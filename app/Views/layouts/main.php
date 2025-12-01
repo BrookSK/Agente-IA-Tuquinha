@@ -250,6 +250,10 @@ $pageTitle = $pageTitle ?? 'Agente IA - Tuquinha';
                         <span class="icon">⚙</span>
                         <span>Configurações do sistema</span>
                     </a>
+                    <a href="/admin/planos" class="sidebar-button" style="margin-top: 6px;">
+                        <span class="icon">🧩</span>
+                        <span>Gerenciar planos</span>
+                    </a>
                 <?php endif; ?>
             </div>
         </div>

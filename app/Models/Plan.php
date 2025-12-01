@@ -22,6 +22,13 @@ class Plan
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
+    public static function all(): array
+    {
+        $pdo = Database::getConnection();
+        $stmt = $pdo->query('SELECT * FROM plans ORDER BY sort_order ASC, price_cents ASC');
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
     public static function findBySlug(string $slug): ?array
     {
         $pdo = Database::getConnection();
@@ -29,6 +36,63 @@ class Plan
         $stmt->execute(['slug' => $slug]);
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
         return $row ?: null;
+    }
+
+    public static function create(array $data): int
+    {
+        $pdo = Database::getConnection();
+        $stmt = $pdo->prepare('INSERT INTO plans (name, slug, price_cents, description, benefits, allow_audio, allow_images, allow_files, is_active)
+            VALUES (:name, :slug, :price_cents, :description, :benefits, :allow_audio, :allow_images, :allow_files, :is_active)');
+        $stmt->execute([
+            'name' => $data['name'] ?? '',
+            'slug' => $data['slug'] ?? '',
+            'price_cents' => (int)($data['price_cents'] ?? 0),
+            'description' => $data['description'] ?? null,
+            'benefits' => $data['benefits'] ?? null,
+            'allow_audio' => (int)($data['allow_audio'] ?? 0),
+            'allow_images' => (int)($data['allow_images'] ?? 0),
+            'allow_files' => (int)($data['allow_files'] ?? 0),
+            'is_active' => (int)($data['is_active'] ?? 1),
+        ]);
+        return (int)$pdo->lastInsertId();
+    }
+
+    public static function updateById(int $id, array $data): void
+    {
+        $pdo = Database::getConnection();
+        $stmt = $pdo->prepare('UPDATE plans SET
+            name = :name,
+            slug = :slug,
+            price_cents = :price_cents,
+            description = :description,
+            benefits = :benefits,
+            allow_audio = :allow_audio,
+            allow_images = :allow_images,
+            allow_files = :allow_files,
+            is_active = :is_active
+            WHERE id = :id');
+        $stmt->execute([
+            'id' => $id,
+            'name' => $data['name'] ?? '',
+            'slug' => $data['slug'] ?? '',
+            'price_cents' => (int)($data['price_cents'] ?? 0),
+            'description' => $data['description'] ?? null,
+            'benefits' => $data['benefits'] ?? null,
+            'allow_audio' => (int)($data['allow_audio'] ?? 0),
+            'allow_images' => (int)($data['allow_images'] ?? 0),
+            'allow_files' => (int)($data['allow_files'] ?? 0),
+            'is_active' => (int)($data['is_active'] ?? 1),
+        ]);
+    }
+
+    public static function setActive(int $id, bool $active): void
+    {
+        $pdo = Database::getConnection();
+        $stmt = $pdo->prepare('UPDATE plans SET is_active = :active WHERE id = :id');
+        $stmt->execute([
+            'id' => $id,
+            'active' => $active ? 1 : 0,
+        ]);
     }
 
     public static function findById(int $id): ?array
