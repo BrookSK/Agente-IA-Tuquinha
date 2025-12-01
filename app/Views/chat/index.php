@@ -339,4 +339,22 @@
 #chat-window::-webkit-scrollbar-thumb:hover {
     background: rgba(255, 255, 255, 0.25);
 }
+
+/* Scrollbar customizado para o campo de digitação */
+#chat-message::-webkit-scrollbar {
+    width: 8px;
+}
+
+#chat-message::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+#chat-message::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.18);
+    border-radius: 999px;
+}
+
+#chat-message::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.28);
+}
 </style>
