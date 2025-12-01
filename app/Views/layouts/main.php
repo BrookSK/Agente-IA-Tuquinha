@@ -45,6 +45,9 @@ $pageTitle = $pageTitle ?? 'Agente IA - Tuquinha';
             gap: 16px;
             height: 100vh;
             overflow-y: auto;
+            position: relative;
+            z-index: 20;
+            transition: transform 0.2s ease-out, opacity 0.2s ease-out;
         }
         .brand {
             display: flex;
@@ -158,6 +161,9 @@ $pageTitle = $pageTitle ?? 'Agente IA - Tuquinha';
             padding: 0 24px;
             backdrop-filter: blur(18px);
             background: linear-gradient(to bottom, rgba(5, 5, 9, 0.92), rgba(5, 5, 9, 0.8));
+            position: sticky;
+            top: 0;
+            z-index: 15;
         }
         .main-header-title {
             font-size: 14px;
@@ -175,6 +181,46 @@ $pageTitle = $pageTitle ?? 'Agente IA - Tuquinha';
             flex: 1;
             padding: 24px;
             overflow-y: auto;
+        }
+
+        .menu-toggle {
+            display: none;
+            width: 32px;
+            height: 32px;
+            border-radius: 999px;
+            border: 1px solid var(--border-subtle);
+            background: rgba(0,0,0,0.4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        .menu-toggle span {
+            display: block;
+            width: 16px;
+            height: 2px;
+            background: var(--text-primary);
+            position: relative;
+        }
+        .menu-toggle span::before,
+        .menu-toggle span::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            width: 16px;
+            height: 2px;
+            background: var(--text-primary);
+        }
+        .menu-toggle span::before { top: -5px; }
+        .menu-toggle span::after { top: 5px; }
+
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.6);
+            z-index: 10;
         }
 
         /* Ajuste do ícone de calendário em inputs de data no tema escuro */
@@ -205,20 +251,42 @@ $pageTitle = $pageTitle ?? 'Agente IA - Tuquinha';
                 flex-direction: column;
             }
             .sidebar {
-                width: 100%;
-                flex-direction: row;
-                align-items: center;
-                justify-content: space-between;
-                padding: 10px 14px;
+                position: fixed;
+                left: 0;
+                top: 0;
+                bottom: 0;
+                width: 260px;
+                transform: translateX(-100%);
+                opacity: 0;
             }
-            .sidebar-footer {
+            .sidebar--open {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            .sidebar-overlay {
                 display: none;
+            }
+            .sidebar-overlay.active {
+                display: block;
+            }
+            .main {
+                flex: 1;
+            }
+            .main-header {
+                padding: 0 14px;
+            }
+            .main-content {
+                padding: 16px 14px 20px 14px;
+            }
+            .menu-toggle {
+                display: flex;
             }
         }
     </style>
 </head>
 <body>
-    <aside class="sidebar">
+    <div class="sidebar-overlay" id="sidebar-overlay"></div>
+    <aside class="sidebar" id="sidebar">
         <div>
             <div class="brand">
                 <div class="brand-logo">T</div>
@@ -312,7 +380,12 @@ $pageTitle = $pageTitle ?? 'Agente IA - Tuquinha';
 
     <main class="main">
         <header class="main-header">
-            <div class="main-header-title"><?= htmlspecialchars($pageTitle) ?></div>
+            <div style="display:flex; align-items:center; gap:8px;">
+                <button type="button" class="menu-toggle" id="menu-toggle" aria-label="Abrir menu" style="display:none;">
+                    <span></span>
+                </button>
+                <div class="main-header-title"><?= htmlspecialchars($pageTitle) ?></div>
+            </div>
             <div>
                 <?php if (!empty($_SESSION['user_id'])): ?>
                     <div class="env-pill">
@@ -331,5 +404,29 @@ $pageTitle = $pageTitle ?? 'Agente IA - Tuquinha';
             <?php include $viewFile; ?>
         </section>
     </main>
+    <script>
+    (function () {
+        var sidebar = document.getElementById('sidebar');
+        var toggle = document.getElementById('menu-toggle');
+        var overlay = document.getElementById('sidebar-overlay');
+        if (!sidebar || !toggle || !overlay) return;
+
+        function closeSidebar() {
+            sidebar.classList.remove('sidebar--open');
+            overlay.classList.remove('active');
+        }
+
+        toggle.addEventListener('click', function () {
+            var isOpen = sidebar.classList.toggle('sidebar--open');
+            if (isOpen) {
+                overlay.classList.add('active');
+            } else {
+                overlay.classList.remove('active');
+            }
+        });
+
+        overlay.addEventListener('click', closeSidebar);
+    })();
+    </script>
 </body>
 </html>
