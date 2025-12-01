@@ -381,7 +381,7 @@ $pageTitle = $pageTitle ?? 'Agente IA - Tuquinha';
     <main class="main">
         <header class="main-header">
             <div style="display:flex; align-items:center; gap:8px;">
-                <button type="button" class="menu-toggle" id="menu-toggle" aria-label="Abrir menu" style="display:none;">
+                <button type="button" class="menu-toggle" id="menu-toggle" aria-label="Abrir menu">
                     <span></span>
                 </button>
                 <div class="main-header-title"><?= htmlspecialchars($pageTitle) ?></div>

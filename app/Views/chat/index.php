@@ -26,7 +26,7 @@ function render_markdown_safe(string $text): string {
     return nl2br($escaped);
 }
 ?>
-<div style="max-width: 900px; margin: 0 auto; display: flex; flex-direction: column; height: calc(100vh - 56px - 48px);">
+<div style="max-width: 900px; width: 100%; margin: 0 auto; padding: 0 8px; display: flex; flex-direction: column; min-height: calc(100vh - 56px - 80px); box-sizing: border-box;">
     <div id="chat-window" style="flex: 1; overflow-y: auto; padding: 12px 4px 12px 0;">
         <?php if (empty($chatHistory)): ?>
             <div id="chat-empty-state" style="text-align: center; margin-top: 40px; color: #b0b0b0; font-size: 14px;">
