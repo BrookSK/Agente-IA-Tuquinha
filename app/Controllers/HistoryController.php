@@ -5,6 +5,8 @@ namespace App\Controllers;
 use App\Core\Controller;
 use App\Models\Conversation;
 use App\Models\Plan;
+use App\Core\Database;
+use App\Models\Setting;
 
 class HistoryController extends Controller
 {
@@ -24,12 +26,26 @@ class HistoryController extends Controller
         $sessionId = session_id();
         $term = trim($_GET['q'] ?? '');
 
+        // Dias de retenção configuráveis
+        $retentionDays = (int)Setting::get('chat_history_retention_days', '90');
+        if ($retentionDays <= 0) {
+            $retentionDays = 90;
+        }
+
+        // Política de retenção: remove conversas mais antigas que X dias desta sessão
+        $pdo = Database::getConnection();
+        $stmt = $pdo->prepare('DELETE FROM conversations WHERE session_id = :session_id AND created_at < (NOW() - INTERVAL :days DAY)');
+        $stmt->bindValue('session_id', $sessionId);
+        $stmt->bindValue('days', $retentionDays, \PDO::PARAM_INT);
+        $stmt->execute();
+
         $conversations = Conversation::searchBySession($sessionId, $term);
 
         $this->view('chat/history', [
             'pageTitle' => 'Histórico de conversas',
             'conversations' => $conversations,
             'term' => $term,
+            'retentionDays' => $retentionDays,
         ]);
     }
 

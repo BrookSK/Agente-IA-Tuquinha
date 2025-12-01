@@ -4,6 +4,7 @@
 /** @var string $transcriptionModel */
 /** @var string $systemPrompt */
 /** @var string $systemPromptExtra */
+/** @var int $historyRetentionDays */
 /** @var string $asaasEnvironment */
 /** @var string $asaasSandboxKey */
 /** @var string $asaasProdKey */
@@ -83,6 +84,15 @@ $knownModels = [
                 background: #050509; color: #f5f5f5; font-size: 13px; resize: vertical;
             "><?= htmlspecialchars($systemPromptExtra) ?></textarea>
             <small style="color:#777; font-size:11px;">Use este campo para complementar o comportamento base, por exemplo com regras específicas para certos tipos de projeto, limites ou orientações internas.</small>
+        </div>
+
+        <div>
+            <label style="font-size: 12px; color: #b0b0b0;">Dias para manter o histrico de conversas</label>
+            <input name="history_retention_days" type="number" min="1" value="<?= htmlspecialchars((string)($historyRetentionDays ?? 90)) ?>" style="
+                width: 120px; padding: 8px 10px; border-radius: 8px; border: 1px solid #272727;
+                background: #050509; color: #f5f5f5; font-size: 13px;
+            ">
+            <small style="color:#777; font-size:11px;">Define por quantos dias as conversas ficar2o salvas para o usu2rio antes de serem apagadas automaticamente.</small>
         </div>
 
         <hr style="border:none; border-top:1px solid #272727; margin: 8px 0;">

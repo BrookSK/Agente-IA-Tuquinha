@@ -21,6 +21,10 @@ class AdminConfigController extends Controller
         $transcriptionModel = Setting::get('openai_transcription_model', 'whisper-1');
         $systemPrompt = Setting::get('tuquinha_system_prompt', TuquinhaEngine::getDefaultPrompt());
         $systemPromptExtra = Setting::get('tuquinha_system_prompt_extra', '');
+        $historyRetentionDays = (int)Setting::get('chat_history_retention_days', '90');
+        if ($historyRetentionDays <= 0) {
+            $historyRetentionDays = 90;
+        }
 
         $smtpHost = Setting::get('smtp_host', '');
         $smtpPort = Setting::get('smtp_port', '587');
@@ -38,6 +42,7 @@ class AdminConfigController extends Controller
             'transcriptionModel' => $transcriptionModel,
             'systemPrompt' => $systemPrompt,
             'systemPromptExtra' => $systemPromptExtra,
+            'historyRetentionDays' => $historyRetentionDays,
             'smtpHost' => $smtpHost,
             'smtpPort' => $smtpPort,
             'smtpUser' => $smtpUser,
@@ -62,6 +67,10 @@ class AdminConfigController extends Controller
         $transcriptionModel = trim($_POST['transcription_model'] ?? '');
         $systemPrompt = trim($_POST['system_prompt'] ?? '');
         $systemPromptExtra = trim($_POST['system_prompt_extra'] ?? '');
+        $historyRetentionDays = (int)($_POST['history_retention_days'] ?? 90);
+        if ($historyRetentionDays <= 0) {
+            $historyRetentionDays = 90;
+        }
         $smtpHost = trim($_POST['smtp_host'] ?? '');
         $smtpPort = trim($_POST['smtp_port'] ?? '587');
         $smtpUser = trim($_POST['smtp_user'] ?? '');
@@ -82,6 +91,7 @@ class AdminConfigController extends Controller
             'openai_transcription_model' => $transcriptionModel !== '' ? $transcriptionModel : 'whisper-1',
             'tuquinha_system_prompt' => $systemPrompt !== '' ? $systemPrompt : TuquinhaEngine::getDefaultPrompt(),
             'tuquinha_system_prompt_extra' => $systemPromptExtra,
+            'chat_history_retention_days' => (string)$historyRetentionDays,
             'smtp_host' => $smtpHost,
             'smtp_port' => $smtpPort,
             'smtp_user' => $smtpUser,
@@ -116,6 +126,7 @@ class AdminConfigController extends Controller
             'transcriptionModel' => $settingsToSave['openai_transcription_model'],
             'systemPrompt' => $settingsToSave['tuquinha_system_prompt'],
             'systemPromptExtra' => $settingsToSave['tuquinha_system_prompt_extra'],
+            'historyRetentionDays' => $historyRetentionDays,
             'smtpHost' => $smtpHost,
             'smtpPort' => $smtpPort,
             'smtpUser' => $smtpUser,

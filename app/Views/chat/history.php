@@ -1,11 +1,16 @@
 <?php
 /** @var array $conversations */
 /** @var string $term */
+/** @var int $retentionDays */
 ?>
 <div style="max-width: 880px; margin: 0 auto;">
     <h1 style="font-size: 24px; margin-bottom: 10px; font-weight: 650;">Histórico de conversas</h1>
-    <p style="color:#b0b0b0; font-size: 14px; margin-bottom: 14px;">
+    <p style="color:#b0b0b0; font-size: 14px; margin-bottom: 4px;">
         Aqui você encontra os chats recentes com o Tuquinha nesta sessão. Use a busca para localizar pelo título.
+    </p>
+    <?php $days = (int)($retentionDays ?? 90); if ($days <= 0) { $days = 90; } ?>
+    <p style="color:#777; font-size: 12px; margin-bottom: 14px;">
+        Os históricos são mantidos por <strong><?= htmlspecialchars((string)$days) ?> dias</strong>. Conversas mais antigas que isso são apagadas automaticamente.
     </p>
 
     <form method="get" action="/historico" style="margin-bottom: 14px; display:flex; gap:8px;">

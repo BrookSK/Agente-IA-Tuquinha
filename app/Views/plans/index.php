@@ -1,11 +1,16 @@
 <?php
 /** @var array $plans */
 /** @var array|null $currentPlan */
+/** @var int $retentionDays */
 ?>
 <div style="max-width: 880px; margin: 0 auto;">
     <h1 style="font-size: 26px; margin-bottom: 10px; font-weight: 650;">Escolha um plano para turbinar seu acesso ao Tuquinha</h1>
-    <p style="color: #b0b0b0; margin-bottom: 22px; font-size: 14px;">
+    <p style="color: #b0b0b0; margin-bottom: 8px; font-size: 14px;">
         Todos os planos são cobrados mensalmente no cartão de crédito via Asaas. Começa pelo gratuito se quiser sentir o fluxo, ou vai direto pro plano que combina com o seu momento.
+    </p>
+    <?php $days = (int)($retentionDays ?? 90); if ($days <= 0) { $days = 90; } ?>
+    <p style="color:#777; margin-bottom: 18px; font-size: 12px;">
+        <strong>Importante:</strong> o histórico de conversas é mantido por até <strong><?= htmlspecialchars((string)$days) ?> dias</strong>. Após esse período, as conversas mais antigas são removidas automaticamente dos servidores.
     </p>
 
     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 14px;">

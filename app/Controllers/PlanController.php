@@ -4,6 +4,7 @@ namespace App\Controllers;
 
 use App\Core\Controller;
 use App\Models\Plan;
+use App\Models\Setting;
 
 class PlanController extends Controller
 {
@@ -19,10 +20,16 @@ class PlanController extends Controller
             }
         }
 
+        $retentionDays = (int)Setting::get('chat_history_retention_days', '90');
+        if ($retentionDays <= 0) {
+            $retentionDays = 90;
+        }
+
         $this->view('plans/index', [
             'pageTitle' => 'Planos - Tuquinha',
             'plans' => $plans,
             'currentPlan' => $currentPlan,
+            'retentionDays' => $retentionDays,
         ]);
     }
 }
