@@ -36,4 +36,33 @@ class User
         ]);
         return (int)$pdo->lastInsertId();
     }
+
+    public static function findById(int $id): ?array
+    {
+        $pdo = Database::getConnection();
+        $stmt = $pdo->prepare('SELECT * FROM users WHERE id = :id LIMIT 1');
+        $stmt->execute(['id' => $id]);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $row ?: null;
+    }
+
+    public static function updateName(int $id, string $name): void
+    {
+        $pdo = Database::getConnection();
+        $stmt = $pdo->prepare('UPDATE users SET name = :name WHERE id = :id LIMIT 1');
+        $stmt->execute([
+            'name' => $name,
+            'id' => $id,
+        ]);
+    }
+
+    public static function updatePassword(int $id, string $passwordHash): void
+    {
+        $pdo = Database::getConnection();
+        $stmt = $pdo->prepare('UPDATE users SET password_hash = :password_hash WHERE id = :id LIMIT 1');
+        $stmt->execute([
+            'password_hash' => $passwordHash,
+            'id' => $id,
+        ]);
+    }
 }

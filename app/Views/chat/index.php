@@ -139,7 +139,7 @@
                     <?php endif; ?>
                 </div>
 
-                <div id="file-list" style="max-width: 200px; font-size: 11px; color: #b0b0b0;"></div>
+                <div id="file-list" style="max-width: 260px; font-size: 11px; color: #b0b0b0; display:flex; flex-wrap:wrap; gap:4px;"></div>
             </div>
             <textarea name="message" rows="1" required style="
                 flex: 1;
@@ -179,10 +179,54 @@
     const fileInput = document.getElementById('file-input');
     const fileList = document.getElementById('file-list');
     if (fileInput && fileList) {
-        fileInput.addEventListener('change', () => {
-            const names = Array.from(fileInput.files || []).map(f => f.name);
-            fileList.textContent = names.join(', ');
-        });
+        const renderFiles = () => {
+            const files = Array.from(fileInput.files || []);
+            fileList.innerHTML = '';
+
+            if (!files.length) {
+                return;
+            }
+
+            files.forEach((file, index) => {
+                const chip = document.createElement('div');
+                chip.style.display = 'inline-flex';
+                chip.style.alignItems = 'center';
+                chip.style.gap = '4px';
+                chip.style.padding = '2px 6px';
+                chip.style.borderRadius = '999px';
+                chip.style.border = '1px solid #272727';
+                chip.style.background = '#050509';
+
+                const nameSpan = document.createElement('span');
+                nameSpan.textContent = file.name;
+
+                const removeBtn = document.createElement('button');
+                removeBtn.type = 'button';
+                removeBtn.textContent = '×';
+                removeBtn.style.border = 'none';
+                removeBtn.style.background = 'transparent';
+                removeBtn.style.color = '#ff6f60';
+                removeBtn.style.cursor = 'pointer';
+                removeBtn.style.fontSize = '11px';
+
+                removeBtn.addEventListener('click', () => {
+                    const dt = new DataTransfer();
+                    files.forEach((f, i) => {
+                        if (i !== index) {
+                            dt.items.add(f);
+                        }
+                    });
+                    fileInput.files = dt.files;
+                    renderFiles();
+                });
+
+                chip.appendChild(nameSpan);
+                chip.appendChild(removeBtn);
+                fileList.appendChild(chip);
+            });
+        };
+
+        fileInput.addEventListener('change', renderFiles);
     }
 
     let mediaRecorder = null;

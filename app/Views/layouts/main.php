@@ -210,6 +210,10 @@ $pageTitle = $pageTitle ?? 'Agente IA - Tuquinha';
                         <span>Novo chat com o Tuquinha</span>
                     </button>
                 </form>
+                <a href="/historico" class="sidebar-button" style="margin-bottom: 8px;">
+                    <span class="icon">🕒</span>
+                    <span>Histórico de chats</span>
+                </a>
                 <div class="sidebar-section-title" style="margin-top: 10px;">Guias rápidos</div>
                 <a href="/" class="sidebar-button">
                     <span class="icon">🏠</span>

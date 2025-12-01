@@ -26,4 +26,13 @@ class Subscription
 
         return (int)$pdo->lastInsertId();
     }
+
+    public static function findLastByEmail(string $email): ?array
+    {
+        $pdo = Database::getConnection();
+        $stmt = $pdo->prepare('SELECT * FROM subscriptions WHERE customer_email = :email ORDER BY created_at DESC LIMIT 1');
+        $stmt->execute(['email' => $email]);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $row ?: null;
+    }
 }

@@ -1,5 +1,6 @@
 <?php
 /** @var array $plans */
+/** @var array|null $currentPlan */
 ?>
 <div style="max-width: 880px; margin: 0 auto;">
     <h1 style="font-size: 26px; margin-bottom: 10px; font-weight: 650;">Escolha um plano para turbinar seu acesso ao Tuquinha</h1>
@@ -12,11 +13,15 @@
             <?php
                 $price = number_format($plan['price_cents'] / 100, 2, ',', '.');
                 $benefits = array_filter(array_map('trim', explode("\n", (string)($plan['benefits'] ?? ''))));
+                $isCurrent = $currentPlan && ($currentPlan['id'] ?? null) === ($plan['id'] ?? null);
             ?>
-            <div style="background: #111118; border-radius: 16px; padding: 14px; border: 1px solid #272727; display: flex; flex-direction: column; justify-content: space-between;">
+            <div style="background: #111118; border-radius: 16px; padding: 14px; border: 1px solid <?= $isCurrent ? '#e53935' : '#272727' ?>; display: flex; flex-direction: column; justify-content: space-between; box-shadow: <?= $isCurrent ? '0 0 0 1px rgba(229,57,53,0.5)' : 'none' ?>;">
                 <div>
                     <div style="font-size: 13px; text-transform: uppercase; letter-spacing: 0.12em; color: #b0b0b0; margin-bottom: 6px;">
                         <?= htmlspecialchars($plan['slug']) === 'free' ? 'Plano inicial' : 'Plano premium' ?>
+                        <?php if ($isCurrent): ?>
+                            <span style="margin-left:6px; font-size:10px; padding:2px 6px; border-radius:999px; background:#e53935; color:#050509;">Seu plano atual</span>
+                        <?php endif; ?>
                     </div>
                     <div style="font-size: 18px; font-weight: 600; margin-bottom: 4px;">
                         <?= htmlspecialchars($plan['name']) ?>

@@ -1,0 +1,57 @@
+<?php
+/** @var array $conversations */
+/** @var string $term */
+?>
+<div style="max-width: 880px; margin: 0 auto;">
+    <h1 style="font-size: 24px; margin-bottom: 10px; font-weight: 650;">Histórico de conversas</h1>
+    <p style="color:#b0b0b0; font-size: 14px; margin-bottom: 14px;">
+        Aqui você encontra os chats recentes com o Tuquinha nesta sessão. Use a busca para localizar pelo título.
+    </p>
+
+    <form method="get" action="/historico" style="margin-bottom: 14px; display:flex; gap:8px;">
+        <input type="text" name="q" value="<?= htmlspecialchars($term) ?>" placeholder="Buscar pelo título do chat" style="
+            flex:1; padding:8px 10px; border-radius:999px; border:1px solid #272727; background:#050509; color:#f5f5f5; font-size:13px;">
+        <button type="submit" style="border:none; border-radius:999px; padding:8px 14px; background:linear-gradient(135deg,#e53935,#ff6f60); color:#050509; font-weight:600; font-size:13px; cursor:pointer;">
+            Buscar
+        </button>
+    </form>
+
+    <?php if (empty($conversations)): ?>
+        <p style="color:#b0b0b0; font-size:14px;">Nenhum histórico encontrado para esta sessão.</p>
+    <?php else: ?>
+        <div style="display:flex; flex-direction:column; gap:8px;">
+            <?php foreach ($conversations as $conv): ?>
+                <?php
+                    $title = trim((string)($conv['title'] ?? ''));
+                    if ($title === '') {
+                        $title = 'Chat sem título';
+                    }
+                    $created = $conv['created_at'] ?? null;
+                ?>
+                <div style="background:#111118; border-radius:12px; padding:10px 12px; border:1px solid #272727; display:flex; justify-content:space-between; align-items:center; gap:8px;">
+                    <div>
+                        <div style="font-size:14px; font-weight:500; margin-bottom:4px;">
+                            <?= htmlspecialchars($title) ?>
+                        </div>
+                        <?php if ($created): ?>
+                            <div style="font-size:11px; color:#b0b0b0;">
+                                Iniciado em <?= htmlspecialchars(date('d/m/Y H:i', strtotime($created))) ?>
+                            </div>
+                        <?php endif; ?>
+                    </div>
+                    <div>
+                        <a href="/chat?c=<?= (int)$conv['id'] ?>" style="
+                            display:inline-flex; align-items:center; gap:6px;
+                            border-radius:999px; padding:6px 12px;
+                            border:1px solid #272727; background:#050509; color:#f5f5f5;
+                            font-size:12px; text-decoration:none;
+                        ">
+                            <span>Abrir chat</span>
+                            <span>➜</span>
+                        </a>
+                    </div>
+                </div>
+            <?php endforeach; ?>
+        </div>
+    <?php endif; ?>
+</div>

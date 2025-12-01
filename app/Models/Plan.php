@@ -31,6 +31,15 @@ class Plan
         return $row ?: null;
     }
 
+    public static function findById(int $id): ?array
+    {
+        $pdo = Database::getConnection();
+        $stmt = $pdo->prepare('SELECT * FROM plans WHERE id = :id LIMIT 1');
+        $stmt->execute(['id' => $id]);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $row ?: null;
+    }
+
     public static function findBySessionSlug(?string $slug): ?array
     {
         if (!$slug) {

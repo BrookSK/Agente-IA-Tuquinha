@@ -25,7 +25,11 @@
         </button>
     </form>
 
-    <div style="margin-top:10px; font-size:13px; color:#b0b0b0;">
-        Ainda não tem conta? <a href="/registrar" style="color:#ff6f60; text-decoration:none;">Criar conta</a>
+    <div style="margin-top:8px; font-size:13px; color:#b0b0b0; display:flex; justify-content:space-between; gap:8px; flex-wrap:wrap;">
+        <span>
+            Ainda não tem conta?
+            <a href="/registrar" style="color:#ff6f60; text-decoration:none;">Criar conta</a>
+        </span>
+        <a href="/senha/esqueci" style="color:#ff6f60; text-decoration:none;">Esqueci minha senha</a>
     </div>
 </div>

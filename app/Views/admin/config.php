@@ -5,12 +5,18 @@
 /** @var string $asaasEnvironment */
 /** @var string $asaasSandboxKey */
 /** @var string $asaasProdKey */
+/** @var string $smtpHost */
+/** @var string $smtpPort */
+/** @var string $smtpUser */
+/** @var string $smtpPassword */
+/** @var string $smtpFromEmail */
+/** @var string $smtpFromName */
 /** @var bool $saved */
 ?>
 <div style="max-width: 720px; margin: 0 auto;">
     <h1 style="font-size: 24px; margin-bottom: 8px; font-weight: 650;">Configurações do sistema</h1>
     <p style="color: #b0b0b0; margin-bottom: 18px; font-size: 14px;">
-        Ajuste aqui a chave de API e os modelos padrão usados pelo Tuquinha para chat e transcrição de áudio.
+        Ajuste aqui a chave de API, os modelos padrão usados pelo Tuquinha e as credenciais de envio de e-mails (SMTP).
     </p>
 
     <?php if (!empty($saved)): ?>
@@ -47,6 +53,56 @@
         </div>
 
         <hr style="border:none; border-top:1px solid #272727; margin: 8px 0;">
+
+        <div>
+            <label style="font-size: 12px; color: #b0b0b0;">Host SMTP</label>
+            <input name="smtp_host" value="<?= htmlspecialchars($smtpHost) ?>" style="
+                width: 100%; padding: 8px 10px; border-radius: 8px; border: 1px solid #272727;
+                background: #050509; color: #f5f5f5; font-size: 13px;
+            " placeholder="ex: smtp.seuprovedor.com">
+        </div>
+
+        <div style="display:flex; gap:10px;">
+            <div style="flex:1;">
+                <label style="font-size: 12px; color: #b0b0b0;">Porta SMTP</label>
+                <input name="smtp_port" value="<?= htmlspecialchars($smtpPort) ?>" style="
+                    width: 100%; padding: 8px 10px; border-radius: 8px; border: 1px solid #272727;
+                    background: #050509; color: #f5f5f5; font-size: 13px;
+                " placeholder="587">
+            </div>
+            <div style="flex:1;">
+                <label style="font-size: 12px; color: #b0b0b0;">Usuário SMTP</label>
+                <input name="smtp_user" value="<?= htmlspecialchars($smtpUser) ?>" style="
+                    width: 100%; padding: 8px 10px; border-radius: 8px; border: 1px solid #272727;
+                    background: #050509; color: #f5f5f5; font-size: 13px;
+                " placeholder="usuário ou e-mail">
+            </div>
+        </div>
+
+        <div>
+            <label style="font-size: 12px; color: #b0b0b0;">Senha SMTP</label>
+            <input name="smtp_password" type="password" value="<?= htmlspecialchars($smtpPassword) ?>" style="
+                width: 100%; padding: 8px 10px; border-radius: 8px; border: 1px solid #272727;
+                background: #050509; color: #f5f5f5; font-size: 13px;
+            " placeholder="senha ou token">
+        </div>
+
+        <div style="display:flex; gap:10px;">
+            <div style="flex:1;">
+                <label style="font-size: 12px; color: #b0b0b0;">E-mail remetente</label>
+                <input name="smtp_from_email" value="<?= htmlspecialchars($smtpFromEmail) ?>" style="
+                    width: 100%; padding: 8px 10px; border-radius: 8px; border: 1px solid #272727;
+                    background: #050509; color: #f5f5f5; font-size: 13px;
+                " placeholder="ex: suporte@seusite.com">
+            </div>
+            <div style="flex:1;">
+                <label style="font-size: 12px; color: #b0b0b0;">Nome remetente</label>
+                <input name="smtp_from_name" value="<?= htmlspecialchars($smtpFromName) ?>" style="
+                    width: 100%; padding: 8px 10px; border-radius: 8px; border: 1px solid #272727;
+                    background: #050509; color: #f5f5f5; font-size: 13px;
+                " placeholder="ex: Tuquinha IA">
+            </div>
+        </div>
 
         <div>
             <label style="font-size: 12px; color: #b0b0b0;">Ambiente Asaas</label>

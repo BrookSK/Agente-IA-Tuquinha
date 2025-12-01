@@ -53,4 +53,32 @@ class Conversation
         $stmt->execute(['session_id' => $sessionId]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
+
+    public static function searchBySession(string $sessionId, string $term): array
+    {
+        $pdo = Database::getConnection();
+        if ($term === '') {
+            return self::allBySession($sessionId);
+        }
+
+        $like = '%' . $term . '%';
+        $stmt = $pdo->prepare('SELECT * FROM conversations WHERE session_id = :session_id AND title IS NOT NULL AND title <> "" AND title LIKE :term ORDER BY created_at DESC');
+        $stmt->execute([
+            'session_id' => $sessionId,
+            'term' => $like,
+        ]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public static function findByIdAndSession(int $id, string $sessionId): ?array
+    {
+        $pdo = Database::getConnection();
+        $stmt = $pdo->prepare('SELECT * FROM conversations WHERE id = :id AND session_id = :session_id LIMIT 1');
+        $stmt->execute([
+            'id' => $id,
+            'session_id' => $sessionId,
+        ]);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $row ?: null;
+    }
 }

@@ -15,7 +15,22 @@ class ChatController extends Controller
     public function index(): void
     {
         $sessionId = session_id();
-        $conversation = Conversation::findOrCreateBySession($sessionId);
+        $conversationParam = isset($_GET['c']) ? (int)$_GET['c'] : 0;
+
+        if ($conversationParam > 0) {
+            $row = Conversation::findByIdAndSession($conversationParam, $sessionId);
+            if ($row) {
+                $conversation = new Conversation();
+                $conversation->id = (int)$row['id'];
+                $conversation->session_id = $row['session_id'];
+                $conversation->title = $row['title'] ?? null;
+            } else {
+                $conversation = Conversation::findOrCreateBySession($sessionId);
+            }
+        } else {
+            $conversation = Conversation::findOrCreateBySession($sessionId);
+        }
+
         $history = Message::allByConversation($conversation->id);
 
         $currentPlan = Plan::findBySessionSlug($_SESSION['plan_slug'] ?? null);
@@ -203,7 +218,8 @@ class ChatController extends Controller
         // Transcrição via OpenAI (se chave configurada)
         $transcriptText = '';
         $configuredApiKey = Setting::get('openai_api_key', AI_API_KEY);
-        $transcriptionModel = Setting::get('openai_transcription_model', 'gpt-4o-mini-transcribe');
+        // Usa whisper-1 como padrão, que é o modelo de transcrição da OpenAI
+        $transcriptionModel = Setting::get('openai_transcription_model', 'whisper-1');
 
         if (!empty($configuredApiKey) && file_exists($targetPath)) {
             $ch = curl_init('https://api.openai.com/v1/audio/transcriptions');
