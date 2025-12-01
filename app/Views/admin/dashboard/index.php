@@ -1,5 +1,5 @@
 <?php /** @var int $totalUsers */ ?>
-<?php /** @var int $totalAdmins */ ?>
+<?php /** @var int $totalClients */ ?>
 <?php /** @var int $totalPlans */ ?>
 <?php /** @var array $subsByStatus */ ?>
 <?php /** @var int $activeRevenueCents */ ?>
@@ -13,8 +13,9 @@
             <div style="font-size:11px; color:#b0b0b0; margin-top:4px;">Inclui admins e clientes</div>
         </div>
         <div style="flex:1; min-width:180px; padding:12px 14px; border-radius:12px; background:#111118; border:1px solid #272727;">
-            <div style="font-size:12px; color:#b0b0b0;">Admins</div>
-            <div style="font-size:22px; font-weight:600; margin-top:4px;"><?= (int)$totalAdmins ?></div>
+            <div style="font-size:12px; color:#b0b0b0;">Clientes (não admin)</div>
+            <div style="font-size:22px; font-weight:600; margin-top:4px;"><?= (int)$totalClients ?></div>
+            <div style="font-size:11px; color:#b0b0b0; margin-top:4px;">Usuários comuns do sistema</div>
         </div>
         <div style="flex:1; min-width:180px; padding:12px 14px; border-radius:12px; background:#111118; border:1px solid #272727;">
             <div style="font-size:12px; color:#b0b0b0;">Planos</div>

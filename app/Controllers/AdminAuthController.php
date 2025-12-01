@@ -24,9 +24,17 @@ class AdminAuthController extends Controller
         if ($emailOrUser !== '' && $pass !== '') {
             $admin = User::findAdminByEmail($emailOrUser);
             if ($admin && password_verify($pass, $admin['password_hash'])) {
+                if (isset($admin['is_active']) && (int)$admin['is_active'] === 0) {
+                    $this->view('admin/login', [
+                        'pageTitle' => 'Login do admin',
+                        'error' => 'Este usuário admin está desativado.',
+                    ]);
+                    return;
+                }
+
                 $_SESSION['is_admin'] = true;
                 $_SESSION['admin_email'] = $admin['email'];
-                header('Location: /admin/config');
+                header('Location: /admin');
                 exit;
             }
         }

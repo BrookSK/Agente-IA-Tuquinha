@@ -55,6 +55,8 @@ $router->get('/admin/planos/editar', 'AdminPlanController@form');
 $router->post('/admin/planos/salvar', 'AdminPlanController@save');
 $router->get('/admin/planos/ativar', 'AdminPlanController@toggleActive');
 $router->get('/admin/usuarios', 'AdminUserController@index');
+$router->get('/admin/usuarios/ver', 'AdminUserController@show');
+$router->post('/admin/usuarios/toggle', 'AdminUserController@toggleActive');
 $router->get('/admin/assinaturas', 'AdminSubscriptionController@index');
 $router->get('/chat', 'ChatController@index');
 $router->post('/chat/send', 'ChatController@send');

@@ -97,4 +97,14 @@ class User
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
         return (int)($row['c'] ?? 0);
     }
+
+    public static function setActive(int $id, bool $active): void
+    {
+        $pdo = Database::getConnection();
+        $stmt = $pdo->prepare('UPDATE users SET is_active = :a WHERE id = :id LIMIT 1');
+        $stmt->execute([
+            'a' => $active ? 1 : 0,
+            'id' => $id,
+        ]);
+    }
 }

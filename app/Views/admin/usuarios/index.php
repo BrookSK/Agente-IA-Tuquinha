@@ -15,6 +15,7 @@
                 <th style="text-align:left; padding:8px 10px;">Nome</th>
                 <th style="text-align:left; padding:8px 10px;">E-mail</th>
                 <th style="text-align:center; padding:8px 10px;">Admin</th>
+                <th style="text-align:center; padding:8px 10px;">Status</th>
                 <th style="text-align:left; padding:8px 10px;">Criado em</th>
             </tr>
         </thead>
@@ -22,10 +23,20 @@
             <?php if (!empty($users)): ?>
                 <?php foreach ($users as $u): ?>
                     <tr>
-                        <td style="padding:7px 10px;"><?= htmlspecialchars($u['name']) ?></td>
+                        <td style="padding:7px 10px;">
+                            <a href="/admin/usuarios/ver?id=<?= (int)$u['id'] ?>" style="color:#f5f5f5; text-decoration:none;">
+                                <?= htmlspecialchars($u['name']) ?>
+                            </a>
+                        </td>
                         <td style="padding:7px 10px;"><?= htmlspecialchars($u['email']) ?></td>
                         <td style="padding:7px 10px; text-align:center;">
                             <?= !empty($u['is_admin']) ? '✔' : '' ?>
+                        </td>
+                        <td style="padding:7px 10px; text-align:center; font-size:11px;">
+                            <?php $active = isset($u['is_active']) ? (int)$u['is_active'] === 1 : true; ?>
+                            <span style="padding:2px 8px; border-radius:999px; border:1px solid <?= $active ? '#2e7d32' : '#b71c1c' ?>; color:<?= $active ? '#a5d6a7' : '#ef9a9a' ?>;">
+                                <?= $active ? 'Ativo' : 'Inativo' ?>
+                            </span>
                         </td>
                         <td style="padding:7px 10px; font-size:12px; color:#b0b0b0;">
                             <?= htmlspecialchars($u['created_at'] ?? '') ?>
@@ -34,7 +45,7 @@
                 <?php endforeach; ?>
             <?php else: ?>
                 <tr>
-                    <td colspan="4" style="padding:10px; color:#b0b0b0;">Nenhum usuário encontrado.</td>
+                    <td colspan="5" style="padding:10px; color:#b0b0b0;">Nenhum usuário encontrado.</td>
                 </tr>
             <?php endif; ?>
         </tbody>

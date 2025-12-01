@@ -39,6 +39,14 @@ class AuthController extends Controller
             return;
         }
 
+        if (isset($user['is_active']) && (int)$user['is_active'] === 0) {
+            $this->view('auth/login', [
+                'pageTitle' => 'Entrar - Tuquinha',
+                'error' => 'Sua conta está desativada. Fale com o administrador para reativar o acesso.',
+            ]);
+            return;
+        }
+
         $_SESSION['user_id'] = (int)$user['id'];
         $_SESSION['user_name'] = $user['name'];
         $_SESSION['user_email'] = $user['email'];

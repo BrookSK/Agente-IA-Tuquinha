@@ -23,6 +23,7 @@ class AdminDashboardController extends Controller
 
         $totalUsers = User::countAll();
         $totalAdmins = User::countAdmins();
+        $totalClients = max(0, $totalUsers - $totalAdmins);
         $totalPlans = Plan::countAll();
         $subsByStatus = Subscription::countByStatus();
         $activeRevenueCents = Subscription::sumActiveRevenueCents();
@@ -30,7 +31,7 @@ class AdminDashboardController extends Controller
         $this->view('admin/dashboard/index', [
             'pageTitle' => 'Dashboard do administrador',
             'totalUsers' => $totalUsers,
-            'totalAdmins' => $totalAdmins,
+            'totalClients' => $totalClients,
             'totalPlans' => $totalPlans,
             'subsByStatus' => $subsByStatus,
             'activeRevenueCents' => $activeRevenueCents,
