@@ -301,6 +301,36 @@ function render_markdown_safe(string $text): string {
         chatWindow.scrollTop = chatWindow.scrollHeight;
     }
 
+    // Copiar conteúdo de mensagens (usuário e Tuquinha)
+    document.addEventListener('click', (e) => {
+        const btn = e.target && e.target.classList && e.target.classList.contains('copy-message-btn')
+            ? e.target
+            : (e.target && e.target.closest ? e.target.closest('.copy-message-btn') : null);
+        if (!btn) return;
+
+        const text = btn.getAttribute('data-message-text') || '';
+        if (!text) return;
+
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(text).then(() => {
+                const original = btn.dataset.originalLabel || btn.textContent;
+                btn.dataset.originalLabel = original;
+                btn.textContent = 'Copiado';
+                btn.style.color = '#ffffff';
+
+                setTimeout(() => {
+                    btn.textContent = btn.dataset.originalLabel || 'Copiar';
+                    btn.style.color = '#b0b0b0';
+                }, 1500);
+            }).catch(() => {
+                alert('Não consegui copiar o texto. Tente novamente.');
+            });
+        } else {
+            // Fallback simples
+            alert('Seu navegador não suporta cópia automática. Selecione e copie manualmente.');
+        }
+    });
+
     const fileInput = document.getElementById('file-input');
     const fileList = document.getElementById('file-list');
     if (fileInput && fileList) {
