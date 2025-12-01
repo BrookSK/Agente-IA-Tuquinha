@@ -165,6 +165,7 @@ class ChatController extends Controller
                 : 5 * 1024 * 1024; // default 5MB
 
             $attachmentSummaries = [];
+            $attachmentMeta = [];
 
             if (!empty($_FILES['attachments']) && is_array($_FILES['attachments']['name'])) {
                 $count = count($_FILES['attachments']['name']);
@@ -231,19 +232,51 @@ class ChatController extends Controller
                             }
                         }
                         if ($previewLines) {
-                            $attachmentSummaries[] = "Arquivo CSV '" . $name . "' (até 30 linhas iniciais):\n" . implode("\n", $previewLines);
+                            $attachmentSummaries[] = "Arquivo CSV '" . $name . "' (até 30 linhas iniciais)";
                         } else {
-                            $attachmentSummaries[] = "Arquivo CSV '" . $name . "' foi enviado, mas não consegui gerar prévia de conteúdo.";
+                            $attachmentSummaries[] = "Arquivo CSV '" . $name . "' foi enviado.";
                         }
                     } else {
-                        $attachmentSummaries[] = "Arquivo '" . $name . "' foi enviado (tipo MIME: " . $type . ", tamanho: " . $size . " bytes).";
+                        $attachmentSummaries[] = "Arquivo '" . $name . "' foi enviado.";
                     }
+
+                    // metadados para o frontend montar os cards
+                    $humanSize = null;
+                    if ($size > 0) {
+                        if ($size >= 1024 * 1024) {
+                            $humanSize = number_format($size / (1024 * 1024), 2, ',', '.') . ' MB';
+                        } elseif ($size >= 1024) {
+                            $humanSize = number_format($size / 1024, 2, ',', '.') . ' KB';
+                        } else {
+                            $humanSize = $size . ' B';
+                        }
+                    }
+
+                    $label = 'Arquivo';
+                    if ($isCsv) {
+                        $label = 'CSV';
+                    } elseif ($isPdf) {
+                        $label = 'PDF';
+                    } elseif ($isImage) {
+                        $label = 'Imagem';
+                    }
+
+                    $attachmentMeta[] = [
+                        'name' => $name,
+                        'mime_type' => $type,
+                        'size' => $size,
+                        'size_human' => $humanSize,
+                        'is_csv' => $isCsv,
+                        'is_pdf' => $isPdf,
+                        'is_image' => $isImage,
+                        'label' => $label,
+                    ];
                 }
             }
 
             $attachmentsMessage = null;
             if (!empty($attachmentSummaries)) {
-                $attachmentsMessage = "O usuário enviou os seguintes arquivos nesta mensagem:\n\n" . implode("\n\n", $attachmentSummaries);
+                $attachmentsMessage = "O usuário enviou os seguintes arquivos nesta mensagem:" . "\n" . implode("\n", $attachmentSummaries);
                 Message::create($conversation->id, 'user', $attachmentsMessage);
             }
 
@@ -268,10 +301,11 @@ class ChatController extends Controller
                     'content' => $message,
                 ];
 
-                if ($attachmentsMessage !== null) {
+                if (!empty($attachmentMeta)) {
                     $responseMessages[] = [
-                        'role' => 'user',
+                        'role' => 'attachment_summary',
                         'content' => $attachmentsMessage,
+                        'attachments' => $attachmentMeta,
                     ];
                 }
 

@@ -62,7 +62,15 @@ class Conversation
     public static function allBySession(string $sessionId): array
     {
         $pdo = Database::getConnection();
-        $stmt = $pdo->prepare('SELECT * FROM conversations WHERE session_id = :session_id ORDER BY created_at DESC');
+        $stmt = $pdo->prepare(
+            'SELECT c.* FROM conversations c
+             WHERE c.session_id = :session_id
+               AND EXISTS (
+                   SELECT 1 FROM messages m
+                   WHERE m.conversation_id = c.id
+               )
+             ORDER BY c.created_at DESC'
+        );
         $stmt->execute(['session_id' => $sessionId]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
@@ -75,7 +83,18 @@ class Conversation
         }
 
         $like = '%' . $term . '%';
-        $stmt = $pdo->prepare('SELECT * FROM conversations WHERE session_id = :session_id AND title IS NOT NULL AND title <> "" AND title LIKE :term ORDER BY created_at DESC');
+        $stmt = $pdo->prepare(
+            'SELECT c.* FROM conversations c
+             WHERE c.session_id = :session_id
+               AND c.title IS NOT NULL
+               AND c.title <> ""
+               AND c.title LIKE :term
+               AND EXISTS (
+                   SELECT 1 FROM messages m
+                   WHERE m.conversation_id = c.id
+               )
+             ORDER BY c.created_at DESC'
+        );
         $stmt->execute([
             'session_id' => $sessionId,
             'term' => $like,

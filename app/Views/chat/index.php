@@ -213,6 +213,9 @@ function render_markdown_safe(string $text): string {
     const fileInput = document.getElementById('file-input');
     const fileList = document.getElementById('file-list');
     if (fileInput && fileList) {
+        // torna acessível globalmente para limpeza após envio
+        window.fileInput = fileInput;
+        window.fileList = fileList;
         const renderFiles = () => {
             const files = Array.from(fileInput.files || []);
             fileList.innerHTML = '';
@@ -456,7 +459,7 @@ function render_markdown_safe(string $text): string {
             return out;
         };
 
-        const appendMessageToDom = (role, content) => {
+        const appendMessageToDom = (role, content, attachments) => {
             if (!chatWindow) return;
 
             const emptyState = document.getElementById('chat-empty-state');
@@ -467,7 +470,66 @@ function render_markdown_safe(string $text): string {
             const wrapper = document.createElement('div');
             const text = (content || '').toString().trim();
 
-            if (role === 'user') {
+            if (role === 'attachment_summary') {
+                // Bloco especial só para exibir cards de anexos
+                wrapper.style.display = 'flex';
+                wrapper.style.justifyContent = 'flex-end';
+                wrapper.style.marginBottom = '10px';
+
+                const container = document.createElement('div');
+                container.style.maxWidth = '80%';
+                container.style.display = 'flex';
+                container.style.flexWrap = 'wrap';
+                container.style.gap = '6px';
+
+                if (Array.isArray(attachments)) {
+                    attachments.forEach((att) => {
+                        const card = document.createElement('div');
+                        card.style.display = 'flex';
+                        card.style.flexDirection = 'column';
+                        card.style.padding = '6px 10px';
+                        card.style.borderRadius = '12px';
+                        card.style.background = att.is_image ? '#152028' : '#181820';
+                        card.style.border = '1px solid #272727';
+                        card.style.minWidth = '160px';
+                        card.style.maxWidth = '220px';
+
+                        const titleRow = document.createElement('div');
+                        titleRow.style.display = 'flex';
+                        titleRow.style.alignItems = 'center';
+                        titleRow.style.gap = '6px';
+                        titleRow.style.marginBottom = '2px';
+
+                        const icon = document.createElement('span');
+                        icon.textContent = att.is_image ? '🖼️' : (att.is_csv ? '📊' : (att.is_pdf ? '📄' : '📎'));
+                        icon.style.fontSize = '14px';
+
+                        const name = document.createElement('span');
+                        name.textContent = att.name || 'arquivo';
+                        name.style.fontSize = '12px';
+                        name.style.fontWeight = '600';
+                        name.style.whiteSpace = 'nowrap';
+                        name.style.overflow = 'hidden';
+                        name.style.textOverflow = 'ellipsis';
+
+                        titleRow.appendChild(icon);
+                        titleRow.appendChild(name);
+
+                        const meta = document.createElement('div');
+                        meta.style.fontSize = '11px';
+                        meta.style.color = '#b0b0b0';
+                        const sizeLabel = typeof att.size_human === 'string' ? att.size_human : '';
+                        const typeLabel = att.label || '';
+                        meta.textContent = [typeLabel, sizeLabel].filter(Boolean).join(' · ');
+
+                        card.appendChild(titleRow);
+                        card.appendChild(meta);
+                        container.appendChild(card);
+                    });
+                }
+
+                wrapper.appendChild(container);
+            } else if (role === 'user') {
                 wrapper.style.display = 'flex';
                 wrapper.style.justifyContent = 'flex-end';
                 wrapper.style.marginBottom = '10px';
@@ -576,7 +638,7 @@ function render_markdown_safe(string $text): string {
 
                     if (Array.isArray(data.messages)) {
                         data.messages.forEach((m) => {
-                            appendMessageToDom(m.role, m.content);
+                            appendMessageToDom(m.role, m.content, m.attachments || null);
                         });
                     }
                 })
