@@ -63,8 +63,11 @@
     </div>
 
     <?php if (!empty($audioError)): ?>
-        <div style="margin-top:8px; background:#311; border:1px solid #a33; color:#ffbaba; padding:8px 10px; border-radius:8px; font-size:13px;">
-            <?= htmlspecialchars($audioError) ?>
+        <div style="margin-top:8px; background:#311; border:1px solid #a33; color:#ffbaba; padding:8px 10px; border-radius:8px; font-size:13px; display:flex; justify-content:space-between; align-items:center; gap:8px;">
+            <span><?= htmlspecialchars($audioError) ?></span>
+            <button type="button" onclick="window.location.reload();" style="border:none; border-radius:999px; padding:6px 10px; background:linear-gradient(135deg,#e53935,#ff6f60); color:#050509; font-size:12px; font-weight:600; cursor:pointer;">
+                Recarregar chat
+            </button>
         </div>
     <?php endif; ?>
 
@@ -149,7 +152,7 @@
 
                 <div id="file-list" style="max-width: 260px; font-size: 11px; color: #b0b0b0; display:flex; flex-wrap:wrap; gap:4px;"></div>
             </div>
-            <textarea name="message" rows="1" required style="
+            <textarea id="chat-message" name="message" rows="1" required style="
                 flex: 1;
                 resize: none;
                 border: none;
@@ -157,7 +160,7 @@
                 background: transparent;
                 color: #f5f5f5;
                 font-size: 14px;
-                max-height: 120px;
+                max-height: 140px;
             " placeholder="Pergunta pro Tuquinha sobre branding, identidade visual, posicionamento..."><?php if (!empty($draftMessage)) { echo htmlspecialchars($draftMessage); } ?></textarea>
             <button type="submit" style="
                 border: none;
@@ -287,11 +290,53 @@
             }
         });
     }
+
+    const messageInput = document.getElementById('chat-message');
+    const chatForm = messageInput ? messageInput.closest('form') : null;
+
+    if (messageInput && chatForm) {
+        const autoResize = () => {
+            messageInput.style.height = 'auto';
+            const maxHeight = 140; // mesmo valor do max-height
+            const newHeight = Math.min(messageInput.scrollHeight, maxHeight);
+            messageInput.style.height = newHeight + 'px';
+        };
+
+        autoResize();
+
+        messageInput.addEventListener('input', autoResize);
+
+        messageInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                if (messageInput.value.trim() !== '') {
+                    chatForm.submit();
+                }
+            }
+        });
+    }
 </script>
 <style>
 @keyframes wave {
     from { transform: scaleY(0.6); opacity: 0.7; }
     to { transform: scaleY(1.4); opacity: 1; }
 }
+
+/* Scrollbar customizado para a área de chat */
+#chat-window::-webkit-scrollbar {
+    width: 8px;
+}
+
+#chat-window::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+#chat-window::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 999px;
+}
+
+#chat-window::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.25);
+}
 </style>
-</script>
