@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Models\Setting;
+
 class TuquinhaEngine
 {
     private string $systemPrompt;
@@ -13,11 +15,14 @@ class TuquinhaEngine
 
     public function generateResponse(array $messages, ?string $model = null): string
     {
-        if (empty(AI_API_KEY)) {
+        $configuredApiKey = Setting::get('openai_api_key', AI_API_KEY);
+
+        if (empty($configuredApiKey)) {
             return $this->fallbackResponse($messages);
         }
 
-        $modelToUse = $model ?: AI_MODEL;
+        $configuredModel = Setting::get('openai_default_model', AI_MODEL);
+        $modelToUse = $model ?: $configuredModel;
 
         $payloadMessages = [];
         $payloadMessages[] = [
@@ -50,7 +55,7 @@ class TuquinhaEngine
             CURLOPT_POST => true,
             CURLOPT_HTTPHEADER => [
                 'Content-Type: application/json',
-                'Authorization: Bearer ' . AI_API_KEY,
+                'Authorization: Bearer ' . $configuredApiKey,
             ],
             CURLOPT_POSTFIELDS => $body,
             CURLOPT_TIMEOUT => 30,

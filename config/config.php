@@ -5,19 +5,19 @@ const APP_ENV = 'dev';
 
 $dbConfigs = [
     'dev' => [
-        'host' => '127.0.0.1',
+        'host' => 'localhost',
         'port' => 3306,
-        'database' => 'tuquinha_dev', // altere aqui
-        'username' => 'root',         // altere aqui
-        'password' => '',             // altere aqui
+        'database' => 'Agente-IA-Tuquinha', // altere aqui
+        'username' => 'Agente-IA-Tuquinha',         // altere aqui
+        'password' => '67NPU@*ciffjwbh7',             // altere aqui
         'charset'  => 'utf8mb4',
     ],
     'prod' => [
-        'host' => '127.0.0.1',
+        'host' => 'localhost',
         'port' => 3306,
-        'database' => 'tuquinha_prod', // altere aqui
-        'username' => 'prod_user',     // altere aqui
-        'password' => 'prod_password', // altere aqui
+        'database' => 'Agente-IA-Tuquinha', // altere aqui
+        'username' => 'Agente-IA-Tuquinha',     // altere aqui
+        'password' => '67NPU@*ciffjwbh7', // altere aqui
         'charset'  => 'utf8mb4',
     ],
 ];
@@ -29,3 +29,7 @@ const AI_PROVIDER = 'openai';
 // Modelo padrão mais econômico; pode ser sobrescrito por plano/usuário
 const AI_MODEL = 'gpt-4o-mini';
 const AI_API_KEY = ''; // preencha em produção ou use outra forma de carregar
+
+// Credenciais simples de admin para acesso à área /admin
+const ADMIN_USERNAME = 'admin';
+const ADMIN_PASSWORD = 'admin123'; // troque em produção

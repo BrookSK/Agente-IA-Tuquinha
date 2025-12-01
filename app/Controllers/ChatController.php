@@ -8,6 +8,7 @@ use App\Models\Message;
 use App\Models\TuquinhaEngine;
 use App\Models\Plan;
 use App\Models\Attachment;
+use App\Models\Setting;
 
 class ChatController extends Controller
 {
@@ -162,19 +163,22 @@ class ChatController extends Controller
 
         // Transcrição via OpenAI (se chave configurada)
         $transcriptText = '';
-        if (!empty(AI_API_KEY) && file_exists($targetPath)) {
+        $configuredApiKey = Setting::get('openai_api_key', AI_API_KEY);
+        $transcriptionModel = Setting::get('openai_transcription_model', 'gpt-4o-mini-transcribe');
+
+        if (!empty($configuredApiKey) && file_exists($targetPath)) {
             $ch = curl_init('https://api.openai.com/v1/audio/transcriptions');
             $cfile = new \CURLFile($targetPath, $mime, $originalName);
             $postFields = [
                 'file' => $cfile,
-                'model' => 'gpt-4o-mini-transcribe',
+                'model' => $transcriptionModel,
             ];
 
             curl_setopt_array($ch, [
                 CURLOPT_RETURNTRANSFER => true,
                 CURLOPT_POST => true,
                 CURLOPT_HTTPHEADER => [
-                    'Authorization: Bearer ' . AI_API_KEY,
+                    'Authorization: Bearer ' . $configuredApiKey,
                 ],
                 CURLOPT_POSTFIELDS => $postFields,
                 CURLOPT_TIMEOUT => 60,

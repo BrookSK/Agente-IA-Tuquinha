@@ -214,6 +214,16 @@ $pageTitle = $pageTitle ?? 'Agente IA - Tuquinha';
                     <span class="icon">🏠</span>
                     <span>Quem é o Tuquinha</span>
                 </a>
+                <a href="/planos" class="sidebar-button">
+                    <span class="icon">💳</span>
+                    <span>Planos e limites</span>
+                </a>
+
+                <div class="sidebar-section-title" style="margin-top: 10px;">Admin</div>
+                <a href="/admin/config" class="sidebar-button">
+                    <span class="icon">⚙</span>
+                    <span>Configurações do sistema</span>
+                </a>
             </div>
         </div>
         <div class="sidebar-footer">
