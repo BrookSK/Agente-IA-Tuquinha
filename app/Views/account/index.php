@@ -8,7 +8,16 @@
 /** @var string|null $subscriptionStart */
 /** @var string|null $subscriptionNext */
 ?>
-<div style="max-width: 900px; margin: 0 auto; display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1.5fr); gap: 16px; align-items: flex-start;">
+<style>
+@media (max-width: 768px) {
+    .account-grid {
+        display: flex !important;
+        flex-direction: column;
+        gap: 16px;
+    }
+}
+</style>
+<div class="account-grid" style="max-width: 900px; margin: 0 auto; display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1.5fr); gap: 16px; align-items: flex-start;">
     <div style="display: flex; flex-direction: column; gap: 12px;">
         <div style="background:#111118; border-radius:16px; padding:14px; border:1px solid #272727;">
             <h2 style="font-size:18px; margin-bottom:8px;">Dados da conta</h2>

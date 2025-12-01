@@ -9,6 +9,7 @@ class Conversation
 {
     public int $id;
     public string $session_id;
+    public ?int $user_id = null;
     public ?string $title = null;
 
     public static function findOrCreateBySession(string $sessionId): self
@@ -23,6 +24,7 @@ class Conversation
             $conv = new self();
             $conv->id = (int)$row['id'];
             $conv->session_id = $row['session_id'];
+            $conv->user_id = isset($row['user_id']) ? (int)$row['user_id'] : null;
             $conv->title = $row['title'] ?? null;
             return $conv;
         }
@@ -33,6 +35,24 @@ class Conversation
         $conv = new self();
         $conv->id = (int)$pdo->lastInsertId();
         $conv->session_id = $sessionId;
+        $conv->user_id = null;
+        return $conv;
+    }
+
+    public static function createForUser(int $userId, string $sessionId): self
+    {
+        $pdo = Database::getConnection();
+        $stmt = $pdo->prepare('INSERT INTO conversations (session_id, user_id) VALUES (:session_id, :user_id)');
+        $stmt->execute([
+            'session_id' => $sessionId,
+            'user_id' => $userId,
+        ]);
+
+        $conv = new self();
+        $conv->id = (int)$pdo->lastInsertId();
+        $conv->session_id = $sessionId;
+        $conv->user_id = $userId;
+        $conv->title = null;
         return $conv;
     }
 
@@ -75,6 +95,22 @@ class Conversation
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
+    public static function allByUser(int $userId): array
+    {
+        $pdo = Database::getConnection();
+        $stmt = $pdo->prepare(
+            'SELECT c.* FROM conversations c
+             WHERE c.user_id = :user_id
+               AND EXISTS (
+                   SELECT 1 FROM messages m
+                   WHERE m.conversation_id = c.id
+               )
+             ORDER BY c.created_at DESC'
+        );
+        $stmt->execute(['user_id' => $userId]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
     public static function searchBySession(string $sessionId, string $term): array
     {
         $pdo = Database::getConnection();
@@ -97,6 +133,33 @@ class Conversation
         );
         $stmt->execute([
             'session_id' => $sessionId,
+            'term' => $like,
+        ]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public static function searchByUser(int $userId, string $term): array
+    {
+        $pdo = Database::getConnection();
+        if ($term === '') {
+            return self::allByUser($userId);
+        }
+
+        $like = '%' . $term . '%';
+        $stmt = $pdo->prepare(
+            'SELECT c.* FROM conversations c
+             WHERE c.user_id = :user_id
+               AND c.title IS NOT NULL
+               AND c.title <> ""
+               AND c.title LIKE :term
+               AND EXISTS (
+                   SELECT 1 FROM messages m
+                   WHERE m.conversation_id = c.id
+               )
+             ORDER BY c.created_at DESC'
+        );
+        $stmt->execute([
+            'user_id' => $userId,
             'term' => $like,
         ]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);

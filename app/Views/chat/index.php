@@ -26,6 +26,21 @@ function render_markdown_safe(string $text): string {
     return nl2br($escaped);
 }
 ?>
+<style>
+@media (max-width: 640px) {
+    #chat-input-bar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    #chat-input-bar > div:first-child {
+        width: 100%;
+    }
+    #chat-message {
+        width: 100%;
+        min-height: 72px;
+    }
+}
+</style>
 <div style="max-width: 900px; width: 100%; margin: 0 auto; padding: 0 8px; display: flex; flex-direction: column; min-height: calc(100vh - 56px - 80px); box-sizing: border-box;">
     <div id="chat-window" style="flex: 1; overflow-y: auto; padding: 12px 4px 12px 0;">
         <?php if (empty($chatHistory)): ?>
@@ -186,7 +201,7 @@ function render_markdown_safe(string $text): string {
     <form action="/chat/send" method="post" enctype="multipart/form-data" style="margin-top: 12px;">
         <div id="chat-input-bar" style="
             display: flex;
-            align-items: flex-end;
+            align-items: stretch;
             gap: 8px;
             background: #111118;
             border-radius: 18px;
