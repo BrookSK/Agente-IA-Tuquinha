@@ -299,6 +299,7 @@ function render_markdown_safe(string $text): string {
 
                     mediaRecorder.onstop = () => {
                         wave.style.display = 'none';
+                        btnMic.textContent = '🎙';
                         const blob = new Blob(audioChunks, { type: 'audio/webm' });
                         audioChunks = [];
 
