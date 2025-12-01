@@ -91,4 +91,14 @@ class AsaasClient
     {
         return $this->request('POST', '/subscriptions', $payload);
     }
+
+    public function getSubscription(string $id): array
+    {
+        return $this->request('GET', '/subscriptions/' . urlencode($id));
+    }
+
+    public function cancelSubscription(string $id): array
+    {
+        return $this->request('POST', '/subscriptions/' . urlencode($id) . '/cancel');
+    }
 }

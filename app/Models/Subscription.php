@@ -75,4 +75,15 @@ class Subscription
         $stmt->execute($params);
         return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
     }
+
+    public static function updateStatusAndCanceledAt(int $id, string $status, ?string $canceledAt): void
+    {
+        $pdo = Database::getConnection();
+        $stmt = $pdo->prepare('UPDATE subscriptions SET status = :status, canceled_at = :canceled_at WHERE id = :id');
+        $stmt->execute([
+            'status' => $status,
+            'canceled_at' => $canceledAt,
+            'id' => $id,
+        ]);
+    }
 }

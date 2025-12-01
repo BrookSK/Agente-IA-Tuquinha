@@ -6,6 +6,8 @@ use App\Core\Controller;
 use App\Models\User;
 use App\Models\Subscription;
 use App\Models\Plan;
+use App\Services\AsaasClient;
+use App\Services\MailService;
 
 class AccountController extends Controller
 {
@@ -32,11 +34,33 @@ class AccountController extends Controller
 
         $subscription = null;
         $plan = null;
+        $cardLast4 = null;
+        $subscriptionStart = null;
+        $subscriptionNext = null;
 
         if (!empty($user['email'])) {
             $subscription = Subscription::findLastByEmail($user['email']);
             if ($subscription) {
                 $plan = Plan::findById((int)$subscription['plan_id']);
+
+                $subscriptionStart = $subscription['created_at'] ?? null;
+                $subscriptionNext = $subscription['started_at'] ?? null;
+
+                if (!empty($subscription['asaas_subscription_id'])) {
+                    try {
+                        $asaas = new AsaasClient();
+                        $asaasSub = $asaas->getSubscription($subscription['asaas_subscription_id']);
+                        if (!empty($asaasSub['creditCard']['creditCardNumber'])) {
+                            $num = (string)$asaasSub['creditCard']['creditCardNumber'];
+                            $cardLast4 = substr($num, -4);
+                        }
+                        if (!empty($asaasSub['nextDueDate'])) {
+                            $subscriptionNext = $asaasSub['nextDueDate'];
+                        }
+                    } catch (\Throwable $e) {
+                        // Falha ao consultar detalhes da assinatura no gateway não deve quebrar a tela
+                    }
+                }
             }
         }
 
@@ -45,6 +69,9 @@ class AccountController extends Controller
             'user' => $user,
             'subscription' => $subscription,
             'plan' => $plan,
+            'cardLast4' => $cardLast4,
+            'subscriptionStart' => $subscriptionStart,
+            'subscriptionNext' => $subscriptionNext,
             'error' => null,
             'success' => null,
         ]);
@@ -106,6 +133,25 @@ class AccountController extends Controller
             $subscription = Subscription::findLastByEmail($user['email']);
             if ($subscription) {
                 $plan = Plan::findById((int)$subscription['plan_id']);
+
+                $subscriptionStart = $subscription['created_at'] ?? null;
+                $subscriptionNext = $subscription['started_at'] ?? null;
+
+                if (!empty($subscription['asaas_subscription_id'])) {
+                    try {
+                        $asaas = new AsaasClient();
+                        $asaasSub = $asaas->getSubscription($subscription['asaas_subscription_id']);
+                        if (!empty($asaasSub['creditCard']['creditCardNumber'])) {
+                            $num = (string)$asaasSub['creditCard']['creditCardNumber'];
+                            $cardLast4 = substr($num, -4);
+                        }
+                        if (!empty($asaasSub['nextDueDate'])) {
+                            $subscriptionNext = $asaasSub['nextDueDate'];
+                        }
+                    } catch (\Throwable $e) {
+                        // ignora erro de consulta ao gateway
+                    }
+                }
             }
         }
 
@@ -114,8 +160,120 @@ class AccountController extends Controller
             'user' => $user,
             'subscription' => $subscription,
             'plan' => $plan,
+            'cardLast4' => $cardLast4,
+            'subscriptionStart' => $subscriptionStart,
+            'subscriptionNext' => $subscriptionNext,
             'error' => $error,
             'success' => $success,
         ]);
+    }
+
+    public function cancelSubscription(): void
+    {
+        $user = $this->requireLogin();
+
+        if (empty($user['email'])) {
+            $this->reloadWithMessages($user, 'Não encontrei uma assinatura vinculada ao seu e-mail.', null);
+            return;
+        }
+
+        $subscription = Subscription::findLastByEmail($user['email']);
+        if (!$subscription || empty($subscription['asaas_subscription_id'])) {
+            $this->reloadWithMessages($user, 'Nenhuma assinatura ativa encontrada para cancelamento.', null);
+            return;
+        }
+
+        try {
+            $asaas = new AsaasClient();
+            $validUntil = null;
+
+            try {
+                $asaasSub = $asaas->getSubscription($subscription['asaas_subscription_id']);
+                if (!empty($asaasSub['nextDueDate'])) {
+                    $validUntil = $asaasSub['nextDueDate'];
+                }
+            } catch (\Throwable $e) {
+                // se não conseguir ler os dados, segue apenas com o cancelamento
+            }
+
+            $asaas->cancelSubscription($subscription['asaas_subscription_id']);
+
+            $now = date('Y-m-d H:i:s');
+            Subscription::updateStatusAndCanceledAt((int)$subscription['id'], 'canceled', $now);
+
+            $successMsg = 'Sua assinatura foi cancelada.';
+            if ($validUntil) {
+                $successMsg .= ' O acesso atual permanece até ' . date('d/m/Y', strtotime($validUntil)) . ', depois disso não haverá novas cobranças.';
+            } else {
+                $successMsg .= ' Você ainda pode ter acesso até o fim do ciclo já pago, dependendo das regras do meio de pagamento.';
+            }
+
+            try {
+                $plan = Plan::findById((int)$subscription['plan_id']);
+                $planName = $plan['name'] ?? 'seu plano atual';
+                $safeName = htmlspecialchars($user['name'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+                $safePlan = htmlspecialchars($planName, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+                $subject = 'Confirmação de cancelamento da sua assinatura do Tuquinha';
+
+                $benefitsLines = [];
+                if (!empty($plan['benefits'])) {
+                    $benefitsLines = preg_split('/\r?\n/', (string)$plan['benefits']);
+                }
+
+                $benefitsHtml = '';
+                if ($benefitsLines) {
+                    $benefitsHtml .= '<ul style="font-size:13px; color:#b0b0b0; padding-left:18px; margin:0 0 10px 0;">';
+                    foreach ($benefitsLines as $line) {
+                        $line = trim($line);
+                        if ($line === '') continue;
+                        $benefitsHtml .= '<li>' . htmlspecialchars($line, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') . '</li>';
+                    }
+                    $benefitsHtml .= '</ul>';
+                }
+
+                $validUntilText = '';
+                if ($validUntil) {
+                    $validUntilText = 'Sua assinatura continua válida até <strong>' . htmlspecialchars(date('d/m/Y', strtotime($validUntil))) . '</strong>. Depois dessa data, nenhuma nova cobrança será feita.';
+                } else {
+                    $validUntilText = 'Dependendo das regras do meio de pagamento, você ainda pode ter acesso ao plano até o fim do ciclo já pago.';
+                }
+
+                $body = <<<HTML
+<html>
+<body style="margin:0; padding:0; background:#050509; font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; color:#f5f5f5;">
+  <div style="width:100%; padding:24px 0;">
+    <div style="max-width:520px; margin:0 auto; background:#111118; border-radius:16px; border:1px solid #272727; padding:18px 20px;">
+      <div style="display:flex; align-items:center; gap:10px; margin-bottom:12px;">
+        <div style="width:32px; height:32px; line-height:32px; border-radius:50%; background:radial-gradient(circle at 30% 20%, #fff 0, #ff8a65 25%, #e53935 65%, #050509 100%); text-align:center; font-weight:700; font-size:16px; color:#050509;">T</div>
+        <div>
+          <div style="font-weight:700; font-size:15px;">Agente IA - Tuquinha</div>
+          <div style="font-size:11px; color:#b0b0b0;">Branding vivo na veia</div>
+        </div>
+      </div>
+
+      <p style="font-size:14px; margin:0 0 10px 0;">Oi, {$safeName} 👋</p>
+      <p style="font-size:14px; margin:0 0 10px 0;">Confirmamos o cancelamento da sua assinatura do plano <strong>{$safePlan}</strong> no Tuquinha.</p>
+
+      <p style="font-size:13px; margin:0 0 8px 0;">Com o cancelamento, você deixa de contar com os benefícios deste plano, como por exemplo:</p>
+      {$benefitsHtml}
+
+      <p style="font-size:13px; margin:0 0 8px 0;">{$validUntilText}</p>
+
+      <p style="font-size:12px; margin:12px 0 0 0; color:#b0b0b0;">Se isso foi um engano ou se quiser voltar em algum momento, é só assinar novamente um dos planos disponíveis dentro do próprio Tuquinha.</p>
+    </div>
+  </div>
+</body>
+</html>
+HTML;
+
+                MailService::send($user['email'], $user['name'], $subject, $body);
+            } catch (\Throwable $mailEx) {
+                // falha ao enviar e-mail de cancelamento não deve impedir o fluxo
+            }
+
+            $this->reloadWithMessages($user, null, $successMsg);
+        } catch (\Throwable $e) {
+            $this->reloadWithMessages($user, 'Não consegui cancelar a assinatura agora. Tente novamente em alguns minutos ou fale com o suporte.', null);
+        }
     }
 }

@@ -4,6 +4,9 @@
 /** @var array|null $plan */
 /** @var string|null $error */
 /** @var string|null $success */
+/** @var string|null $cardLast4 */
+/** @var string|null $subscriptionStart */
+/** @var string|null $subscriptionNext */
 ?>
 <div style="max-width: 900px; margin: 0 auto; display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1.5fr); gap: 16px; align-items: flex-start;">
     <div style="display: flex; flex-direction: column; gap: 12px;">
@@ -77,13 +80,45 @@
                 <div style="font-size:14px; margin-bottom:6px; font-weight:600;">
                     <?= htmlspecialchars($plan['name']) ?>
                 </div>
-                <div style="font-size:13px; color:#b0b0b0; margin-bottom:8px;">
+                <div style="font-size:13px; color:#b0b0b0; margin-bottom:6px;">
                     Status: <strong><?= htmlspecialchars($subscription['status']) ?></strong>
                 </div>
-                <div style="font-size:12px; color:#b0b0b0;">
+                <div style="font-size:12px; color:#b0b0b0; margin-bottom:6px;">
                     Assinatura feita para <strong><?= htmlspecialchars($subscription['customer_name']) ?></strong><br>
                     E-mail: <?= htmlspecialchars($subscription['customer_email']) ?>
                 </div>
+                <?php if (!empty($cardLast4)): ?>
+                    <div style="font-size:12px; color:#b0b0b0; margin-bottom:4px;">
+                        Cartão usado: final <strong><?= htmlspecialchars($cardLast4) ?></strong>
+                    </div>
+                <?php endif; ?>
+                <?php if (!empty($subscriptionStart)): ?>
+                    <div style="font-size:12px; color:#b0b0b0;">
+                        Contratado em: <strong><?= htmlspecialchars(date('d/m/Y H:i', strtotime($subscriptionStart))) ?></strong>
+                    </div>
+                <?php endif; ?>
+                <?php if (!empty($subscriptionNext)): ?>
+                    <div style="font-size:12px; color:#b0b0b0;">
+                        Próxima renovação prevista: <strong><?= htmlspecialchars(date('d/m/Y', strtotime($subscriptionNext))) ?></strong>
+                    </div>
+                <?php endif; ?>
+
+                <?php if (in_array($subscription['status'], ['active', 'pending'], true)): ?>
+                    <?php
+                    $nextDisplay = '';
+                    if (!empty($subscriptionNext)) {
+                        $nextDisplay = date('d/m/Y', strtotime($subscriptionNext));
+                    }
+                    ?>
+                    <form id="cancel-subscription-form" action="/conta/assinatura/cancelar" method="post" style="margin-top:10px;">
+                        <button type="submit" data-plan-name="<?= htmlspecialchars($plan['name']) ?>" data-next-date="<?= htmlspecialchars($nextDisplay) ?>" style="border:none; border-radius:999px; padding:6px 12px; font-size:12px; cursor:pointer; background:#311; color:#ffbaba; border:1px solid #a33;">
+                            Cancelar assinatura
+                        </button>
+                        <div style="margin-top:4px; font-size:11px; color:#b0b0b0; max-width:260px;">
+                            O cancelamento interrompe novas cobranças, mas o acesso pode continuar até o fim do ciclo já pago, conforme regras do cartão.
+                        </div>
+                    </form>
+                <?php endif; ?>
             <?php else: ?>
                 <p style="font-size:13px; color:#b0b0b0;">
                     Você ainda não tem uma assinatura ativa. Por enquanto está usando o plano Free padrão.
@@ -95,3 +130,34 @@
         </div>
     </div>
 </div>
+
+<div style="max-width: 900px; margin: 16px auto 0 auto; font-size: 12px; color: #8d8d8d; text-align: right;">
+    Precisa de ajuda com sua assinatura ou acesso?
+    <a href="/suporte" style="color: #ff6f60; text-decoration: none;">Fale com o suporte</a>.
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    var form = document.getElementById('cancel-subscription-form');
+    if (!form) return;
+
+    form.addEventListener('submit', function (ev) {
+        var btn = form.querySelector('button[type="submit"]');
+        var plan = btn ? (btn.getAttribute('data-plan-name') || 'seu plano atual') : 'seu plano atual';
+        var nextDate = btn ? (btn.getAttribute('data-next-date') || '') : '';
+
+        var msg = 'Tem certeza que deseja cancelar o plano ' + plan + '?\n\n';
+        msg += 'Ao cancelar, você perde os benefícios do plano pago, como mais mensagens, prioridade de uso e outras vantagens exclusivas. ';
+        if (nextDate) {
+            msg += '\nSua assinatura deve continuar válida até ' + nextDate + ' e depois disso não haverá novas cobranças.\n\n';
+        } else {
+            msg += '\nDepois do cancelamento, você pode manter o acesso apenas até o fim do ciclo já pago, dependendo do meio de pagamento.\n\n';
+        }
+        msg += 'Essa ação pode levar alguns minutos para refletir em todos os sistemas.';
+
+        if (!confirm(msg)) {
+            ev.preventDefault();
+        }
+    });
+});
+</script>
