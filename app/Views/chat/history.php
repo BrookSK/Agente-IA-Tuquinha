@@ -34,10 +34,18 @@
                             <?= htmlspecialchars($title) ?>
                         </div>
                         <?php if ($created): ?>
-                            <div style="font-size:11px; color:#b0b0b0;">
+                            <div style="font-size:11px; color:#b0b0b0; margin-bottom:4px;">
                                 Iniciado em <?= htmlspecialchars(date('d/m/Y H:i', strtotime($created))) ?>
                             </div>
                         <?php endif; ?>
+                        <form method="post" action="/historico/renomear" style="display:flex; gap:4px; align-items:center; font-size:11px; margin-top:2px;">
+                            <input type="hidden" name="id" value="<?= (int)$conv['id'] ?>">
+                            <input type="text" name="title" value="<?= htmlspecialchars($title) ?>" style="
+                                flex:1; min-width:0;
+                                background:#050509; border-radius:999px; border:1px solid #272727;
+                                padding:3px 7px; color:#f5f5f5; font-size:11px;">
+                            <button type="submit" style="border:none; border-radius:999px; padding:3px 8px; background:#272727; color:#f5f5f5; font-size:10px; cursor:pointer;">Salvar</button>
+                        </form>
                     </div>
                     <div>
                         <a href="/chat?c=<?= (int)$conv['id'] ?>" style="

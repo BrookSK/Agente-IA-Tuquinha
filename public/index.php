@@ -28,6 +28,7 @@ $router = new Router();
 $router->get('/', 'HomeController@index');
 $router->get('/planos', 'PlanController@index');
 $router->get('/historico', 'HistoryController@index');
+$router->post('/historico/renomear', 'HistoryController@rename');
 $router->get('/checkout', 'CheckoutController@show');
 $router->post('/checkout', 'CheckoutController@process');
 $router->get('/login', 'AuthController@showLogin');
