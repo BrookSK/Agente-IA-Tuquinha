@@ -214,7 +214,8 @@ $pageTitle = $pageTitle ?? 'Agente IA - Tuquinha';
                 <?php
                     $hasUser = !empty($_SESSION['user_id']);
                     $currentSlug = $_SESSION['plan_slug'] ?? null;
-                    $canSeeHistory = $hasUser && $currentSlug && $currentSlug !== 'free';
+                    $isAdmin = !empty($_SESSION['is_admin']);
+                    $canSeeHistory = $hasUser && ($isAdmin || ($currentSlug && $currentSlug !== 'free'));
                 ?>
                 <?php if ($canSeeHistory): ?>
                     <a href="/historico" class="sidebar-button" style="margin-bottom: 8px;">

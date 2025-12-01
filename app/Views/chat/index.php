@@ -315,6 +315,7 @@ function render_markdown_safe(string $text): string {
 
     if (messageInput && chatForm) {
         const STORAGE_KEY = 'tuquinha_chat_draft';
+        let isSending = false;
 
         // Se não veio draft do servidor (ex: áudio), tenta restaurar do localStorage
         <?php if (empty($draftMessage)): ?>
@@ -432,12 +433,17 @@ function render_markdown_safe(string $text): string {
         };
 
         const sendViaAjax = () => {
+            if (isSending) {
+                return;
+            }
             const text = messageInput.value.trim();
             if (!text) {
                 return;
             }
 
             const formData = new FormData(chatForm);
+
+            isSending = true;
 
             if (submitButton) {
                 submitButton.disabled = true;
@@ -480,6 +486,7 @@ function render_markdown_safe(string $text): string {
                     alert('Erro ao enviar mensagem. Verifique sua conexão e tente novamente.');
                 })
                 .finally(() => {
+                    isSending = false;
                     if (submitButton) {
                         submitButton.disabled = false;
                         const sendLabel = document.getElementById('send-label');
