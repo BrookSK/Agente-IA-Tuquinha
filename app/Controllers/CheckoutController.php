@@ -6,6 +6,7 @@ use App\Core\Controller;
 use App\Models\Plan;
 use App\Models\Subscription;
 use App\Services\AsaasClient;
+use App\Services\MailService;
 use App\Models\User;
 use App\Models\AsaasConfig;
 
@@ -229,6 +230,49 @@ class CheckoutController extends Controller
 
             $_SESSION['plan_slug'] = $plan['slug'];
 
+            // Envia e-mail de confirmação da assinatura
+            try {
+                $priceFormatted = number_format($plan['price_cents'] / 100, 2, ',', '.');
+                $subject = 'Sua assinatura do Tuquinha está ativa';
+                $safeName = htmlspecialchars($customer['name'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+                $safePlan = htmlspecialchars($plan['name'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+                $safePrice = htmlspecialchars($priceFormatted, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+                $body = <<<HTML
+<html>
+<body style="margin:0; padding:0; background:#050509; font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; color:#f5f5f5;">
+  <div style="width:100%; padding:24px 0;">
+    <div style="max-width:520px; margin:0 auto; background:#111118; border-radius:16px; border:1px solid #272727; padding:18px 20px;">
+      <div style="display:flex; align-items:center; gap:10px; margin-bottom:12px;">
+        <div style="width:32px; height:32px; line-height:32px; border-radius:50%; background:radial-gradient(circle at 30% 20%, #fff 0, #ff8a65 25%, #e53935 65%, #050509 100%); text-align:center; font-weight:700; font-size:16px; color:#050509;">T</div>
+        <div>
+          <div style="font-weight:700; font-size:15px;">Agente IA - Tuquinha</div>
+          <div style="font-size:11px; color:#b0b0b0;">Branding vivo na veia</div>
+        </div>
+      </div>
+
+      <p style="font-size:14px; margin:0 0 10px 0;">Oi, {$safeName} 👋</p>
+      <p style="font-size:14px; margin:0 0 10px 0;">Sua assinatura foi criada com sucesso. A partir de agora, você tem acesso ao plano <strong>{$safePlan}</strong> no Tuquinha.</p>
+      <p style="font-size:14px; margin:0 0 10px 0;">Valor da assinatura: <strong>R\$ {$safePrice}/mês</strong>.</p>
+
+      <p style="font-size:13px; margin:0 0 8px 0;">Com esse plano você pode:</p>
+      <ul style="font-size:13px; color:#b0b0b0; padding-left:18px; margin:0 0 10px 0;">
+        <li>Usar o Tuquinha para apoiar sua criação de marcas no dia a dia;</li>
+        <li>Organizar seus projetos de branding com histórico de conversas salvo;</li>
+        <li>Explorar prompts e ideias guiadas pelo próprio Tuquinha.</li>
+      </ul>
+
+      <p style="font-size:13px; margin:0 0 10px 0;">Se perceber qualquer problema com a cobrança ou acesso, responda este e-mail ou fale com a gente pelo suporte.</p>
+    </div>
+  </div>
+</body>
+</html>
+HTML;
+
+                MailService::send($customer['email'], $customer['name'], $subject, $body);
+            } catch (\Throwable $mailEx) {
+                error_log('CheckoutController::process erro ao enviar e-mail de confirmação: ' . $mailEx->getMessage());
+            }
+
             $this->view('checkout/success', [
                 'pageTitle' => 'Assinatura criada',
                 'plan' => $plan,
@@ -247,6 +291,52 @@ class CheckoutController extends Controller
             $msg = $e->getMessage();
             if (strpos($msg, 'Erro Asaas HTTP') !== false) {
                 $friendlyError = 'Não consegui aprovar o pagamento no cartão. Confira se os dados estão corretos (número, validade, CVV e limite) ou tente outro cartão. Se o problema continuar, fale com o suporte.';
+
+                // Tenta enviar e-mail avisando sobre a falha no pagamento
+                try {
+                    $sessionCustomer = $_SESSION['checkout_customer'] ?? null;
+                    if ($sessionCustomer) {
+                        $priceFormatted = number_format($plan['price_cents'] / 100, 2, ',', '.');
+                        $subject = 'Falha ao processar o pagamento da sua assinatura';
+                        $safeName = htmlspecialchars($sessionCustomer['name'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+                        $safePlan = htmlspecialchars($plan['name'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+                        $safePrice = htmlspecialchars($priceFormatted, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+                        $body = <<<HTML
+<html>
+<body style="margin:0; padding:0; background:#050509; font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; color:#f5f5f5;">
+  <div style="width:100%; padding:24px 0;">
+    <div style="max-width:520px; margin:0 auto; background:#111118; border-radius:16px; border:1px solid #272727; padding:18px 20px;">
+      <div style="display:flex; align-items:center; gap:10px; margin-bottom:12px;">
+        <div style="width:32px; height:32px; line-height:32px; border-radius:50%; background:radial-gradient(circle at 30% 20%, #fff 0, #ff8a65 25%, #e53935 65%, #050509 100%); text-align:center; font-weight:700; font-size:16px; color:#050509;">T</div>
+        <div>
+          <div style="font-weight:700; font-size:15px;">Agente IA - Tuquinha</div>
+          <div style="font-size:11px; color:#b0b0b0;">Branding vivo na veia</div>
+        </div>
+      </div>
+
+      <p style="font-size:14px; margin:0 0 10px 0;">Oi, {$safeName} 👋</p>
+      <p style="font-size:14px; margin:0 0 10px 0;">Tentamos processar o pagamento da sua assinatura do plano <strong>{$safePlan}</strong>, mas o cartão não foi aprovado.</p>
+      <p style="font-size:14px; margin:0 0 10px 0;">Valor da assinatura: <strong>R\$ {$safePrice}/mês</strong>.</p>
+
+      <p style="font-size:13px; margin:0 0 8px 0;">Geralmente isso acontece por algum destes motivos:</p>
+      <ul style="font-size:13px; color:#b0b0b0; padding-left:18px; margin:0 0 10px 0;">
+        <li>dados do cartão incorretos (número, validade ou CVV);</li>
+        <li>cartão sem limite disponível ou com bloqueio para compras online;</li>
+        <li>restrição temporária da operadora do cartão.</li>
+      </ul>
+
+      <p style="font-size:13px; margin:0 0 8px 0;">Você pode tentar novamente com o mesmo cartão, conferir os dados ou usar outro cartão. Se continuar com dificuldade, é só responder este e-mail ou falar com a gente pelo suporte.</p>
+    </div>
+  </div>
+</body>
+</html>
+HTML;
+
+                        MailService::send($sessionCustomer['email'], $sessionCustomer['name'], $subject, $body);
+                    }
+                } catch (\Throwable $mailFail) {
+                    error_log('CheckoutController::process erro ao enviar e-mail de falha de pagamento: ' . $mailFail->getMessage());
+                }
             } else {
                 $friendlyError = 'Não consegui finalizar a assinatura agora. Tenta novamente em alguns minutos ou fala com o suporte.';
             }

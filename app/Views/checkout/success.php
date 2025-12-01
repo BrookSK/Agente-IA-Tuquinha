@@ -5,7 +5,7 @@ $price = number_format($plan['price_cents'] / 100, 2, ',', '.');
 <div style="max-width: 720px; margin: 0 auto; text-align: center;">
     <h1 style="font-size: 26px; margin-bottom: 10px; font-weight: 650;">Assinatura criada com sucesso! 🔥</h1>
     <p style="color: #b0b0b0; margin-bottom: 18px; font-size: 14px;">
-        Seu plano <strong><?= htmlspecialchars($plan['name']) ?></strong> foi registrado. Pode levar alguns instantes para o Asaas confirmar tudo, mas você já está no caminho certo.
+        Seu plano <strong><?= htmlspecialchars($plan['name']) ?></strong> foi registrado. Pode levar alguns instantes para o sistema de pagamento confirmar tudo, mas você já está no caminho certo.
     </p>
     <p style="color: #b0b0b0; margin-bottom: 18px; font-size: 14px;">
         Valor: <strong>R$ <?= $price ?>/mês</strong>
