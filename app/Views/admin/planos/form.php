@@ -1,6 +1,21 @@
 <?php
 /** @var array|null $plan */
 $isEdit = !empty($plan);
+
+$knownModels = [
+    'gpt-4o-mini',
+    'gpt-4o',
+    'gpt-4.1',
+];
+
+$selectedAllowed = [];
+if (!empty($plan['allowed_models'])) {
+    $decoded = json_decode((string)$plan['allowed_models'], true);
+    if (is_array($decoded)) {
+        $selectedAllowed = array_values(array_filter(array_map('strval', $decoded)));
+    }
+}
+$planDefaultModel = $plan['default_model'] ?? '';
 ?>
 <div style="max-width: 640px; margin: 0 auto;">
     <h1 style="font-size: 22px; margin-bottom: 10px; font-weight: 650;">
@@ -51,6 +66,31 @@ $isEdit = !empty($plan);
                 width:100%; padding:8px 10px; border-radius:8px; border:1px solid #272727;
                 background:#050509; color:#f5f5f5; font-size:13px; resize:vertical;">
 <?= htmlspecialchars($plan['benefits'] ?? '') ?></textarea>
+        </div>
+
+        <div>
+            <label style="font-size:13px; color:#ddd; display:block; margin-bottom:4px;">Modelos de IA permitidos neste plano</label>
+            <div style="display:flex; flex-wrap:wrap; gap:8px; font-size:13px; color:#ddd;">
+                <?php foreach ($knownModels as $m): ?>
+                    <label style="display:flex; align-items:center; gap:5px;">
+                        <input type="checkbox" name="allowed_models[]" value="<?= htmlspecialchars($m) ?>" <?= in_array($m, $selectedAllowed, true) ? 'checked' : '' ?>>
+                        <span><?= htmlspecialchars($m) ?></span>
+                    </label>
+                <?php endforeach; ?>
+            </div>
+            <div style="font-size:11px; color:#777; margin-top:3px;">Isso controla quais modelos aparecem para o usuário na seleção dentro do chat.</div>
+        </div>
+
+        <div>
+            <label style="font-size:13px; color:#ddd; display:block; margin-bottom:4px;">Modelo padrão deste plano</label>
+            <select name="default_model" style="
+                width:100%; padding:8px 10px; border-radius:8px; border:1px solid #272727;
+                background:#050509; color:#f5f5f5; font-size:13px;">
+                <option value="">Usar modelo padrão global</option>
+                <?php foreach ($knownModels as $m): ?>
+                    <option value="<?= htmlspecialchars($m) ?>" <?= $planDefaultModel === $m ? 'selected' : '' ?>><?= htmlspecialchars($m) ?></option>
+                <?php endforeach; ?>
+            </select>
         </div>
 
         <div style="display:flex; flex-wrap:wrap; gap:10px; font-size:13px; color:#ddd;">

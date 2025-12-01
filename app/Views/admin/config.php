@@ -12,6 +12,12 @@
 /** @var string $smtpFromEmail */
 /** @var string $smtpFromName */
 /** @var bool $saved */
+
+$knownModels = [
+    'gpt-4o-mini',
+    'gpt-4o',
+    'gpt-4.1',
+];
 ?>
 <div style="max-width: 720px; margin: 0 auto;">
     <h1 style="font-size: 24px; margin-bottom: 8px; font-weight: 650;">Configurações do sistema</h1>
@@ -37,10 +43,17 @@
 
         <div>
             <label style="font-size: 12px; color: #b0b0b0;">Modelo padrão do chat</label>
-            <input name="default_model" value="<?= htmlspecialchars($defaultModel) ?>" style="
+            <select name="default_model" style="
                 width: 100%; padding: 8px 10px; border-radius: 8px; border: 1px solid #272727;
                 background: #050509; color: #f5f5f5; font-size: 13px;
-            " placeholder="ex: gpt-4o-mini">
+            ">
+                <?php foreach ($knownModels as $m): ?>
+                    <option value="<?= htmlspecialchars($m) ?>" <?= $defaultModel === $m ? 'selected' : '' ?>><?= htmlspecialchars($m) ?></option>
+                <?php endforeach; ?>
+                <?php if ($defaultModel && !in_array($defaultModel, $knownModels, true)): ?>
+                    <option value="<?= htmlspecialchars($defaultModel) ?>" selected><?= htmlspecialchars($defaultModel) ?> (atual)</option>
+                <?php endif; ?>
+            </select>
             <small style="color:#777; font-size:11px;">Pode ser sobrescrito por plano ou pelo usuário na seleção de modelo.</small>
         </div>
 

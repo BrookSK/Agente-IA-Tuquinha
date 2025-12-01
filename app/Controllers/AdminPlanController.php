@@ -55,6 +55,10 @@ class AdminPlanController extends Controller
         $allowImages = !empty($_POST['allow_images']) ? 1 : 0;
         $allowFiles = !empty($_POST['allow_files']) ? 1 : 0;
         $isActive = !empty($_POST['is_active']) ? 1 : 0;
+        $allowedModels = isset($_POST['allowed_models']) && is_array($_POST['allowed_models'])
+            ? array_values(array_filter(array_map('trim', $_POST['allowed_models'])))
+            : [];
+        $defaultModel = trim($_POST['default_model'] ?? '');
 
         $priceCents = (int)round(str_replace([',', ' '], ['.', ''], $price) * 100);
         if ($priceCents < 0) {
@@ -67,6 +71,8 @@ class AdminPlanController extends Controller
             'price_cents' => $priceCents,
             'description' => $description,
             'benefits' => $benefits,
+            'allowed_models' => $allowedModels ? json_encode($allowedModels) : null,
+            'default_model' => $defaultModel !== '' ? $defaultModel : null,
             'allow_audio' => $allowAudio,
             'allow_images' => $allowImages,
             'allow_files' => $allowFiles,

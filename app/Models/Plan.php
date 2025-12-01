@@ -41,14 +41,16 @@ class Plan
     public static function create(array $data): int
     {
         $pdo = Database::getConnection();
-        $stmt = $pdo->prepare('INSERT INTO plans (name, slug, price_cents, description, benefits, allow_audio, allow_images, allow_files, is_active)
-            VALUES (:name, :slug, :price_cents, :description, :benefits, :allow_audio, :allow_images, :allow_files, :is_active)');
+        $stmt = $pdo->prepare('INSERT INTO plans (name, slug, price_cents, description, benefits, allowed_models, default_model, allow_audio, allow_images, allow_files, is_active)
+            VALUES (:name, :slug, :price_cents, :description, :benefits, :allowed_models, :default_model, :allow_audio, :allow_images, :allow_files, :is_active)');
         $stmt->execute([
             'name' => $data['name'] ?? '',
             'slug' => $data['slug'] ?? '',
             'price_cents' => (int)($data['price_cents'] ?? 0),
             'description' => $data['description'] ?? null,
             'benefits' => $data['benefits'] ?? null,
+            'allowed_models' => $data['allowed_models'] ?? null,
+            'default_model' => $data['default_model'] ?? null,
             'allow_audio' => (int)($data['allow_audio'] ?? 0),
             'allow_images' => (int)($data['allow_images'] ?? 0),
             'allow_files' => (int)($data['allow_files'] ?? 0),
@@ -66,6 +68,8 @@ class Plan
             price_cents = :price_cents,
             description = :description,
             benefits = :benefits,
+            allowed_models = :allowed_models,
+            default_model = :default_model,
             allow_audio = :allow_audio,
             allow_images = :allow_images,
             allow_files = :allow_files,

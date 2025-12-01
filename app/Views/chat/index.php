@@ -5,6 +5,23 @@
 /** @var array|null $currentPlan */
 /** @var string|null $draftMessage */
 /** @var string|null $audioError */
+
+function render_markdown_safe(string $text): string {
+    // Escapa HTML primeiro
+    $escaped = htmlspecialchars($text, ENT_QUOTES, 'UTF-8');
+
+    // ### Título -> <strong>...</strong>
+    $escaped = preg_replace('/^#{3,6}\s*(.+)$/m', '<strong>$1</strong>', $escaped);
+
+    // **negrito** -> <strong>negrito</strong>
+    $escaped = preg_replace('/\*\*(.+?)\*\*/s', '<strong>$1</strong>', $escaped);
+
+    // "- texto" no começo da linha vira bullet visual
+    $escaped = preg_replace('/^\-\s+/m', '• ', $escaped);
+
+    // Quebras de linha para <br>
+    return nl2br($escaped);
+}
 ?>
 <div style="max-width: 900px; margin: 0 auto; display: flex; flex-direction: column; height: calc(100vh - 56px - 48px);">
     <div id="chat-window" style="flex: 1; overflow-y: auto; padding: 12px 4px 12px 0;">
@@ -27,7 +44,7 @@
                             word-wrap: break-word;
                         ">
                             <?php $content = trim((string)($message['content'] ?? '')); ?>
-                            <?= nl2br(htmlspecialchars($content)) ?>
+                            <?= render_markdown_safe($content) ?>
                         </div>
                     </div>
                 <?php else: ?>
@@ -56,7 +73,7 @@
                             border: 1px solid #272727;
                         ">
                             <?php $content = trim((string)($message['content'] ?? '')); ?>
-                            <?= nl2br(htmlspecialchars($content)) ?>
+                            <?= render_markdown_safe($content) ?>
                         </div>
                     </div>
                 <?php endif; ?>
@@ -326,19 +343,149 @@
             } catch (e) {}
         });
 
+        const submitButton = chatForm.querySelector('button[type="submit"]');
+
+        const renderMarkdownSafeJs = (text) => {
+            const escapeHtml = (s) => s
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+
+            let out = escapeHtml(text || '');
+            // ### títulos -> <strong>
+            out = out.replace(/^#{3,6}\s*(.+)$/gm, '<strong>$1</strong>');
+            // **negrito** -> <strong>
+            out = out.replace(/\*\*(.+?)\*\*/gs, '<strong>$1</strong>');
+            // "- " no início da linha -> bullet visual
+            out = out.replace(/^\-\s+/gm, '• ');
+            // Quebras de linha
+            out = out.replace(/\n/g, '<br>');
+            return out;
+        };
+
+        const appendMessageToDom = (role, content) => {
+            if (!chatWindow) return;
+
+            const wrapper = document.createElement('div');
+            const text = (content || '').toString().trim();
+
+            if (role === 'user') {
+                wrapper.style.display = 'flex';
+                wrapper.style.justifyContent = 'flex-end';
+                wrapper.style.marginBottom = '10px';
+
+                const bubble = document.createElement('div');
+                bubble.style.maxWidth = '80%';
+                bubble.style.background = '#1e1e24';
+                bubble.style.borderRadius = '16px 16px 4px 16px';
+                bubble.style.padding = '9px 12px';
+                bubble.style.fontSize = '14px';
+                bubble.style.whiteSpace = 'pre-wrap';
+                bubble.style.wordWrap = 'break-word';
+                bubble.innerHTML = renderMarkdownSafeJs(text);
+
+                wrapper.appendChild(bubble);
+            } else {
+                wrapper.style.display = 'flex';
+                wrapper.style.alignItems = 'flex-start';
+                wrapper.style.gap = '8px';
+                wrapper.style.marginBottom = '10px';
+
+                const avatar = document.createElement('div');
+                avatar.textContent = 'T';
+                avatar.style.width = '28px';
+                avatar.style.height = '28px';
+                avatar.style.borderRadius = '50%';
+                avatar.style.background = 'radial-gradient(circle at 30% 20%, #fff 0, #ff8a65 25%, #e53935 65%, #050509 100%)';
+                avatar.style.display = 'flex';
+                avatar.style.alignItems = 'center';
+                avatar.style.justifyContent = 'center';
+                avatar.style.fontWeight = '700';
+                avatar.style.fontSize = '14px';
+                avatar.style.color = '#050509';
+                avatar.style.flexShrink = '0';
+
+                const bubble = document.createElement('div');
+                bubble.style.maxWidth = '80%';
+                bubble.style.background = '#111118';
+                bubble.style.borderRadius = '16px 16px 16px 4px';
+                bubble.style.padding = '9px 12px';
+                bubble.style.fontSize = '14px';
+                bubble.style.whiteSpace = 'pre-wrap';
+                bubble.style.wordWrap = 'break-word';
+                bubble.style.border = '1px solid #272727';
+                bubble.innerHTML = renderMarkdownSafeJs(text);
+
+                wrapper.appendChild(avatar);
+                wrapper.appendChild(bubble);
+            }
+
+            chatWindow.appendChild(wrapper);
+            chatWindow.scrollTop = chatWindow.scrollHeight;
+        };
+
+        const sendViaAjax = () => {
+            const text = messageInput.value.trim();
+            if (!text) {
+                return;
+            }
+
+            const formData = new FormData(chatForm);
+
+            if (submitButton) {
+                submitButton.disabled = true;
+            }
+
+            fetch('/chat/send', {
+                method: 'POST',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+                body: formData,
+            })
+                .then((res) => res.json().catch(() => null))
+                .then((data) => {
+                    if (!data || !data.success) {
+                        const err = data && data.error ? data.error : 'Não foi possível enviar a mensagem. Tente novamente.';
+                        alert(err);
+                        return;
+                    }
+
+                    try {
+                        window.localStorage.removeItem(STORAGE_KEY);
+                    } catch (e) {}
+
+                    messageInput.value = '';
+                    autoResize();
+
+                    if (Array.isArray(data.messages)) {
+                        data.messages.forEach((m) => {
+                            appendMessageToDom(m.role, m.content);
+                        });
+                    }
+                })
+                .catch(() => {
+                    alert('Erro ao enviar mensagem. Verifique sua conexão e tente novamente.');
+                })
+                .finally(() => {
+                    if (submitButton) {
+                        submitButton.disabled = false;
+                    }
+                });
+        };
+
         messageInput.addEventListener('keydown', (e) => {
             if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
-                if (messageInput.value.trim() !== '') {
-                    chatForm.submit();
-                }
+                sendViaAjax();
             }
         });
 
-        chatForm.addEventListener('submit', () => {
-            try {
-                window.localStorage.removeItem(STORAGE_KEY);
-            } catch (e) {}
+        chatForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            sendViaAjax();
         });
     }
 </script>

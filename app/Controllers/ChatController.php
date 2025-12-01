@@ -85,7 +85,13 @@ class ChatController extends Controller
 
     public function send(): void
     {
-        $message = trim($_POST['message'] ?? '');
+        $rawInput = (string)($_POST['message'] ?? '');
+        $rawInput = str_replace(["\r\n", "\r"], "\n", $rawInput);
+        $rawInput = preg_replace('/^[ \t]+/m', '', $rawInput);
+        $message = trim($rawInput);
+
+        $isAjax = !empty($_SERVER['HTTP_X_REQUESTED_WITH'])
+            && strtolower((string)$_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest';
 
         if (isset($_POST['model']) && $_POST['model'] !== '') {
             $_SESSION['chat_model'] = $_POST['model'];
@@ -201,7 +207,39 @@ class ChatController extends Controller
             $engine = new TuquinhaEngine();
             $assistantReply = $engine->generateResponse($history, $_SESSION['chat_model'] ?? null);
 
+            // Normaliza quebras de linha e remove espaços no início de cada linha
+            $assistantReply = str_replace(["\r\n", "\r"], "\n", (string)$assistantReply);
+            $assistantReply = preg_replace('/^[ \t]+/m', '', $assistantReply);
+            $assistantReply = trim($assistantReply);
+
             Message::create($conversation->id, 'assistant', $assistantReply);
+
+            if ($isAjax) {
+                header('Content-Type: application/json; charset=utf-8');
+                echo json_encode([
+                    'success' => true,
+                    'messages' => [
+                        [
+                            'role' => 'user',
+                            'content' => $message,
+                        ],
+                        [
+                            'role' => 'assistant',
+                            'content' => $assistantReply,
+                        ],
+                    ],
+                ]);
+                exit;
+            }
+        }
+
+        if ($isAjax) {
+            header('Content-Type: application/json; charset=utf-8');
+            echo json_encode([
+                'success' => false,
+                'error' => 'Mensagem vazia.',
+            ]);
+            exit;
         }
 
         header('Location: /chat');
