@@ -247,9 +247,18 @@ $pageTitle = $pageTitle ?? 'Agente IA - Tuquinha';
     <main class="main">
         <header class="main-header">
             <div class="main-header-title"><?= htmlspecialchars($pageTitle) ?></div>
-            <div class="env-pill">
-                <?php $nomeSaudacao = $_SESSION['user_name'] ?? 'designer'; ?>
-                Olá, <?= htmlspecialchars($nomeSaudacao) ?>
+            <div>
+                <?php if (!empty($_SESSION['user_id'])): ?>
+                    <div class="env-pill">
+                        <?php $nomeSaudacao = $_SESSION['user_name'] ?? 'designer'; ?>
+                        Olá, <?= htmlspecialchars($nomeSaudacao) ?>
+                    </div>
+                <?php else: ?>
+                    <a href="/login" class="env-pill" style="text-decoration:none; display:inline-flex; align-items:center; gap:6px;">
+                        <span>Entrar</span>
+                        <span>↪</span>
+                    </a>
+                <?php endif; ?>
             </div>
         </header>
         <section class="main-content">

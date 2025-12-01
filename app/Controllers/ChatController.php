@@ -33,6 +33,10 @@ class ChatController extends Controller
 
         $history = Message::allByConversation($conversation->id);
 
+        $draftMessage = $_SESSION['draft_message'] ?? '';
+        $audioError = $_SESSION['audio_error'] ?? null;
+        unset($_SESSION['draft_message'], $_SESSION['audio_error']);
+
         $currentPlan = Plan::findBySessionSlug($_SESSION['plan_slug'] ?? null);
         if (!$currentPlan) {
             $currentPlan = Plan::findBySlug('free');
@@ -69,6 +73,8 @@ class ChatController extends Controller
             'allowedModels' => $allowedModels,
             'currentModel' => $_SESSION['chat_model'] ?? $defaultModel,
             'currentPlan' => $currentPlan,
+            'draftMessage' => $draftMessage,
+            'audioError' => $audioError,
         ]);
     }
 
@@ -216,12 +222,18 @@ class ChatController extends Controller
         ]);
 
         // Transcrição via OpenAI (se chave configurada)
-        $transcriptText = '';
         $configuredApiKey = Setting::get('openai_api_key', AI_API_KEY);
-        // Usa whisper-1 como padrão, que é o modelo de transcrição da OpenAI
         $transcriptionModel = Setting::get('openai_transcription_model', 'whisper-1');
 
-        if (!empty($configuredApiKey) && file_exists($targetPath)) {
+        if (empty($configuredApiKey)) {
+            $_SESSION['audio_error'] = 'A transcrição de áudio ainda não está configurada pelo administrador.';
+            header('Location: /chat');
+            exit;
+        }
+
+        $transcriptText = '';
+
+        if (file_exists($targetPath)) {
             $ch = curl_init('https://api.openai.com/v1/audio/transcriptions');
             $cfile = new \CURLFile($targetPath, $mime, $originalName);
             $postFields = [
@@ -245,18 +257,19 @@ class ChatController extends Controller
                 if ($http >= 200 && $http < 300) {
                     $data = json_decode($result, true);
                     $transcriptText = (string)($data['text'] ?? '');
+                } else {
+                    $_SESSION['audio_error'] = 'Não consegui transcrever o áudio (código ' . $http . '). Tente novamente.';
                 }
+            } else {
+                $_SESSION['audio_error'] = 'Ocorreu um erro ao enviar o áudio para transcrição.';
             }
             curl_close($ch);
         }
 
         if ($transcriptText !== '') {
-            Message::create($conversation->id, 'user', $transcriptText);
-
-            $history = Message::allByConversation($conversation->id);
-            $engine = new TuquinhaEngine();
-            $assistantReply = $engine->generateResponse($history, $_SESSION['chat_model'] ?? null);
-            Message::create($conversation->id, 'assistant', $assistantReply);
+            $_SESSION['draft_message'] = $transcriptText;
+        } elseif (empty($_SESSION['audio_error'])) {
+            $_SESSION['audio_error'] = 'Não consegui obter texto a partir do áudio enviado.';
         }
 
         header('Location: /chat');

@@ -3,6 +3,8 @@
 /** @var array $allowedModels */
 /** @var string|null $currentModel */
 /** @var array|null $currentPlan */
+/** @var string|null $draftMessage */
+/** @var string|null $audioError */
 ?>
 <div style="max-width: 900px; margin: 0 auto; display: flex; flex-direction: column; height: calc(100vh - 56px - 48px);">
     <div id="chat-window" style="flex: 1; overflow-y: auto; padding: 12px 4px 12px 0;">
@@ -59,6 +61,12 @@
             <?php endforeach; ?>
         <?php endif; ?>
     </div>
+
+    <?php if (!empty($audioError)): ?>
+        <div style="margin-top:8px; background:#311; border:1px solid #a33; color:#ffbaba; padding:8px 10px; border-radius:8px; font-size:13px;">
+            <?= htmlspecialchars($audioError) ?>
+        </div>
+    <?php endif; ?>
 
     <form action="/chat/send" method="post" enctype="multipart/form-data" style="margin-top: 12px;">
         <div style="
@@ -150,7 +158,7 @@
                 color: #f5f5f5;
                 font-size: 14px;
                 max-height: 120px;
-            " placeholder="Pergunta pro Tuquinha sobre branding, identidade visual, posicionamento..."></textarea>
+            " placeholder="Pergunta pro Tuquinha sobre branding, identidade visual, posicionamento..."><?php if (!empty($draftMessage)) { echo htmlspecialchars($draftMessage); } ?></textarea>
             <button type="submit" style="
                 border: none;
                 border-radius: 999px;
