@@ -26,7 +26,7 @@ function render_markdown_safe(string $text): string {
 <div style="max-width: 900px; margin: 0 auto; display: flex; flex-direction: column; height: calc(100vh - 56px - 48px);">
     <div id="chat-window" style="flex: 1; overflow-y: auto; padding: 12px 4px 12px 0;">
         <?php if (empty($chatHistory)): ?>
-            <div style="text-align: center; margin-top: 40px; color: #b0b0b0; font-size: 14px;">
+            <div id="chat-empty-state" style="text-align: center; margin-top: 40px; color: #b0b0b0; font-size: 14px;">
                 <div style="font-size: 18px; margin-bottom: 6px;">Bora começar esse papo? ✨</div>
                 <div>Me conta rapidinho: em que fase você tá com seus projetos de marca?</div>
             </div>
@@ -194,7 +194,7 @@ function render_markdown_safe(string $text): string {
                 align-items: center;
                 gap: 6px;
             ">
-                <span>Enviar</span>
+                <span id="send-label">Enviar</span>
                 <span>➤</span>
             </button>
         </div>
@@ -357,7 +357,7 @@ function render_markdown_safe(string $text): string {
             // ### títulos -> <strong>
             out = out.replace(/^#{3,6}\s*(.+)$/gm, '<strong>$1</strong>');
             // **negrito** -> <strong>
-            out = out.replace(/\*\*(.+?)\*\*/gs, '<strong>$1</strong>');
+            out = out.replace(/\*\*([\s\S]+?)\*\*/g, '<strong>$1</strong>');
             // "- " no início da linha -> bullet visual
             out = out.replace(/^\-\s+/gm, '• ');
             // Quebras de linha
@@ -367,6 +367,11 @@ function render_markdown_safe(string $text): string {
 
         const appendMessageToDom = (role, content) => {
             if (!chatWindow) return;
+
+            const emptyState = document.getElementById('chat-empty-state');
+            if (emptyState) {
+                emptyState.remove();
+            }
 
             const wrapper = document.createElement('div');
             const text = (content || '').toString().trim();
@@ -436,6 +441,11 @@ function render_markdown_safe(string $text): string {
 
             if (submitButton) {
                 submitButton.disabled = true;
+                const sendLabel = document.getElementById('send-label');
+                if (sendLabel) {
+                    sendLabel.dataset.original = sendLabel.dataset.original || sendLabel.textContent;
+                    sendLabel.textContent = 'Enviando...';
+                }
             }
 
             fetch('/chat/send', {
@@ -472,6 +482,10 @@ function render_markdown_safe(string $text): string {
                 .finally(() => {
                     if (submitButton) {
                         submitButton.disabled = false;
+                        const sendLabel = document.getElementById('send-label');
+                        if (sendLabel && sendLabel.dataset.original) {
+                            sendLabel.textContent = sendLabel.dataset.original;
+                        }
                     }
                 });
         };
