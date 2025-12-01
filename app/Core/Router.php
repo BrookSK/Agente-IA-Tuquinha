@@ -28,7 +28,13 @@ class Router
 
         if (!$action) {
             http_response_code(404);
-            echo '404 - Página não encontrada';
+            $controllerClass = 'App\\Controllers\\ErrorController';
+            if (class_exists($controllerClass) && method_exists($controllerClass, 'notFound')) {
+                $controller = new $controllerClass();
+                $controller->notFound();
+            } else {
+                echo '404 - Página não encontrada';
+            }
             return;
         }
 
