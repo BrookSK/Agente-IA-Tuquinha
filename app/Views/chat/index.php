@@ -6,6 +6,8 @@
 /** @var string|null $draftMessage */
 /** @var string|null $audioError */
 
+$hasMediaOrFiles = !empty($currentPlan['allow_audio']) || !empty($currentPlan['allow_images']) || !empty($currentPlan['allow_files']);
+
 function render_markdown_safe(string $text): string {
     // Escapa HTML primeiro
     $escaped = htmlspecialchars($text, ENT_QUOTES, 'UTF-8');
@@ -100,7 +102,7 @@ function render_markdown_safe(string $text): string {
             border: 1px solid #272727;
             padding: 8px 10px;
         ">
-            <div style="display: flex; flex-direction: column; gap: 6px; margin-right: 8px;">
+            <div style="display: flex; flex-direction: column; gap: 6px; margin-right: <?= $hasMediaOrFiles ? '8px' : '0'; ?>;">
                 <?php if (!empty($allowedModels)): ?>
                     <select name="model" style="
                         min-width: 150px;
@@ -119,6 +121,7 @@ function render_markdown_safe(string $text): string {
                     </select>
                 <?php endif; ?>
 
+                <?php if ($hasMediaOrFiles): ?>
                 <div style="display: flex; gap: 6px; align-items: center;">
                     <?php if (!empty($currentPlan['allow_audio'])): ?>
                         <button type="button" id="btn-mic" style="
@@ -170,6 +173,7 @@ function render_markdown_safe(string $text): string {
                 </div>
 
                 <div id="file-list" style="max-width: 260px; font-size: 11px; color: #b0b0b0; display:flex; flex-wrap:wrap; gap:4px;"></div>
+                <?php endif; ?>
             </div>
             <textarea id="chat-message" name="message" rows="1" required style="
                 flex: 1;
