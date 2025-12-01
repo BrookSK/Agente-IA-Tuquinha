@@ -164,6 +164,8 @@ class ChatController extends Controller
                 ? (int)$plan['max_file_size_bytes']
                 : 5 * 1024 * 1024; // default 5MB
 
+            $attachmentSummaries = [];
+
             if (!empty($_FILES['attachments']) && is_array($_FILES['attachments']['name'])) {
                 $count = count($_FILES['attachments']['name']);
                 $uploadDir = __DIR__ . '/../../storage/uploads/files';
@@ -214,7 +216,34 @@ class ChatController extends Controller
                         'mime_type' => $type,
                         'size' => $size,
                     ]);
+
+                    // Monta um resumo amigável para o Tuquinha usar
+                    if ($isCsv) {
+                        $previewLines = [];
+                        if (is_readable($targetPath)) {
+                            if (($fh = fopen($targetPath, 'r')) !== false) {
+                                $lineCount = 0;
+                                while (($row = fgetcsv($fh)) !== false && $lineCount < 30) {
+                                    $previewLines[] = implode(',', $row);
+                                    $lineCount++;
+                                }
+                                fclose($fh);
+                            }
+                        }
+                        if ($previewLines) {
+                            $attachmentSummaries[] = "Arquivo CSV '" . $name . "' (até 30 linhas iniciais):\n" . implode("\n", $previewLines);
+                        } else {
+                            $attachmentSummaries[] = "Arquivo CSV '" . $name . "' foi enviado, mas não consegui gerar prévia de conteúdo.";
+                        }
+                    } else {
+                        $attachmentSummaries[] = "Arquivo '" . $name . "' foi enviado (tipo MIME: " . $type . ", tamanho: " . $size . " bytes).";
+                    }
                 }
+            }
+
+            if (!empty($attachmentSummaries)) {
+                $attachmentsMessage = "O usuário enviou os seguintes arquivos nesta mensagem:\n\n" . implode("\n\n", $attachmentSummaries);
+                Message::create($conversation->id, 'user', $attachmentsMessage);
             }
 
             $history = Message::allByConversation($conversation->id);

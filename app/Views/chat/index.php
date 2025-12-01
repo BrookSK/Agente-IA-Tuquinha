@@ -265,11 +265,20 @@ function render_markdown_safe(string $text): string {
 
     let mediaRecorder = null;
     let audioChunks = [];
+    let isRecordingAudio = false;
     const btnMic = document.getElementById('btn-mic');
     const wave = document.getElementById('audio-wave');
 
     if (btnMic && wave) {
         btnMic.addEventListener('click', async () => {
+            if (isRecordingAudio) {
+                // Já está gravando: parar
+                if (mediaRecorder && mediaRecorder.state === 'recording') {
+                    mediaRecorder.stop();
+                }
+                return;
+            }
+
             if (!mediaRecorder) {
                 try {
                     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -289,11 +298,35 @@ function render_markdown_safe(string $text): string {
                         const formData = new FormData();
                         formData.append('audio', blob, 'gravacao.webm');
 
+                        const messageEl = document.getElementById('chat-message');
+                        const formEl = messageEl ? messageEl.closest('form') : null;
+                        const submitBtnEl = formEl ? formEl.querySelector('button[type="submit"]') : null;
+
+                        if (messageEl) {
+                            messageEl.disabled = true;
+                            messageEl.placeholder = 'Transcrevendo áudio...';
+                        }
+                        if (submitBtnEl) {
+                            submitBtnEl.disabled = true;
+                        }
+                        btnMic.disabled = true;
+
                         fetch('/chat/audio', {
                             method: 'POST',
                             body: formData
                         }).then(() => {
                             window.location.reload();
+                        }).catch(() => {
+                            alert('Erro ao enviar o áudio para transcrição. Tente novamente.');
+                            if (messageEl) {
+                                messageEl.disabled = false;
+                            }
+                            if (submitBtnEl) {
+                                submitBtnEl.disabled = false;
+                            }
+                            btnMic.disabled = false;
+                        }).finally(() => {
+                            isRecordingAudio = false;
                         });
                     };
                 } catch (e) {
@@ -303,13 +336,23 @@ function render_markdown_safe(string $text): string {
             }
 
             if (mediaRecorder.state === 'inactive') {
+                const messageEl = document.getElementById('chat-message');
+                const formEl = messageEl ? messageEl.closest('form') : null;
+                const submitBtnEl = formEl ? formEl.querySelector('button[type="submit"]') : null;
+
+                if (messageEl) {
+                    messageEl.disabled = true;
+                    messageEl.placeholder = 'Gravando áudio...';
+                }
+                if (submitBtnEl) {
+                    submitBtnEl.disabled = true;
+                }
+
                 audioChunks = [];
                 mediaRecorder.start();
                 wave.style.display = 'flex';
                 btnMic.textContent = '⏹';
-            } else if (mediaRecorder.state === 'recording') {
-                mediaRecorder.stop();
-                btnMic.textContent = '🎙';
+                isRecordingAudio = true;
             }
         });
     }
