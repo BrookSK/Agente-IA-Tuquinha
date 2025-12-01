@@ -243,7 +243,13 @@ class CheckoutController extends Controller
             error_log('CheckoutController::process payload customer: ' . json_encode($debugCustomer, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
             error_log('CheckoutController::process payload subscription: ' . json_encode($debugSubscription, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
 
-            $friendlyError = 'Não consegui finalizar a assinatura agora. Tenta novamente em alguns minutos ou fala com o suporte.';
+            // Mensagem amigável diferente para erros do Asaas (cartão/dados de cobrança)
+            $msg = $e->getMessage();
+            if (strpos($msg, 'Erro Asaas HTTP') !== false) {
+                $friendlyError = 'Não consegui aprovar o pagamento no cartão. Confira se os dados estão corretos (número, validade, CVV e limite) ou tente outro cartão. Se o problema continuar, fale com o suporte.';
+            } else {
+                $friendlyError = 'Não consegui finalizar a assinatura agora. Tenta novamente em alguns minutos ou fala com o suporte.';
+            }
 
             $sessionCustomer = $_SESSION['checkout_customer'] ?? null;
 
