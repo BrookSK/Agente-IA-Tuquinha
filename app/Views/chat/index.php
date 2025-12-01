@@ -295,6 +295,18 @@
     const chatForm = messageInput ? messageInput.closest('form') : null;
 
     if (messageInput && chatForm) {
+        const STORAGE_KEY = 'tuquinha_chat_draft';
+
+        // Se não veio draft do servidor (ex: áudio), tenta restaurar do localStorage
+        <?php if (empty($draftMessage)): ?>
+        try {
+            const stored = window.localStorage.getItem(STORAGE_KEY);
+            if (stored) {
+                messageInput.value = stored;
+            }
+        } catch (e) {}
+        <?php endif; ?>
+
         const autoResize = () => {
             messageInput.style.height = 'auto';
             const maxHeight = 140; // mesmo valor do max-height
@@ -306,6 +318,12 @@
 
         messageInput.addEventListener('input', autoResize);
 
+        messageInput.addEventListener('input', () => {
+            try {
+                window.localStorage.setItem(STORAGE_KEY, messageInput.value);
+            } catch (e) {}
+        });
+
         messageInput.addEventListener('keydown', (e) => {
             if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
@@ -313,6 +331,12 @@
                     chatForm.submit();
                 }
             }
+        });
+
+        chatForm.addEventListener('submit', () => {
+            try {
+                window.localStorage.removeItem(STORAGE_KEY);
+            } catch (e) {}
         });
     }
 </script>
