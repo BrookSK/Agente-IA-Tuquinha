@@ -35,4 +35,44 @@ class Subscription
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
         return $row ?: null;
     }
+
+    public static function countByStatus(): array
+    {
+        $pdo = Database::getConnection();
+        $stmt = $pdo->query('SELECT status, COUNT(*) AS total FROM subscriptions GROUP BY status');
+        return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+    }
+
+    public static function sumActiveRevenueCents(): int
+    {
+        $pdo = Database::getConnection();
+        $sql = 'SELECT SUM(p.price_cents) AS total
+                FROM subscriptions s
+                INNER JOIN plans p ON p.id = s.plan_id
+                WHERE s.status = "active"';
+        $stmt = $pdo->query($sql);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        return (int)($row['total'] ?? 0);
+    }
+
+    public static function allWithPlanAndStatus(string $statusFilter = ''): array
+    {
+        $pdo = Database::getConnection();
+        $params = [];
+        $where = '';
+        if ($statusFilter !== '') {
+            $where = 'WHERE s.status = :status';
+            $params['status'] = $statusFilter;
+        }
+
+        $sql = 'SELECT s.*, p.name AS plan_name, p.slug AS plan_slug
+                FROM subscriptions s
+                INNER JOIN plans p ON p.id = s.plan_id
+                ' . $where . '
+                ORDER BY s.created_at DESC';
+
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute($params);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+    }
 }

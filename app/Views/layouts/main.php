@@ -43,6 +43,8 @@ $pageTitle = $pageTitle ?? 'Agente IA - Tuquinha';
             display: flex;
             flex-direction: column;
             gap: 16px;
+            height: 100vh;
+            overflow-y: auto;
         }
         .brand {
             display: flex;
@@ -175,6 +177,24 @@ $pageTitle = $pageTitle ?? 'Agente IA - Tuquinha';
             overflow-y: auto;
         }
 
+        /* Scrollbar customizado para a sidebar */
+        .sidebar::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .sidebar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .sidebar::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.18);
+            border-radius: 999px;
+        }
+
+        .sidebar::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
         @media (max-width: 900px) {
             body {
                 flex-direction: column;
@@ -247,6 +267,10 @@ $pageTitle = $pageTitle ?? 'Agente IA - Tuquinha';
 
                 <?php if (!empty($_SESSION['is_admin'])): ?>
                     <div class="sidebar-section-title" style="margin-top: 10px;">Admin</div>
+                    <a href="/admin" class="sidebar-button">
+                        <span class="icon">📊</span>
+                        <span>Dashboard</span>
+                    </a>
                     <a href="/admin/config" class="sidebar-button">
                         <span class="icon">⚙</span>
                         <span>Configurações do sistema</span>
@@ -254,6 +278,14 @@ $pageTitle = $pageTitle ?? 'Agente IA - Tuquinha';
                     <a href="/admin/planos" class="sidebar-button" style="margin-top: 6px;">
                         <span class="icon">🧩</span>
                         <span>Gerenciar planos</span>
+                    </a>
+                    <a href="/admin/usuarios" class="sidebar-button" style="margin-top: 6px;">
+                        <span class="icon">👥</span>
+                        <span>Usuários</span>
+                    </a>
+                    <a href="/admin/assinaturas" class="sidebar-button" style="margin-top: 6px;">
+                        <span class="icon">📑</span>
+                        <span>Assinaturas</span>
                     </a>
                 <?php endif; ?>
             </div>

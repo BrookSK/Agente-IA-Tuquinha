@@ -65,4 +65,36 @@ class User
             'id' => $id,
         ]);
     }
+
+    public static function all(): array
+    {
+        $pdo = Database::getConnection();
+        $stmt = $pdo->query('SELECT * FROM users ORDER BY created_at DESC');
+        return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+    }
+
+    public static function search(string $term): array
+    {
+        $pdo = Database::getConnection();
+        $like = '%' . $term . '%';
+        $stmt = $pdo->prepare('SELECT * FROM users WHERE name LIKE :q OR email LIKE :q ORDER BY created_at DESC');
+        $stmt->execute(['q' => $like]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+    }
+
+    public static function countAll(): int
+    {
+        $pdo = Database::getConnection();
+        $stmt = $pdo->query('SELECT COUNT(*) AS c FROM users');
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        return (int)($row['c'] ?? 0);
+    }
+
+    public static function countAdmins(): int
+    {
+        $pdo = Database::getConnection();
+        $stmt = $pdo->query('SELECT COUNT(*) AS c FROM users WHERE is_admin = 1');
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        return (int)($row['c'] ?? 0);
+    }
 }
