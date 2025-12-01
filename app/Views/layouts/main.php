@@ -211,10 +211,17 @@ $pageTitle = $pageTitle ?? 'Agente IA - Tuquinha';
                         <span>Novo chat com o Tuquinha</span>
                     </button>
                 </form>
-                <a href="/historico" class="sidebar-button" style="margin-bottom: 8px;">
-                    <span class="icon">🕒</span>
-                    <span>Histórico de chats</span>
-                </a>
+                <?php
+                    $hasUser = !empty($_SESSION['user_id']);
+                    $currentSlug = $_SESSION['plan_slug'] ?? null;
+                    $canSeeHistory = $hasUser && $currentSlug && $currentSlug !== 'free';
+                ?>
+                <?php if ($canSeeHistory): ?>
+                    <a href="/historico" class="sidebar-button" style="margin-bottom: 8px;">
+                        <span class="icon">🕒</span>
+                        <span>Histórico de chats</span>
+                    </a>
+                <?php endif; ?>
                 <div class="sidebar-section-title" style="margin-top: 10px;">Guias rápidos</div>
                 <a href="/" class="sidebar-button">
                     <span class="icon">🏠</span>
@@ -224,6 +231,14 @@ $pageTitle = $pageTitle ?? 'Agente IA - Tuquinha';
                     <span class="icon">💳</span>
                     <span>Planos e limites</span>
                 </a>
+
+                <?php if (!empty($_SESSION['user_id'])): ?>
+                    <div class="sidebar-section-title" style="margin-top: 10px;">Conta</div>
+                    <a href="/conta" class="sidebar-button">
+                        <span class="icon">👤</span>
+                        <span>Minha conta</span>
+                    </a>
+                <?php endif; ?>
 
                 <?php if (!empty($_SESSION['is_admin'])): ?>
                     <div class="sidebar-section-title" style="margin-top: 10px;">Admin</div>

@@ -26,7 +26,8 @@
                             white-space: pre-wrap;
                             word-wrap: break-word;
                         ">
-                            <?= nl2br(htmlspecialchars($message['content'] ?? '')) ?>
+                            <?php $content = trim((string)($message['content'] ?? '')); ?>
+                            <?= nl2br(htmlspecialchars($content)) ?>
                         </div>
                     </div>
                 <?php else: ?>
@@ -54,7 +55,8 @@
                             word-wrap: break-word;
                             border: 1px solid #272727;
                         ">
-                            <?= nl2br(htmlspecialchars($message['content'] ?? '')) ?>
+                            <?php $content = trim((string)($message['content'] ?? '')); ?>
+                            <?= nl2br(htmlspecialchars($content)) ?>
                         </div>
                     </div>
                 <?php endif; ?>

@@ -43,6 +43,13 @@ class AuthController extends Controller
         $_SESSION['user_name'] = $user['name'];
         $_SESSION['user_email'] = $user['email'];
 
+        // Marca sessão como admin se estiver usando as credenciais de admin definidas no config
+        if (defined('ADMIN_USERNAME') && defined('ADMIN_PASSWORD') && $email === ADMIN_USERNAME && $password === ADMIN_PASSWORD) {
+            $_SESSION['is_admin'] = true;
+        } else {
+            unset($_SESSION['is_admin']);
+        }
+
         $redirectPlan = $_SESSION['pending_plan_slug'] ?? null;
         unset($_SESSION['pending_plan_slug']);
 
@@ -121,7 +128,7 @@ class AuthController extends Controller
 
     public function logout(): void
     {
-        unset($_SESSION['user_id'], $_SESSION['user_name'], $_SESSION['user_email']);
+        unset($_SESSION['user_id'], $_SESSION['user_name'], $_SESSION['user_email'], $_SESSION['is_admin']);
         header('Location: /');
         exit;
     }
