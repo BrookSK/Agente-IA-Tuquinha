@@ -257,12 +257,6 @@ class CheckoutController extends Controller
      */
     public function debugLastAsaas(): void
     {
-        if (empty($_SESSION['is_admin'])) {
-            http_response_code(403);
-            echo 'Acesso restrito.';
-            return;
-        }
-
         $config = AsaasConfig::getActive();
         $env = $config['environment'] ?? 'sandbox';
         if ($env === 'production') {
