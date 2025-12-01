@@ -35,6 +35,10 @@ function render_markdown_safe(string $text): string {
         <?php else: ?>
             <?php foreach ($chatHistory as $message): ?>
                 <?php if (($message['role'] ?? '') === 'user'): ?>
+                    <?php $rawContent = trim((string)($message['content'] ?? '')); ?>
+                    <?php if (str_starts_with($rawContent, 'O usuário enviou os seguintes arquivos nesta mensagem')): ?>
+                        <?php continue; ?>
+                    <?php endif; ?>
                     <div style="display: flex; justify-content: flex-end; margin-bottom: 10px;">
                         <div style="
                             max-width: 80%;
@@ -45,7 +49,7 @@ function render_markdown_safe(string $text): string {
                             white-space: pre-wrap;
                             word-wrap: break-word;
                         ">
-                            <?php $content = trim((string)($message['content'] ?? '')); ?>
+                            <?php $content = $rawContent; ?>
                             <?= render_markdown_safe($content) ?>
                         </div>
                     </div>
@@ -597,6 +601,9 @@ function render_markdown_safe(string $text): string {
 
             isSending = true;
 
+            // bloqueia edição enquanto envia
+            messageInput.disabled = true;
+
             if (submitButton) {
                 submitButton.disabled = true;
                 const sendLabel = document.getElementById('send-label');
@@ -647,6 +654,7 @@ function render_markdown_safe(string $text): string {
                 })
                 .finally(() => {
                     isSending = false;
+                    messageInput.disabled = false;
                     if (submitButton) {
                         submitButton.disabled = false;
                         const sendLabel = document.getElementById('send-label');

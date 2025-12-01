@@ -166,6 +166,7 @@ class ChatController extends Controller
 
             $attachmentSummaries = [];
             $attachmentMeta = [];
+            $attachmentCsvPreviews = [];
 
             if (!empty($_FILES['attachments']) && is_array($_FILES['attachments']['name'])) {
                 $count = count($_FILES['attachments']['name']);
@@ -233,6 +234,7 @@ class ChatController extends Controller
                         }
                         if ($previewLines) {
                             $attachmentSummaries[] = "Arquivo CSV '" . $name . "' (até 30 linhas iniciais)";
+                            $attachmentCsvPreviews[] = "ARQUIVO CSV: '" . $name . "' - ATÉ 30 LINHAS INICIAIS (USE ESTES DADOS, NÃO PEÇA PRO USUÁRIO COPIAR):\n" . implode("\n", $previewLines);
                         } else {
                             $attachmentSummaries[] = "Arquivo CSV '" . $name . "' foi enviado.";
                         }
@@ -276,7 +278,16 @@ class ChatController extends Controller
 
             $attachmentsMessage = null;
             if (!empty($attachmentSummaries)) {
-                $attachmentsMessage = "O usuário enviou os seguintes arquivos nesta mensagem:" . "\n" . implode("\n", $attachmentSummaries);
+                $parts = [];
+                $parts[] = "O usuário enviou os seguintes arquivos nesta mensagem. Você, Tuquinha, TEM acesso às prévias abaixo e deve usar esses dados diretamente nas suas respostas, sem pedir para o usuário abrir ou copiar o conteúdo do arquivo.";
+                $parts[] = implode("\n", $attachmentSummaries);
+
+                if (!empty($attachmentCsvPreviews)) {
+                    $parts[] = implode("\n\n", $attachmentCsvPreviews);
+                }
+
+                $attachmentsMessage = implode("\n\n", $parts);
+
                 Message::create($conversation->id, 'user', $attachmentsMessage);
             }
 
