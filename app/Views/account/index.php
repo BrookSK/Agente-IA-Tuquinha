@@ -41,6 +41,11 @@
                     <input type="text" name="name" value="<?= htmlspecialchars($user['name'] ?? '') ?>" required style="width:100%; padding:8px 10px; border-radius:8px; border:1px solid #272727; background:#050509; color:#f5f5f5; font-size:14px;">
                 </div>
                 <div>
+                    <label style="font-size:13px; color:#ddd; display:block; margin-bottom:4px;">Como o Tuquinha deve te chamar?</label>
+                    <input type="text" name="preferred_name" value="<?= htmlspecialchars($user['preferred_name'] ?? '') ?>" placeholder="Opcional. Ex: Rafa, Dr. João, você decide." style="width:100%; padding:8px 10px; border-radius:8px; border:1px solid #272727; background:#050509; color:#f5f5f5; font-size:14px;">
+                    <div style="font-size:11px; color:#8d8d8d; margin-top:3px;">Se preencher, o Tuquinha vai usar esse nome nas respostas.</div>
+                </div>
+                <div>
                     <label style="font-size:13px; color:#ddd; display:block; margin-bottom:4px;">E-mail</label>
                     <input type="email" value="<?= htmlspecialchars($user['email'] ?? '') ?>" disabled style="width:100%; padding:8px 10px; border-radius:8px; border:1px solid #272727; background:#050509; color:#777; font-size:14px;">
                 </div>
@@ -51,6 +56,14 @@
                         <span style="color:#ffb74d; font-weight:500;">E-mail ainda não verificado.</span>
                         <a href="/verificar-email" style="margin-left:6px; color:#ff6f60; text-decoration:none;">Verificar agora</a>
                     <?php endif; ?>
+                </div>
+                <div>
+                    <label style="font-size:13px; color:#ddd; display:block; margin:10px 0 4px;">Memórias globais sobre você</label>
+                    <textarea name="global_memory" rows="3" placeholder="Opcional. Ex: tipo de cliente que você atende, nível de experiência, nicho favorito, informações que o Tuquinha não precisa perguntar toda hora." style="width:100%; padding:8px 10px; border-radius:8px; border:1px solid #272727; background:#050509; color:#f5f5f5; font-size:13px; resize:vertical; min-height:70px;"><?= htmlspecialchars($user['global_memory'] ?? '') ?></textarea>
+                </div>
+                <div>
+                    <label style="font-size:13px; color:#ddd; display:block; margin:6px 0 4px;">Regras globais para o Tuquinha</label>
+                    <textarea name="global_instructions" rows="3" placeholder="Opcional. Ex: sempre responder mais direto, evitar certos temas, foco em resultado prático, etc." style="width:100%; padding:8px 10px; border-radius:8px; border:1px solid #272727; background:#050509; color:#f5f5f5; font-size:13px; resize:vertical; min-height:70px;"><?= htmlspecialchars($user['global_instructions'] ?? '') ?></textarea>
                 </div>
                 <button type="submit" style="margin-top:6px; align-self:flex-start; border:none; border-radius:999px; padding:8px 14px; background:linear-gradient(135deg,#e53935,#ff6f60); color:#050509; font-weight:600; cursor:pointer; font-size:13px;">
                     Salvar dados

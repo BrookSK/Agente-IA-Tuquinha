@@ -15,6 +15,12 @@ class TuquinhaEngine
 
     public function generateResponse(array $messages, ?string $model = null): string
     {
+        // Compatibilidade: mantém a assinatura antiga usando apenas o system prompt padrão
+        return $this->generateResponseWithContext($messages, $model, null, null);
+    }
+
+    public function generateResponseWithContext(array $messages, ?string $model = null, ?array $user = null, ?array $conversationSettings = null): string
+    {
         $configuredApiKey = Setting::get('openai_api_key', AI_API_KEY);
 
         if (empty($configuredApiKey)) {
@@ -27,7 +33,7 @@ class TuquinhaEngine
         $payloadMessages = [];
         $payloadMessages[] = [
             'role' => 'system',
-            'content' => $this->systemPrompt,
+            'content' => $this->buildSystemPromptWithContext($user, $conversationSettings),
         ];
 
         foreach ($messages as $m) {
@@ -126,6 +132,63 @@ class TuquinhaEngine
         }
 
         return implode("\n\n", $parts);
+    }
+
+    private function buildSystemPromptWithContext(?array $user, ?array $conversationSettings): string
+    {
+        $parts = [];
+        $parts[] = $this->systemPrompt;
+
+        if ($user) {
+            $userLines = [];
+
+            $name = isset($user['name']) ? trim((string)$user['name']) : '';
+            $preferredName = isset($user['preferred_name']) ? trim((string)$user['preferred_name']) : '';
+
+            if ($preferredName !== '' || $name !== '') {
+                if ($preferredName !== '' && $name !== '' && $preferredName !== $name) {
+                    $userLines[] = 'O usuário se chama ' . $name . ' e prefere ser chamado de ' . $preferredName . ' nas respostas.';
+                } elseif ($preferredName !== '') {
+                    $userLines[] = 'O usuário prefere ser chamado de ' . $preferredName . ' nas respostas.';
+                } elseif ($name !== '') {
+                    $userLines[] = 'O nome do usuário é ' . $name . '.';
+                }
+            }
+
+            $globalMemory = isset($user['global_memory']) ? trim((string)$user['global_memory']) : '';
+            if ($globalMemory !== '') {
+                $userLines[] = "Memórias globais sobre o usuário (use como contexto fixo, não peça para ele repetir):\n" . $globalMemory;
+            }
+
+            $globalInstructions = isset($user['global_instructions']) ? trim((string)$user['global_instructions']) : '';
+            if ($globalInstructions !== '') {
+                $userLines[] = "Regras globais definidas pelo usuário (siga sempre que não forem conflitantes com regras de segurança):\n" . $globalInstructions;
+            }
+
+            if ($userLines) {
+                $parts[] = implode("\n\n", $userLines);
+            }
+        }
+
+        if ($conversationSettings) {
+            $convLines = [];
+
+            $memoryNotes = isset($conversationSettings['memory_notes']) ? trim((string)$conversationSettings['memory_notes']) : '';
+            if ($memoryNotes !== '') {
+                $convLines[] = "Memórias específicas deste chat (dados que devem ser considerados durante toda a conversa):\n" . $memoryNotes;
+            }
+
+            $customInstructions = isset($conversationSettings['custom_instructions']) ? trim((string)$conversationSettings['custom_instructions']) : '';
+            if ($customInstructions !== '') {
+                $convLines[] = "Regras específicas deste chat (estilo de resposta, papel, limites etc.):\n" . $customInstructions;
+            }
+
+            if ($convLines) {
+                $parts[] = implode("\n\n", $convLines);
+            }
+        }
+
+        return implode("\n\n---\n\n", $parts);
     }
 
     public static function getDefaultPrompt(): string

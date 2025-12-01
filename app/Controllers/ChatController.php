@@ -9,6 +9,8 @@ use App\Models\TuquinhaEngine;
 use App\Models\Plan;
 use App\Models\Attachment;
 use App\Models\Setting;
+use App\Models\User;
+use App\Models\ConversationSetting;
 
 class ChatController extends Controller
 {
@@ -53,6 +55,11 @@ class ChatController extends Controller
 
         $history = Message::allByConversation($conversation->id);
         $attachments = Attachment::allByConversation($conversation->id);
+
+        $conversationSettings = null;
+        if ($userId > 0) {
+            $conversationSettings = ConversationSetting::findForConversation($conversation->id, $userId) ?: null;
+        }
 
         $draftMessage = $_SESSION['draft_message'] ?? '';
         $audioError = $_SESSION['audio_error'] ?? null;
@@ -105,6 +112,8 @@ class ChatController extends Controller
             'currentPlan' => $currentPlan,
             'draftMessage' => $draftMessage,
             'audioError' => $audioError,
+            'conversationId' => $conversation->id,
+            'conversationSettings' => $conversationSettings,
         ]);
     }
 
@@ -327,8 +336,23 @@ class ChatController extends Controller
 
             $history = Message::allByConversation($conversation->id);
 
+            // Carrega contexto do usuário e da conversa para personalizar o Tuquinha
+            $userData = null;
+            if ($userId > 0) {
+                $userData = User::findById($userId) ?: null;
+            }
+            $conversationSettings = null;
+            if ($userId > 0) {
+                $conversationSettings = ConversationSetting::findForConversation($conversation->id, $userId) ?: null;
+            }
+
             $engine = new TuquinhaEngine();
-            $assistantReply = $engine->generateResponse($history, $_SESSION['chat_model'] ?? null);
+            $assistantReply = $engine->generateResponseWithContext(
+                $history,
+                $_SESSION['chat_model'] ?? null,
+                $userData,
+                $conversationSettings
+            );
 
             // Normaliza quebras de linha e remove espaços/brancos no início de cada linha
             $assistantReply = str_replace(["\r\n", "\r"], "\n", (string)$assistantReply);
@@ -543,6 +567,33 @@ class ChatController extends Controller
         }
 
         header('Location: /chat');
+        exit;
+    }
+
+    public function saveSettings(): void
+    {
+        if (empty($_SESSION['user_id'])) {
+            header('Location: /login');
+            exit;
+        }
+
+        $userId = (int)$_SESSION['user_id'];
+        $conversationId = isset($_POST['conversation_id']) ? (int)$_POST['conversation_id'] : 0;
+        $memoryNotes = trim((string)($_POST['memory_notes'] ?? ''));
+        $customInstructions = trim((string)($_POST['custom_instructions'] ?? ''));
+
+        if ($conversationId > 0) {
+            $conv = Conversation::findByIdForUser($conversationId, $userId);
+            if ($conv) {
+                ConversationSetting::upsert($conversationId, $userId, $customInstructions, $memoryNotes);
+            }
+        }
+
+        $redirect = '/chat';
+        if ($conversationId > 0) {
+            $redirect .= '?c=' . $conversationId;
+        }
+        header('Location: ' . $redirect);
         exit;
     }
 }

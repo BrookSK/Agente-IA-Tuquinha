@@ -41,7 +41,50 @@ function render_markdown_safe(string $text): string {
     }
 }
 </style>
+<?php
+$convSettings = $conversationSettings ?? null;
+?>
 <div style="max-width: 900px; width: 100%; margin: 0 auto; padding: 0 8px; display: flex; flex-direction: column; min-height: calc(100vh - 56px - 80px); box-sizing: border-box;">
+    <?php if (!empty($conversationId)): ?>
+        <div style="margin-top:10px; margin-bottom:6px; display:flex; justify-content:flex-end;">
+            <button type="button" id="chat-rules-toggle" style="
+                border:none;
+                border-radius:999px;
+                padding:4px 10px;
+                background:#111118;
+                color:#f5f5f5;
+                font-size:11px;
+                border:1px solid #272727;
+                cursor:pointer;
+            ">
+                Regras deste chat
+            </button>
+        </div>
+        <div id="chat-rules-panel" style="display:none; margin-bottom:6px; background:#111118; border-radius:12px; border:1px solid #272727; padding:10px 12px; font-size:12px;">
+            <form action="/chat/settings" method="post" style="display:flex; flex-direction:column; gap:6px;">
+                <input type="hidden" name="conversation_id" value="<?= (int)$conversationId ?>">
+                <div style="font-size:12px; color:#b0b0b0; margin-bottom:4px;">
+                    Ajuste regras e memórias só deste chat. O Tuquinha usa isso junto com as preferências globais da sua conta.
+                </div>
+                <div>
+                    <label style="display:block; margin-bottom:3px; color:#ddd;">Memórias específicas deste chat</label>
+                    <textarea name="memory_notes" rows="2" style="width:100%; padding:6px 8px; border-radius:8px; border:1px solid #272727; background:#050509; color:#f5f5f5; font-size:12px; resize:vertical; min-height:50px;" placeholder="Ex: dados de um projeto, briefing fixo, contexto que vale para toda esta conversa."><?php if (!empty($convSettings['memory_notes'])) { echo htmlspecialchars($convSettings['memory_notes']); } ?></textarea>
+                </div>
+                <div>
+                    <label style="display:block; margin-bottom:3px; color:#ddd;">Regras específicas deste chat</label>
+                    <textarea name="custom_instructions" rows="2" style="width:100%; padding:6px 8px; border-radius:8px; border:1px solid #272727; background:#050509; color:#f5f5f5; font-size:12px; resize:vertical; min-height:50px;" placeholder="Ex: agir como mentor de precificação, responder ultra direto, evitar exemplos de nichos X."><?php if (!empty($convSettings['custom_instructions'])) { echo htmlspecialchars($convSettings['custom_instructions']); } ?></textarea>
+                </div>
+                <div style="display:flex; justify-content:space-between; align-items:center; gap:8px; margin-top:2px;">
+                    <div style="font-size:11px; color:#8d8d8d; max-width:70%;">
+                        Essas regras valem só para este histórico. Para algo permanente em toda a conta, configure em "Minha conta".
+                    </div>
+                    <button type="submit" style="border:none; border-radius:999px; padding:5px 10px; background:linear-gradient(135deg,#e53935,#ff6f60); color:#050509; font-weight:600; font-size:11px; cursor:pointer;">
+                        Salvar regras do chat
+                    </button>
+                </div>
+            </form>
+        </div>
+    <?php endif; ?>
     <div id="chat-window" style="flex: 1; overflow-y: auto; padding: 12px 4px 12px 0;">
         <?php if (empty($chatHistory)): ?>
             <div id="chat-empty-state" style="text-align: center; margin-top: 40px; color: #b0b0b0; font-size: 14px;">
@@ -314,6 +357,16 @@ function render_markdown_safe(string $text): string {
     const chatWindow = document.getElementById('chat-window');
     if (chatWindow) {
         chatWindow.scrollTop = chatWindow.scrollHeight;
+    }
+
+    // Toggle painel de regras do chat
+    const rulesToggle = document.getElementById('chat-rules-toggle');
+    const rulesPanel = document.getElementById('chat-rules-panel');
+    if (rulesToggle && rulesPanel) {
+        rulesToggle.addEventListener('click', () => {
+            const isOpen = rulesPanel.style.display === 'block';
+            rulesPanel.style.display = isOpen ? 'none' : 'block';
+        });
     }
 
     // Copiar conteúdo de mensagens (usuário e Tuquinha)

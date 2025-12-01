@@ -70,4 +70,7 @@ $router->get('/chat', 'ChatController@index');
 $router->post('/chat/send', 'ChatController@send');
 $router->post('/chat/audio', 'ChatController@sendAudio');
 
+// Configurações por conversa (regras/memórias específicas do chat)
+$router->post('/chat/settings', 'ChatController@saveSettings');
+
 $router->dispatch($_SERVER['REQUEST_URI'], $_SERVER['REQUEST_METHOD']);

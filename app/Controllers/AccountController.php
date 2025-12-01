@@ -82,12 +82,15 @@ class AccountController extends Controller
         $user = $this->requireLogin();
 
         $name = trim($_POST['name'] ?? '');
+        $preferredName = trim($_POST['preferred_name'] ?? '');
+        $globalMemory = trim($_POST['global_memory'] ?? '');
+        $globalInstructions = trim($_POST['global_instructions'] ?? '');
         if ($name === '') {
             $this->reloadWithMessages($user, 'Nome não pode ficar em branco.', null);
             return;
         }
 
-        User::updateName((int)$user['id'], $name);
+        User::updateProfile((int)$user['id'], $name, $preferredName, $globalMemory, $globalInstructions);
         $_SESSION['user_name'] = $name;
 
         $user = User::findById((int)$user['id']) ?? $user;
