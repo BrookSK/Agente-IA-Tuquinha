@@ -63,7 +63,16 @@ class AsaasClient
         $data = json_decode($result, true) ?: [];
 
         if ($httpCode < 200 || $httpCode >= 300) {
-            throw new \RuntimeException('Erro Asaas HTTP ' . $httpCode . ': ' . ($data['errors'][0]['description'] ?? '')); 
+            $desc = '';
+            if (isset($data['errors']) && is_array($data['errors']) && !empty($data['errors'][0]['description'])) {
+                $desc = $data['errors'][0]['description'];
+            } elseif (!empty($data['message'])) {
+                $desc = $data['message'];
+            } else {
+                $desc = json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+            }
+
+            throw new \RuntimeException('Erro Asaas HTTP ' . $httpCode . ': ' . $desc);
         }
 
         return $data;
