@@ -219,11 +219,13 @@ $pageTitle = $pageTitle ?? 'Agente IA - Tuquinha';
                     <span>Planos e limites</span>
                 </a>
 
-                <div class="sidebar-section-title" style="margin-top: 10px;">Admin</div>
-                <a href="/admin/config" class="sidebar-button">
-                    <span class="icon">⚙</span>
-                    <span>Configurações do sistema</span>
-                </a>
+                <?php if (!empty($_SESSION['is_admin'])): ?>
+                    <div class="sidebar-section-title" style="margin-top: 10px;">Admin</div>
+                    <a href="/admin/config" class="sidebar-button">
+                        <span class="icon">⚙</span>
+                        <span>Configurações do sistema</span>
+                    </a>
+                <?php endif; ?>
             </div>
         </div>
         <div class="sidebar-footer">
@@ -231,6 +233,9 @@ $pageTitle = $pageTitle ?? 'Agente IA - Tuquinha';
                 <span>Branding Vivo</span>
             </div>
             <div>Mentor IA focado em designers de marca. Educação primeiro, execução depois.</div>
+            <div style="margin-top: 8px; font-size: 10px; color: var(--text-secondary);">
+                Desenvolvido por <a href="https://lrvweb.com.br" target="_blank" rel="noopener noreferrer" style="color: var(--accent-soft); text-decoration: none;">LRV Web</a>
+            </div>
         </div>
     </aside>
 
