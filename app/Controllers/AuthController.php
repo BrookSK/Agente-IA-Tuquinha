@@ -41,7 +41,8 @@ class AuthController extends Controller
             return;
         }
 
-        if (empty($user['email_verified_at'])) {
+        // Apenas usuários não-admin precisam ter o e-mail verificado para entrar
+        if (empty($user['is_admin']) && empty($user['email_verified_at'])) {
             $_SESSION['pending_verify_user_id'] = (int)$user['id'];
             $_SESSION['pending_verify_email'] = $user['email'];
 
