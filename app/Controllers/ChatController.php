@@ -26,7 +26,12 @@ class ChatController extends Controller
                 $conversation = Conversation::createForSession($sessionId);
             }
         } elseif ($conversationParam > 0) {
-            $row = Conversation::findByIdAndSession($conversationParam, $sessionId);
+            if ($userId > 0) {
+                $row = Conversation::findByIdForUser($conversationParam, $userId);
+            } else {
+                $row = Conversation::findByIdAndSession($conversationParam, $sessionId);
+            }
+
             if ($row) {
                 $conversation = new Conversation();
                 $conversation->id = (int)$row['id'];

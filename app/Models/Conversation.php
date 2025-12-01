@@ -177,6 +177,18 @@ class Conversation
         return $row ?: null;
     }
 
+    public static function findByIdForUser(int $id, int $userId): ?array
+    {
+        $pdo = Database::getConnection();
+        $stmt = $pdo->prepare('SELECT * FROM conversations WHERE id = :id AND user_id = :user_id LIMIT 1');
+        $stmt->execute([
+            'id' => $id,
+            'user_id' => $userId,
+        ]);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $row ?: null;
+    }
+
     public static function ensureUniqueTitle(string $sessionId, string $baseTitle): string
     {
         $pdo = Database::getConnection();
