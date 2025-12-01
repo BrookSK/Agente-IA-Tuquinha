@@ -44,6 +44,10 @@ function render_markdown_safe(string $text): string {
                     ">
                         <?php foreach ($attachments as $att): ?>
                             <?php
+                            // não exibe anexos de áudio no histórico (já foram transcritos)
+                            if (($att['type'] ?? '') === 'audio') {
+                                continue;
+                            }
                             $isImage = str_starts_with((string)($att['mime_type'] ?? ''), 'image/');
                             $isCsv = in_array(($att['mime_type'] ?? ''), ['text/csv', 'application/vnd.ms-excel'], true);
                             $isPdf = ($att['mime_type'] ?? '') === 'application/pdf';
@@ -93,8 +97,8 @@ function render_markdown_safe(string $text): string {
                 <?php if (($message['role'] ?? '') === 'user'): ?>
                     <?php
                     $rawContent = trim((string)($message['content'] ?? ''));
-                    // remove recuo estranho no início de cada linha (herança de mensagens antigas)
-                    $rawContent = preg_replace('/^[ \t]+/m', '', $rawContent);
+                    // remove recuo estranho no início de cada linha (inclui espaços, tabs e outros brancos)
+                    $rawContent = preg_replace('/^\s+/mu', '', $rawContent);
                     ?>
                     <?php if (str_starts_with($rawContent, 'O usuário enviou os seguintes arquivos nesta mensagem')): ?>
                         <?php continue; ?>
@@ -140,7 +144,7 @@ function render_markdown_safe(string $text): string {
                         ">
                             <?php
                             $content = trim((string)($message['content'] ?? ''));
-                            $content = preg_replace('/^[ \t]+/m', '', $content);
+                            $content = preg_replace('/^\s+/mu', '', $content);
                             ?>
                             <?= render_markdown_safe($content) ?>
                         </div>

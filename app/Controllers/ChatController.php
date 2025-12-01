@@ -97,7 +97,8 @@ class ChatController extends Controller
     {
         $rawInput = (string)($_POST['message'] ?? '');
         $rawInput = str_replace(["\r\n", "\r"], "\n", $rawInput);
-        $rawInput = preg_replace('/^[ \t]+/m', '', $rawInput);
+        // remove qualquer espaço/branco no início das linhas
+        $rawInput = preg_replace('/^\s+/mu', '', $rawInput);
         $message = trim($rawInput);
 
         $isAjax = !empty($_SERVER['HTTP_X_REQUESTED_WITH'])
@@ -308,9 +309,9 @@ class ChatController extends Controller
             $engine = new TuquinhaEngine();
             $assistantReply = $engine->generateResponse($history, $_SESSION['chat_model'] ?? null);
 
-            // Normaliza quebras de linha e remove espaços no início de cada linha
+            // Normaliza quebras de linha e remove espaços/brancos no início de cada linha
             $assistantReply = str_replace(["\r\n", "\r"], "\n", (string)$assistantReply);
-            $assistantReply = preg_replace('/^[ \t]+/m', '', $assistantReply);
+            $assistantReply = preg_replace('/^\s+/mu', '', $assistantReply);
             $assistantReply = trim($assistantReply);
 
             Message::create($conversation->id, 'assistant', $assistantReply);
