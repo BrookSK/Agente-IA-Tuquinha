@@ -241,6 +241,7 @@ class ChatController extends Controller
                 }
             }
 
+            $attachmentsMessage = null;
             if (!empty($attachmentSummaries)) {
                 $attachmentsMessage = "O usuário enviou os seguintes arquivos nesta mensagem:\n\n" . implode("\n\n", $attachmentSummaries);
                 Message::create($conversation->id, 'user', $attachmentsMessage);
@@ -260,18 +261,28 @@ class ChatController extends Controller
 
             if ($isAjax) {
                 header('Content-Type: application/json; charset=utf-8');
+
+                $responseMessages = [];
+                $responseMessages[] = [
+                    'role' => 'user',
+                    'content' => $message,
+                ];
+
+                if ($attachmentsMessage !== null) {
+                    $responseMessages[] = [
+                        'role' => 'user',
+                        'content' => $attachmentsMessage,
+                    ];
+                }
+
+                $responseMessages[] = [
+                    'role' => 'assistant',
+                    'content' => $assistantReply,
+                ];
+
                 echo json_encode([
                     'success' => true,
-                    'messages' => [
-                        [
-                            'role' => 'user',
-                            'content' => $message,
-                        ],
-                        [
-                            'role' => 'assistant',
-                            'content' => $assistantReply,
-                        ],
-                    ],
+                    'messages' => $responseMessages,
                 ]);
                 exit;
             }
@@ -292,7 +303,19 @@ class ChatController extends Controller
 
     public function sendAudio(): void
     {
+        $isAjax = !empty($_SERVER['HTTP_X_REQUESTED_WITH'])
+            && strtolower((string)$_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest';
+
         if (empty($_FILES['audio']['tmp_name'])) {
+            if ($isAjax) {
+                header('Content-Type: application/json; charset=utf-8');
+                echo json_encode([
+                    'success' => false,
+                    'error' => 'Nenhum áudio recebido.',
+                ]);
+                exit;
+            }
+
             header('Location: /chat');
             exit;
         }
@@ -343,6 +366,15 @@ class ChatController extends Controller
         $transcriptionModel = Setting::get('openai_transcription_model', 'whisper-1');
 
         if (empty($configuredApiKey)) {
+            if ($isAjax) {
+                header('Content-Type: application/json; charset=utf-8');
+                echo json_encode([
+                    'success' => false,
+                    'error' => 'A transcrição de áudio ainda não está configurada pelo administrador.',
+                ]);
+                exit;
+            }
+
             $_SESSION['audio_error'] = 'A transcrição de áudio ainda não está configurada pelo administrador.';
             header('Location: /chat');
             exit;
@@ -375,12 +407,48 @@ class ChatController extends Controller
                     $data = json_decode($result, true);
                     $transcriptText = (string)($data['text'] ?? '');
                 } else {
+                    if ($isAjax) {
+                        header('Content-Type: application/json; charset=utf-8');
+                        echo json_encode([
+                            'success' => false,
+                            'error' => 'Não consegui transcrever o áudio (código ' . $http . '). Tente novamente.',
+                        ]);
+                        curl_close($ch);
+                        exit;
+                    }
+
                     $_SESSION['audio_error'] = 'Não consegui transcrever o áudio (código ' . $http . '). Tente novamente.';
                 }
             } else {
+                if ($isAjax) {
+                    header('Content-Type: application/json; charset=utf-8');
+                    echo json_encode([
+                        'success' => false,
+                        'error' => 'Ocorreu um erro ao enviar o áudio para transcrição.',
+                    ]);
+                    curl_close($ch);
+                    exit;
+                }
+
                 $_SESSION['audio_error'] = 'Ocorreu um erro ao enviar o áudio para transcrição.';
             }
             curl_close($ch);
+        }
+
+        if ($isAjax) {
+            header('Content-Type: application/json; charset=utf-8');
+            if ($transcriptText !== '') {
+                echo json_encode([
+                    'success' => true,
+                    'text' => $transcriptText,
+                ]);
+            } else {
+                echo json_encode([
+                    'success' => false,
+                    'error' => 'Não consegui obter texto a partir do áudio enviado.',
+                ]);
+            }
+            exit;
         }
 
         if ($transcriptText !== '') {

@@ -313,21 +313,53 @@ function render_markdown_safe(string $text): string {
 
                         fetch('/chat/audio', {
                             method: 'POST',
+                            headers: {
+                                'X-Requested-With': 'XMLHttpRequest',
+                            },
                             body: formData
-                        }).then(() => {
-                            window.location.reload();
-                        }).catch(() => {
-                            alert('Erro ao enviar o áudio para transcrição. Tente novamente.');
-                            if (messageEl) {
-                                messageEl.disabled = false;
-                            }
-                            if (submitBtnEl) {
-                                submitBtnEl.disabled = false;
-                            }
-                            btnMic.disabled = false;
-                        }).finally(() => {
-                            isRecordingAudio = false;
-                        });
+                        })
+                            .then((res) => res.json().catch(() => null))
+                            .then((data) => {
+                                if (!data || !data.success) {
+                                    const err = data && data.error ? data.error : 'Não consegui transcrever o áudio. Tente novamente.';
+                                    alert(err);
+                                    if (messageEl) {
+                                        messageEl.disabled = false;
+                                        messageEl.placeholder = 'Pergunta pro Tuquinha sobre branding, identidade visual, posicionamento...';
+                                    }
+                                    if (submitBtnEl) {
+                                        submitBtnEl.disabled = false;
+                                    }
+                                    btnMic.disabled = false;
+                                    return;
+                                }
+
+                                if (messageEl && typeof data.text === 'string') {
+                                    messageEl.value = data.text;
+                                    messageEl.disabled = false;
+                                    messageEl.placeholder = 'Mensagem transcrita. Você pode revisar e enviar.';
+                                    const event = new Event('input');
+                                    messageEl.dispatchEvent(event);
+                                }
+                                if (submitBtnEl) {
+                                    submitBtnEl.disabled = false;
+                                }
+                                btnMic.disabled = false;
+                            })
+                            .catch(() => {
+                                alert('Erro ao enviar o áudio para transcrição. Tente novamente.');
+                                if (messageEl) {
+                                    messageEl.disabled = false;
+                                    messageEl.placeholder = 'Pergunta pro Tuquinha sobre branding, identidade visual, posicionamento...';
+                                }
+                                if (submitBtnEl) {
+                                    submitBtnEl.disabled = false;
+                                }
+                                btnMic.disabled = false;
+                            })
+                            .finally(() => {
+                                isRecordingAudio = false;
+                            });
                     };
                 } catch (e) {
                     alert('Não consegui acessar o microfone. Verifique as permissões do navegador.');
@@ -533,6 +565,14 @@ function render_markdown_safe(string $text): string {
 
                     messageInput.value = '';
                     autoResize();
+
+                    // Limpa arquivos selecionados e lista visual
+                    if (window.fileInput && window.fileList) {
+                        try {
+                            window.fileInput.value = '';
+                        } catch (e) {}
+                        window.fileList.innerHTML = '';
+                    }
 
                     if (Array.isArray(data.messages)) {
                         data.messages.forEach((m) => {
