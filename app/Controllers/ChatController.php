@@ -15,20 +15,30 @@ class ChatController extends Controller
     public function index(): void
     {
         $sessionId = session_id();
+        $userId = !empty($_SESSION['user_id']) ? (int)$_SESSION['user_id'] : 0;
         $conversationParam = isset($_GET['c']) ? (int)$_GET['c'] : 0;
         $isNew = isset($_GET['new']);
 
         if ($isNew) {
-            $conversation = Conversation::createForSession($sessionId);
+            if ($userId > 0) {
+                $conversation = Conversation::createForUser($userId, $sessionId);
+            } else {
+                $conversation = Conversation::createForSession($sessionId);
+            }
         } elseif ($conversationParam > 0) {
             $row = Conversation::findByIdAndSession($conversationParam, $sessionId);
             if ($row) {
                 $conversation = new Conversation();
                 $conversation->id = (int)$row['id'];
                 $conversation->session_id = $row['session_id'];
+                $conversation->user_id = isset($row['user_id']) ? (int)$row['user_id'] : null;
                 $conversation->title = $row['title'] ?? null;
             } else {
-                $conversation = Conversation::findOrCreateBySession($sessionId);
+                if ($userId > 0) {
+                    $conversation = Conversation::createForUser($userId, $sessionId);
+                } else {
+                    $conversation = Conversation::findOrCreateBySession($sessionId);
+                }
             }
         } else {
             $conversation = Conversation::findOrCreateBySession($sessionId);
@@ -110,6 +120,7 @@ class ChatController extends Controller
 
         if ($message !== '') {
             $sessionId = session_id();
+            $userId = !empty($_SESSION['user_id']) ? (int)$_SESSION['user_id'] : 0;
             $conversation = null;
 
             if (!empty($_SESSION['current_conversation_id'])) {
@@ -118,12 +129,17 @@ class ChatController extends Controller
                     $conversation = new Conversation();
                     $conversation->id = (int)$row['id'];
                     $conversation->session_id = $row['session_id'];
+                    $conversation->user_id = isset($row['user_id']) ? (int)$row['user_id'] : null;
                     $conversation->title = $row['title'] ?? null;
                 }
             }
 
             if (!$conversation) {
-                $conversation = Conversation::findOrCreateBySession($sessionId);
+                if ($userId > 0) {
+                    $conversation = Conversation::createForUser($userId, $sessionId);
+                } else {
+                    $conversation = Conversation::findOrCreateBySession($sessionId);
+                }
                 $_SESSION['current_conversation_id'] = $conversation->id;
             }
 
@@ -379,6 +395,7 @@ class ChatController extends Controller
         }
 
         $sessionId = session_id();
+        $userId = !empty($_SESSION['user_id']) ? (int)$_SESSION['user_id'] : 0;
         $conversation = null;
 
         if (!empty($_SESSION['current_conversation_id'])) {
@@ -387,12 +404,17 @@ class ChatController extends Controller
                 $conversation = new Conversation();
                 $conversation->id = (int)$row['id'];
                 $conversation->session_id = $row['session_id'];
+                $conversation->user_id = isset($row['user_id']) ? (int)$row['user_id'] : null;
                 $conversation->title = $row['title'] ?? null;
             }
         }
 
         if (!$conversation) {
-            $conversation = Conversation::findOrCreateBySession($sessionId);
+            if ($userId > 0) {
+                $conversation = Conversation::createForUser($userId, $sessionId);
+            } else {
+                $conversation = Conversation::findOrCreateBySession($sessionId);
+            }
             $_SESSION['current_conversation_id'] = $conversation->id;
         }
 
