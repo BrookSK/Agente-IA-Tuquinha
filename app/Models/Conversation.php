@@ -36,6 +36,19 @@ class Conversation
         return $conv;
     }
 
+    public static function createForSession(string $sessionId): self
+    {
+        $pdo = Database::getConnection();
+        $stmt = $pdo->prepare('INSERT INTO conversations (session_id) VALUES (:session_id)');
+        $stmt->execute(['session_id' => $sessionId]);
+
+        $conv = new self();
+        $conv->id = (int)$pdo->lastInsertId();
+        $conv->session_id = $sessionId;
+        $conv->title = null;
+        return $conv;
+    }
+
     public static function updateTitle(int $id, string $title): void
     {
         $pdo = Database::getConnection();

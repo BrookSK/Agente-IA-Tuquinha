@@ -16,8 +16,11 @@ class ChatController extends Controller
     {
         $sessionId = session_id();
         $conversationParam = isset($_GET['c']) ? (int)$_GET['c'] : 0;
+        $isNew = isset($_GET['new']);
 
-        if ($conversationParam > 0) {
+        if ($isNew) {
+            $conversation = Conversation::createForSession($sessionId);
+        } elseif ($conversationParam > 0) {
             $row = Conversation::findByIdAndSession($conversationParam, $sessionId);
             if ($row) {
                 $conversation = new Conversation();
@@ -30,6 +33,8 @@ class ChatController extends Controller
         } else {
             $conversation = Conversation::findOrCreateBySession($sessionId);
         }
+
+        $_SESSION['current_conversation_id'] = $conversation->id;
 
         $history = Message::allByConversation($conversation->id);
 
@@ -88,7 +93,22 @@ class ChatController extends Controller
 
         if ($message !== '') {
             $sessionId = session_id();
-            $conversation = Conversation::findOrCreateBySession($sessionId);
+            $conversation = null;
+
+            if (!empty($_SESSION['current_conversation_id'])) {
+                $row = Conversation::findByIdAndSession((int)$_SESSION['current_conversation_id'], $sessionId);
+                if ($row) {
+                    $conversation = new Conversation();
+                    $conversation->id = (int)$row['id'];
+                    $conversation->session_id = $row['session_id'];
+                    $conversation->title = $row['title'] ?? null;
+                }
+            }
+
+            if (!$conversation) {
+                $conversation = Conversation::findOrCreateBySession($sessionId);
+                $_SESSION['current_conversation_id'] = $conversation->id;
+            }
 
             // Verifica se é a primeira mensagem dessa conversa
             $existingMessages = Message::allByConversation($conversation->id);
@@ -196,7 +216,22 @@ class ChatController extends Controller
         }
 
         $sessionId = session_id();
-        $conversation = Conversation::findOrCreateBySession($sessionId);
+        $conversation = null;
+
+        if (!empty($_SESSION['current_conversation_id'])) {
+            $row = Conversation::findByIdAndSession((int)$_SESSION['current_conversation_id'], $sessionId);
+            if ($row) {
+                $conversation = new Conversation();
+                $conversation->id = (int)$row['id'];
+                $conversation->session_id = $row['session_id'];
+                $conversation->title = $row['title'] ?? null;
+            }
+        }
+
+        if (!$conversation) {
+            $conversation = Conversation::findOrCreateBySession($sessionId);
+            $_SESSION['current_conversation_id'] = $conversation->id;
+        }
 
         $tmpPath = $_FILES['audio']['tmp_name'];
         $originalName = $_FILES['audio']['name'] ?? 'audio.webm';

@@ -205,6 +205,7 @@ $pageTitle = $pageTitle ?? 'Agente IA - Tuquinha';
             <div style="margin-top: 10px;">
                 <div class="sidebar-section-title">Conversa</div>
                 <form action="/chat" method="get" style="margin-bottom: 8px;">
+                    <input type="hidden" name="new" value="1">
                     <button class="sidebar-button primary" type="submit">
                         <span class="icon">+</span>
                         <span>Novo chat com o Tuquinha</span>
