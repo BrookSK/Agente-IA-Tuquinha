@@ -93,7 +93,7 @@ function render_markdown_safe(string $text): string {
     <?php endif; ?>
 
     <form action="/chat/send" method="post" enctype="multipart/form-data" style="margin-top: 12px;">
-        <div style="
+        <div id="chat-input-bar" style="
             display: flex;
             align-items: flex-end;
             gap: 8px;
@@ -349,6 +349,17 @@ function render_markdown_safe(string $text): string {
         });
 
         const submitButton = chatForm.querySelector('button[type="submit"]');
+        const inputBar = document.getElementById('chat-input-bar');
+
+        if (inputBar) {
+            inputBar.addEventListener('click', (e) => {
+                const tag = (e.target && e.target.tagName ? e.target.tagName.toLowerCase() : '');
+                if (tag === 'textarea' || tag === 'button' || tag === 'select' || tag === 'input' || tag === 'label') {
+                    return;
+                }
+                messageInput.focus();
+            });
+        }
 
         const renderMarkdownSafeJs = (text) => {
             const escapeHtml = (s) => s
