@@ -20,6 +20,13 @@ class CheckoutController extends Controller
             return;
         }
 
+        // Exige que o usuário esteja logado antes de assinar um plano
+        if (empty($_SESSION['user_id'])) {
+            $_SESSION['pending_plan_slug'] = $plan['slug'];
+            header('Location: /login');
+            exit;
+        }
+
         $this->view('checkout/show', [
             'pageTitle' => 'Checkout - ' . $plan['name'],
             'plan' => $plan,
@@ -29,6 +36,11 @@ class CheckoutController extends Controller
 
     public function process(): void
     {
+        if (empty($_SESSION['user_id'])) {
+            header('Location: /login');
+            exit;
+        }
+
         $slug = $_POST['plan_slug'] ?? '';
         $plan = $slug ? Plan::findBySlug($slug) : null;
 

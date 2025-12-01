@@ -10,6 +10,7 @@ $pageTitle = $pageTitle ?? 'Agente IA - Tuquinha';
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= htmlspecialchars($pageTitle) ?></title>
+    <link rel="icon" type="image/png" href="/favicon.png">
     <style>
         :root {
             --bg-main: #050509;
@@ -242,7 +243,10 @@ $pageTitle = $pageTitle ?? 'Agente IA - Tuquinha';
     <main class="main">
         <header class="main-header">
             <div class="main-header-title"><?= htmlspecialchars($pageTitle) ?></div>
-            <div class="env-pill">Ambiente: <?= APP_ENV === 'dev' ? 'DEV' : 'PROD' ?></div>
+            <div class="env-pill">
+                <?php $nomeSaudacao = $_SESSION['user_name'] ?? 'designer'; ?>
+                Olá, <?= htmlspecialchars($nomeSaudacao) ?>
+            </div>
         </header>
         <section class="main-content">
             <?php include $viewFile; ?>

@@ -44,6 +44,38 @@ CREATE TABLE plans (
     max_file_size_bytes INT UNSIGNED NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- Planos padrão
+INSERT INTO plans (
+    name, slug, description, price_cents, monthly_message_limit, benefits,
+    asaas_plan_id, is_active, sort_order,
+    allowed_models, default_model,
+    allow_audio, allow_images, allow_files, max_file_size_bytes
+) VALUES
+(
+    'Free', 'free', 'Plano gratuito para testar o fluxo com o Tuquinha.',
+    0, 100,
+    'Acesso básico ao chat do Tuquinha\nModelo padrão econômico\nSem necessidade de cartão para começar',
+    NULL, 1, 1,
+    '["gpt-4o-mini"]', 'gpt-4o-mini',
+    1, 1, 1, 5242880
+),
+(
+    'Tuquinha Pro', 'pro-30', 'Plano mensal para quem usa o Tuquinha no dia a dia.',
+    3000, 1000,
+    'Mais mensagens por mês\nPrioridade no uso do modelo padrão\nEnvio de áudios, imagens e arquivos para análise',
+    NULL, 1, 2,
+    '["gpt-4o-mini","gpt-4o"]', 'gpt-4o',
+    1, 1, 1, 10485760
+),
+(
+    'Tuquinha Expert', 'pro-60', 'Para quem vive de branding e quer o máximo do Tuquinha.',
+    6000, 3000,
+    'Mais mensagens e prioridade máxima\nAcesso ampliado a modelos\nSuporte a anexos maiores',
+    NULL, 1, 3,
+    '["gpt-4o-mini","gpt-4o","gpt-4.1"]', 'gpt-4.1',
+    1, 1, 1, 20971520
+);
+
 CREATE TABLE subscriptions (
     id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     plan_id INT UNSIGNED NOT NULL,

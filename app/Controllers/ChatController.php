@@ -19,12 +19,29 @@ class ChatController extends Controller
         $history = Message::allByConversation($conversation->id);
 
         $currentPlan = Plan::findBySessionSlug($_SESSION['plan_slug'] ?? null);
+        if (!$currentPlan) {
+            $currentPlan = Plan::findBySlug('free');
+            if ($currentPlan) {
+                $_SESSION['plan_slug'] = $currentPlan['slug'];
+            }
+        }
+
         $allowedModels = [];
         $defaultModel = null;
 
         if ($currentPlan) {
             $allowedModels = Plan::parseAllowedModels($currentPlan['allowed_models'] ?? null);
             $defaultModel = $currentPlan['default_model'] ?? null;
+        }
+
+        if (!$allowedModels) {
+            $fallbackModel = Setting::get('openai_default_model', AI_MODEL);
+            if ($fallbackModel) {
+                $allowedModels = [$fallbackModel];
+                if (!$defaultModel) {
+                    $defaultModel = $fallbackModel;
+                }
+            }
         }
 
         if (empty($_SESSION['chat_model']) && $defaultModel) {
@@ -52,11 +69,33 @@ class ChatController extends Controller
             $sessionId = session_id();
             $conversation = Conversation::findOrCreateBySession($sessionId);
 
+            // Verifica se é a primeira mensagem dessa conversa
+            $existingMessages = Message::allByConversation($conversation->id);
+
             // Salva mensagem de texto do usuário
             Message::create($conversation->id, 'user', $message);
 
+            // Se for a primeira mensagem, gera um título automático para o chat
+            if (empty($existingMessages)) {
+                $raw = trim(preg_replace('/\s+/', ' ', $message));
+                if ($raw === '') {
+                    $raw = 'Chat com o Tuquinha';
+                }
+                $title = mb_substr($raw, 0, 60, 'UTF-8');
+                if (mb_strlen($raw, 'UTF-8') > 60) {
+                    $title .= '...';
+                }
+                Conversation::updateTitle($conversation->id, $title);
+            }
+
             // Trata anexos (imagens/arquivos) se enviados e se o plano permitir
             $plan = Plan::findBySessionSlug($_SESSION['plan_slug'] ?? null);
+            if (!$plan) {
+                $plan = Plan::findBySlug('free');
+                if ($plan) {
+                    $_SESSION['plan_slug'] = $plan['slug'];
+                }
+            }
             $allowImages = !empty($plan['allow_images']);
             $allowFiles = !empty($plan['allow_files']);
             $maxSize = isset($plan['max_file_size_bytes']) && (int)$plan['max_file_size_bytes'] > 0
