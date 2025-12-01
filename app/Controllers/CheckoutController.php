@@ -6,6 +6,7 @@ use App\Core\Controller;
 use App\Models\Plan;
 use App\Models\Subscription;
 use App\Services\AsaasClient;
+use App\Models\User;
 
 class CheckoutController extends Controller
 {
@@ -27,10 +28,17 @@ class CheckoutController extends Controller
             exit;
         }
 
-        $this->view('checkout/show', [
+        $currentUser = null;
+        if (!empty($_SESSION['user_id'])) {
+            $currentUser = User::findById((int)$_SESSION['user_id']);
+        }
+
+        // Passo 1: dados pessoais/endereço
+        $this->view('checkout/step1', [
             'pageTitle' => 'Checkout - ' . $plan['name'],
             'plan' => $plan,
             'error' => null,
+            'currentUser' => $currentUser,
         ]);
     }
 
@@ -50,30 +58,89 @@ class CheckoutController extends Controller
             return;
         }
 
-        $required = ['name', 'email', 'cpf', 'birthdate', 'postal_code', 'address', 'address_number', 'province', 'city', 'state', 'card_number', 'card_holder', 'card_exp_month', 'card_exp_year', 'card_cvv'];
-        foreach ($required as $field) {
+        $step = (int)($_POST['step'] ?? 1);
+
+        if ($step === 1) {
+            // Validação de dados pessoais/endereço
+            $required = ['name', 'email', 'cpf', 'birthdate', 'postal_code', 'address', 'address_number', 'province', 'city', 'state'];
+            foreach ($required as $field) {
+                if (empty($_POST[$field])) {
+                    $this->view('checkout/step1', [
+                        'pageTitle' => 'Checkout - ' . $plan['name'],
+                        'plan' => $plan,
+                        'error' => 'Por favor, preencha todos os campos obrigatórios.',
+                    ]);
+                    return;
+                }
+            }
+
+            $customerForSession = [
+                'name' => trim($_POST['name']),
+                'email' => trim($_POST['email']),
+                'cpf' => $_POST['cpf'],
+                'cpfCnpj' => preg_replace('/\D+/', '', $_POST['cpf']),
+                'phone' => $_POST['phone'] ?? '',
+                'postal_code' => $_POST['postal_code'],
+                'postalCode' => preg_replace('/\D+/', '', $_POST['postal_code']),
+                'address' => trim($_POST['address']),
+                'address_number' => trim($_POST['address_number']),
+                'complement' => $_POST['complement'] ?? '',
+                'province' => trim($_POST['province']),
+                'city' => trim($_POST['city']),
+                'state' => trim($_POST['state']),
+                'birthdate' => $_POST['birthdate'],
+            ];
+
+            $_SESSION['checkout_customer'] = $customerForSession;
+
+            $this->view('checkout/show', [
+                'pageTitle' => 'Checkout - ' . $plan['name'],
+                'plan' => $plan,
+                'customer' => $customerForSession,
+                'birthdate' => $customerForSession['birthdate'],
+                'error' => null,
+            ]);
+            return;
+        }
+
+        // Passo 2: dados do cartão, usando dados do cliente da sessão
+        $sessionCustomer = $_SESSION['checkout_customer'] ?? null;
+        if (!$sessionCustomer) {
+            // sessão perdida, volta para passo 1
+            $this->view('checkout/step1', [
+                'pageTitle' => 'Checkout - ' . $plan['name'],
+                'plan' => $plan,
+                'error' => 'Sua sessão expirou. Preencha novamente seus dados para continuar.',
+            ]);
+            return;
+        }
+
+        $requiredCard = ['card_number', 'card_holder', 'card_exp_month', 'card_exp_year', 'card_cvv'];
+        foreach ($requiredCard as $field) {
             if (empty($_POST[$field])) {
                 $this->view('checkout/show', [
                     'pageTitle' => 'Checkout - ' . $plan['name'],
                     'plan' => $plan,
-                    'error' => 'Por favor, preencha todos os campos obrigatórios.',
+                    'customer' => $sessionCustomer,
+                    'birthdate' => $sessionCustomer['birthdate'] ?? '',
+                    'error' => 'Por favor, preencha todos os dados do cartão.',
                 ]);
                 return;
             }
         }
 
         $customer = [
-            'name' => trim($_POST['name']),
-            'email' => trim($_POST['email']),
-            'cpfCnpj' => preg_replace('/\D+/', '', $_POST['cpf']),
-            'phone' => $_POST['phone'] ?? '',
-            'postalCode' => preg_replace('/\D+/', '', $_POST['postal_code']),
-            'address' => trim($_POST['address']),
-            'addressNumber' => trim($_POST['address_number']),
-            'complement' => $_POST['complement'] ?? '',
-            'province' => trim($_POST['province']),
-            'city' => trim($_POST['city']),
-            'state' => trim($_POST['state']),
+            'name' => $sessionCustomer['name'],
+            'email' => $sessionCustomer['email'],
+            'cpfCnpj' => $sessionCustomer['cpfCnpj'],
+            'phone' => $sessionCustomer['phone'],
+            'postalCode' => $sessionCustomer['postalCode'],
+            'address' => $sessionCustomer['address'],
+            'addressNumber' => $sessionCustomer['address_number'],
+            'complement' => $sessionCustomer['complement'],
+            'province' => $sessionCustomer['province'],
+            'city' => $sessionCustomer['city'],
+            'state' => $sessionCustomer['state'],
         ];
 
         $creditCard = [
@@ -84,7 +151,7 @@ class CheckoutController extends Controller
             'ccv' => trim($_POST['card_cvv']),
         ];
 
-        $birthdate = $_POST['birthdate'];
+        $birthdate = $sessionCustomer['birthdate'];
 
         $subscriptionPayload = [
             'billingType' => 'CREDIT_CARD',
@@ -147,10 +214,15 @@ class CheckoutController extends Controller
                 'plan' => $plan,
             ]);
         } catch (\Throwable $e) {
+            // Loga erro detalhado para depuração (incluindo resposta do Asaas quando houver)
+            error_log('CheckoutController::process erro: ' . $e->getMessage());
+
+            $friendlyError = 'Não consegui finalizar a assinatura agora. Tenta novamente em alguns minutos ou fala com o suporte.';
+
             $this->view('checkout/show', [
                 'pageTitle' => 'Checkout - ' . $plan['name'],
                 'plan' => $plan,
-                'error' => 'Não consegui finalizar a assinatura agora. Tenta novamente em alguns minutos ou fala com o suporte.',
+                'error' => $friendlyError,
             ]);
         }
     }

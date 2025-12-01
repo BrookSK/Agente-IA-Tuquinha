@@ -1,75 +1,94 @@
 <?php
 /** @var array $plan */
+/** @var array $customer */
+/** @var string $birthdate */
 /** @var string|null $error */
 $price = number_format($plan['price_cents'] / 100, 2, ',', '.');
 ?>
 <div style="max-width: 880px; margin: 0 auto;">
     <h1 style="font-size: 24px; margin-bottom: 6px; font-weight: 650;">Finalizar assinatura</h1>
+    <p style="color: #b0b0b0; margin-bottom: 6px; font-size: 14px;">
+        Passo 2 de 2 &mdash; Dados do cartão.
+    </p>
     <p style="color: #b0b0b0; margin-bottom: 18px; font-size: 14px;">
         Você está assinando o plano <strong><?= htmlspecialchars($plan['name']) ?></strong> por <strong>R$ <?= $price ?>/mês</strong>, com cobrança recorrente no cartão via Asaas.
     </p>
 
     <?php if (!empty($error)): ?>
         <div style="background: #3b1a1a; border-radius: 10px; padding: 10px 12px; color: #ffb3b3; font-size: 13px; margin-bottom: 14px; border: 1px solid #ff6f60;">
-            <?= htmlspecialchars($error) ?>
+            <?= htmlspecialchars($error) ?><br>
+            Se o problema continuar, fale com o suporte pelo <a href="/suporte" style="color:#ff6f60; text-decoration:none;">WhatsApp ou e-mail</a>.
         </div>
     <?php endif; ?>
 
     <form action="/checkout" method="post" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px;">
         <input type="hidden" name="plan_slug" value="<?= htmlspecialchars($plan['slug']) ?>">
+        <input type="hidden" name="step" value="2">
 
-        <div style="grid-column: 1 / -1; font-size: 12px; text-transform: uppercase; letter-spacing: 0.12em; color: #b0b0b0;">Dados pessoais</div>
+        <div style="grid-column: 1 / -1; font-size: 12px; text-transform: uppercase; letter-spacing: 0.12em; color: #b0b0b0;">Confere se está tudo certo com seus dados</div>
 
         <div>
-            <label style="font-size: 12px; color: #b0b0b0;">Nome completo*</label>
-            <input name="name" required style="width: 100%; padding: 7px 9px; border-radius: 8px; border: 1px solid #272727; background: #050509; color: #f5f5f5; font-size: 13px;">
+            <label style="font-size: 12px; color: #b0b0b0;">Nome completo</label>
+            <div style="font-size:13px; padding:7px 9px; border-radius:8px; border:1px solid #272727; background:#050509; color:#f5f5f5;">
+                <?= htmlspecialchars($customer['name'] ?? '') ?>
+            </div>
         </div>
         <div>
-            <label style="font-size: 12px; color: #b0b0b0;">E-mail*</label>
-            <input name="email" type="email" required style="width: 100%; padding: 7px 9px; border-radius: 8px; border: 1px solid #272727; background: #050509; color: #f5f5f5; font-size: 13px;">
+            <label style="font-size: 12px; color: #b0b0b0;">E-mail</label>
+            <div style="font-size:13px; padding:7px 9px; border-radius:8px; border:1px solid #272727; background:#050509; color:#f5f5f5;">
+                <?= htmlspecialchars($customer['email'] ?? '') ?>
+            </div>
         </div>
         <div>
-            <label style="font-size: 12px; color: #b0b0b0;">CPF*</label>
-            <input name="cpf" required style="width: 100%; padding: 7px 9px; border-radius: 8px; border: 1px solid #272727; background: #050509; color: #f5f5f5; font-size: 13px;">
+            <label style="font-size: 12px; color: #b0b0b0;">CPF</label>
+            <div style="font-size:13px; padding:7px 9px; border-radius:8px; border:1px solid #272727; background:#050509; color:#f5f5f5;">
+                <?= htmlspecialchars($customer['cpf'] ?? '') ?>
+            </div>
         </div>
         <div>
-            <label style="font-size: 12px; color: #b0b0b0;">Data de nascimento*</label>
-            <input name="birthdate" type="date" required style="width: 100%; padding: 7px 9px; border-radius: 8px; border: 1px solid #272727; background: #050509; color: #f5f5f5; font-size: 13px;">
+            <label style="font-size: 12px; color: #b0b0b0;">Data de nascimento</label>
+            <div style="font-size:13px; padding:7px 9px; border-radius:8px; border:1px solid #272727; background:#050509; color:#f5f5f5;">
+                <?= htmlspecialchars($birthdate) ?>
+            </div>
         </div>
         <div>
             <label style="font-size: 12px; color: #b0b0b0;">Telefone</label>
-            <input name="phone" style="width: 100%; padding: 7px 9px; border-radius: 8px; border: 1px solid #272727; background: #050509; color: #f5f5f5; font-size: 13px;">
+            <div style="font-size:13px; padding:7px 9px; border-radius:8px; border:1px solid #272727; background:#050509; color:#f5f5f5;">
+                <?= htmlspecialchars($customer['phone'] ?? '') ?>
+            </div>
         </div>
 
-        <div style="grid-column: 1 / -1; margin-top: 8px; font-size: 12px; text-transform: uppercase; letter-spacing: 0.12em; color: #b0b0b0;">Endereço</div>
+        <div style="grid-column: 1 / -1; margin-top: 8px; font-size: 12px; text-transform: uppercase; letter-spacing: 0.12em; color: #b0b0b0;">Endereço de cobrança</div>
 
         <div>
-            <label style="font-size: 12px; color: #b0b0b0;">CEP*</label>
-            <input name="postal_code" required style="width: 100%; padding: 7px 9px; border-radius: 8px; border: 1px solid #272727; background: #050509; color: #f5f5f5; font-size: 13px;">
+            <label style="font-size: 12px; color: #b0b0b0;">CEP</label>
+            <div style="font-size:13px; padding:7px 9px; border-radius:8px; border:1px solid #272727; background:#050509; color:#f5f5f5;">
+                <?= htmlspecialchars($customer['postal_code'] ?? '') ?>
+            </div>
         </div>
         <div>
-            <label style="font-size: 12px; color: #b0b0b0;">Endereço*</label>
-            <input name="address" required style="width: 100%; padding: 7px 9px; border-radius: 8px; border: 1px solid #272727; background: #050509; color: #f5f5f5; font-size: 13px;">
-        </div>
-        <div>
-            <label style="font-size: 12px; color: #b0b0b0;">Número*</label>
-            <input name="address_number" required style="width: 100%; padding: 7px 9px; border-radius: 8px; border: 1px solid #272727; background: #050509; color: #f5f5f5; font-size: 13px;">
+            <label style="font-size: 12px; color: #b0b0b0;">Endereço</label>
+            <div style="font-size:13px; padding:7px 9px; border-radius:8px; border:1px solid #272727; background:#050509; color:#f5f5f5;">
+                <?= htmlspecialchars($customer['address'] ?? '') ?>, <?= htmlspecialchars($customer['address_number'] ?? '') ?>
+            </div>
         </div>
         <div>
             <label style="font-size: 12px; color: #b0b0b0;">Complemento</label>
-            <input name="complement" style="width: 100%; padding: 7px 9px; border-radius: 8px; border: 1px solid #272727; background: #050509; color: #f5f5f5; font-size: 13px;">
+            <div style="font-size:13px; padding:7px 9px; border-radius:8px; border:1px solid #272727; background:#050509; color:#f5f5f5;">
+                <?= htmlspecialchars($customer['complement'] ?? '') ?>
+            </div>
         </div>
         <div>
-            <label style="font-size: 12px; color: #b0b0b0;">Bairro*</label>
-            <input name="province" required style="width: 100%; padding: 7px 9px; border-radius: 8px; border: 1px solid #272727; background: #050509; color: #f5f5f5; font-size: 13px;">
+            <label style="font-size: 12px; color: #b0b0b0;">Bairro</label>
+            <div style="font-size:13px; padding:7px 9px; border-radius:8px; border:1px solid #272727; background:#050509; color:#f5f5f5;">
+                <?= htmlspecialchars($customer['province'] ?? '') ?>
+            </div>
         </div>
         <div>
-            <label style="font-size: 12px; color: #b0b0b0;">Cidade*</label>
-            <input name="city" required style="width: 100%; padding: 7px 9px; border-radius: 8px; border: 1px solid #272727; background: #050509; color: #f5f5f5; font-size: 13px;">
-        </div>
-        <div>
-            <label style="font-size: 12px; color: #b0b0b0;">Estado (UF)*</label>
-            <input name="state" maxlength="2" required style="width: 100%; padding: 7px 9px; border-radius: 8px; border: 1px solid #272727; background: #050509; color: #f5f5f5; font-size: 13px; text-transform: uppercase;">
+            <label style="font-size: 12px; color: #b0b0b0;">Cidade / UF</label>
+            <div style="font-size:13px; padding:7px 9px; border-radius:8px; border:1px solid #272727; background:#050509; color:#f5f5f5;">
+                <?= htmlspecialchars($customer['city'] ?? '') ?> - <?= htmlspecialchars($customer['state'] ?? '') ?>
+            </div>
         </div>
 
         <div style="grid-column: 1 / -1; margin-top: 8px; font-size: 12px; text-transform: uppercase; letter-spacing: 0.12em; color: #b0b0b0;">Dados do cartão</div>
@@ -111,3 +130,94 @@ $price = number_format($plan['price_cents'] / 100, 2, ',', '.');
         </div>
     </form>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const cpfInput = document.querySelector('input[name="cpf"]');
+    const phoneInput = document.querySelector('input[name="phone"]');
+    const cepInput = document.querySelector('input[name="postal_code"]');
+    const cardNumberInput = document.querySelector('input[name="card_number"]');
+    const expMonthInput = document.querySelector('input[name="card_exp_month"]');
+    const expYearInput = document.querySelector('input[name="card_exp_year"]');
+    const cvvInput = document.querySelector('input[name="card_cvv"]');
+
+    function onlyDigits(value) {
+        return value.replace(/\D+/g, '');
+    }
+
+    if (cpfInput) {
+        cpfInput.addEventListener('input', function () {
+            let v = onlyDigits(this.value).slice(0, 11);
+            if (v.length > 9) {
+                v = v.replace(/(\d{3})(\d{3})(\d{3})(\d{0,2}).*/, '$1.$2.$3-$4');
+            } else if (v.length > 6) {
+                v = v.replace(/(\d{3})(\d{3})(\d{0,3}).*/, '$1.$2.$3');
+            } else if (v.length > 3) {
+                v = v.replace(/(\d{3})(\d{0,3}).*/, '$1.$2');
+            }
+            this.value = v;
+        });
+    }
+
+    if (phoneInput) {
+        phoneInput.addEventListener('input', function () {
+            let v = onlyDigits(this.value).slice(0, 11);
+            if (v.length > 10) {
+                v = v.replace(/(\d{2})(\d{5})(\d{0,4}).*/, '($1) $2-$3');
+            } else if (v.length > 6) {
+                v = v.replace(/(\d{2})(\d{4})(\d{0,4}).*/, '($1) $2-$3');
+            } else if (v.length > 2) {
+                v = v.replace(/(\d{2})(\d{0,5}).*/, '($1) $2');
+            }
+            this.value = v;
+        });
+    }
+
+    if (cepInput) {
+        cepInput.addEventListener('input', function () {
+            let v = onlyDigits(this.value).slice(0, 8);
+            if (v.length > 5) {
+                v = v.replace(/(\d{5})(\d{0,3}).*/, '$1-$2');
+            }
+            this.value = v;
+        });
+    }
+
+    if (cardNumberInput) {
+        cardNumberInput.addEventListener('input', function () {
+            let v = onlyDigits(this.value).slice(0, 16);
+            v = v.replace(/(\d{4})(?=\d)/g, '$1 ');
+            this.value = v.trim();
+            if (onlyDigits(this.value).length === 16 && expMonthInput) {
+                expMonthInput.focus();
+            }
+        });
+    }
+
+    if (expMonthInput) {
+        expMonthInput.addEventListener('input', function () {
+            let v = onlyDigits(this.value).slice(0, 2);
+            this.value = v;
+            if (v.length === 2 && expYearInput) {
+                expYearInput.focus();
+            }
+        });
+    }
+
+    if (expYearInput) {
+        expYearInput.addEventListener('input', function () {
+            let v = onlyDigits(this.value).slice(0, 4);
+            this.value = v;
+            if (v.length === 4 && cvvInput) {
+                cvvInput.focus();
+            }
+        });
+    }
+
+    if (cvvInput) {
+        cvvInput.addEventListener('input', function () {
+            this.value = onlyDigits(this.value).slice(0, 4);
+        });
+    }
+});
+</script>
