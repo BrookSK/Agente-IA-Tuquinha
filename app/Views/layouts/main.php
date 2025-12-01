@@ -190,7 +190,6 @@ $pageTitle = $pageTitle ?? 'Agente IA - Tuquinha';
             border-radius: 999px;
             border: 1px solid var(--border-subtle);
             background: rgba(0,0,0,0.4);
-            display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
