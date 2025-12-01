@@ -238,6 +238,10 @@ $pageTitle = $pageTitle ?? 'Agente IA - Tuquinha';
                         <span class="icon">👤</span>
                         <span>Minha conta</span>
                     </a>
+                    <a href="/logout" class="sidebar-button" style="margin-top: 6px;">
+                        <span class="icon">⏻</span>
+                        <span>Sair da conta</span>
+                    </a>
                 <?php endif; ?>
 
                 <?php if (!empty($_SESSION['is_admin'])): ?>

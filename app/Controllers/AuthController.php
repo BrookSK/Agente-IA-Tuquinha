@@ -43,8 +43,8 @@ class AuthController extends Controller
         $_SESSION['user_name'] = $user['name'];
         $_SESSION['user_email'] = $user['email'];
 
-        // Marca sessão como admin se o e-mail corresponder ao ADMIN_USERNAME definido no config
-        if (defined('ADMIN_USERNAME') && $email === ADMIN_USERNAME) {
+        // Marca sessão como admin se o usuário tiver is_admin = 1 no banco
+        if (!empty($user['is_admin'])) {
             $_SESSION['is_admin'] = true;
         } else {
             unset($_SESSION['is_admin']);
