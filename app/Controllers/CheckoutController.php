@@ -7,6 +7,7 @@ use App\Models\Plan;
 use App\Models\Subscription;
 use App\Services\AsaasClient;
 use App\Models\User;
+use App\Models\AsaasConfig;
 
 class CheckoutController extends Controller
 {
@@ -190,6 +191,10 @@ class CheckoutController extends Controller
             ],
         ];
 
+        // Guarda payloads em sessão para debug posterior
+        $_SESSION['asaas_debug_customer'] = $customer;
+        $_SESSION['asaas_debug_subscription'] = $subscriptionPayload;
+
         try {
             $asaas = new AsaasClient();
             $customerResp = $asaas->createOrUpdateCustomer($customer);
@@ -243,6 +248,61 @@ class CheckoutController extends Controller
                 'birthdate' => $sessionCustomer['birthdate'] ?? '',
                 'error' => $friendlyError,
             ]);
+        }
+    }
+
+    /**
+     * Rota de debug: reenvia o último payload salvo para o Asaas e mostra a resposta bruta.
+     * Disponível apenas para admin e quando o Asaas estiver em ambiente sandbox.
+     */
+    public function debugLastAsaas(): void
+    {
+        if (empty($_SESSION['is_admin'])) {
+            http_response_code(403);
+            echo 'Acesso restrito.';
+            return;
+        }
+
+        $config = AsaasConfig::getActive();
+        $env = $config['environment'] ?? 'sandbox';
+        if ($env === 'production') {
+            echo 'Debug do Asaas disponível apenas em ambiente sandbox.';
+            return;
+        }
+
+        $customer = $_SESSION['asaas_debug_customer'] ?? null;
+        $subscription = $_SESSION['asaas_debug_subscription'] ?? null;
+
+        if (!$customer || !$subscription) {
+            echo 'Nenhum payload Asaas salvo na sessão. Tente primeiro fazer um checkout que gere erro.';
+            return;
+        }
+
+        header('Content-Type: text/html; charset=UTF-8');
+        echo '<h1>Debug Asaas - Último payload</h1>';
+        echo '<h2>Ambiente: ' . htmlspecialchars($env) . '</h2>';
+
+        try {
+            $asaas = new AsaasClient();
+
+            echo '<h3>Enviando customer...</h3>';
+            $custResp = $asaas->createOrUpdateCustomer($customer);
+            echo '<pre>' . htmlspecialchars(json_encode($custResp, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)) . '</pre>';
+
+            if (!empty($custResp['id'])) {
+                $subscription['customer'] = $custResp['id'];
+            }
+
+            echo '<h3>Enviando subscription...</h3>';
+            $subResp = $asaas->createSubscription($subscription);
+            echo '<pre>' . htmlspecialchars(json_encode($subResp, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)) . '</pre>';
+        } catch (\Throwable $e) {
+            echo '<h3>Exceção capturada</h3>';
+            echo '<p>' . htmlspecialchars($e->getMessage()) . '</p>';
+            echo '<h4>Payload customer</h4>';
+            echo '<pre>' . htmlspecialchars(json_encode($customer, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)) . '</pre>';
+            echo '<h4>Payload subscription</h4>';
+            echo '<pre>' . htmlspecialchars(json_encode($subscription, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)) . '</pre>';
         }
     }
 }

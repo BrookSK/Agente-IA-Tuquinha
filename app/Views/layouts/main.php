@@ -292,6 +292,10 @@ $pageTitle = $pageTitle ?? 'Agente IA - Tuquinha';
                         <span class="icon">📑</span>
                         <span>Assinaturas</span>
                     </a>
+                    <a href="/debug/asaas" class="sidebar-button" style="margin-top: 6px;">
+                        <span class="icon">🧪</span>
+                        <span>Debug Asaas</span>
+                    </a>
                 <?php endif; ?>
             </div>
         </div>

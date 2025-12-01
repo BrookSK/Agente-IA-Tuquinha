@@ -31,6 +31,7 @@ $router->get('/historico', 'HistoryController@index');
 $router->post('/historico/renomear', 'HistoryController@rename');
 $router->get('/checkout', 'CheckoutController@show');
 $router->post('/checkout', 'CheckoutController@process');
+$router->get('/debug/asaas', 'CheckoutController@debugLastAsaas');
 $router->get('/suporte', 'SupportController@index');
 $router->get('/login', 'AuthController@showLogin');
 $router->post('/login', 'AuthController@login');
