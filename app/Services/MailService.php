@@ -27,8 +27,16 @@ class MailService
         $headers[] = 'Content-Type: text/html; charset=UTF-8';
 
         // Observação: aqui usamos mail() simples; em muitos provedores, será suficiente
-        // desde que o servidor esteja com SMTP configurado corretamente.
-        $success = @mail($toEmail, '=?UTF-8?B?' . base64_encode($subject) . '?=', $body, implode("\r\r\n", $headers));
+        // desde que o servidor esteja com SMTP/config de e-mail do servidor corretamente.
+        $encodedSubject = '=?UTF-8?B?' . base64_encode($subject) . '?=';
+        $headerString = implode("\r\n", $headers);
+
+        $success = @mail($toEmail, $encodedSubject, $body, $headerString);
+
+        if (!$success) {
+            // Loga um erro simples no log do PHP para ajudar na depuração
+            error_log('MailService: falha ao enviar e-mail para ' . $toEmail . ' usando remetente ' . $fromEmail);
+        }
 
         return (bool)$success;
     }

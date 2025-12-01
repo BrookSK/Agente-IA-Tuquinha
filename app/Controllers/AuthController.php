@@ -16,6 +16,7 @@ class AuthController extends Controller
         $this->view('auth/login', [
             'pageTitle' => 'Entrar - Tuquinha',
             'error' => null,
+            'showVerifyLink' => false,
         ]);
     }
 
@@ -28,6 +29,7 @@ class AuthController extends Controller
             $this->view('auth/login', [
                 'pageTitle' => 'Entrar - Tuquinha',
                 'error' => 'Informe seu e-mail e senha.',
+                'showVerifyLink' => false,
             ]);
             return;
         }
@@ -37,6 +39,7 @@ class AuthController extends Controller
             $this->view('auth/login', [
                 'pageTitle' => 'Entrar - Tuquinha',
                 'error' => 'E-mail ou senha inválidos.',
+                'showVerifyLink' => false,
             ]);
             return;
         }
@@ -49,6 +52,7 @@ class AuthController extends Controller
             $this->view('auth/login', [
                 'pageTitle' => 'Entrar - Tuquinha',
                 'error' => 'Antes de entrar, confirme seu e-mail. Enviamos um código de verificação para você.',
+                'showVerifyLink' => true,
             ]);
             return;
         }
@@ -57,6 +61,7 @@ class AuthController extends Controller
             $this->view('auth/login', [
                 'pageTitle' => 'Entrar - Tuquinha',
                 'error' => 'Sua conta está desativada. Fale com o administrador para reativar o acesso.',
+                'showVerifyLink' => false,
             ]);
             return;
         }

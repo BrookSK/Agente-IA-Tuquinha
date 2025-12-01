@@ -52,6 +52,7 @@ $router->get('/admin/logout', 'AdminAuthController@logout');
 $router->get('/admin', 'AdminDashboardController@index');
 $router->get('/admin/config', 'AdminConfigController@index');
 $router->post('/admin/config', 'AdminConfigController@save');
+$router->post('/admin/config/test-email', 'AdminConfigController@sendTestEmail');
 $router->get('/admin/planos', 'AdminPlanController@index');
 $router->get('/admin/planos/novo', 'AdminPlanController@form');
 $router->get('/admin/planos/editar', 'AdminPlanController@form');

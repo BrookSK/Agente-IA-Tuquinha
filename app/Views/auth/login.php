@@ -1,4 +1,5 @@
 <?php /** @var string|null $error */ ?>
+<?php /** @var bool|null $showVerifyLink */ ?>
 <div style="max-width: 420px; margin: 0 auto;">
     <h1 style="font-size: 24px; margin-bottom: 10px;">Entrar na sua conta</h1>
     <p style="color:#b0b0b0; font-size: 14px; margin-bottom: 16px;">
@@ -25,10 +26,12 @@
         </button>
     </form>
 
-    <div style="margin-top:8px; font-size:13px; color:#b0b0b0;">
-        Já recebeu o código de verificação?
-        <a href="/verificar-email" style="color:#ff6f60; text-decoration:none;">Digitar código</a>
-    </div>
+    <?php if (!empty($showVerifyLink)): ?>
+        <div style="margin-top:8px; font-size:13px; color:#b0b0b0;">
+            Já recebeu o código de verificação?
+            <a href="/verificar-email" style="color:#ff6f60; text-decoration:none;">Digitar código</a>
+        </div>
+    <?php endif; ?>
 
     <div style="margin-top:8px; font-size:13px; color:#b0b0b0; display:flex; justify-content:space-between; gap:8px; flex-wrap:wrap;">
         <span>

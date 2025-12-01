@@ -7,6 +7,7 @@ use App\Core\Database;
 use App\Models\Setting;
 use App\Models\AsaasConfig;
 use App\Models\TuquinhaEngine;
+use App\Services\MailService;
 
 class AdminConfigController extends Controller
 {
@@ -53,6 +54,8 @@ class AdminConfigController extends Controller
             'asaasSandboxKey' => $asaas['sandbox_api_key'] ?? '',
             'asaasProdKey' => $asaas['production_api_key'] ?? '',
             'saved' => false,
+            'testEmailStatus' => null,
+            'testEmailError' => null,
         ]);
     }
 
@@ -137,6 +140,75 @@ class AdminConfigController extends Controller
             'asaasSandboxKey' => $asaasSandboxKey,
             'asaasProdKey' => $asaasProdKey,
             'saved' => true,
+            'testEmailStatus' => null,
+            'testEmailError' => null,
+        ]);
+    }
+
+    public function sendTestEmail(): void
+    {
+        if (empty($_SESSION['is_admin'])) {
+            header('Location: /admin/login');
+            exit;
+        }
+
+        $toEmail = trim($_POST['test_email'] ?? '');
+
+        $openaiKey = Setting::get('openai_api_key', '');
+        $defaultModel = Setting::get('openai_default_model', AI_MODEL);
+        $transcriptionModel = Setting::get('openai_transcription_model', 'whisper-1');
+        $systemPrompt = Setting::get('tuquinha_system_prompt', TuquinhaEngine::getDefaultPrompt());
+        $systemPromptExtra = Setting::get('tuquinha_system_prompt_extra', '');
+        $historyRetentionDays = (int)Setting::get('chat_history_retention_days', '90');
+        if ($historyRetentionDays <= 0) {
+            $historyRetentionDays = 90;
+        }
+
+        $smtpHost = Setting::get('smtp_host', '');
+        $smtpPort = Setting::get('smtp_port', '587');
+        $smtpUser = Setting::get('smtp_user', '');
+        $smtpPassword = Setting::get('smtp_password', '');
+        $smtpFromEmail = Setting::get('smtp_from_email', '');
+        $smtpFromName = Setting::get('smtp_from_name', 'Tuquinha IA');
+
+        $asaas = AsaasConfig::getActive();
+
+        $status = null;
+        $error = null;
+
+        if ($toEmail === '') {
+            $status = false;
+            $error = 'Informe um e-mail para teste.';
+        } else {
+            $subject = 'Teste de e-mail - Tuquinha';
+            $body = '<p>Se você recebeu este e-mail, o envio SMTP do Tuquinha está funcionando.</p>';
+            $sent = MailService::send($toEmail, $toEmail, $subject, $body);
+            $status = $sent;
+            if (!$sent) {
+                $error = 'Não consegui enviar o e-mail de teste. Verifique as credenciais SMTP ou o servidor.';
+            }
+        }
+
+        $this->view('admin/config', [
+            'pageTitle' => 'Configuração - OpenAI',
+            'openaiKey' => $openaiKey,
+            'defaultModel' => $defaultModel,
+            'transcriptionModel' => $transcriptionModel,
+            'systemPrompt' => $systemPrompt,
+            'systemPromptExtra' => $systemPromptExtra,
+            'historyRetentionDays' => $historyRetentionDays,
+            'smtpHost' => $smtpHost,
+            'smtpPort' => $smtpPort,
+            'smtpUser' => $smtpUser,
+            'smtpPassword' => $smtpPassword,
+            'smtpFromEmail' => $smtpFromEmail,
+            'smtpFromName' => $smtpFromName,
+            'asaasEnvironment' => $asaas['environment'] ?? 'sandbox',
+            'asaasSandboxKey' => $asaas['sandbox_api_key'] ?? '',
+            'asaasProdKey' => $asaas['production_api_key'] ?? '',
+            'saved' => false,
+            'testEmailStatus' => $status,
+            'testEmailError' => $error,
         ]);
     }
 }

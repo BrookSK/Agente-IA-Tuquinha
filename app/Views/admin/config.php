@@ -15,6 +15,8 @@
 /** @var string $smtpFromEmail */
 /** @var string $smtpFromName */
 /** @var bool $saved */
+/** @var bool|null $testEmailStatus */
+/** @var string|null $testEmailError */
 
 $knownModels = [
     'gpt-4o-mini',
@@ -31,6 +33,16 @@ $knownModels = [
     <?php if (!empty($saved)): ?>
         <div style="background: #14361f; border-radius: 10px; padding: 10px 12px; color: #c1ffda; font-size: 13px; margin-bottom: 14px; border: 1px solid #2ecc71;">
             Configurações salvas com sucesso.
+        </div>
+    <?php endif; ?>
+
+    <?php if ($testEmailStatus === true): ?>
+        <div style="background: #14361f; border-radius: 10px; padding: 10px 12px; color: #c1ffda; font-size: 13px; margin-bottom: 14px; border: 1px solid #2ecc71;">
+            E-mail de teste enviado com sucesso.
+        </div>
+    <?php elseif ($testEmailStatus === false && $testEmailError !== null): ?>
+        <div style="background: #311; border-radius: 10px; padding: 10px 12px; color: #ffbaba; font-size: 13px; margin-bottom: 14px; border: 1px solid #a33;">
+            <?= htmlspecialchars($testEmailError) ?>
         </div>
     <?php endif; ?>
 
@@ -187,4 +199,24 @@ $knownModels = [
             </button>
         </div>
     </form>
+
+    <div style="margin-top:16px; padding:10px 12px; border-radius:10px; border:1px solid #272727; background:#0a0a10;">
+        <div style="font-size:13px; color:#b0b0b0; margin-bottom:8px;">
+            <strong>Teste rápido de envio de e-mail</strong><br>
+            Use este campo para enviar um e-mail de teste e confirmar se as credenciais SMTP / servidor estão funcionando.
+        </div>
+        <form action="/admin/config/test-email" method="post" style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+            <input name="test_email" type="email" placeholder="E-mail para teste" style="
+                flex: 1 1 220px; padding: 8px 10px; border-radius: 8px; border: 1px solid #272727;
+                background: #050509; color: #f5f5f5; font-size: 13px;
+            ">
+            <button type="submit" style="
+                border: none; border-radius: 999px; padding: 8px 14px;
+                background: linear-gradient(135deg, #e53935, #ff6f60);
+                color: #050509; font-weight: 600; font-size: 13px; cursor: pointer;
+            ">
+                Enviar e-mail de teste
+            </button>
+        </form>
+    </div>
 </div>
