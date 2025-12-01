@@ -29,6 +29,14 @@ class Plan
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
+    public static function countAll(): int
+    {
+        $pdo = Database::getConnection();
+        $stmt = $pdo->query('SELECT COUNT(*) AS c FROM plans');
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        return (int)($row['c'] ?? 0);
+    }
+
     public static function findBySlug(string $slug): ?array
     {
         $pdo = Database::getConnection();
