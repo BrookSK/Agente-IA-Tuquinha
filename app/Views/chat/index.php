@@ -33,63 +33,62 @@ function render_markdown_safe(string $text): string {
                 <div style="font-size: 18px; margin-bottom: 6px;">Bora começar esse papo? ✨</div>
                 <div>Me conta rapidinho: em que fase você tá com seus projetos de marca?</div>
             </div>
-
-    <?php if (!empty($attachments)): ?>
-        <div style="margin-top:8px; display:flex; justify-content:flex-end;">
-            <div style="
-                max-width: 80%;
-                display: flex;
-                flex-wrap: wrap;
-                gap: 6px;
-            ">
-                <?php foreach ($attachments as $att): ?>
-                    <?php
-                    $isImage = str_starts_with((string)($att['mime_type'] ?? ''), 'image/');
-                    $isCsv = in_array(($att['mime_type'] ?? ''), ['text/csv', 'application/vnd.ms-excel'], true);
-                    $isPdf = ($att['mime_type'] ?? '') === 'application/pdf';
-                    $size = (int)($att['size'] ?? 0);
-                    $humanSize = '';
-                    if ($size > 0) {
-                        if ($size >= 1024 * 1024) {
-                            $humanSize = number_format($size / (1024 * 1024), 2, ',', '.') . ' MB';
-                        } elseif ($size >= 1024) {
-                            $humanSize = number_format($size / 1024, 2, ',', '.') . ' KB';
-                        } else {
-                            $humanSize = $size . ' B';
-                        }
-                    }
-                    $label = 'Arquivo';
-                    if ($isCsv) { $label = 'CSV'; }
-                    elseif ($isPdf) { $label = 'PDF'; }
-                    elseif ($isImage) { $label = 'Imagem'; }
-                    ?>
-                    <div style="
-                        display:flex;
-                        flex-direction:column;
-                        padding:6px 10px;
-                        border-radius:12px;
-                        background: <?= $isImage ? '\'#152028\'' : '\'#181820\'' ?>;
-                        border:1px solid #272727;
-                        min-width:160px;
-                        max-width:220px;
-                    ">
-                        <div style="display:flex; align-items:center; gap:6px; margin-bottom:2px;">
-                            <span style="font-size:14px;">
-                                <?= $isImage ? '🖼️' : ($isCsv ? '📊' : ($isPdf ? '📄' : '📎')) ?>
-                            </span>
-                            <span style="font-size:12px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
-                                <?= htmlspecialchars((string)($att['original_name'] ?? 'arquivo')) ?>
-                            </span>
-                        </div>
-                        <div style="font-size:11px; color:#b0b0b0;">
-                            <?= htmlspecialchars(trim($label . ($humanSize ? ' · ' . $humanSize : ''))) ?>
-                        </div>
-                    </div>
-                <?php endforeach; ?>
-            </div>
-        </div>
-    <?php endif; ?>
         <?php else: ?>
+            <?php if (!empty($attachments)): ?>
+                <div style="margin-bottom:8px; display:flex; justify-content:flex-end;">
+                    <div style="
+                        max-width: 80%;
+                        display: flex;
+                        flex-wrap: wrap;
+                        gap: 6px;
+                    ">
+                        <?php foreach ($attachments as $att): ?>
+                            <?php
+                            $isImage = str_starts_with((string)($att['mime_type'] ?? ''), 'image/');
+                            $isCsv = in_array(($att['mime_type'] ?? ''), ['text/csv', 'application/vnd.ms-excel'], true);
+                            $isPdf = ($att['mime_type'] ?? '') === 'application/pdf';
+                            $size = (int)($att['size'] ?? 0);
+                            $humanSize = '';
+                            if ($size > 0) {
+                                if ($size >= 1024 * 1024) {
+                                    $humanSize = number_format($size / (1024 * 1024), 2, ',', '.') . ' MB';
+                                } elseif ($size >= 1024) {
+                                    $humanSize = number_format($size / 1024, 2, ',', '.') . ' KB';
+                                } else {
+                                    $humanSize = $size . ' B';
+                                }
+                            }
+                            $label = 'Arquivo';
+                            if ($isCsv) { $label = 'CSV'; }
+                            elseif ($isPdf) { $label = 'PDF'; }
+                            elseif ($isImage) { $label = 'Imagem'; }
+                            ?>
+                            <div style="
+                                display:flex;
+                                flex-direction:column;
+                                padding:6px 10px;
+                                border-radius:12px;
+                                background: <?= $isImage ? '\'#152028\'' : '\'#181820\'' ?>;
+                                border:1px solid #272727;
+                                min-width:160px;
+                                max-width:220px;
+                            ">
+                                <div style="display:flex; align-items:center; gap:6px; margin-bottom:2px;">
+                                    <span style="font-size:14px;">
+                                        <?= $isImage ? '🖼️' : ($isCsv ? '📊' : ($isPdf ? '📄' : '📎')) ?>
+                                    </span>
+                                    <span style="font-size:12px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                                        <?= htmlspecialchars((string)($att['original_name'] ?? 'arquivo')) ?>
+                                    </span>
+                                </div>
+                                <div style="font-size:11px; color:#b0b0b0;">
+                                    <?= htmlspecialchars(trim($label . ($humanSize ? ' · ' . $humanSize : ''))) ?>
+                                </div>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+            <?php endif; ?>
             <?php foreach ($chatHistory as $message): ?>
                 <?php if (($message['role'] ?? '') === 'user'): ?>
                     <?php
