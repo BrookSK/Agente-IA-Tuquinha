@@ -49,8 +49,8 @@ class Plan
     public static function create(array $data): int
     {
         $pdo = Database::getConnection();
-        $stmt = $pdo->prepare('INSERT INTO plans (name, slug, price_cents, description, benefits, allowed_models, default_model, allow_audio, allow_images, allow_files, is_active)
-            VALUES (:name, :slug, :price_cents, :description, :benefits, :allowed_models, :default_model, :allow_audio, :allow_images, :allow_files, :is_active)');
+        $stmt = $pdo->prepare('INSERT INTO plans (name, slug, price_cents, description, benefits, allowed_models, default_model, allow_audio, allow_images, allow_files, is_active, history_retention_days)
+            VALUES (:name, :slug, :price_cents, :description, :benefits, :allowed_models, :default_model, :allow_audio, :allow_images, :allow_files, :is_active, :history_retention_days)');
         $stmt->execute([
             'name' => $data['name'] ?? '',
             'slug' => $data['slug'] ?? '',
@@ -63,6 +63,7 @@ class Plan
             'allow_images' => (int)($data['allow_images'] ?? 0),
             'allow_files' => (int)($data['allow_files'] ?? 0),
             'is_active' => (int)($data['is_active'] ?? 1),
+            'history_retention_days' => isset($data['history_retention_days']) ? (int)$data['history_retention_days'] : null,
         ]);
         return (int)$pdo->lastInsertId();
     }
@@ -81,7 +82,8 @@ class Plan
             allow_audio = :allow_audio,
             allow_images = :allow_images,
             allow_files = :allow_files,
-            is_active = :is_active
+            is_active = :is_active,
+            history_retention_days = :history_retention_days
             WHERE id = :id');
         $stmt->execute([
             'id' => $id,
@@ -94,6 +96,7 @@ class Plan
             'allow_images' => (int)($data['allow_images'] ?? 0),
             'allow_files' => (int)($data['allow_files'] ?? 0),
             'is_active' => (int)($data['is_active'] ?? 1),
+            'history_retention_days' => isset($data['history_retention_days']) ? (int)$data['history_retention_days'] : null,
         ]);
     }
 

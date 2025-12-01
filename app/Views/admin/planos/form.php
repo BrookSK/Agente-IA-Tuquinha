@@ -93,7 +93,15 @@ $planDefaultModel = $plan['default_model'] ?? '';
             </select>
         </div>
 
-        <div style="display:flex; flex-wrap:wrap; gap:10px; font-size:13px; color:#ddd;">
+        <div>
+            <label style="font-size:13px; color:#ddd; display:block; margin-bottom:4px;">Dias para manter o histórico deste plano (opcional)</label>
+            <input type="number" name="history_retention_days" min="1" value="<?= isset($plan['history_retention_days']) ? (int)$plan['history_retention_days'] : '' ?>" style="
+                width:140px; padding:8px 10px; border-radius:8px; border:1px solid #272727;
+                background:#050509; color:#f5f5f5; font-size:13px;">
+            <div style="font-size:11px; color:#777; margin-top:3px;">Se vazio, usa o valor padrão configurado em Configurações do sistema.</div>
+        </div>
+
+        <div style="display:flex; flex-wrap:wrap; gap:10px; font-size:13px; color:#ddd; margin-top:8px;">
             <label style="display:flex; align-items:center; gap:5px;">
                 <input type="checkbox" name="allow_audio" value="1" <?= !empty($plan['allow_audio']) ? 'checked' : '' ?>>
                 <span>Permitir áudios</span>

@@ -20,10 +20,13 @@ class PlanController extends Controller
             }
         }
 
-        $retentionDays = (int)Setting::get('chat_history_retention_days', '90');
-        if ($retentionDays <= 0) {
-            $retentionDays = 90;
+        $defaultRetention = (int)Setting::get('chat_history_retention_days', '90');
+        if ($defaultRetention <= 0) {
+            $defaultRetention = 90;
         }
+
+        $planRetention = isset($currentPlan['history_retention_days']) ? (int)$currentPlan['history_retention_days'] : 0;
+        $retentionDays = $planRetention > 0 ? $planRetention : $defaultRetention;
 
         $this->view('plans/index', [
             'pageTitle' => 'Planos - Tuquinha',

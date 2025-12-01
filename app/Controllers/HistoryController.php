@@ -26,11 +26,14 @@ class HistoryController extends Controller
         $sessionId = session_id();
         $term = trim($_GET['q'] ?? '');
 
-        // Dias de retenção configuráveis
-        $retentionDays = (int)Setting::get('chat_history_retention_days', '90');
-        if ($retentionDays <= 0) {
-            $retentionDays = 90;
+        // Dias de retenção configuráveis: por plano, com fallback para valor global
+        $defaultRetention = (int)Setting::get('chat_history_retention_days', '90');
+        if ($defaultRetention <= 0) {
+            $defaultRetention = 90;
         }
+
+        $planRetention = isset($currentPlan['history_retention_days']) ? (int)$currentPlan['history_retention_days'] : 0;
+        $retentionDays = $planRetention > 0 ? $planRetention : $defaultRetention;
 
         // Política de retenção: remove conversas mais antigas que X dias desta sessão
         $pdo = Database::getConnection();

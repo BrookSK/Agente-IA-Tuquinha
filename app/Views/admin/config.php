@@ -87,12 +87,12 @@ $knownModels = [
         </div>
 
         <div>
-            <label style="font-size: 12px; color: #b0b0b0;">Dias para manter o histrico de conversas</label>
+            <label style="font-size: 12px; color: #b0b0b0;">Dias para manter o histórico de conversas</label>
             <input name="history_retention_days" type="number" min="1" value="<?= htmlspecialchars((string)($historyRetentionDays ?? 90)) ?>" style="
                 width: 120px; padding: 8px 10px; border-radius: 8px; border: 1px solid #272727;
                 background: #050509; color: #f5f5f5; font-size: 13px;
             ">
-            <small style="color:#777; font-size:11px;">Define por quantos dias as conversas ficar2o salvas para o usu2rio antes de serem apagadas automaticamente.</small>
+            <small style="color:#777; font-size:11px;">Define por quantos dias as conversas ficarão salvas para o usuário antes de serem apagadas automaticamente.</small>
         </div>
 
         <hr style="border:none; border-top:1px solid #272727; margin: 8px 0;">

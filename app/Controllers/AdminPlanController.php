@@ -59,6 +59,9 @@ class AdminPlanController extends Controller
             ? array_values(array_filter(array_map('trim', $_POST['allowed_models'])))
             : [];
         $defaultModel = trim($_POST['default_model'] ?? '');
+        $historyRetentionDays = isset($_POST['history_retention_days']) && $_POST['history_retention_days'] !== ''
+            ? max(1, (int)$_POST['history_retention_days'])
+            : null;
 
         $priceCents = (int)round(str_replace([',', ' '], ['.', ''], $price) * 100);
         if ($priceCents < 0) {
@@ -73,6 +76,7 @@ class AdminPlanController extends Controller
             'benefits' => $benefits,
             'allowed_models' => $allowedModels ? json_encode($allowedModels) : null,
             'default_model' => $defaultModel !== '' ? $defaultModel : null,
+            'history_retention_days' => $historyRetentionDays,
             'allow_audio' => $allowAudio,
             'allow_images' => $allowImages,
             'allow_files' => $allowFiles,
