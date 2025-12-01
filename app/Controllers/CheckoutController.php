@@ -237,6 +237,12 @@ class CheckoutController extends Controller
             // Loga erro detalhado para depuração (incluindo resposta do Asaas quando houver)
             error_log('CheckoutController::process erro: ' . $e->getMessage());
 
+            // Log geral dos payloads em sessão (se existirem)
+            $debugCustomer = $_SESSION['asaas_debug_customer'] ?? null;
+            $debugSubscription = $_SESSION['asaas_debug_subscription'] ?? null;
+            error_log('CheckoutController::process payload customer: ' . json_encode($debugCustomer, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
+            error_log('CheckoutController::process payload subscription: ' . json_encode($debugSubscription, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
+
             $friendlyError = 'Não consegui finalizar a assinatura agora. Tenta novamente em alguns minutos ou fala com o suporte.';
 
             $sessionCustomer = $_SESSION['checkout_customer'] ?? null;

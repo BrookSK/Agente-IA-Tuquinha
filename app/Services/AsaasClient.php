@@ -63,6 +63,9 @@ class AsaasClient
         $data = json_decode($result, true) ?: [];
 
         if ($httpCode < 200 || $httpCode >= 300) {
+            // Log geral da resposta crua do Asaas para depuração
+            error_log('AsaasClient HTTP ' . $httpCode . ' raw response: ' . $result);
+
             $desc = '';
             if (isset($data['errors']) && is_array($data['errors']) && !empty($data['errors'][0]['description'])) {
                 $desc = $data['errors'][0]['description'];
