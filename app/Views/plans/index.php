@@ -48,19 +48,20 @@
                 </div>
                 <form action="/checkout" method="get" style="margin-top: 14px;">
                     <input type="hidden" name="plan" value="<?= htmlspecialchars($plan['slug']) ?>">
-                    <button type="submit" style="
+                    <button type="submit" <?= $isCurrent ? 'disabled' : '' ?> style="
                         width: 100%;
                         border-radius: 999px;
                         border: none;
                         padding: 9px 14px;
-                        background: linear-gradient(135deg, #e53935, #ff6f60);
-                        color: #050509;
+                        background: <?= $isCurrent ? 'rgba(255,255,255,0.06)' : 'linear-gradient(135deg, #e53935, #ff6f60)' ?>;
+                        color: <?= $isCurrent ? '#b0b0b0' : '#050509' ?>;
                         font-weight: 600;
                         font-size: 14px;
-                        cursor: pointer;
+                        cursor: <?= $isCurrent ? 'default' : 'pointer' ?>;
                         margin-top: 4px;
+                        opacity: <?= $isCurrent ? '0.7' : '1' ?>;
                     ">
-                        Assinar este plano
+                        <?= $isCurrent ? 'Plano já ativo' : 'Assinar este plano' ?>
                     </button>
                 </form>
             </div>
