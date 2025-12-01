@@ -6,6 +6,7 @@ use App\Core\Controller;
 use App\Core\Database;
 use App\Models\Setting;
 use App\Models\AsaasConfig;
+use App\Models\TuquinhaEngine;
 
 class AdminConfigController extends Controller
 {
@@ -18,6 +19,8 @@ class AdminConfigController extends Controller
         $openaiKey = Setting::get('openai_api_key', '');
         $defaultModel = Setting::get('openai_default_model', AI_MODEL);
         $transcriptionModel = Setting::get('openai_transcription_model', 'whisper-1');
+        $systemPrompt = Setting::get('tuquinha_system_prompt', TuquinhaEngine::getDefaultPrompt());
+        $systemPromptExtra = Setting::get('tuquinha_system_prompt_extra', '');
 
         $smtpHost = Setting::get('smtp_host', '');
         $smtpPort = Setting::get('smtp_port', '587');
@@ -33,6 +36,8 @@ class AdminConfigController extends Controller
             'openaiKey' => $openaiKey,
             'defaultModel' => $defaultModel,
             'transcriptionModel' => $transcriptionModel,
+            'systemPrompt' => $systemPrompt,
+            'systemPromptExtra' => $systemPromptExtra,
             'smtpHost' => $smtpHost,
             'smtpPort' => $smtpPort,
             'smtpUser' => $smtpUser,
@@ -55,6 +60,8 @@ class AdminConfigController extends Controller
         $key = trim($_POST['openai_key'] ?? '');
         $defaultModel = trim($_POST['default_model'] ?? '');
         $transcriptionModel = trim($_POST['transcription_model'] ?? '');
+        $systemPrompt = trim($_POST['system_prompt'] ?? '');
+        $systemPromptExtra = trim($_POST['system_prompt_extra'] ?? '');
         $smtpHost = trim($_POST['smtp_host'] ?? '');
         $smtpPort = trim($_POST['smtp_port'] ?? '587');
         $smtpUser = trim($_POST['smtp_user'] ?? '');
@@ -73,6 +80,8 @@ class AdminConfigController extends Controller
             'openai_api_key' => $key,
             'openai_default_model' => $defaultModel !== '' ? $defaultModel : AI_MODEL,
             'openai_transcription_model' => $transcriptionModel !== '' ? $transcriptionModel : 'whisper-1',
+            'tuquinha_system_prompt' => $systemPrompt !== '' ? $systemPrompt : TuquinhaEngine::getDefaultPrompt(),
+            'tuquinha_system_prompt_extra' => $systemPromptExtra,
             'smtp_host' => $smtpHost,
             'smtp_port' => $smtpPort,
             'smtp_user' => $smtpUser,
@@ -105,6 +114,8 @@ class AdminConfigController extends Controller
             'openaiKey' => $key,
             'defaultModel' => $settingsToSave['openai_default_model'],
             'transcriptionModel' => $settingsToSave['openai_transcription_model'],
+            'systemPrompt' => $settingsToSave['tuquinha_system_prompt'],
+            'systemPromptExtra' => $settingsToSave['tuquinha_system_prompt_extra'],
             'smtpHost' => $smtpHost,
             'smtpPort' => $smtpPort,
             'smtpUser' => $smtpUser,

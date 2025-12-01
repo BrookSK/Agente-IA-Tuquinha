@@ -2,6 +2,8 @@
 /** @var string $openaiKey */
 /** @var string $defaultModel */
 /** @var string $transcriptionModel */
+/** @var string $systemPrompt */
+/** @var string $systemPromptExtra */
 /** @var string $asaasEnvironment */
 /** @var string $asaasSandboxKey */
 /** @var string $asaasProdKey */
@@ -63,6 +65,24 @@ $knownModels = [
                 width: 100%; padding: 8px 10px; border-radius: 8px; border: 1px solid #272727;
                 background: #050509; color: #f5f5f5; font-size: 13px;
             " placeholder="ex: whisper-1 ou gpt-4o-mini-transcribe">
+        </div>
+
+        <div>
+            <label style="font-size: 12px; color: #b0b0b0;">Prompt padrão do Tuquinha (comportamento da IA)</label>
+            <textarea name="system_prompt" rows="12" style="
+                width: 100%; padding: 8px 10px; border-radius: 8px; border: 1px solid #272727;
+                background: #050509; color: #f5f5f5; font-size: 13px; resize: vertical;
+            "><?= htmlspecialchars($systemPrompt) ?></textarea>
+            <small style="color:#777; font-size:11px;">Esse texto define como o Tuquinha se comporta e responde. Se você apagar tudo e salvar, o sistema volta para o prompt padrão original.</small>
+        </div>
+
+        <div>
+            <label style="font-size: 12px; color: #b0b0b0;">Regras extras (opcional)</label>
+            <textarea name="system_prompt_extra" rows="8" style="
+                width: 100%; padding: 8px 10px; border-radius: 8px; border: 1px solid #272727;
+                background: #050509; color: #f5f5f5; font-size: 13px; resize: vertical;
+            "><?= htmlspecialchars($systemPromptExtra) ?></textarea>
+            <small style="color:#777; font-size:11px;">Use este campo para complementar o comportamento base, por exemplo com regras específicas para certos tipos de projeto, limites ou orientações internas.</small>
         </div>
 
         <hr style="border:none; border-top:1px solid #272727; margin: 8px 0;">

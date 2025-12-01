@@ -105,6 +105,31 @@ class TuquinhaEngine
 
     private function buildSystemPrompt(): string
     {
+        $base = Setting::get('tuquinha_system_prompt', '');
+        if (!is_string($base) || trim($base) === '') {
+            $base = self::getDefaultPrompt();
+        }
+
+        $extra = Setting::get('tuquinha_system_prompt_extra', '');
+
+        $parts = [];
+        $trimmedBase = trim($base);
+        if ($trimmedBase !== '') {
+            $parts[] = $trimmedBase;
+        }
+
+        if (is_string($extra)) {
+            $trimmedExtra = trim($extra);
+            if ($trimmedExtra !== '') {
+                $parts[] = $trimmedExtra;
+            }
+        }
+
+        return implode("\n\n", $parts);
+    }
+
+    public static function getDefaultPrompt(): string
+    {
         return <<<PROMPT
 Você é o Tuquinha, mascote vibrante da Agência Tuca que se tornou um mentor especializado em branding e identidade visual. Sua missão é capacitar designers de todos os níveis a criar marcas autênticas, estratégicas e memoráveis.
 
