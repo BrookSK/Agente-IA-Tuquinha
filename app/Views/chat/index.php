@@ -94,6 +94,10 @@ function render_markdown_safe(string $text): string {
                 </div>
             <?php endif; ?>
             <?php foreach ($chatHistory as $message): ?>
+                <?php
+                $createdAt = isset($message['created_at']) ? strtotime((string)$message['created_at']) : null;
+                $createdLabel = $createdAt ? date('d/m/Y H:i', $createdAt) : '';
+                ?>
                 <?php if (($message['role'] ?? '') === 'user'): ?>
                     <?php
                     $rawContent = trim((string)($message['content'] ?? ''));
@@ -103,7 +107,7 @@ function render_markdown_safe(string $text): string {
                     <?php if (str_starts_with($rawContent, 'O usuário enviou os seguintes arquivos nesta mensagem')): ?>
                         <?php continue; ?>
                     <?php endif; ?>
-                    <div style="display: flex; justify-content: flex-end; margin-bottom: 10px;">
+                    <div style="display: flex; flex-direction: column; align-items: flex-end; margin-bottom: 10px;">
                         <div style="
                             max-width: 80%;
                             background: #1e1e24;
@@ -116,9 +120,17 @@ function render_markdown_safe(string $text): string {
                             <?php $content = $rawContent; ?>
                             <?= render_markdown_safe($content) ?>
                         </div>
+                        <div style="margin-top: 2px; display:flex; align-items:center; gap:6px; font-size:10px; color:#777; max-width:80%; justify-content:flex-end;">
+                            <?php if ($createdLabel): ?>
+                                <span><?= htmlspecialchars($createdLabel) ?></span>
+                            <?php endif; ?>
+                            <button type="button" class="copy-message-btn" data-message-text="<?= htmlspecialchars($rawContent) ?>" style="
+                                border:none; background:transparent; color:#b0b0b0; font-size:10px; cursor:pointer; padding:0;
+                            ">Copiar</button>
+                        </div>
                     </div>
                 <?php else: ?>
-                    <div style="display: flex; align-items: flex-start; gap: 8px; margin-bottom: 10px;">
+                    <div style="display: flex; flex-direction: row; align-items: flex-start; gap: 8px; margin-bottom: 10px;">
                         <div style="
                             width: 28px;
                             height: 28px;
@@ -148,6 +160,14 @@ function render_markdown_safe(string $text): string {
                             ?>
                             <?= render_markdown_safe($content) ?>
                         </div>
+                    </div>
+                    <div style="margin: -6px 0 6px 36px; display:flex; align-items:center; gap:6px; font-size:10px; color:#777; max-width:80%;">
+                        <?php if ($createdLabel): ?>
+                            <span><?= htmlspecialchars($createdLabel) ?></span>
+                        <?php endif; ?>
+                        <button type="button" class="copy-message-btn" data-message-text="<?= htmlspecialchars(trim((string)($message['content'] ?? ''))) ?>" style="
+                            border:none; background:transparent; color:#b0b0b0; font-size:10px; cursor:pointer; padding:0;
+                        ">Copiar</button>
                     </div>
                 <?php endif; ?>
             <?php endforeach; ?>
