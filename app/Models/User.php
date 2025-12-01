@@ -66,6 +66,16 @@ class User
         ]);
     }
 
+    public static function setEmailVerifiedAt(int $id, string $dateTime): void
+    {
+        $pdo = Database::getConnection();
+        $stmt = $pdo->prepare('UPDATE users SET email_verified_at = :dt WHERE id = :id LIMIT 1');
+        $stmt->execute([
+            'dt' => $dateTime,
+            'id' => $id,
+        ]);
+    }
+
     public static function all(): array
     {
         $pdo = Database::getConnection();

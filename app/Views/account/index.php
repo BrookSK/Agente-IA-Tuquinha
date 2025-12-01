@@ -32,6 +32,14 @@
                     <label style="font-size:13px; color:#ddd; display:block; margin-bottom:4px;">E-mail</label>
                     <input type="email" value="<?= htmlspecialchars($user['email'] ?? '') ?>" disabled style="width:100%; padding:8px 10px; border-radius:8px; border:1px solid #272727; background:#050509; color:#777; font-size:14px;">
                 </div>
+                <div style="font-size:12px; color:#b0b0b0;">
+                    <?php if (!empty($user['email_verified_at'])): ?>
+                        <span style="color:#8bc34a; font-weight:500;">E-mail verificado em <?= htmlspecialchars(date('d/m/Y H:i', strtotime($user['email_verified_at']))) ?></span>
+                    <?php else: ?>
+                        <span style="color:#ffb74d; font-weight:500;">E-mail ainda não verificado.</span>
+                        <a href="/verificar-email" style="margin-left:6px; color:#ff6f60; text-decoration:none;">Verificar agora</a>
+                    <?php endif; ?>
+                </div>
                 <button type="submit" style="margin-top:6px; align-self:flex-start; border:none; border-radius:999px; padding:8px 14px; background:linear-gradient(135deg,#e53935,#ff6f60); color:#050509; font-weight:600; cursor:pointer; font-size:13px;">
                     Salvar dados
                 </button>

@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Models\Plan;
 use App\Services\MailService;
 use App\Core\Database;
+use App\Models\EmailVerification;
 
 class AuthController extends Controller
 {
@@ -36,6 +37,17 @@ class AuthController extends Controller
             $this->view('auth/login', [
                 'pageTitle' => 'Entrar - Tuquinha',
                 'error' => 'E-mail ou senha inválidos.',
+            ]);
+            return;
+        }
+
+        if (empty($user['email_verified_at'])) {
+            $_SESSION['pending_verify_user_id'] = (int)$user['id'];
+            $_SESSION['pending_verify_email'] = $user['email'];
+
+            $this->view('auth/login', [
+                'pageTitle' => 'Entrar - Tuquinha',
+                'error' => 'Antes de entrar, confirme seu e-mail. Enviamos um código de verificação para você.',
             ]);
             return;
         }
@@ -126,19 +138,59 @@ class AuthController extends Controller
         $hash = password_hash($password, PASSWORD_BCRYPT);
         $userId = User::createUser($name, $email, $hash);
 
-        $_SESSION['user_id'] = $userId;
-        $_SESSION['user_name'] = $name;
-        $_SESSION['user_email'] = $email;
+        // cria código de verificação de e-mail
+        $code = str_pad((string)random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+        $expiresAt = (new \DateTime('+30 minutes'))->format('Y-m-d H:i:s');
+        EmailVerification::create($userId, $code, $expiresAt);
 
-        $redirectPlan = $_SESSION['pending_plan_slug'] ?? null;
-        unset($_SESSION['pending_plan_slug']);
+        // envia e-mail de boas-vindas com código
+        $subject = 'Bem-vindo(a) ao Tuquinha - Confirme seu e-mail';
+        $safeName = htmlspecialchars($name, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+        $safeCode = htmlspecialchars($code, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+        $body = <<<HTML
+<html>
+<body style="margin:0; padding:0; background:#050509; font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; color:#f5f5f5;">
+  <div style="width:100%; padding:24px 0;">
+    <div style="max-width:520px; margin:0 auto; background:#111118; border-radius:16px; border:1px solid #272727; padding:18px 20px;">
+      <div style="display:flex; align-items:center; gap:10px; margin-bottom:12px;">
+        <div style="width:32px; height:32px; border-radius:50%; background:radial-gradient(circle at 30% 20%, #fff 0, #ff8a65 25%, #e53935 65%, #050509 100%); display:flex; align-items:center; justify-content:center; font-weight:700; font-size:16px; color:#050509;">T</div>
+        <div>
+          <div style="font-weight:700; font-size:15px;">Agente IA - Tuquinha</div>
+          <div style="font-size:11px; color:#b0b0b0;">Branding vivo na veia</div>
+        </div>
+      </div>
 
-        if ($redirectPlan) {
-            header('Location: /checkout?plan=' . urlencode($redirectPlan));
-        } else {
-            header('Location: /');
-        }
-        exit;
+      <p style="font-size:14px; margin:0 0 10px 0;">Oi, {$safeName} 👋</p>
+      <p style="font-size:14px; margin:0 0 10px 0;">Que bom te ver por aqui! Antes de começar a brincar com o Tuquinha, precisamos confirmar que este e-mail é seu.</p>
+      <p style="font-size:14px; margin:0 0 10px 0;">Use o código abaixo na tela de confirmação para ativar sua conta:</p>
+
+      <div style="text-align:center; margin:12px 0 16px 0;">
+        <div style="display:inline-block; padding:10px 18px; border-radius:999px; background:linear-gradient(135deg,#e53935,#ff6f60); color:#050509; font-weight:700; font-size:18px; letter-spacing:0.35em;">
+          {$safeCode}
+        </div>
+      </div>
+
+      <p style="font-size:12px; color:#b0b0b0; margin:0 0 8px 0;">Por segurança, esse código vale por <strong>30 minutos</strong>. Depois disso, é só pedir um código novo.</p>
+
+      <p style="font-size:12px; color:#777; margin:0;">Se você não criou uma conta no Tuquinha, pode ignorar este e-mail.</p>
+    </div>
+  </div>
+</body>
+</html>
+HTML;
+
+        MailService::send($email, $name, $subject, $body);
+
+        $_SESSION['pending_verify_user_id'] = $userId;
+        $_SESSION['pending_verify_email'] = $email;
+
+        $this->view('auth/verify_email', [
+            'pageTitle' => 'Confirmar e-mail',
+            'email' => $email,
+            'error' => null,
+            'success' => 'Enviamos um código de verificação para o seu e-mail.',
+        ]);
+        return;
     }
 
     public function logout(): void
@@ -319,5 +371,161 @@ class AuthController extends Controller
 
         header('Location: /conta');
         exit;
+    }
+
+    public function showVerifyEmail(): void
+    {
+        $userId = $_SESSION['pending_verify_user_id'] ?? null;
+        $email = $_SESSION['pending_verify_email'] ?? null;
+
+        if (!$userId || !$email) {
+            header('Location: /login');
+            exit;
+        }
+
+        $this->view('auth/verify_email', [
+            'pageTitle' => 'Confirmar e-mail',
+            'email' => (string)$email,
+            'error' => null,
+            'success' => null,
+        ]);
+    }
+
+    public function verifyEmail(): void
+    {
+        $userId = $_SESSION['pending_verify_user_id'] ?? null;
+        $email = $_SESSION['pending_verify_email'] ?? null;
+        $code = trim((string)($_POST['code'] ?? ''));
+
+        if (!$userId || !$email) {
+            header('Location: /login');
+            exit;
+        }
+
+        if ($code === '') {
+            $this->view('auth/verify_email', [
+                'pageTitle' => 'Confirmar e-mail',
+                'email' => (string)$email,
+                'error' => 'Informe o código que enviamos para o seu e-mail.',
+                'success' => null,
+            ]);
+            return;
+        }
+
+        $userId = (int)$userId;
+        $verification = EmailVerification::findValidByUserAndCode($userId, $code);
+        if (!$verification) {
+            $this->view('auth/verify_email', [
+                'pageTitle' => 'Confirmar e-mail',
+                'email' => (string)$email,
+                'error' => 'Código inválido ou expirado. Confira o código ou peça um novo.',
+                'success' => null,
+            ]);
+            return;
+        }
+
+        // marca como usado e atualiza usuário
+        EmailVerification::markUsed((int)$verification['id']);
+        $now = (new \DateTime())->format('Y-m-d H:i:s');
+        User::setEmailVerifiedAt($userId, $now);
+
+        // carrega usuário atualizado
+        $user = User::findById($userId);
+        if (!$user) {
+            unset($_SESSION['pending_verify_user_id'], $_SESSION['pending_verify_email']);
+            header('Location: /login');
+            exit;
+        }
+
+        // cria sessão de login
+        $_SESSION['user_id'] = (int)$user['id'];
+        $_SESSION['user_name'] = $user['name'];
+        $_SESSION['user_email'] = $user['email'];
+
+        if (!empty($user['is_admin'])) {
+            $_SESSION['is_admin'] = true;
+            $topPlan = Plan::findTopActive();
+            if ($topPlan && !empty($topPlan['slug'])) {
+                $_SESSION['plan_slug'] = $topPlan['slug'];
+            }
+        } else {
+            unset($_SESSION['is_admin']);
+        }
+
+        unset($_SESSION['pending_verify_user_id'], $_SESSION['pending_verify_email']);
+
+        $redirectPlan = $_SESSION['pending_plan_slug'] ?? null;
+        unset($_SESSION['pending_plan_slug']);
+
+        if ($redirectPlan) {
+            header('Location: /checkout?plan=' . urlencode((string)$redirectPlan));
+        } else {
+            header('Location: /');
+        }
+        exit;
+    }
+
+    public function resendVerification(): void
+    {
+        $userId = $_SESSION['pending_verify_user_id'] ?? null;
+        $email = $_SESSION['pending_verify_email'] ?? null;
+
+        if (!$userId || !$email) {
+            header('Location: /login');
+            exit;
+        }
+
+        $user = User::findById((int)$userId);
+        if (!$user) {
+            unset($_SESSION['pending_verify_user_id'], $_SESSION['pending_verify_email']);
+            header('Location: /login');
+            exit;
+        }
+
+        $code = str_pad((string)random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+        $expiresAt = (new \DateTime('+30 minutes'))->format('Y-m-d H:i:s');
+        EmailVerification::create((int)$userId, $code, $expiresAt);
+
+        $subject = 'Seu novo código para confirmar o e-mail - Tuquinha';
+        $safeName = htmlspecialchars($user['name'] ?? '', ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+        $safeCode = htmlspecialchars($code, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+        $body = <<<HTML
+<html>
+<body style="margin:0; padding:0; background:#050509; font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; color:#f5f5f5;">
+  <div style="width:100%; padding:24px 0;">
+    <div style="max-width:520px; margin:0 auto; background:#111118; border-radius:16px; border:1px solid #272727; padding:18px 20px;">
+      <div style="display:flex; align-items:center; gap:10px; margin-bottom:12px;">
+        <div style="width:32px; height:32px; border-radius:50%; background:radial-gradient(circle at 30% 20%, #fff 0, #ff8a65 25%, #e53935 65%, #050509 100%); display:flex; align-items:center; justify-content:center; font-weight:700; font-size:16px; color:#050509;">T</div>
+        <div>
+          <div style="font-weight:700; font-size:15px;">Agente IA - Tuquinha</div>
+          <div style="font-size:11px; color:#b0b0b0;">Branding vivo na veia</div>
+        </div>
+      </div>
+
+      <p style="font-size:14px; margin:0 0 10px 0;">Oi, {$safeName} 👋</p>
+      <p style="font-size:14px; margin:0 0 10px 0;">Aqui vai um novo código para você confirmar o seu e-mail no Tuquinha.</p>
+      <p style="font-size:14px; margin:0 0 10px 0;">Digite o código abaixo na tela de confirmação:</p>
+
+      <div style="text-align:center; margin:12px 0 16px 0;">
+        <div style="display:inline-block; padding:10px 18px; border-radius:999px; background:linear-gradient(135deg,#e53935,#ff6f60); color:#050509; font-weight:700; font-size:18px; letter-spacing:0.35em;">
+          {$safeCode}
+        </div>
+      </div>
+
+      <p style="font-size:12px; color:#b0b0b0; margin:0 0 8px 0;">Este código é válido por <strong>30 minutos</strong>.</p>
+    </div>
+  </div>
+</body>
+</html>
+HTML;
+
+        MailService::send((string)$email, $user['name'] ?? '', $subject, $body);
+
+        $this->view('auth/verify_email', [
+            'pageTitle' => 'Confirmar e-mail',
+            'email' => (string)$email,
+            'error' => null,
+            'success' => 'Enviamos um novo código para o seu e-mail.',
+        ]);
     }
 }
