@@ -114,7 +114,13 @@ $price = number_format($plan['price_cents'] / 100, 2, ',', '.');
             <input name="card_cvv" required maxlength="4" style="width: 100%; padding: 7px 9px; border-radius: 8px; border: 1px solid #272727; background: #050509; color: #f5f5f5; font-size: 13px;">
         </div>
 
-        <div style="grid-column: 1 / -1; margin-top: 10px; display: flex; justify-content: flex-end;">
+        <div style="grid-column: 1 / -1; margin-top: 10px; display: flex; justify-content: space-between; align-items: center; gap: 8px;">
+            <a href="/checkout?plan=<?= urlencode($plan['slug']) ?>" style="
+                font-size: 13px; color:#b0b0b0; text-decoration:none; padding:8px 12px;
+                border-radius:999px; border:1px solid #272727;
+            ">
+                Voltar e editar dados
+            </a>
             <button type="submit" style="
                 border: none;
                 border-radius: 999px;

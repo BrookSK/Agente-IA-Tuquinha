@@ -2,9 +2,22 @@
 /** @var array $plan */
 /** @var string|null $error */
 /** @var array|null $currentUser */
+/** @var array|null $savedCustomer */
 $price = number_format($plan['price_cents'] / 100, 2, ',', '.');
-$prefillName = $currentUser['name'] ?? '';
-$prefillEmail = $currentUser['email'] ?? '';
+
+// Se já existe cliente salvo na sessão, prioriza ele; senão usa dados do usuário logado
+$prefillName = $savedCustomer['name'] ?? ($currentUser['name'] ?? '');
+$prefillEmail = $savedCustomer['email'] ?? ($currentUser['email'] ?? '');
+$prefillCpf = $savedCustomer['cpf'] ?? '';
+$prefillBirthdate = $savedCustomer['birthdate'] ?? '';
+$prefillPhone = $savedCustomer['phone'] ?? '';
+$prefillPostalCode = $savedCustomer['postal_code'] ?? '';
+$prefillAddress = $savedCustomer['address'] ?? '';
+$prefillAddressNumber = $savedCustomer['address_number'] ?? '';
+$prefillComplement = $savedCustomer['complement'] ?? '';
+$prefillProvince = $savedCustomer['province'] ?? '';
+$prefillCity = $savedCustomer['city'] ?? '';
+$prefillState = $savedCustomer['state'] ?? '';
 ?>
 <div style="max-width: 880px; margin: 0 auto;">
     <h1 style="font-size: 24px; margin-bottom: 6px; font-weight: 650;">Finalizar assinatura</h1>
@@ -35,46 +48,46 @@ $prefillEmail = $currentUser['email'] ?? '';
         </div>
         <div>
             <label style="font-size: 12px; color: #b0b0b0;">CPF*</label>
-            <input name="cpf" required style="width: 100%; padding: 7px 9px; border-radius: 8px; border: 1px solid #272727; background: #050509; color: #f5f5f5; font-size: 13px;">
+            <input name="cpf" required value="<?= htmlspecialchars($prefillCpf) ?>" style="width: 100%; padding: 7px 9px; border-radius: 8px; border: 1px solid #272727; background: #050509; color: #f5f5f5; font-size: 13px;">
         </div>
         <div>
             <label style="font-size: 12px; color: #b0b0b0;">Data de nascimento*</label>
-            <input name="birthdate" type="date" required style="width: 100%; padding: 7px 9px; border-radius: 8px; border: 1px solid #272727; background: #050509; color: #f5f5f5; font-size: 13px;">
+            <input name="birthdate" type="date" required value="<?= htmlspecialchars($prefillBirthdate) ?>" style="width: 100%; padding: 7px 9px; border-radius: 8px; border: 1px solid #272727; background: #050509; color: #f5f5f5; font-size: 13px;">
         </div>
         <div>
             <label style="font-size: 12px; color: #b0b0b0;">Telefone</label>
-            <input name="phone" style="width: 100%; padding: 7px 9px; border-radius: 8px; border: 1px solid #272727; background: #050509; color: #f5f5f5; font-size: 13px;">
+            <input name="phone" value="<?= htmlspecialchars($prefillPhone) ?>" style="width: 100%; padding: 7px 9px; border-radius: 8px; border: 1px solid #272727; background: #050509; color: #f5f5f5; font-size: 13px;">
         </div>
 
         <div style="grid-column: 1 / -1; margin-top: 8px; font-size: 12px; text-transform: uppercase; letter-spacing: 0.12em; color: #b0b0b0;">Endereço</div>
 
         <div>
             <label style="font-size: 12px; color: #b0b0b0;">CEP*</label>
-            <input name="postal_code" required style="width: 100%; padding: 7px 9px; border-radius: 8px; border: 1px solid #272727; background: #050509; color: #f5f5f5; font-size: 13px;">
+            <input name="postal_code" required value="<?= htmlspecialchars($prefillPostalCode) ?>" style="width: 100%; padding: 7px 9px; border-radius: 8px; border: 1px solid #272727; background: #050509; color: #f5f5f5; font-size: 13px;">
         </div>
         <div>
             <label style="font-size: 12px; color: #b0b0b0;">Endereço*</label>
-            <input name="address" required style="width: 100%; padding: 7px 9px; border-radius: 8px; border: 1px solid #272727; background: #050509; color: #f5f5f5; font-size: 13px;">
+            <input name="address" required value="<?= htmlspecialchars($prefillAddress) ?>" style="width: 100%; padding: 7px 9px; border-radius: 8px; border: 1px solid #272727; background: #050509; color: #f5f5f5; font-size: 13px;">
         </div>
         <div>
             <label style="font-size: 12px; color: #b0b0b0;">Número*</label>
-            <input name="address_number" required style="width: 100%; padding: 7px 9px; border-radius: 8px; border: 1px solid #272727; background: #050509; color: #f5f5f5; font-size: 13px;">
+            <input name="address_number" required value="<?= htmlspecialchars($prefillAddressNumber) ?>" style="width: 100%; padding: 7px 9px; border-radius: 8px; border: 1px solid #272727; background: #050509; color: #f5f5f5; font-size: 13px;">
         </div>
         <div>
             <label style="font-size: 12px; color: #b0b0b0;">Complemento</label>
-            <input name="complement" style="width: 100%; padding: 7px 9px; border-radius: 8px; border: 1px solid #272727; background: #050509; color: #f5f5f5; font-size: 13px;">
+            <input name="complement" value="<?= htmlspecialchars($prefillComplement) ?>" style="width: 100%; padding: 7px 9px; border-radius: 8px; border: 1px solid #272727; background: #050509; color: #f5f5f5; font-size: 13px;">
         </div>
         <div>
             <label style="font-size: 12px; color: #b0b0b0;">Bairro*</label>
-            <input name="province" required style="width: 100%; padding: 7px 9px; border-radius: 8px; border: 1px solid #272727; background: #050509; color: #f5f5f5; font-size: 13px;">
+            <input name="province" required value="<?= htmlspecialchars($prefillProvince) ?>" style="width: 100%; padding: 7px 9px; border-radius: 8px; border: 1px solid #272727; background: #050509; color: #f5f5f5; font-size: 13px;">
         </div>
         <div>
             <label style="font-size: 12px; color: #b0b0b0;">Cidade*</label>
-            <input name="city" required style="width: 100%; padding: 7px 9px; border-radius: 8px; border: 1px solid #272727; background: #050509; color: #f5f5f5; font-size: 13px;">
+            <input name="city" required value="<?= htmlspecialchars($prefillCity) ?>" style="width: 100%; padding: 7px 9px; border-radius: 8px; border: 1px solid #272727; background: #050509; color: #f5f5f5; font-size: 13px;">
         </div>
         <div>
             <label style="font-size: 12px; color: #b0b0b0;">Estado (UF)*</label>
-            <input name="state" maxlength="2" required style="width: 100%; padding: 7px 9px; border-radius: 8px; border: 1px solid #272727; background: #050509; color: #f5f5f5; font-size: 13px; text-transform: uppercase;">
+            <input name="state" maxlength="2" required value="<?= htmlspecialchars($prefillState) ?>" style="width: 100%; padding: 7px 9px; border-radius: 8px; border: 1px solid #272727; background: #050509; color: #f5f5f5; font-size: 13px; text-transform: uppercase;">
         </div>
 
         <div style="grid-column: 1 / -1; margin-top: 10px; display: flex; justify-content: flex-end;">

@@ -177,6 +177,11 @@ $pageTitle = $pageTitle ?? 'Agente IA - Tuquinha';
             overflow-y: auto;
         }
 
+        /* Ajuste do ícone de calendário em inputs de data no tema escuro */
+        input[type="date"]::-webkit-calendar-picker-indicator {
+            filter: invert(1);
+        }
+
         /* Scrollbar customizado para a sidebar */
         .sidebar::-webkit-scrollbar {
             width: 8px;

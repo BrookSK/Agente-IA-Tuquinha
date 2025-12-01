@@ -33,12 +33,15 @@ class CheckoutController extends Controller
             $currentUser = User::findById((int)$_SESSION['user_id']);
         }
 
+        $savedCustomer = $_SESSION['checkout_customer'] ?? null;
+
         // Passo 1: dados pessoais/endereço
         $this->view('checkout/step1', [
             'pageTitle' => 'Checkout - ' . $plan['name'],
             'plan' => $plan,
             'error' => null,
             'currentUser' => $currentUser,
+            'savedCustomer' => $savedCustomer,
         ]);
     }
 
@@ -151,7 +154,19 @@ class CheckoutController extends Controller
             'ccv' => trim($_POST['card_cvv']),
         ];
 
-        $birthdate = $sessionCustomer['birthdate'];
+        $birthdateInput = $sessionCustomer['birthdate'] ?? '';
+        $birthdate = $birthdateInput;
+        $birthdateForAsaas = $birthdateInput;
+        if ($birthdateInput !== '') {
+            try {
+                $dt = new \DateTime($birthdateInput);
+                // Asaas espera formato dd/MM/yyyy
+                $birthdateForAsaas = $dt->format('d/m/Y');
+            } catch (\Throwable $e) {
+                // mantém valor original se algo der errado
+                $birthdateForAsaas = $birthdateInput;
+            }
+        }
 
         $subscriptionPayload = [
             'billingType' => 'CREDIT_CARD',
@@ -171,7 +186,7 @@ class CheckoutController extends Controller
                 'province' => $customer['province'],
                 'city' => $customer['city'],
                 'state' => $customer['state'],
-                'birthDate' => $birthdate,
+                'birthDate' => $birthdateForAsaas,
             ],
         ];
 
@@ -219,9 +234,13 @@ class CheckoutController extends Controller
 
             $friendlyError = 'Não consegui finalizar a assinatura agora. Tenta novamente em alguns minutos ou fala com o suporte.';
 
+            $sessionCustomer = $_SESSION['checkout_customer'] ?? null;
+
             $this->view('checkout/show', [
                 'pageTitle' => 'Checkout - ' . $plan['name'],
                 'plan' => $plan,
+                'customer' => $sessionCustomer ?: [],
+                'birthdate' => $sessionCustomer['birthdate'] ?? '',
                 'error' => $friendlyError,
             ]);
         }
