@@ -113,4 +113,44 @@ class Conversation
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
         return $row ?: null;
     }
+
+    public static function ensureUniqueTitle(string $sessionId, string $baseTitle): string
+    {
+        $pdo = Database::getConnection();
+
+        $title = trim($baseTitle);
+        if ($title === '') {
+            $title = 'Chat com o Tuquinha';
+        }
+
+        // Se não existir ainda, usa direto
+        $stmt = $pdo->prepare('SELECT COUNT(*) FROM conversations WHERE session_id = :session_id AND title = :title');
+        $stmt->execute([
+            'session_id' => $sessionId,
+            'title' => $title,
+        ]);
+        $count = (int)$stmt->fetchColumn();
+        if ($count === 0) {
+            return $title;
+        }
+
+        // Caso já exista, tenta com sufixos (2), (3), ...
+        $suffix = 2;
+        while (true) {
+            $candidate = $title . ' (' . $suffix . ')';
+            $stmt->execute([
+                'session_id' => $sessionId,
+                'title' => $candidate,
+            ]);
+            $exists = (int)$stmt->fetchColumn();
+            if ($exists === 0) {
+                return $candidate;
+            }
+            $suffix++;
+            if ($suffix > 50) {
+                // evita loop infinito em cenário extremo
+                return $title . ' (' . uniqid() . ')';
+            }
+        }
+    }
 }

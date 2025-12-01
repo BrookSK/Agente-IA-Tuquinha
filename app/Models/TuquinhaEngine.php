@@ -210,4 +210,80 @@ Seu sucesso é medido pelo quanto o designer:
 Siga sempre essas diretrizes em TODAS as respostas.
 PROMPT;
     }
+
+    public static function generateShortTitle(string $userText): ?string
+    {
+        $userText = trim($userText);
+        if ($userText === '') {
+            return null;
+        }
+
+        $configuredApiKey = Setting::get('openai_api_key', AI_API_KEY);
+        if (empty($configuredApiKey)) {
+            return null;
+        }
+
+        $configuredModel = Setting::get('openai_default_model', AI_MODEL);
+        $modelToUse = $configuredModel ?: AI_MODEL;
+
+        $messages = [
+            [
+                'role' => 'system',
+                'content' => 'Você é um assistente que gera títulos curtos e claros para conversas de chat. Responda apenas com um título em, no máximo, 6 palavras, sem aspas.',
+            ],
+            [
+                'role' => 'user',
+                'content' => "Gere um título curto para esta conversa, baseado na primeira mensagem do usuário:\n\n" . $userText,
+            ],
+        ];
+
+        $body = json_encode([
+            'model' => $modelToUse,
+            'messages' => $messages,
+            'temperature' => 0.4,
+        ]);
+
+        $ch = curl_init('https://api.openai.com/v1/chat/completions');
+        curl_setopt_array($ch, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_POST => true,
+            CURLOPT_HTTPHEADER => [
+                'Content-Type: application/json',
+                'Authorization: Bearer ' . $configuredApiKey,
+            ],
+            CURLOPT_POSTFIELDS => $body,
+            CURLOPT_TIMEOUT => 15,
+        ]);
+
+        $result = curl_exec($ch);
+        if ($result === false) {
+            curl_close($ch);
+            return null;
+        }
+
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+
+        if ($httpCode < 200 || $httpCode >= 300) {
+            return null;
+        }
+
+        $data = json_decode($result, true);
+        $content = $data['choices'][0]['message']['content'] ?? null;
+        if (!is_string($content)) {
+            return null;
+        }
+
+        $title = trim($content);
+        if ($title === '') {
+            return null;
+        }
+
+        // Limita tamanho máximo para garantir que fique curto
+        if (mb_strlen($title, 'UTF-8') > 80) {
+            $title = mb_substr($title, 0, 80, 'UTF-8');
+        }
+
+        return $title;
+    }
 }

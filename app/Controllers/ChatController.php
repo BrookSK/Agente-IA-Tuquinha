@@ -37,6 +37,7 @@ class ChatController extends Controller
         $_SESSION['current_conversation_id'] = $conversation->id;
 
         $history = Message::allByConversation($conversation->id);
+        $attachments = Attachment::allByConversation($conversation->id);
 
         $draftMessage = $_SESSION['draft_message'] ?? '';
         $audioError = $_SESSION['audio_error'] ?? null;
@@ -83,6 +84,7 @@ class ChatController extends Controller
         $this->view('chat/index', [
             'pageTitle' => 'Chat - Tuquinha',
             'chatHistory' => $history,
+            'attachments' => $attachments,
             'allowedModels' => $allowedModels,
             'currentModel' => $_SESSION['chat_model'] ?? $defaultModel,
             'currentPlan' => $currentPlan,
@@ -130,17 +132,27 @@ class ChatController extends Controller
             // Salva mensagem de texto do usuário
             Message::create($conversation->id, 'user', $message);
 
-            // Se for a primeira mensagem, gera um título automático para o chat
+            // Se for a primeira mensagem, gera um título automático curto usando a IA
             if (empty($existingMessages)) {
                 $raw = trim(preg_replace('/\s+/', ' ', $message));
                 if ($raw === '') {
                     $raw = 'Chat com o Tuquinha';
                 }
-                $title = mb_substr($raw, 0, 60, 'UTF-8');
-                if (mb_strlen($raw, 'UTF-8') > 60) {
-                    $title .= '...';
+
+                $title = TuquinhaEngine::generateShortTitle($raw);
+
+                if (!$title) {
+                    // Fallback antigo: corta a primeira frase
+                    $title = mb_substr($raw, 0, 60, 'UTF-8');
+                    if (mb_strlen($raw, 'UTF-8') > 60) {
+                        $title .= '...';
+                    }
                 }
-                Conversation::updateTitle($conversation->id, $title);
+
+                // Garante que não haja dois títulos idênticos para a mesma sessão
+                $uniqueTitle = Conversation::ensureUniqueTitle($sessionId, $title);
+
+                Conversation::updateTitle($conversation->id, $uniqueTitle);
             }
 
             // Trata anexos (imagens/arquivos) se enviados e se o plano permitir

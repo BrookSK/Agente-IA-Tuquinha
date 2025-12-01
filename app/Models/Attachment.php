@@ -17,4 +17,12 @@ class Attachment
         )');
         $stmt->execute($data);
     }
+
+    public static function allByConversation(int $conversationId): array
+    {
+        $pdo = Database::getConnection();
+        $stmt = $pdo->prepare('SELECT * FROM attachments WHERE conversation_id = :cid ORDER BY id ASC');
+        $stmt->execute(['cid' => $conversationId]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
 }
