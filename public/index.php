@@ -57,6 +57,7 @@ $router->get('/admin/planos/ativar', 'AdminPlanController@toggleActive');
 $router->get('/admin/usuarios', 'AdminUserController@index');
 $router->get('/admin/usuarios/ver', 'AdminUserController@show');
 $router->post('/admin/usuarios/toggle', 'AdminUserController@toggleActive');
+$router->post('/admin/usuarios/toggle-admin', 'AdminUserController@toggleAdmin');
 $router->get('/admin/assinaturas', 'AdminSubscriptionController@index');
 $router->get('/chat', 'ChatController@index');
 $router->post('/chat/send', 'ChatController@send');

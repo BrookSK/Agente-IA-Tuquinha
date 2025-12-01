@@ -11,7 +11,7 @@
         <h2 style="font-size:16px; margin-bottom:10px;">Dados básicos</h2>
         <p style="font-size:13px; margin-bottom:4px;"><strong>Nome:</strong> <?= htmlspecialchars($user['name']) ?></p>
         <p style="font-size:13px; margin-bottom:4px;"><strong>E-mail:</strong> <?= htmlspecialchars($user['email']) ?></p>
-        <p style="font-size:13px; margin-bottom:4px;"><strong>Admin:</strong> <?= !empty($user['is_admin']) ? 'Sim' : 'Não' ?></p>
+        <p style="font-size:13px; margin-bottom:8px;"><strong>Admin:</strong> <?= !empty($user['is_admin']) ? 'Sim' : 'Não' ?></p>
         <p style="font-size:13px; margin-bottom:8px;">
             <strong>Status:</strong>
             <?php $active = isset($user['is_active']) ? (int)$user['is_active'] === 1 : true; ?>
@@ -25,6 +25,14 @@
             <input type="hidden" name="value" value="<?= $active ? 0 : 1 ?>">
             <button type="submit" style="border:none; border-radius:999px; padding:6px 12px; font-size:13px; font-weight:600; cursor:pointer; <?= $active ? 'background:#311; color:#ef9a9a; border:1px solid #b71c1c;' : 'background:linear-gradient(135deg,#2e7d32,#66bb6a); color:#050509; border:none;' ?>">
                 <?= $active ? 'Desativar usuário' : 'Ativar usuário' ?>
+            </button>
+        </form>
+
+        <form method="post" action="/admin/usuarios/toggle-admin" style="margin-top:8px;">
+            <input type="hidden" name="id" value="<?= (int)$user['id'] ?>">
+            <input type="hidden" name="value" value="<?= !empty($user['is_admin']) ? 0 : 1 ?>">
+            <button type="submit" style="border:none; border-radius:999px; padding:6px 12px; font-size:13px; font-weight:600; cursor:pointer; background:#111; color:#ffcc80; border:1px solid #ffb74d;">
+                <?= !empty($user['is_admin']) ? 'Remover admin' : 'Tornar admin' ?>
             </button>
         </form>
     </div>

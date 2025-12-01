@@ -42,11 +42,19 @@ class ChatController extends Controller
         $audioError = $_SESSION['audio_error'] ?? null;
         unset($_SESSION['draft_message'], $_SESSION['audio_error']);
 
-        $currentPlan = Plan::findBySessionSlug($_SESSION['plan_slug'] ?? null);
-        if (!$currentPlan) {
-            $currentPlan = Plan::findBySlug('free');
-            if ($currentPlan) {
+        $currentPlan = null;
+        if (!empty($_SESSION['is_admin'])) {
+            $currentPlan = Plan::findTopActive();
+            if ($currentPlan && !empty($currentPlan['slug'])) {
                 $_SESSION['plan_slug'] = $currentPlan['slug'];
+            }
+        } else {
+            $currentPlan = Plan::findBySessionSlug($_SESSION['plan_slug'] ?? null);
+            if (!$currentPlan) {
+                $currentPlan = Plan::findBySlug('free');
+                if ($currentPlan) {
+                    $_SESSION['plan_slug'] = $currentPlan['slug'];
+                }
             }
         }
 
@@ -136,11 +144,18 @@ class ChatController extends Controller
             }
 
             // Trata anexos (imagens/arquivos) se enviados e se o plano permitir
-            $plan = Plan::findBySessionSlug($_SESSION['plan_slug'] ?? null);
-            if (!$plan) {
-                $plan = Plan::findBySlug('free');
-                if ($plan) {
+            if (!empty($_SESSION['is_admin'])) {
+                $plan = Plan::findTopActive();
+                if ($plan && !empty($plan['slug'])) {
                     $_SESSION['plan_slug'] = $plan['slug'];
+                }
+            } else {
+                $plan = Plan::findBySessionSlug($_SESSION['plan_slug'] ?? null);
+                if (!$plan) {
+                    $plan = Plan::findBySlug('free');
+                    if ($plan) {
+                        $_SESSION['plan_slug'] = $plan['slug'];
+                    }
                 }
             }
             $allowImages = !empty($plan['allow_images']);

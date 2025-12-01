@@ -75,4 +75,19 @@ class AdminUserController extends Controller
         header('Location: /admin/usuarios/ver?id=' . $id);
         exit;
     }
+
+    public function toggleAdmin(): void
+    {
+        $this->ensureAdmin();
+
+        $id = isset($_POST['id']) ? (int)$_POST['id'] : 0;
+        $value = isset($_POST['value']) ? (int)$_POST['value'] : 0;
+
+        if ($id > 0) {
+            User::setAdmin($id, $value === 1);
+        }
+
+        header('Location: /admin/usuarios/ver?id=' . $id);
+        exit;
+    }
 }

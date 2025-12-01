@@ -4,6 +4,7 @@ namespace App\Controllers;
 
 use App\Core\Controller;
 use App\Models\User;
+use App\Models\Plan;
 use App\Services\MailService;
 use App\Core\Database;
 
@@ -54,6 +55,12 @@ class AuthController extends Controller
         // Marca sessão como admin se o usuário tiver is_admin = 1 no banco
         if (!empty($user['is_admin'])) {
             $_SESSION['is_admin'] = true;
+
+            // Admin sempre usa o plano mais "top" disponível
+            $topPlan = Plan::findTopActive();
+            if ($topPlan && !empty($topPlan['slug'])) {
+                $_SESSION['plan_slug'] = $topPlan['slug'];
+            }
         } else {
             unset($_SESSION['is_admin']);
         }

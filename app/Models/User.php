@@ -107,4 +107,14 @@ class User
             'id' => $id,
         ]);
     }
+
+    public static function setAdmin(int $id, bool $isAdmin): void
+    {
+        $pdo = Database::getConnection();
+        $stmt = $pdo->prepare('UPDATE users SET is_admin = :adm WHERE id = :id LIMIT 1');
+        $stmt->execute([
+            'adm' => $isAdmin ? 1 : 0,
+            'id' => $id,
+        ]);
+    }
 }

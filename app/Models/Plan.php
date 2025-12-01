@@ -124,6 +124,14 @@ class Plan
         return self::findBySlug($slug);
     }
 
+    public static function findTopActive(): ?array
+    {
+        $pdo = Database::getConnection();
+        $stmt = $pdo->query('SELECT * FROM plans WHERE is_active = 1 ORDER BY price_cents DESC, sort_order DESC LIMIT 1');
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $row ?: null;
+    }
+
     public static function parseAllowedModels(?string $allowed): array
     {
         if (!$allowed) {
