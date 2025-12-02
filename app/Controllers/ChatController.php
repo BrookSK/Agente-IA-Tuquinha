@@ -21,6 +21,12 @@ class ChatController extends Controller
         $conversationParam = isset($_GET['c']) ? (int)$_GET['c'] : 0;
         $isNew = isset($_GET['new']);
 
+        // Se acessar /chat sem ?new=1 e sem ?c=, força redirecionar para uma nova conversa
+        if (!$isNew && $conversationParam === 0) {
+            header('Location: /chat?new=1');
+            exit;
+        }
+
         if ($isNew) {
             if ($userId > 0) {
                 $conversation = Conversation::createForUser($userId, $sessionId);
