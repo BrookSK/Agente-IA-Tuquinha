@@ -32,7 +32,6 @@ $pageTitle = $pageTitle ?? 'Agente IA - Tuquinha';
             font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
             background-color: var(--bg-main);
             color: var(--text-primary);
-            display: flex;
             min-height: 100vh;
         }
         a { color: inherit; text-decoration: none; }
@@ -47,7 +46,9 @@ $pageTitle = $pageTitle ?? 'Agente IA - Tuquinha';
             gap: 16px;
             height: 100vh;
             overflow-y: auto;
-            position: relative;
+            position: fixed;
+            top: 0;
+            left: 0;
             z-index: 20;
             transition: transform 0.2s ease-out, opacity 0.2s ease-out;
         }
@@ -148,10 +149,11 @@ $pageTitle = $pageTitle ?? 'Agente IA - Tuquinha';
         }
 
         .main {
-            flex: 1;
+            margin-left: 260px;
             display: flex;
             flex-direction: column;
             background: radial-gradient(circle at top, rgba(229, 57, 53, 0.1) 0, #050509 50%);
+            min-height: 100vh;
         }
 
         .main-header {
@@ -248,9 +250,6 @@ $pageTitle = $pageTitle ?? 'Agente IA - Tuquinha';
         }
 
         @media (max-width: 900px) {
-            body {
-                flex-direction: column;
-            }
             .sidebar {
                 position: fixed;
                 left: 0;
@@ -271,7 +270,7 @@ $pageTitle = $pageTitle ?? 'Agente IA - Tuquinha';
                 display: block;
             }
             .main {
-                flex: 1;
+                margin-left: 0;
             }
             .main-header {
                 padding: 0 14px;
