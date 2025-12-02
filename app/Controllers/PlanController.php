@@ -5,18 +5,44 @@ namespace App\Controllers;
 use App\Core\Controller;
 use App\Models\Plan;
 use App\Models\Setting;
+use App\Models\Subscription;
+use App\Models\User;
 
 class PlanController extends Controller
 {
     public function index(): void
     {
         $plans = Plan::allActive();
+        $currentPlan = null;
 
-        $currentPlan = Plan::findBySessionSlug($_SESSION['plan_slug'] ?? null);
+        // Se o usuário estiver logado, tenta descobrir o plano pela assinatura (igual à Minha Conta)
+        $userId = !empty($_SESSION['user_id']) ? (int)$_SESSION['user_id'] : 0;
+        if ($userId > 0) {
+            $user = User::findById($userId);
+            if ($user && !empty($user['email'])) {
+                $subscription = Subscription::findLastByEmail($user['email']);
+                if ($subscription && !empty($subscription['plan_id'])) {
+                    $planFromSub = Plan::findById((int)$subscription['plan_id']);
+                    if ($planFromSub) {
+                        $currentPlan = $planFromSub;
+
+                        // Mantém a session em sincronia para outras telas que usam plan_slug
+                        if (!empty($currentPlan['slug'])) {
+                            $_SESSION['plan_slug'] = $currentPlan['slug'];
+                        }
+                    }
+                }
+            }
+        }
+
+        // Se não encontrou plano via assinatura (usuário não logado ou sem assinatura), usa plan_slug da sessão / free
         if (!$currentPlan) {
-            $currentPlan = Plan::findBySlug('free');
-            if ($currentPlan) {
-                $_SESSION['plan_slug'] = $currentPlan['slug'];
+            $currentPlan = Plan::findBySessionSlug($_SESSION['plan_slug'] ?? null);
+            if (!$currentPlan) {
+                $currentPlan = Plan::findBySlug('free');
+                if ($currentPlan && !empty($currentPlan['slug'])) {
+                    $_SESSION['plan_slug'] = $currentPlan['slug'];
+                }
             }
         }
 
