@@ -7,6 +7,12 @@
 /** @var string|null $cardLast4 */
 /** @var string|null $subscriptionStart */
 /** @var string|null $subscriptionNext */
+
+$isFreePlan = empty($plan) || (($plan['slug'] ?? 'free') === 'free');
+$freeGlobalLimit = (int)\App\Models\Setting::get('free_memory_global_chars', '500');
+if ($freeGlobalLimit <= 0) { $freeGlobalLimit = 500; }
+$freeChatLimit = (int)\App\Models\Setting::get('free_memory_chat_chars', '400');
+if ($freeChatLimit <= 0) { $freeChatLimit = 400; }
 ?>
 <style>
 @media (max-width: 768px) {
@@ -65,6 +71,11 @@
                     <label style="font-size:13px; color:#ddd; display:block; margin:6px 0 4px;">Regras globais para o Tuquinha</label>
                     <textarea name="global_instructions" rows="3" placeholder="Opcional. Ex: sempre responder mais direto, evitar certos temas, foco em resultado prático, etc." style="width:100%; padding:8px 10px; border-radius:8px; border:1px solid #272727; background:#050509; color:#f5f5f5; font-size:13px; resize:vertical; min-height:70px;"><?= htmlspecialchars($user['global_instructions'] ?? '') ?></textarea>
                 </div>
+                <?php if ($isFreePlan): ?>
+                    <div style="font-size:11px; color:#8d8d8d; margin-top:4px;">
+                        No plano Free o Tuquinha considera até <?= htmlspecialchars((string)$freeGlobalLimit) ?> caracteres das memórias/regras globais. Para textos maiores, apenas o início será usado.
+                    </div>
+                <?php endif; ?>
                 <button type="submit" style="margin-top:6px; align-self:flex-start; border:none; border-radius:999px; padding:8px 14px; background:linear-gradient(135deg,#e53935,#ff6f60); color:#050509; font-weight:600; cursor:pointer; font-size:13px;">
                     Salvar dados
                 </button>

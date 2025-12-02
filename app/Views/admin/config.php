@@ -5,6 +5,8 @@
 /** @var string $systemPrompt */
 /** @var string $systemPromptExtra */
 /** @var int $historyRetentionDays */
+/** @var int $freeGlobalLimit */
+/** @var int $freeChatLimit */
 /** @var string $asaasEnvironment */
 /** @var string $asaasSandboxKey */
 /** @var string $asaasProdKey */
@@ -105,6 +107,25 @@ $knownModels = [
                 background: #050509; color: #f5f5f5; font-size: 13px;
             ">
             <small style="color:#777; font-size:11px;">Define por quantos dias as conversas ficarão salvas para o usuário antes de serem apagadas automaticamente.</small>
+        </div>
+
+        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+            <div style="flex:1; min-width:180px;">
+                <label style="font-size: 12px; color: #b0b0b0;">Limite de caracteres globais no plano Free</label>
+                <input name="free_global_limit" type="number" min="50" value="<?= htmlspecialchars((string)($freeGlobalLimit ?? 500)) ?>" style="
+                    width: 120px; padding: 8px 10px; border-radius: 8px; border: 1px solid #272727;
+                    background: #050509; color: #f5f5f5; font-size: 13px;
+                ">
+                <small style="color:#777; font-size:11px;">Máximo de caracteres considerados nas memórias e regras globais de contas Free.</small>
+            </div>
+            <div style="flex:1; min-width:180px;">
+                <label style="font-size: 12px; color: #b0b0b0;">Limite de caracteres por chat no plano Free</label>
+                <input name="free_chat_limit" type="number" min="50" value="<?= htmlspecialchars((string)($freeChatLimit ?? 400)) ?>" style="
+                    width: 120px; padding: 8px 10px; border-radius: 8px; border: 1px solid #272727;
+                    background: #050509; color: #f5f5f5; font-size: 13px;
+                ">
+                <small style="color:#777; font-size:11px;">Máximo de caracteres considerados nas memórias e regras específicas de cada chat para contas Free.</small>
+            </div>
         </div>
 
         <hr style="border:none; border-top:1px solid #272727; margin: 8px 0;">

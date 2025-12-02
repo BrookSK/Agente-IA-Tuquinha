@@ -57,9 +57,6 @@ class ChatController extends Controller
         $attachments = Attachment::allByConversation($conversation->id);
 
         $conversationSettings = null;
-        if ($userId > 0) {
-            $conversationSettings = ConversationSetting::findForConversation($conversation->id, $userId) ?: null;
-        }
 
         $draftMessage = $_SESSION['draft_message'] ?? '';
         $audioError = $_SESSION['audio_error'] ?? null;
@@ -103,6 +100,13 @@ class ChatController extends Controller
             $_SESSION['chat_model'] = $defaultModel;
         }
 
+        // Usuários logados podem usar regras/memórias por chat (inclusive plano free)
+        $canUseConversationSettings = $userId > 0;
+
+        if ($conversationSettings === null && $userId > 0) {
+            $conversationSettings = ConversationSetting::findForConversation($conversation->id, $userId) ?: null;
+        }
+
         $this->view('chat/index', [
             'pageTitle' => 'Chat - Tuquinha',
             'chatHistory' => $history,
@@ -114,6 +118,7 @@ class ChatController extends Controller
             'audioError' => $audioError,
             'conversationId' => $conversation->id,
             'conversationSettings' => $conversationSettings,
+            'canUseConversationSettings' => $canUseConversationSettings,
         ]);
     }
 
@@ -338,12 +343,53 @@ class ChatController extends Controller
 
             // Carrega contexto do usuário e da conversa para personalizar o Tuquinha
             $userData = null;
+            $conversationSettings = null;
+
+            $planForContext = null;
+            if (!empty($_SESSION['is_admin'])) {
+                $planForContext = Plan::findTopActive();
+            } else {
+                $planForContext = Plan::findBySessionSlug($_SESSION['plan_slug'] ?? null);
+                if (!$planForContext) {
+                    $planForContext = Plan::findBySlug('free');
+                }
+            }
+
+            $isFreePlan = $planForContext && ($planForContext['slug'] ?? '') === 'free';
+
             if ($userId > 0) {
                 $userData = User::findById($userId) ?: null;
-            }
-            $conversationSettings = null;
-            if ($userId > 0) {
                 $conversationSettings = ConversationSetting::findForConversation($conversation->id, $userId) ?: null;
+
+                // Limites para plano free: corta textos muito longos de memórias/regras
+                if ($isFreePlan) {
+                    $maxGlobalChars = (int)Setting::get('free_memory_global_chars', '500');
+                    if ($maxGlobalChars <= 0) {
+                        $maxGlobalChars = 500;
+                    }
+                    $maxChatChars = (int)Setting::get('free_memory_chat_chars', '400');
+                    if ($maxChatChars <= 0) {
+                        $maxChatChars = 400;
+                    }
+
+                    if (is_array($userData)) {
+                        if (isset($userData['global_memory']) && is_string($userData['global_memory'])) {
+                            $userData['global_memory'] = mb_substr($userData['global_memory'], 0, $maxGlobalChars, 'UTF-8');
+                        }
+                        if (isset($userData['global_instructions']) && is_string($userData['global_instructions'])) {
+                            $userData['global_instructions'] = mb_substr($userData['global_instructions'], 0, $maxGlobalChars, 'UTF-8');
+                        }
+                    }
+
+                    if (is_array($conversationSettings)) {
+                        if (isset($conversationSettings['memory_notes']) && is_string($conversationSettings['memory_notes'])) {
+                            $conversationSettings['memory_notes'] = mb_substr($conversationSettings['memory_notes'], 0, $maxChatChars, 'UTF-8');
+                        }
+                        if (isset($conversationSettings['custom_instructions']) && is_string($conversationSettings['custom_instructions'])) {
+                            $conversationSettings['custom_instructions'] = mb_substr($conversationSettings['custom_instructions'], 0, $maxChatChars, 'UTF-8');
+                        }
+                    }
+                }
             }
 
             $engine = new TuquinhaEngine();

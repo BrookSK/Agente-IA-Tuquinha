@@ -27,6 +27,15 @@ class AdminConfigController extends Controller
             $historyRetentionDays = 90;
         }
 
+        $freeGlobalLimit = (int)Setting::get('free_memory_global_chars', '500');
+        if ($freeGlobalLimit <= 0) {
+            $freeGlobalLimit = 500;
+        }
+        $freeChatLimit = (int)Setting::get('free_memory_chat_chars', '400');
+        if ($freeChatLimit <= 0) {
+            $freeChatLimit = 400;
+        }
+
         $smtpHost = Setting::get('smtp_host', '');
         $smtpPort = Setting::get('smtp_port', '587');
         $smtpUser = Setting::get('smtp_user', '');
@@ -44,6 +53,8 @@ class AdminConfigController extends Controller
             'systemPrompt' => $systemPrompt,
             'systemPromptExtra' => $systemPromptExtra,
             'historyRetentionDays' => $historyRetentionDays,
+            'freeGlobalLimit' => $freeGlobalLimit,
+            'freeChatLimit' => $freeChatLimit,
             'smtpHost' => $smtpHost,
             'smtpPort' => $smtpPort,
             'smtpUser' => $smtpUser,
@@ -74,6 +85,14 @@ class AdminConfigController extends Controller
         if ($historyRetentionDays <= 0) {
             $historyRetentionDays = 90;
         }
+        $freeGlobalLimit = (int)($_POST['free_global_limit'] ?? 500);
+        if ($freeGlobalLimit <= 0) {
+            $freeGlobalLimit = 500;
+        }
+        $freeChatLimit = (int)($_POST['free_chat_limit'] ?? 400);
+        if ($freeChatLimit <= 0) {
+            $freeChatLimit = 400;
+        }
         $smtpHost = trim($_POST['smtp_host'] ?? '');
         $smtpPort = trim($_POST['smtp_port'] ?? '587');
         $smtpUser = trim($_POST['smtp_user'] ?? '');
@@ -95,6 +114,8 @@ class AdminConfigController extends Controller
             'tuquinha_system_prompt' => $systemPrompt !== '' ? $systemPrompt : TuquinhaEngine::getDefaultPrompt(),
             'tuquinha_system_prompt_extra' => $systemPromptExtra,
             'chat_history_retention_days' => (string)$historyRetentionDays,
+            'free_memory_global_chars' => (string)$freeGlobalLimit,
+            'free_memory_chat_chars' => (string)$freeChatLimit,
             'smtp_host' => $smtpHost,
             'smtp_port' => $smtpPort,
             'smtp_user' => $smtpUser,

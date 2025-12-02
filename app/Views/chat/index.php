@@ -8,6 +8,9 @@
 /** @var array $attachments */
 
 $hasMediaOrFiles = !empty($currentPlan['allow_audio']) || !empty($currentPlan['allow_images']) || !empty($currentPlan['allow_files']);
+$isFreePlan = $currentPlan && (($currentPlan['slug'] ?? '') === 'free');
+$freeChatLimit = (int)\App\Models\Setting::get('free_memory_chat_chars', '400');
+if ($freeChatLimit <= 0) { $freeChatLimit = 400; }
 
 function render_markdown_safe(string $text): string {
     // Escapa HTML primeiro
@@ -43,9 +46,10 @@ function render_markdown_safe(string $text): string {
 </style>
 <?php
 $convSettings = $conversationSettings ?? null;
+$canUseConversationSettings = !empty($canUseConversationSettings);
 ?>
 <div style="max-width: 900px; width: 100%; margin: 0 auto; padding: 0 8px; display: flex; flex-direction: column; min-height: calc(100vh - 56px - 80px); box-sizing: border-box;">
-    <?php if (!empty($conversationId)): ?>
+    <?php if (!empty($conversationId) && $canUseConversationSettings): ?>
         <div style="margin-top:10px; margin-bottom:6px; display:flex; justify-content:flex-end;">
             <button type="button" id="chat-rules-toggle" style="
                 border:none;
@@ -65,6 +69,9 @@ $convSettings = $conversationSettings ?? null;
                 <input type="hidden" name="conversation_id" value="<?= (int)$conversationId ?>">
                 <div style="font-size:12px; color:#b0b0b0; margin-bottom:4px;">
                     Ajuste regras e memórias só deste chat. O Tuquinha usa isso junto com as preferências globais da sua conta.
+                    <?php if ($isFreePlan): ?>
+                        <br><span style="font-size:11px; color:#8d8d8d;">No plano Free serão considerados até <?= htmlspecialchars((string)$freeChatLimit) ?> caracteres destas memórias/regras por chat.</span>
+                    <?php endif; ?>
                 </div>
                 <div>
                     <label style="display:block; margin-bottom:3px; color:#ddd;">Memórias específicas deste chat</label>
