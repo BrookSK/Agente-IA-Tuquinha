@@ -9,8 +9,10 @@ $pageTitle = $pageTitle ?? 'Agente IA - Tuquinha';
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#e53935">
     <title><?= htmlspecialchars($pageTitle) ?></title>
     <link rel="icon" type="image/png" href="/public/favicon.png">
+    <link rel="manifest" href="/public/manifest.webmanifest">
     <style>
         :root {
             --bg-main: #050509;
@@ -426,6 +428,15 @@ $pageTitle = $pageTitle ?? 'Agente IA - Tuquinha';
 
         overlay.addEventListener('click', closeSidebar);
     })();
+
+    // Registro do Service Worker para PWA
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', function () {
+            navigator.serviceWorker.register('/public/service-worker.js').catch(function (err) {
+                console.error('Falha ao registrar service worker:', err);
+            });
+        });
+    }
     </script>
 </body>
 </html>

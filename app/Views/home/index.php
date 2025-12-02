@@ -20,6 +20,20 @@
         </div>
     </div>
 
+    <!-- CTA para instalar o app (PWA) - exibido apenas em mobile via JS -->
+    <div id="pwa-install-banner" style="display:none; margin-bottom: 18px;">
+        <div style="background:#111118; border-radius:14px; border:1px solid #272727; padding:12px 14px; display:flex; align-items:center; gap:10px;">
+            <div style="width:36px; height:36px; border-radius:12px; background:radial-gradient(circle at 30% 20%, #fff 0, #ff8a65 25%, #e53935 65%, #050509 100%); display:flex; align-items:center; justify-content:center; font-weight:800; color:#050509;">T</div>
+            <div style="flex:1;">
+                <div style="font-size:13px; font-weight:600; margin-bottom:2px;">Leve o Tuquinha pro seu celular</div>
+                <div style="font-size:12px; color:#b0b0b0;">Instale o app na tela inicial e volte pro chat em 1 toque.</div>
+            </div>
+            <button id="pwa-install-button" type="button" style="border:none; border-radius:999px; padding:8px 12px; font-size:12px; font-weight:600; cursor:pointer; background:linear-gradient(135deg,#e53935,#ff6f60); color:#050509;">
+                Instalar app
+            </button>
+        </div>
+    </div>
+
     <form action="/chat" method="get">
         <button type="submit" style="
             display: inline-flex;
@@ -40,3 +54,42 @@
         </button>
     </form>
 </div>
+<script>
+(function () {
+    var deferredPrompt = null;
+    var banner = document.getElementById('pwa-install-banner');
+    var button = document.getElementById('pwa-install-button');
+
+    if (!banner || !button) return;
+
+    // Detecta se é mobile (heurística simples) e se suporta beforeinstallprompt
+    var isMobile = /Android|webOS|iPhone|iPad|iPod|Opera Mini|IEMobile/i.test(navigator.userAgent || '');
+
+    if (!isMobile) {
+        return; // só mostra para mobile
+    }
+
+    window.addEventListener('beforeinstallprompt', function (e) {
+        // Evita o prompt automático
+        e.preventDefault();
+        deferredPrompt = e;
+
+        // Mostra o banner
+        banner.style.display = 'block';
+    });
+
+    button.addEventListener('click', function () {
+        if (!deferredPrompt) {
+            banner.style.display = 'none';
+            return;
+        }
+
+        deferredPrompt.prompt();
+
+        deferredPrompt.userChoice.then(function () {
+            deferredPrompt = null;
+            banner.style.display = 'none';
+        });
+    });
+})();
+</script>
