@@ -5,19 +5,19 @@
 /** @var array|null $savedCustomer */
 $price = number_format($plan['price_cents'] / 100, 2, ',', '.');
 
-// Se já existe cliente salvo na sessão, prioriza ele; senão usa dados do usuário logado
+// Se já existe cliente salvo na sessão, prioriza ele; senão usa dados do usuário logado (incluindo billing_*)
 $prefillName = $savedCustomer['name'] ?? ($currentUser['name'] ?? '');
 $prefillEmail = $savedCustomer['email'] ?? ($currentUser['email'] ?? '');
-$prefillCpf = $savedCustomer['cpf'] ?? '';
-$prefillBirthdate = $savedCustomer['birthdate'] ?? '';
-$prefillPhone = $savedCustomer['phone'] ?? '';
-$prefillPostalCode = $savedCustomer['postal_code'] ?? '';
-$prefillAddress = $savedCustomer['address'] ?? '';
-$prefillAddressNumber = $savedCustomer['address_number'] ?? '';
-$prefillComplement = $savedCustomer['complement'] ?? '';
-$prefillProvince = $savedCustomer['province'] ?? '';
-$prefillCity = $savedCustomer['city'] ?? '';
-$prefillState = $savedCustomer['state'] ?? '';
+$prefillCpf = $savedCustomer['cpf'] ?? ($currentUser['billing_cpf'] ?? '');
+$prefillBirthdate = $savedCustomer['birthdate'] ?? ($currentUser['billing_birthdate'] ?? '');
+$prefillPhone = $savedCustomer['phone'] ?? ($currentUser['billing_phone'] ?? '');
+$prefillPostalCode = $savedCustomer['postal_code'] ?? ($currentUser['billing_postal_code'] ?? '');
+$prefillAddress = $savedCustomer['address'] ?? ($currentUser['billing_address'] ?? '');
+$prefillAddressNumber = $savedCustomer['address_number'] ?? ($currentUser['billing_address_number'] ?? '');
+$prefillComplement = $savedCustomer['complement'] ?? ($currentUser['billing_complement'] ?? '');
+$prefillProvince = $savedCustomer['province'] ?? ($currentUser['billing_province'] ?? '');
+$prefillCity = $savedCustomer['city'] ?? ($currentUser['billing_city'] ?? '');
+$prefillState = $savedCustomer['state'] ?? ($currentUser['billing_state'] ?? '');
 ?>
 <div style="max-width: 880px; margin: 0 auto;">
     <h1 style="font-size: 24px; margin-bottom: 6px; font-weight: 650;">Finalizar assinatura</h1>

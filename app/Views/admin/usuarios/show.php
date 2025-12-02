@@ -11,7 +11,7 @@
         <h2 style="font-size:16px; margin-bottom:10px;">Dados básicos</h2>
         <p style="font-size:13px; margin-bottom:4px;"><strong>Nome:</strong> <?= htmlspecialchars($user['name']) ?></p>
         <p style="font-size:13px; margin-bottom:4px;"><strong>E-mail:</strong> <?= htmlspecialchars($user['email']) ?></p>
-        <p style="font-size:13px; margin-bottom:8px;"><strong>Admin:</strong> <?= !empty($user['is_admin']) ? 'Sim' : 'Não' ?></p>
+        <p style="font-size:13px; margin-bottom:4px;"><strong>Admin:</strong> <?= !empty($user['is_admin']) ? 'Sim' : 'Não' ?></p>
         <p style="font-size:13px; margin-bottom:8px;">
             <strong>Status:</strong>
             <?php $active = isset($user['is_active']) ? (int)$user['is_active'] === 1 : true; ?>
@@ -35,6 +35,36 @@
                 <?= !empty($user['is_admin']) ? 'Remover admin' : 'Tornar admin' ?>
             </button>
         </form>
+    </div>
+
+    <div style="margin-top:18px; padding:14px 16px; border-radius:12px; background:#111118; border:1px solid #272727;">
+        <h2 style="font-size:16px; margin-bottom:10px;">Dados de cobrança salvos no usuário</h2>
+        <p style="font-size:12px; color:#b0b0b0; margin-bottom:8px;">Esses dados vêm direto da tabela de usuários (billing_*). Úteis para conferir o que será enviado no próximo checkout.</p>
+        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap:6px; font-size:13px;">
+            <div><strong>CPF:</strong> <?= htmlspecialchars($user['billing_cpf'] ?? '') ?></div>
+            <div><strong>Nascimento:</strong> <?= htmlspecialchars($user['billing_birthdate'] ?? '') ?></div>
+            <div><strong>Telefone:</strong> <?= htmlspecialchars($user['billing_phone'] ?? '') ?></div>
+            <div><strong>CEP:</strong> <?= htmlspecialchars($user['billing_postal_code'] ?? '') ?></div>
+            <div style="grid-column:1 / -1; margin-top:4px;"><hr style="border:none; border-top:1px solid #272727;"></div>
+            <div><strong>Endereço:</strong> <?= htmlspecialchars($user['billing_address'] ?? '') ?></div>
+            <div><strong>Número:</strong> <?= htmlspecialchars($user['billing_address_number'] ?? '') ?></div>
+            <div><strong>Complemento:</strong> <?= htmlspecialchars($user['billing_complement'] ?? '') ?></div>
+            <div><strong>Bairro:</strong> <?= htmlspecialchars($user['billing_province'] ?? '') ?></div>
+            <div><strong>Cidade:</strong> <?= htmlspecialchars($user['billing_city'] ?? '') ?></div>
+            <div><strong>Estado:</strong> <?= htmlspecialchars($user['billing_state'] ?? '') ?></div>
+        </div>
+    </div>
+
+    <div style="margin-top:18px; padding:14px 16px; border-radius:12px; background:#111118; border:1px solid #272727;">
+        <h2 style="font-size:16px; margin-bottom:10px;">Memórias e regras globais</h2>
+        <p style="font-size:13px; margin-bottom:6px;"><strong>Memórias globais:</strong></p>
+        <div style="font-size:13px; color:#b0b0b0; white-space:pre-wrap; border-radius:8px; border:1px solid #272727; padding:8px 10px; background:#050509; min-height:40px;">
+            <?= nl2br(htmlspecialchars($user['global_memory'] ?? '')) ?: '<span style="color:#555;">(vazio)</span>' ?>
+        </div>
+        <p style="font-size:13px; margin:10px 0 6px 0;"><strong>Regras globais:</strong></p>
+        <div style="font-size:13px; color:#b0b0b0; white-space:pre-wrap; border-radius:8px; border:1px solid #272727; padding:8px 10px; background:#050509; min-height:40px;">
+            <?= nl2br(htmlspecialchars($user['global_instructions'] ?? '')) ?: '<span style="color:#555;">(vazio)</span>' ?>
+        </div>
     </div>
 
     <div style="margin-top:18px; padding:14px 16px; border-radius:12px; background:#111118; border:1px solid #272727;">

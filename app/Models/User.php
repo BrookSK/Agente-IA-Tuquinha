@@ -69,6 +69,47 @@ class User
         ]);
     }
 
+    public static function updateBillingData(
+        int $id,
+        ?string $cpf,
+        ?string $birthdate,
+        ?string $phone,
+        ?string $postalCode,
+        ?string $address,
+        ?string $addressNumber,
+        ?string $complement,
+        ?string $province,
+        ?string $city,
+        ?string $state
+    ): void {
+        $pdo = Database::getConnection();
+        $stmt = $pdo->prepare('UPDATE users SET
+            billing_cpf = :cpf,
+            billing_birthdate = :birthdate,
+            billing_phone = :phone,
+            billing_postal_code = :postal_code,
+            billing_address = :address,
+            billing_address_number = :address_number,
+            billing_complement = :complement,
+            billing_province = :province,
+            billing_city = :city,
+            billing_state = :state
+            WHERE id = :id LIMIT 1');
+        $stmt->execute([
+            'id' => $id,
+            'cpf' => $cpf !== '' ? $cpf : null,
+            'birthdate' => $birthdate !== '' ? $birthdate : null,
+            'phone' => $phone !== '' ? $phone : null,
+            'postal_code' => $postalCode !== '' ? $postalCode : null,
+            'address' => $address !== '' ? $address : null,
+            'address_number' => $addressNumber !== '' ? $addressNumber : null,
+            'complement' => $complement !== '' ? $complement : null,
+            'province' => $province !== '' ? $province : null,
+            'city' => $city !== '' ? $city : null,
+            'state' => $state !== '' ? strtoupper($state) : null,
+        ]);
+    }
+
     public static function updatePassword(int $id, string $passwordHash): void
     {
         $pdo = Database::getConnection();

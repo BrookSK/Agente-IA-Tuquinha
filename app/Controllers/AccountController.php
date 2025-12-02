@@ -91,6 +91,32 @@ class AccountController extends Controller
         }
 
         User::updateProfile((int)$user['id'], $name, $preferredName, $globalMemory, $globalInstructions);
+
+        // Campos extras de cobrança (dados usados no checkout)
+        $billingCpf = trim($_POST['billing_cpf'] ?? '');
+        $billingBirthdate = trim($_POST['billing_birthdate'] ?? '');
+        $billingPhone = trim($_POST['billing_phone'] ?? '');
+        $billingPostalCode = trim($_POST['billing_postal_code'] ?? '');
+        $billingAddress = trim($_POST['billing_address'] ?? '');
+        $billingAddressNumber = trim($_POST['billing_address_number'] ?? '');
+        $billingComplement = trim($_POST['billing_complement'] ?? '');
+        $billingProvince = trim($_POST['billing_province'] ?? '');
+        $billingCity = trim($_POST['billing_city'] ?? '');
+        $billingState = trim($_POST['billing_state'] ?? '');
+
+        User::updateBillingData(
+            (int)$user['id'],
+            $billingCpf,
+            $billingBirthdate,
+            $billingPhone,
+            $billingPostalCode,
+            $billingAddress,
+            $billingAddressNumber,
+            $billingComplement,
+            $billingProvince,
+            $billingCity,
+            $billingState
+        );
         $_SESSION['user_name'] = $name;
 
         $user = User::findById((int)$user['id']) ?? $user;

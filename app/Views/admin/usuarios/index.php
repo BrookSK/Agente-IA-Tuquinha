@@ -17,6 +17,7 @@
                 <th style="text-align:center; padding:8px 10px;">Admin</th>
                 <th style="text-align:center; padding:8px 10px;">Status</th>
                 <th style="text-align:left; padding:8px 10px;">Criado em</th>
+                <th style="text-align:center; padding:8px 10px;">Ações</th>
             </tr>
         </thead>
         <tbody>
@@ -40,6 +41,20 @@
                         </td>
                         <td style="padding:7px 10px; font-size:12px; color:#b0b0b0;">
                             <?= htmlspecialchars($u['created_at'] ?? '') ?>
+                        </td>
+                        <td style="padding:7px 10px; text-align:center;">
+                            <a href="/admin/usuarios/ver?id=<?= (int)$u['id'] ?>" style="
+                                display:inline-flex;
+                                align-items:center;
+                                justify-content:center;
+                                padding:4px 10px;
+                                border-radius:999px;
+                                border:1px solid #272727;
+                                background:#15151f;
+                                color:#f5f5f5;
+                                font-size:12px;
+                                text-decoration:none;
+                            ">Ver detalhes</a>
                         </td>
                     </tr>
                 <?php endforeach; ?>

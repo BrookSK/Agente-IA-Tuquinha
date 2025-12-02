@@ -171,6 +171,16 @@ if ($freeChatLimit <= 0) { $freeChatLimit = 400; }
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {
+    var toggleBilling = document.getElementById('toggle-billing-fields');
+    var billingBox = document.getElementById('billing-fields');
+    if (toggleBilling && billingBox) {
+        toggleBilling.addEventListener('click', function () {
+            var isHidden = billingBox.style.display === 'none' || billingBox.style.display === '';
+            billingBox.style.display = isHidden ? 'block' : 'none';
+            toggleBilling.textContent = isHidden ? 'Esconder detalhes de cobrança' : 'Ver mais detalhes de cobrança';
+        });
+    }
+
     var form = document.getElementById('cancel-subscription-form');
     if (!form) return;
 

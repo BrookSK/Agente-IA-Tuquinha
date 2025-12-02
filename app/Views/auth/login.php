@@ -8,7 +8,7 @@
 
     <?php if (!empty($error)): ?>
         <div style="background:#311; border:1px solid #a33; color:#ffbaba; padding:8px 10px; border-radius:8px; font-size:13px; margin-bottom:12px;">
-            <?= htmlspecialchars($error) ?>
+            <?= $error ?>
         </div>
     <?php endif; ?>
 

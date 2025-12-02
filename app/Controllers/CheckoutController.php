@@ -98,6 +98,22 @@ class CheckoutController extends Controller
 
             $_SESSION['checkout_customer'] = $customerForSession;
 
+            // Atualiza também o cadastro do usuário com esses dados de cobrança
+            $userId = (int)$_SESSION['user_id'];
+            User::updateBillingData(
+                $userId,
+                $customerForSession['cpf'],
+                $customerForSession['birthdate'],
+                $customerForSession['phone'],
+                $customerForSession['postal_code'],
+                $customerForSession['address'],
+                $customerForSession['address_number'],
+                $customerForSession['complement'],
+                $customerForSession['province'],
+                $customerForSession['city'],
+                $customerForSession['state']
+            );
+
             $this->view('checkout/show', [
                 'pageTitle' => 'Checkout - ' . $plan['name'],
                 'plan' => $plan,

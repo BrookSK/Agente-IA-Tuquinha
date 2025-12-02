@@ -60,7 +60,7 @@ class AuthController extends Controller
         if (isset($user['is_active']) && (int)$user['is_active'] === 0) {
             $this->view('auth/login', [
                 'pageTitle' => 'Entrar - Tuquinha',
-                'error' => 'Sua conta está desativada. Fale com o administrador para reativar o acesso.',
+                'error' => 'Sua conta foi desativada por tempo indeterminado. Se você não solicitou isso ou não sabe o motivo, <a href="/suporte" style="color:#ffcc80; text-decoration:none;">fale com o suporte</a> para revisar o seu caso.',
                 'showVerifyLink' => false,
             ]);
             return;
