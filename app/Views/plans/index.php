@@ -8,6 +8,31 @@
     <p style="color: #b0b0b0; margin-bottom: 8px; font-size: 14px;">
         Todos os planos são cobrados mensalmente no cartão de crédito via Asaas. Começa pelo gratuito se quiser sentir o fluxo, ou vai direto pro plano que combina com o seu momento.
     </p>
+    <?php
+        $hasCurrentPlan = !empty($currentPlan) && is_array($currentPlan);
+        $currentSlug = $hasCurrentPlan ? (string)($currentPlan['slug'] ?? '') : '';
+        $isPaidPlan = $hasCurrentPlan && $currentSlug !== 'free';
+    ?>
+    <?php if ($isPaidPlan): ?>
+        <div style="margin-bottom: 14px; padding:10px 12px; border-radius:12px; background:#111118; border:1px solid #272727; display:flex; flex-wrap:wrap; gap:8px; align-items:center; justify-content:space-between;">
+            <div style="font-size:13px; color:#e0e0e0; max-width:70%;">
+                Aproveite seu plano atual para ir além do limite mensal: compre <strong>tokens extras</strong> quando precisar, no modelo pré-pago.
+            </div>
+            <a href="/tokens/comprar" style="
+                border:none;
+                border-radius:999px;
+                padding:7px 14px;
+                background:linear-gradient(135deg,#e53935,#ff6f60);
+                color:#050509;
+                font-size:13px;
+                font-weight:600;
+                text-decoration:none;
+                white-space:nowrap;
+            ">
+                Comprar tokens extras
+            </a>
+        </div>
+    <?php endif; ?>
     <?php $days = (int)($retentionDays ?? 90); if ($days <= 0) { $days = 90; } ?>
     <p style="color:#777; margin-bottom: 18px; font-size: 12px;">
         <strong>Importante:</strong> o histórico de conversas é mantido por até <strong><?= htmlspecialchars((string)$days) ?> dias</strong>. Após esse período, as conversas mais antigas são removidas automaticamente dos servidores.

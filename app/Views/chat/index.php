@@ -871,7 +871,8 @@ $canUseConversationSettings = !empty($canUseConversationSettings);
 
                 // Linha de meta: tokens usados + horário + botão copiar
                 const metaRow = document.createElement('div');
-                metaRow.style.margin = '-6px 0 6px 36px';
+                // deixa um pequeno respiro abaixo da bolha, alinhado com o avatar
+                metaRow.style.margin = '4px 0 6px 36px';
                 metaRow.style.display = 'flex';
                 metaRow.style.alignItems = 'center';
                 metaRow.style.gap = '6px';
