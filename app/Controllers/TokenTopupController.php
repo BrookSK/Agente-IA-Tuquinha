@@ -160,7 +160,7 @@ class TokenTopupController extends Controller
             $blocks = $minBlocks;
         }
 
-        // tipo de cobrança
+        // tipo de cobrança: PIX ou BOLETO vindo do formulário
         $billingType = $_POST['billing_type'] ?? 'PIX';
         if (!in_array($billingType, ['PIX', 'BOLETO'], true)) {
             $billingType = 'PIX';

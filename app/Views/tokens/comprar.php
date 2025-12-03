@@ -83,7 +83,7 @@
                 <div style="display:flex; flex-wrap:wrap; gap:10px; font-size:13px; color:#ddd;">
                     <label style="display:flex; align-items:center; gap:5px;">
                         <input type="radio" name="billing_type" value="PIX" checked>
-                        <span>PIX (recomendado)</span>
+                        <span>PIX</span>
                     </label>
                     <label style="display:flex; align-items:center; gap:5px;">
                         <input type="radio" name="billing_type" value="BOLETO">
@@ -91,7 +91,7 @@
                     </label>
                 </div>
                 <div style="font-size:11px; color:#777; margin-top:3px; max-width:420px;">
-                    O pagamento é processado pelo Asaas, o mesmo gateway usado nas assinaturas. Assim que o pagamento for confirmado, seus tokens extras serão liberados automaticamente.
+                    O pagamento é processado pelo Asaas, o mesmo gateway usado nas assinaturas. Assim que o pagamento for confirmado, seus tokens extras serão liberados automaticamente. PIX ficará disponível assim que a conta for aprovada no gateway.
                 </div>
             </div>
 
