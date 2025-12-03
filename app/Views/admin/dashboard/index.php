@@ -9,7 +9,7 @@
     <div style="display:flex; gap:12px; flex-wrap:wrap; margin-bottom:20px;">
         <div style="flex:1; min-width:180px; padding:12px 14px; border-radius:12px; background:#111118; border:1px solid #272727;">
             <div style="font-size:12px; color:#b0b0b0;">Usuários cadastrados</div>
-            <div style="font-size:22px; font-weight:600; margin-top:4px;"><?= (int)$totalUsers ?></div>
+            <div style="font-size:22px; font-weight:600; margin-top:4px;"><?php echo (int)$totalUsers; ?></div>
             <div style="font-size:11px; color:#b0b0b0; margin-top:4px;">Inclui admins e clientes</div>
         </div>
         <div style="flex:1; min-width:180px; padding:12px 14px; border-radius:12px; background:#111118; border:1px solid #272727;">
@@ -27,6 +27,19 @@
                 R$ <?= number_format($activeRevenueCents / 100, 2, ',', '.') ?>
             </div>
             <div style="font-size:11px; color:#b0b0b0; margin-top:4px;">Soma dos planos com status ativo</div>
+        </div>
+        <div style="flex:1; min-width:220px; padding:12px 14px; border-radius:12px; background:#111118; border:1px solid #272727; display:flex; flex-direction:column; justify-content:space-between;">
+            <div>
+                <div style="font-size:12px; color:#b0b0b0;">Relatos de erros de análise</div>
+                <div style="font-size:13px; color:#b0b0b0; margin-top:6px;">
+                    Gerencie problemas reportados pelos usuários e faça estorno de tokens quando necessário.
+                </div>
+            </div>
+            <div style="margin-top:10px;">
+                <a href="/admin/erros" style="display:inline-block; padding:7px 12px; border-radius:999px; border:1px solid #ff6f60; color:#ffcc80; font-size:12px; text-decoration:none;">
+                    Ver relatos de erro
+                </a>
+            </div>
         </div>
     </div>
 
