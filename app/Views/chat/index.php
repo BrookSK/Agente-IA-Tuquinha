@@ -213,15 +213,15 @@ $canUseConversationSettings = !empty($canUseConversationSettings);
                             width: 28px;
                             height: 28px;
                             border-radius: 50%;
-                            background: radial-gradient(circle at 30% 20%, #fff 0, #ff8a65 25%, #e53935 65%, #050509 100%);
-                            display: flex;
-                            align-items: center;
-                            justify-content: center;
-                            font-weight: 700;
-                            font-size: 14px;
-                            color: #050509;
+                            overflow: hidden;
                             flex-shrink: 0;
-                        ">T</div>
+                            background: #050509;
+                            display:flex;
+                            align-items:center;
+                            justify-content:center;
+                        ">
+                            <img src="/public/favicon.png" alt="Tuquinha" style="width:100%; height:100%; display:block; object-fit:cover;">
+                        </div>
                         <div style="
                             max-width: 80%;
                             background: #111118;
@@ -788,18 +788,22 @@ $canUseConversationSettings = !empty($canUseConversationSettings);
                 wrapper.style.marginBottom = '10px';
 
                 const avatar = document.createElement('div');
-                avatar.textContent = 'T';
                 avatar.style.width = '28px';
                 avatar.style.height = '28px';
                 avatar.style.borderRadius = '50%';
-                avatar.style.background = 'radial-gradient(circle at 30% 20%, #fff 0, #ff8a65 25%, #e53935 65%, #050509 100%)';
-                avatar.style.display = 'flex';
-                avatar.style.alignItems = 'center';
-                avatar.style.justifyContent = 'center';
-                avatar.style.fontWeight = '700';
-                avatar.style.fontSize = '14px';
-                avatar.style.color = '#050509';
+                avatar.style.overflow = 'hidden';
                 avatar.style.flexShrink = '0';
+                avatar.style.background = '#050509';
+
+                var logoImg = document.createElement('img');
+                logoImg.src = '/public/favicon.png';
+                logoImg.alt = 'Tuquinha';
+                logoImg.style.width = '100%';
+                logoImg.style.height = '100%';
+                logoImg.style.display = 'block';
+                logoImg.style.objectFit = 'cover';
+
+                avatar.appendChild(logoImg);
 
                 const bubble = document.createElement('div');
                 bubble.style.maxWidth = '80%';
