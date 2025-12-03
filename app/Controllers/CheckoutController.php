@@ -186,10 +186,21 @@ class CheckoutController extends Controller
             }
         }
 
+        // Define o ciclo de cobrança no Asaas com base no sufixo do slug do plano
+        $planSlug = (string)($plan['slug'] ?? '');
+        $asaasCycle = 'MONTHLY';
+        if (substr($planSlug, -7) === '-mensal') {
+            $asaasCycle = 'MONTHLY';
+        } elseif (substr($planSlug, -11) === '-semestral') {
+            $asaasCycle = 'SEMIANNUAL';
+        } elseif (substr($planSlug, -6) === '-anual') {
+            $asaasCycle = 'YEARLY';
+        }
+
         $subscriptionPayload = [
             'billingType' => 'CREDIT_CARD',
             'value' => $plan['price_cents'] / 100,
-            'cycle' => 'MONTHLY',
+            'cycle' => $asaasCycle,
             'description' => $plan['name'],
             'creditCard' => $creditCard,
             'creditCardHolderInfo' => [
