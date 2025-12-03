@@ -107,8 +107,8 @@
     <?php endif; ?>
 
     <?php if (!empty($freePlans)): ?>
-        <div style="margin-bottom: 12px;">
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 14px;">
+        <div class="plans-cycle-section" data-cycle-section="mensal" style="margin-bottom: 12px; display: <?= $selectedCycle === 'mensal' ? 'block' : 'none' ?>;">
+            <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px;">
                 <?php foreach ($freePlans as $plan): ?>
                     <?php
                         $price = number_format(($plan['price_cents'] ?? 0) / 100, 2, ',', '.');
@@ -173,7 +173,7 @@
         </div>
     <?php endif; ?>
 
-    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 14px;" id="plans-paid-wrapper">
+    <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px;" id="plans-paid-wrapper">
         <?php foreach (['mensal', 'semestral', 'anual'] as $ck): ?>
             <?php if (empty($plansByCycle[$ck])) continue; ?>
             <div class="plans-cycle-section" data-cycle-section="<?= htmlspecialchars($ck) ?>" style="display: <?= $ck === $selectedCycle ? 'block' : 'none' ?>;">
