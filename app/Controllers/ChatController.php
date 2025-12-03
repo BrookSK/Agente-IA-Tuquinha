@@ -468,6 +468,8 @@ class ChatController extends Controller
                 $responseMessages[] = [
                     'role' => 'assistant',
                     'content' => $assistantReply,
+                    'tokens_used' => $totalTokensUsed,
+                    'created_label' => date('d/m/Y H:i'),
                 ];
 
                 echo json_encode([

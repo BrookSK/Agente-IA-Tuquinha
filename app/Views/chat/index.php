@@ -699,7 +699,7 @@ $canUseConversationSettings = !empty($canUseConversationSettings);
             return out;
         };
 
-        const appendMessageToDom = (role, content, attachments) => {
+        const appendMessageToDom = (role, content, attachmentsOrMeta) => {
             if (!chatWindow) return;
 
             const emptyState = document.getElementById('chat-empty-state');
@@ -722,6 +722,7 @@ $canUseConversationSettings = !empty($canUseConversationSettings);
                 container.style.flexWrap = 'wrap';
                 container.style.gap = '6px';
 
+                const attachments = attachmentsOrMeta;
                 if (Array.isArray(attachments)) {
                     attachments.forEach((att) => {
                         const card = document.createElement('div');
@@ -791,6 +792,10 @@ $canUseConversationSettings = !empty($canUseConversationSettings);
                 wrapper.style.gap = '8px';
                 wrapper.style.marginBottom = '10px';
 
+                const meta = attachmentsOrMeta || {};
+                const tokensUsed = typeof meta.tokens_used === 'number' ? meta.tokens_used : 0;
+                const createdLabel = typeof meta.created_label === 'string' ? meta.created_label : '';
+
                 const avatar = document.createElement('div');
                 avatar.style.width = '28px';
                 avatar.style.height = '28px';
@@ -822,6 +827,47 @@ $canUseConversationSettings = !empty($canUseConversationSettings);
 
                 wrapper.appendChild(avatar);
                 wrapper.appendChild(bubble);
+
+                // Linha de meta: tokens usados + horário + botão copiar
+                const metaRow = document.createElement('div');
+                metaRow.style.margin = '-6px 0 6px 36px';
+                metaRow.style.display = 'flex';
+                metaRow.style.alignItems = 'center';
+                metaRow.style.gap = '6px';
+                metaRow.style.fontSize = '10px';
+                metaRow.style.color = '#777';
+                metaRow.style.maxWidth = '80%';
+
+                if (tokensUsed > 0) {
+                    const spanTokens = document.createElement('span');
+                    spanTokens.textContent = tokensUsed + ' tokens';
+                    metaRow.appendChild(spanTokens);
+                }
+
+                if (createdLabel) {
+                    const spanDate = document.createElement('span');
+                    spanDate.textContent = (tokensUsed > 0 ? ' · ' : '') + createdLabel;
+                    metaRow.appendChild(spanDate);
+                }
+
+                const copyBtn = document.createElement('button');
+                copyBtn.type = 'button';
+                copyBtn.className = 'copy-message-btn';
+                copyBtn.dataset.messageText = text;
+                copyBtn.textContent = 'Copiar';
+                copyBtn.style.border = 'none';
+                copyBtn.style.background = 'transparent';
+                copyBtn.style.color = '#b0b0b0';
+                copyBtn.style.fontSize = '10px';
+                copyBtn.style.cursor = 'pointer';
+                copyBtn.style.padding = '0';
+
+                metaRow.appendChild(copyBtn);
+
+                const metaWrapper = document.createElement('div');
+                metaWrapper.appendChild(metaRow);
+
+                wrapper.appendChild(metaWrapper);
             }
 
             chatWindow.appendChild(wrapper);
@@ -920,7 +966,10 @@ $canUseConversationSettings = !empty($canUseConversationSettings);
 
                     if (Array.isArray(data.messages)) {
                         data.messages.forEach((m) => {
-                            appendMessageToDom(m.role, m.content, m.attachments || null);
+                            const thirdArg = m.role === 'attachment_summary'
+                                ? (m.attachments || [])
+                                : m;
+                            appendMessageToDom(m.role, m.content, thirdArg);
                         });
                     }
                 })
