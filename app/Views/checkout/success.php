@@ -1,6 +1,15 @@
 <?php
 /** @var array $plan */
 $price = number_format($plan['price_cents'] / 100, 2, ',', '.');
+
+// Define rótulo do período (mês / semestre / ano) com base no sufixo do slug
+$slug = (string)($plan['slug'] ?? '');
+$periodLabel = 'mês';
+if (substr($slug, -11) === '-semestral') {
+    $periodLabel = 'semestre';
+} elseif (substr($slug, -6) === '-anual') {
+    $periodLabel = 'ano';
+}
 ?>
 <div style="max-width: 720px; margin: 0 auto; text-align: center;">
     <h1 style="font-size: 26px; margin-bottom: 10px; font-weight: 650;">Assinatura criada com sucesso! 🔥</h1>
@@ -8,7 +17,7 @@ $price = number_format($plan['price_cents'] / 100, 2, ',', '.');
         Seu plano <strong><?= htmlspecialchars($plan['name']) ?></strong> foi registrado. Pode levar alguns instantes para o sistema de pagamento confirmar tudo, mas você já está no caminho certo.
     </p>
     <p style="color: #b0b0b0; margin-bottom: 18px; font-size: 14px;">
-        Valor: <strong>R$ <?= $price ?>/mês</strong>
+        Valor: <strong>R$ <?= $price ?>/<?= htmlspecialchars($periodLabel) ?></strong>
     </p>
     <a href="/chat" style="
         display: inline-flex;

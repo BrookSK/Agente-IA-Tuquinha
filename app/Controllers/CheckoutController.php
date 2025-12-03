@@ -265,10 +265,20 @@ class CheckoutController extends Controller
             // Envia e-mail de confirmação da assinatura
             try {
                 $priceFormatted = number_format($plan['price_cents'] / 100, 2, ',', '.');
+                // Define rótulo do período (mês / semestre / ano) com base no sufixo do slug para o e-mail
+                $slug = (string)($plan['slug'] ?? '');
+                $periodLabel = 'mês';
+                if (substr($slug, -11) === '-semestral') {
+                    $periodLabel = 'semestre';
+                } elseif (substr($slug, -6) === '-anual') {
+                    $periodLabel = 'ano';
+                }
+
                 $subject = 'Sua assinatura do Tuquinha está ativa';
                 $safeName = htmlspecialchars($customer['name'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
                 $safePlan = htmlspecialchars($plan['name'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
                 $safePrice = htmlspecialchars($priceFormatted, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+                $safePeriod = htmlspecialchars($periodLabel, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
                 $body = <<<HTML
 <html>
 <body style="margin:0; padding:0; background:#050509; font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; color:#f5f5f5;">
@@ -284,7 +294,7 @@ class CheckoutController extends Controller
 
       <p style="font-size:14px; margin:0 0 10px 0;">Oi, {$safeName} 👋</p>
       <p style="font-size:14px; margin:0 0 10px 0;">Sua assinatura foi criada com sucesso. A partir de agora, você tem acesso ao plano <strong>{$safePlan}</strong> no Tuquinha.</p>
-      <p style="font-size:14px; margin:0 0 10px 0;">Valor da assinatura: <strong>R\$ {$safePrice}/mês</strong>.</p>
+      <p style="font-size:14px; margin:0 0 10px 0;">Valor da assinatura: <strong>R\$ {$safePrice}/{$safePeriod}</strong>.</p>
 
       <p style="font-size:13px; margin:0 0 8px 0;">Com esse plano você pode:</p>
       <ul style="font-size:13px; color:#b0b0b0; padding-left:18px; margin:0 0 10px 0;">
@@ -329,10 +339,20 @@ HTML;
                     $sessionCustomer = $_SESSION['checkout_customer'] ?? null;
                     if ($sessionCustomer) {
                         $priceFormatted = number_format($plan['price_cents'] / 100, 2, ',', '.');
+                        // Define rótulo do período para o e-mail de falha
+                        $slug = (string)($plan['slug'] ?? '');
+                        $periodLabel = 'mês';
+                        if (substr($slug, -11) === '-semestral') {
+                            $periodLabel = 'semestre';
+                        } elseif (substr($slug, -6) === '-anual') {
+                            $periodLabel = 'ano';
+                        }
+
                         $subject = 'Falha ao processar o pagamento da sua assinatura';
                         $safeName = htmlspecialchars($sessionCustomer['name'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
                         $safePlan = htmlspecialchars($plan['name'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
                         $safePrice = htmlspecialchars($priceFormatted, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+                        $safePeriod = htmlspecialchars($periodLabel, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
                         $body = <<<HTML
 <html>
 <body style="margin:0; padding:0; background:#050509; font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; color:#f5f5f5;">
@@ -348,7 +368,7 @@ HTML;
 
       <p style="font-size:14px; margin:0 0 10px 0;">Oi, {$safeName} 👋</p>
       <p style="font-size:14px; margin:0 0 10px 0;">Tentamos processar o pagamento da sua assinatura do plano <strong>{$safePlan}</strong>, mas o cartão não foi aprovado.</p>
-      <p style="font-size:14px; margin:0 0 10px 0;">Valor da assinatura: <strong>R\$ {$safePrice}/mês</strong>.</p>
+      <p style="font-size:14px; margin:0 0 10px 0;">Valor da assinatura: <strong>R\$ {$safePrice}/{$safePeriod}</strong>.</p>
 
       <p style="font-size:13px; margin:0 0 8px 0;">Geralmente isso acontece por algum destes motivos:</p>
       <ul style="font-size:13px; color:#b0b0b0; padding-left:18px; margin:0 0 10px 0;">
