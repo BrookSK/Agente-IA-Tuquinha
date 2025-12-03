@@ -49,14 +49,16 @@ class Plan
     public static function create(array $data): int
     {
         $pdo = Database::getConnection();
-        $stmt = $pdo->prepare('INSERT INTO plans (name, slug, price_cents, description, benefits, allowed_models, default_model, allow_audio, allow_images, allow_files, is_active, history_retention_days)
-            VALUES (:name, :slug, :price_cents, :description, :benefits, :allowed_models, :default_model, :allow_audio, :allow_images, :allow_files, :is_active, :history_retention_days)');
+        $stmt = $pdo->prepare('INSERT INTO plans (name, slug, price_cents, description, benefits, monthly_token_limit, extra_token_price_per_1k, allowed_models, default_model, allow_audio, allow_images, allow_files, is_active, history_retention_days)
+            VALUES (:name, :slug, :price_cents, :description, :benefits, :monthly_token_limit, :extra_token_price_per_1k, :allowed_models, :default_model, :allow_audio, :allow_images, :allow_files, :is_active, :history_retention_days)');
         $stmt->execute([
             'name' => $data['name'] ?? '',
             'slug' => $data['slug'] ?? '',
             'price_cents' => (int)($data['price_cents'] ?? 0),
             'description' => $data['description'] ?? null,
             'benefits' => $data['benefits'] ?? null,
+            'monthly_token_limit' => $data['monthly_token_limit'] ?? null,
+            'extra_token_price_per_1k' => $data['extra_token_price_per_1k'] ?? null,
             'allowed_models' => $data['allowed_models'] ?? null,
             'default_model' => $data['default_model'] ?? null,
             'allow_audio' => (int)($data['allow_audio'] ?? 0),
@@ -77,6 +79,8 @@ class Plan
             price_cents = :price_cents,
             description = :description,
             benefits = :benefits,
+            monthly_token_limit = :monthly_token_limit,
+            extra_token_price_per_1k = :extra_token_price_per_1k,
             allowed_models = :allowed_models,
             default_model = :default_model,
             allow_audio = :allow_audio,
@@ -93,6 +97,8 @@ class Plan
             'price_cents' => (int)($data['price_cents'] ?? 0),
             'description' => $data['description'] ?? null,
             'benefits' => $data['benefits'] ?? null,
+            'monthly_token_limit' => $data['monthly_token_limit'] ?? null,
+            'extra_token_price_per_1k' => $data['extra_token_price_per_1k'] ?? null,
             'allowed_models' => $data['allowed_models'] ?? null,
             'default_model' => $data['default_model'] ?? null,
             'allow_audio' => (int)($data['allow_audio'] ?? 0),
