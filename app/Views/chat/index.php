@@ -175,6 +175,7 @@ $canUseConversationSettings = !empty($canUseConversationSettings);
                 <?php
                 $createdAt = isset($message['created_at']) ? strtotime((string)$message['created_at']) : null;
                 $createdLabel = $createdAt ? date('d/m/Y H:i', $createdAt) : '';
+                $tokensUsed = isset($message['tokens_used']) ? (int)$message['tokens_used'] : 0;
                 ?>
                 <?php if (($message['role'] ?? '') === 'user'): ?>
                     <?php
@@ -240,8 +241,11 @@ $canUseConversationSettings = !empty($canUseConversationSettings);
                         </div>
                     </div>
                     <div style="margin: -6px 0 6px 36px; display:flex; align-items:center; gap:6px; font-size:10px; color:#777; max-width:80%;">
+                        <?php if ($tokensUsed > 0): ?>
+                            <span><?= htmlspecialchars($tokensUsed) ?> tokens</span>
+                        <?php endif; ?>
                         <?php if ($createdLabel): ?>
-                            <span><?= htmlspecialchars($createdLabel) ?></span>
+                            <span>· <?= htmlspecialchars($createdLabel) ?></span>
                         <?php endif; ?>
                         <button type="button" class="copy-message-btn" data-message-text="<?= htmlspecialchars(trim((string)($message['content'] ?? ''))) ?>" style="
                             border:none; background:transparent; color:#b0b0b0; font-size:10px; cursor:pointer; padding:0;

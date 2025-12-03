@@ -92,6 +92,12 @@ class AsaasWebhookController extends Controller
             return;
         }
 
+        // Garante que esta assinatura fique como ativa e cancela outras ativas do mesmo e-mail
+        Subscription::updateStatusAndCanceledAt((int)$subscription['id'], 'active', null);
+        if (!empty($subscription['customer_email'])) {
+            Subscription::cancelOtherActivesForEmail((string)$subscription['customer_email'], (int)$subscription['id']);
+        }
+
         $monthlyLimit = isset($plan['monthly_token_limit']) ? (int)$plan['monthly_token_limit'] : 0;
         if ($monthlyLimit < 0) {
             $monthlyLimit = 0;

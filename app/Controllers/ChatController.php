@@ -174,7 +174,7 @@ class ChatController extends Controller
             $existingMessages = Message::allByConversation($conversation->id);
 
             // Salva mensagem de texto do usuário
-            Message::create($conversation->id, 'user', $message);
+            Message::create($conversation->id, 'user', $message, null);
 
             // Se for a primeira mensagem, gera um título automático curto usando a IA
             if (empty($existingMessages)) {
@@ -344,7 +344,7 @@ class ChatController extends Controller
 
                 $attachmentsMessage = implode("\n\n", $parts);
 
-                Message::create($conversation->id, 'user', $attachmentsMessage);
+                Message::create($conversation->id, 'user', $attachmentsMessage, null);
             }
 
             $history = Message::allByConversation($conversation->id);
@@ -438,7 +438,7 @@ class ChatController extends Controller
             $assistantReply = preg_replace('/^\s+/mu', '', $assistantReply);
             $assistantReply = trim($assistantReply);
 
-            Message::create($conversation->id, 'assistant', $assistantReply);
+            Message::create($conversation->id, 'assistant', $assistantReply, $totalTokensUsed > 0 ? $totalTokensUsed : null);
 
             // Debita tokens do usuário logado, se houver contador de uso disponível
             if ($userId > 0 && $totalTokensUsed > 0) {
