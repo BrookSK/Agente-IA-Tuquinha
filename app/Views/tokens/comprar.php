@@ -91,7 +91,7 @@
                     </label>
                 </div>
                 <div style="font-size:11px; color:#777; margin-top:3px; max-width:420px;">
-                    O pagamento é processado pelo Asaas, o mesmo gateway usado nas assinaturas. Assim que o pagamento for confirmado, seus tokens extras serão liberados automaticamente. PIX ficará disponível assim que a conta for aprovada no gateway.
+                    O pagamento é processado pelo mesmo gateway usado nas assinaturas. Assim que o pagamento for confirmado, seus tokens extras serão liberados automaticamente.
                 </div>
             </div>
 
