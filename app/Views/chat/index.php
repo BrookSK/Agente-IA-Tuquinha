@@ -6,6 +6,7 @@
 /** @var string|null $draftMessage */
 /** @var string|null $audioError */
 /** @var array $attachments */
+/** @var string|null $chatError */
 
 $hasMediaOrFiles = !empty($currentPlan['allow_audio']) || !empty($currentPlan['allow_images']) || !empty($currentPlan['allow_files']);
 $isFreePlan = $currentPlan && (($currentPlan['slug'] ?? '') === 'free');
@@ -92,6 +93,18 @@ $canUseConversationSettings = !empty($canUseConversationSettings);
             </form>
         </div>
     <?php endif; ?>
+    <?php if (!empty($chatError)): ?>
+        <div style="margin-bottom:8px; background:#311; border:1px solid #a33; color:#ffbaba; padding:8px 10px; border-radius:8px; font-size:13px; display:flex; justify-content:space-between; gap:8px; align-items:center;">
+            <span><?= htmlspecialchars($chatError) ?></span>
+            <a href="/tokens/comprar" style="
+                border:none; border-radius:999px; padding:6px 12px;
+                background:linear-gradient(135deg,#e53935,#ff6f60); color:#050509;
+                font-size:12px; font-weight:600; text-decoration:none; white-space:nowrap;">
+                Comprar mais tokens
+            </a>
+        </div>
+    <?php endif; ?>
+
     <div id="chat-window" style="flex: 1; overflow-y: auto; padding: 12px 4px 12px 0;">
         <?php if (empty($chatHistory)): ?>
             <div id="chat-empty-state" style="text-align: center; margin-top: 40px; color: #b0b0b0; font-size: 14px;">

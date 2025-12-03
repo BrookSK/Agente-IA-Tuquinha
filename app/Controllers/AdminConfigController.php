@@ -46,6 +46,8 @@ class AdminConfigController extends Controller
         $adminErrorEmail = Setting::get('admin_error_notification_email', '');
         $adminErrorWebhook = Setting::get('admin_error_webhook_url', '');
 
+        $extraTokenPricePer1kGlobal = Setting::get('extra_token_price_per_1k_global', '');
+
         $asaas = AsaasConfig::getActive();
 
         $this->view('admin/config', [
@@ -66,6 +68,7 @@ class AdminConfigController extends Controller
             'smtpFromName' => $smtpFromName,
             'adminErrorEmail' => $adminErrorEmail,
             'adminErrorWebhook' => $adminErrorWebhook,
+            'extraTokenPricePer1kGlobal' => $extraTokenPricePer1kGlobal,
             'asaasEnvironment' => $asaas['environment'] ?? 'sandbox',
             'asaasSandboxKey' => $asaas['sandbox_api_key'] ?? '',
             'asaasProdKey' => $asaas['production_api_key'] ?? '',
@@ -106,6 +109,7 @@ class AdminConfigController extends Controller
         $smtpFromName = trim($_POST['smtp_from_name'] ?? 'Tuquinha IA');
         $adminErrorEmail = trim($_POST['admin_error_email'] ?? '');
         $adminErrorWebhook = trim($_POST['admin_error_webhook'] ?? '');
+        $extraTokenPricePer1kGlobalRaw = trim($_POST['extra_token_price_per_1k_global'] ?? '');
         $asaasEnv = $_POST['asaas_environment'] ?? 'sandbox';
         $asaasSandboxKey = trim($_POST['asaas_sandbox_key'] ?? '');
         $asaasProdKey = trim($_POST['asaas_prod_key'] ?? '');
@@ -113,6 +117,14 @@ class AdminConfigController extends Controller
         $pdo = Database::getConnection();
         $stmt = $pdo->prepare('INSERT INTO settings (`key`, `value`) VALUES (:key, :value)
             ON DUPLICATE KEY UPDATE `value` = VALUES(`value`)');
+
+        $extraTokenPricePer1kGlobal = '';
+        if ($extraTokenPricePer1kGlobalRaw !== '') {
+            $normalized = str_replace([' ', ','], ['', '.'], $extraTokenPricePer1kGlobalRaw);
+            if (is_numeric($normalized)) {
+                $extraTokenPricePer1kGlobal = number_format((float)$normalized, 4, '.', '');
+            }
+        }
 
         $settingsToSave = [
             'openai_api_key' => $key,
@@ -131,6 +143,7 @@ class AdminConfigController extends Controller
             'smtp_from_name' => $smtpFromName,
             'admin_error_notification_email' => $adminErrorEmail,
             'admin_error_webhook_url' => $adminErrorWebhook,
+            'extra_token_price_per_1k_global' => $extraTokenPricePer1kGlobal,
         ];
 
         foreach ($settingsToSave as $sKey => $sValue) {
@@ -166,6 +179,9 @@ class AdminConfigController extends Controller
             'smtpPassword' => $smtpPassword,
             'smtpFromEmail' => $smtpFromEmail,
             'smtpFromName' => $smtpFromName,
+            'adminErrorEmail' => $adminErrorEmail,
+            'adminErrorWebhook' => $adminErrorWebhook,
+            'extraTokenPricePer1kGlobal' => $extraTokenPricePer1kGlobal,
             'asaasEnvironment' => $asaasEnv === 'production' ? 'production' : 'sandbox',
             'asaasSandboxKey' => $asaasSandboxKey,
             'asaasProdKey' => $asaasProdKey,

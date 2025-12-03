@@ -18,6 +18,7 @@
 /** @var string $smtpFromName */
 /** @var string $adminErrorEmail */
 /** @var string $adminErrorWebhook */
+/** @var string $extraTokenPricePer1kGlobal */
 /** @var bool $saved */
 /** @var bool|null $testEmailStatus */
 /** @var string|null $testEmailError */
@@ -127,6 +128,25 @@ $knownModels = [
                     background: #050509; color: #f5f5f5; font-size: 13px;
                 ">
                 <small style="color:#777; font-size:11px;">Máximo de caracteres considerados nas memórias e regras específicas de cada chat para contas Free.</small>
+            </div>
+        </div>
+
+        <div style="margin-top: 8px; padding:10px 12px; border-radius:10px; border:1px solid #272727; background:#0a0a10;">
+            <div style="font-size:13px; color:#b0b0b0; margin-bottom:8px;">
+                <strong>Preço global de tokens extras</strong><br>
+                Defina aqui o valor padrão cobrado por <strong>1.000 tokens extras</strong> quando o usuário comprar mais saldo além do plano.
+            </div>
+            <div style="display:flex; flex-wrap:wrap; gap:10px; align-items:flex-end;">
+                <div>
+                    <label style="font-size: 12px; color: #b0b0b0;">Preço por 1.000 tokens extras (R$)</label>
+                    <input name="extra_token_price_per_1k_global" value="<?= $extraTokenPricePer1kGlobal !== '' ? number_format((float)$extraTokenPricePer1kGlobal, 4, ',', '.') : '' ?>" style="
+                        width: 160px; padding: 8px 10px; border-radius: 8px; border: 1px solid #272727;
+                        background: #050509; color: #f5f5f5; font-size: 13px;
+                    " placeholder="ex: 0,0090">
+                </div>
+                <div style="font-size:11px; color:#777; max-width:360px;">
+                    Este valor é usado para calcular o preço das compras avulsas de tokens (pay as you go), independente do plano do usuário.
+                </div>
             </div>
         </div>
 

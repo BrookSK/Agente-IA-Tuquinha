@@ -1,0 +1,12 @@
+CREATE TABLE IF NOT EXISTS token_topups (
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    user_id INT UNSIGNED NOT NULL,
+    tokens INT UNSIGNED NOT NULL,
+    amount_cents INT UNSIGNED NOT NULL,
+    asaas_payment_id VARCHAR(191) DEFAULT NULL,
+    status ENUM('pending','paid','canceled') NOT NULL DEFAULT 'pending',
+    created_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    paid_at TIMESTAMP NULL DEFAULT NULL,
+    CONSTRAINT fk_token_topups_user FOREIGN KEY (user_id) REFERENCES users(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

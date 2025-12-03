@@ -101,4 +101,9 @@ class AsaasClient
     {
         return $this->request('POST', '/subscriptions/' . urlencode($id) . '/cancel');
     }
+
+    public function createPayment(array $payload): array
+    {
+        return $this->request('POST', '/payments', $payload);
+    }
 }

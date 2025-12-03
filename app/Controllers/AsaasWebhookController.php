@@ -7,6 +7,7 @@ use App\Models\Subscription;
 use App\Models\Plan;
 use App\Models\User;
 use App\Models\TokenTransaction;
+use App\Models\TokenTopup;
 
 class AsaasWebhookController extends Controller
 {
@@ -15,14 +16,14 @@ class AsaasWebhookController extends Controller
         $raw = file_get_contents('php://input') ?: '';
         $data = json_decode($raw, true);
 
-        if (!is_array($data) || empty($data['event']) || empty($data['payment']['subscription'])) {
+        if (!is_array($data) || empty($data['event']) || empty($data['payment'])) {
             http_response_code(400);
             echo 'invalid payload';
             return;
         }
 
         $event = (string)$data['event'];
-        $asaasSubscriptionId = (string)$data['payment']['subscription'];
+        $payment = (array)$data['payment'];
 
         // Considera eventos de confirmação de pagamento/renovação
         $isPaidEvent = in_array($event, [
@@ -36,6 +37,47 @@ class AsaasWebhookController extends Controller
             return;
         }
 
+        // 1) Tratamento de recargas de tokens (pagamentos avulsos sem subscription)
+        $externalRef = isset($payment['externalReference']) ? (string)$payment['externalReference'] : '';
+        $asaasSubscriptionId = isset($payment['subscription']) ? (string)$payment['subscription'] : '';
+
+        if ($externalRef !== '' && str_starts_with($externalRef, 'token_topup:')) {
+            $parts = explode(':', $externalRef, 2);
+            $topupId = isset($parts[1]) ? (int)$parts[1] : 0;
+
+            if ($topupId > 0) {
+                $topup = TokenTopup::findByAsaasPaymentId((string)($payment['id'] ?? ''));
+                if (!$topup) {
+                    // fallback: se ainda não tiver o payment_id salvo, tenta só pelo ID interno
+                    $topup = ['id' => $topupId] + ['user_id' => null, 'tokens' => null];
+                }
+
+                if (!empty($topup['user_id']) && !empty($topup['tokens'])) {
+                    $userId = (int)$topup['user_id'];
+                    $tokens = (int)$topup['tokens'];
+
+                    // Credita tokens extras no usuário
+                    User::creditTokens($userId, $tokens, 'token_topup', [
+                        'asaas_payment_id' => (string)($payment['id'] ?? ''),
+                        'event' => $event,
+                    ]);
+
+                    // Marca a recarga como paga
+                    TokenTopup::markPaid((int)$topup['id']);
+                }
+            }
+
+            http_response_code(200);
+            echo 'ok';
+            return;
+        }
+
+        // 2) Fluxo padrão de assinatura (subscription)
+        if ($asaasSubscriptionId === '') {
+            http_response_code(200);
+            echo 'ignored';
+            return;
+        }
         $subscription = Subscription::findByAsaasId($asaasSubscriptionId);
         if (!$subscription) {
             http_response_code(200);

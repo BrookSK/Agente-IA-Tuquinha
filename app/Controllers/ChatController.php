@@ -66,7 +66,8 @@ class ChatController extends Controller
 
         $draftMessage = $_SESSION['draft_message'] ?? '';
         $audioError = $_SESSION['audio_error'] ?? null;
-        unset($_SESSION['draft_message'], $_SESSION['audio_error']);
+        $chatError = $_SESSION['chat_error'] ?? null;
+        unset($_SESSION['draft_message'], $_SESSION['audio_error'], $_SESSION['chat_error']);
 
         $currentPlan = null;
         if (!empty($_SESSION['is_admin'])) {
@@ -122,6 +123,7 @@ class ChatController extends Controller
             'currentPlan' => $currentPlan,
             'draftMessage' => $draftMessage,
             'audioError' => $audioError,
+            'chatError' => $chatError,
             'conversationId' => $conversation->id,
             'conversationSettings' => $conversationSettings,
             'canUseConversationSettings' => $canUseConversationSettings,

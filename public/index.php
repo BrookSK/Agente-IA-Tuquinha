@@ -49,6 +49,8 @@ $router->get('/conta', 'AccountController@index');
 $router->post('/conta', 'AccountController@updateProfile');
 $router->post('/conta/senha', 'AccountController@updatePassword');
 $router->post('/conta/assinatura/cancelar', 'AccountController@cancelSubscription');
+$router->get('/tokens/comprar', 'TokenTopupController@show');
+$router->post('/tokens/comprar', 'TokenTopupController@create');
 $router->get('/admin/login', 'AdminAuthController@login');
 $router->post('/admin/login', 'AdminAuthController@authenticate');
 $router->get('/admin/logout', 'AdminAuthController@logout');
