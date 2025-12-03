@@ -96,7 +96,6 @@ class Plan
             'description' => $data['description'] ?? null,
             'benefits' => $data['benefits'] ?? null,
             'monthly_token_limit' => $data['monthly_token_limit'] ?? null,
-            'extra_token_price_per_1k' => $data['extra_token_price_per_1k'] ?? null,
             'allowed_models' => $data['allowed_models'] ?? null,
             'default_model' => $data['default_model'] ?? null,
             'allow_audio' => (int)($data['allow_audio'] ?? 0),
