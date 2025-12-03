@@ -71,6 +71,7 @@ class TokenTopupController extends Controller
 
         $priceGlobal = Setting::get('extra_token_price_per_1k_global', '');
         $pricePer1k = $priceGlobal !== '' ? (float)$priceGlobal : 0.0;
+        $minAmountReais = 5.01; // mínimo em R$
 
         if ($pricePer1k <= 0) {
             $this->view('tokens/comprar', [
@@ -153,9 +154,10 @@ class TokenTopupController extends Controller
 
         $blocks = (int)ceil($rawTokens / 1000);
 
-        $billingType = $_POST['billing_type'] ?? 'PIX';
-        if (!in_array($billingType, ['PIX', 'BOLETO'], true)) {
-            $billingType = 'PIX';
+        // garante mínimo em reais
+        $minBlocks = (int)ceil($minAmountReais / $pricePer1k);
+        if ($blocks < $minBlocks) {
+            $blocks = $minBlocks;
         }
 
         $tokens = 1000 * $blocks;
@@ -180,7 +182,7 @@ class TokenTopupController extends Controller
             'user_id'         => (int)$user['id'],
             'tokens'          => $tokens,
             'amount_cents'    => $amountCents,
-            'asaas_payment_id'=> null,
+            'asaas_payment_id' => null,
             'status'          => 'pending',
             'paid_at'         => null,
         ]);

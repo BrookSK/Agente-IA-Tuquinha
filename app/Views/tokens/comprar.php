@@ -1,4 +1,5 @@
 <?php
+
 /** @var array $user */
 /** @var array|null $subscription */
 /** @var array|null $currentPlan */
@@ -41,14 +42,14 @@
     <?php endif; ?>
 
     <?php
-        $hasLimitForView = !empty($hasLimit);
-        $limitValue = 0;
-        if (!empty($currentPlan) && isset($currentPlan['monthly_token_limit'])) {
-            $limitValue = (int)$currentPlan['monthly_token_limit'];
-        }
-        if ($limitValue <= 0) {
-            $hasLimitForView = false;
-        }
+    $hasLimitForView = !empty($hasLimit);
+    $limitValue = 0;
+    if (!empty($currentPlan) && isset($currentPlan['monthly_token_limit'])) {
+        $limitValue = (int)$currentPlan['monthly_token_limit'];
+    }
+    if ($limitValue <= 0) {
+        $hasLimitForView = false;
+    }
     ?>
 
     <?php if (!$hasLimitForView): ?>
@@ -119,38 +120,42 @@
     <?php endif; ?>
 </div>
 <script>
-(function() {
-    var input   = document.getElementById('tokens-input');
-    var totalEl = document.getElementById('tokens-total');
-    <?php $priceJs = $pricePer1k > 0 ? $pricePer1k : 0; ?>
-    var pricePer1k = <?= json_encode($priceJs) ?>;
+    (function() {
+        var input = document.getElementById('tokens-input');
+        var totalEl = document.getElementById('tokens-total');
+        <?php $priceJs = $pricePer1k > 0 ? $pricePer1k : 0; ?>
+        var pricePer1k = <?= json_encode($priceJs) ?>;
+        var MIN_AMOUNT_REAIS = 5.01;
 
-    if (!input || !totalEl || !pricePer1k) return;
+        if (!input || !totalEl || !pricePer1k) return;
 
-    function updateTotal() {
-        var raw = parseInt(input.value || '0', 10);
-        if (isNaN(raw) || raw <= 0) {
-            raw = 1000;
+        function updateTotal() {
+            var blocks = Math.ceil(raw / 1000);
+
+            // aplica mínimo em reais
+            var minBlocks = Math.ceil(MIN_AMOUNT_REAIS / pricePer1k);
+            if (blocks < minBlocks) {
+                blocks = minBlocks;
+            }
+
+            var tokens = blocks * 1000;
+            input.value = tokens;
+
+            var amount = (tokens / 1000) * pricePer1k;
+            var formatted = amount.toFixed(2).replace('.', ',');
+            totalEl.textContent = 'Valor final: R$ ' + formatted + ' para ' +
+                tokens.toLocaleString('pt-BR') + ' tokens.';
         }
-        var blocks = Math.ceil(raw / 1000);
-        var tokens = blocks * 1000;
-        input.value = tokens;
 
-        var amount = (tokens / 1000) * pricePer1k;
-        var formatted = amount.toFixed(2).replace('.', ',');
-        totalEl.textContent = 'Valor final: R$ ' + formatted + ' para ' +
-            tokens.toLocaleString('pt-BR') + ' tokens.';
-    }
+        input.addEventListener('change', updateTotal);
+        input.addEventListener('blur', updateTotal);
+        input.addEventListener('keyup', function(e) {
+            if (['ArrowUp', 'ArrowDown', 'Tab'].indexOf(e.key) === -1) {
+                clearTimeout(window.__tokensTimeout);
+                window.__tokensTimeout = setTimeout(updateTotal, 150);
+            }
+        });
 
-    input.addEventListener('change', updateTotal);
-    input.addEventListener('blur', updateTotal);
-    input.addEventListener('keyup', function(e) {
-        if (['ArrowUp','ArrowDown','Tab'].indexOf(e.key) === -1) {
-            clearTimeout(window.__tokensTimeout);
-            window.__tokensTimeout = setTimeout(updateTotal, 150);
-        }
-    });
-
-    updateTotal();
-})();
+        updateTotal();
+    })();
 </script>
