@@ -5,6 +5,15 @@
 /** @var array|null $savedCustomer */
 $price = number_format($plan['price_cents'] / 100, 2, ',', '.');
 
+// Define rótulo do período (mês / semestre / ano) com base no sufixo do slug
+$slug = (string)($plan['slug'] ?? '');
+$periodLabel = 'mês';
+if (substr($slug, -11) === '-semestral') {
+    $periodLabel = 'semestre';
+} elseif (substr($slug, -6) === '-anual') {
+    $periodLabel = 'ano';
+}
+
 // Se já existe cliente salvo na sessão, prioriza ele; senão usa dados do usuário logado (incluindo billing_*)
 $prefillName = $savedCustomer['name'] ?? ($currentUser['name'] ?? '');
 $prefillEmail = $savedCustomer['email'] ?? ($currentUser['email'] ?? '');
@@ -23,7 +32,7 @@ $prefillState = $savedCustomer['state'] ?? ($currentUser['billing_state'] ?? '')
     <h1 style="font-size: 24px; margin-bottom: 6px; font-weight: 650;">Finalizar assinatura</h1>
     <p style="color: #b0b0b0; margin-bottom: 18px; font-size: 14px;">
         Passo 1 de 2 &mdash; Dados pessoais. Depois vamos pedir os dados do cartão.<br>
-        Você está assinando o plano <strong><?= htmlspecialchars($plan['name']) ?></strong> por <strong>R$ <?= $price ?>/mês</strong>.
+        Você está assinando o plano <strong><?= htmlspecialchars($plan['name']) ?></strong> por <strong>R$ <?= $price ?>/<?= htmlspecialchars($periodLabel) ?></strong>.
     </p>
 
     <?php if (!empty($error)): ?>

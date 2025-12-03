@@ -4,6 +4,15 @@
 /** @var string $birthdate */
 /** @var string|null $error */
 $price = number_format($plan['price_cents'] / 100, 2, ',', '.');
+
+// Define rótulo do período (mês / semestre / ano) com base no sufixo do slug
+$slug = (string)($plan['slug'] ?? '');
+$periodLabel = 'mês';
+if (substr($slug, -11) === '-semestral') {
+    $periodLabel = 'semestre';
+} elseif (substr($slug, -6) === '-anual') {
+    $periodLabel = 'ano';
+}
 ?>
 <div style="max-width: 880px; margin: 0 auto;">
     <h1 style="font-size: 24px; margin-bottom: 6px; font-weight: 650;">Finalizar assinatura</h1>
@@ -11,7 +20,7 @@ $price = number_format($plan['price_cents'] / 100, 2, ',', '.');
         Passo 2 de 2 &mdash; Dados do cartão.
     </p>
     <p style="color: #b0b0b0; margin-bottom: 18px; font-size: 14px;">
-        Você está assinando o plano <strong><?= htmlspecialchars($plan['name']) ?></strong> por <strong>R$ <?= $price ?>/mês</strong>, com cobrança recorrente no cartão via Asaas.
+        Você está assinando o plano <strong><?= htmlspecialchars($plan['name']) ?></strong> por <strong>R$ <?= $price ?>/<?= htmlspecialchars($periodLabel) ?></strong>, com cobrança recorrente no cartão via Asaas.
     </p>
 
     <?php if (!empty($error)): ?>
