@@ -52,7 +52,6 @@ class AdminPlanController extends Controller
         $description = trim($_POST['description'] ?? '');
         $benefits = trim($_POST['benefits'] ?? '');
         $monthlyTokenLimitRaw = trim($_POST['monthly_token_limit'] ?? '');
-        $extraTokenPriceRaw = trim($_POST['extra_token_price_per_1k'] ?? '');
         $allowAudio = !empty($_POST['allow_audio']) ? 1 : 0;
         $allowImages = !empty($_POST['allow_images']) ? 1 : 0;
         $allowFiles = !empty($_POST['allow_files']) ? 1 : 0;
@@ -76,14 +75,6 @@ class AdminPlanController extends Controller
             $monthlyTokenLimit = max(0, (int)$monthlyTokenLimitRaw);
         }
 
-        $extraTokenPricePer1k = null;
-        if ($extraTokenPriceRaw !== '') {
-            $normalized = str_replace([' ', ','], ['', '.'], $extraTokenPriceRaw);
-            if (is_numeric($normalized)) {
-                $extraTokenPricePer1k = number_format((float)$normalized, 4, '.', '');
-            }
-        }
-
         $data = [
             'name' => $name,
             'slug' => $slug,
@@ -91,7 +82,6 @@ class AdminPlanController extends Controller
             'description' => $description,
             'benefits' => $benefits,
             'monthly_token_limit' => $monthlyTokenLimit,
-            'extra_token_price_per_1k' => $extraTokenPricePer1k,
             'allowed_models' => $allowedModels ? json_encode($allowedModels) : null,
             'default_model' => $defaultModel !== '' ? $defaultModel : null,
             'history_retention_days' => $historyRetentionDays,

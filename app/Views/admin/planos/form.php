@@ -60,13 +60,6 @@ $planDefaultModel = $plan['default_model'] ?? '';
                     background:#050509; color:#f5f5f5; font-size:13px;">
                 <div style="font-size:11px; color:#777; margin-top:3px;">Se vazio ou 0, o plano não terá limite mensal rígido de tokens.</div>
             </div>
-            <div style="flex:1 1 200px;">
-                <label style="font-size:13px; color:#ddd; display:block; margin-bottom:4px;">Preço por 1.000 tokens extras (R$)</label>
-                <input type="text" name="extra_token_price_per_1k" value="<?= isset($plan['extra_token_price_per_1k']) && $plan['extra_token_price_per_1k'] !== null ? number_format((float)$plan['extra_token_price_per_1k'], 4, ',', '.') : '' ?>" style="
-                    width:200px; padding:8px 10px; border-radius:8px; border:1px solid #272727;
-                    background:#050509; color:#f5f5f5; font-size:13px;">
-                <div style="font-size:11px; color:#777; margin-top:3px;">Opcional. Usado para cálculo/controle de consumo acima do limite (valores em BRL).</div>
-            </div>
         </div>
 
         <div>
