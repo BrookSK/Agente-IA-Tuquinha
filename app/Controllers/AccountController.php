@@ -64,6 +64,8 @@ class AccountController extends Controller
             }
         }
 
+        $tokenBalance = \App\Models\User::getTokenBalance((int)$user['id']);
+
         $this->view('account/index', [
             'pageTitle' => 'Minha conta',
             'user' => $user,
@@ -72,6 +74,7 @@ class AccountController extends Controller
             'cardLast4' => $cardLast4,
             'subscriptionStart' => $subscriptionStart,
             'subscriptionNext' => $subscriptionNext,
+            'tokenBalance' => $tokenBalance,
             'error' => null,
             'success' => null,
         ]);
@@ -184,6 +187,8 @@ class AccountController extends Controller
             }
         }
 
+        $tokenBalance = \App\Models\User::getTokenBalance((int)$user['id']);
+
         $this->view('account/index', [
             'pageTitle' => 'Minha conta',
             'user' => $user,
@@ -192,6 +197,7 @@ class AccountController extends Controller
             'cardLast4' => $cardLast4,
             'subscriptionStart' => $subscriptionStart,
             'subscriptionNext' => $subscriptionNext,
+            'tokenBalance' => $tokenBalance,
             'error' => $error,
             'success' => $success,
         ]);

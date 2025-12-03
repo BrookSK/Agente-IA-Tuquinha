@@ -221,11 +221,18 @@ class TokenTopupController extends Controller
             }
 
             if ($redirectUrl) {
-                header('Location: ' . $redirectUrl);
-                exit;
+                // tela intermediária: abre o link em nova aba e mantém o Tuquinha aberto
+                $this->view('tokens/abrir_pagamento', [
+                    'pageTitle'    => 'Pagamento de tokens extras',
+                    'redirectUrl'  => $redirectUrl,
+                    'billingType'  => $billingType,
+                    'amountReais'  => $amountCents / 100,
+                    'tokens'       => $tokens,
+                ]);
+                return;
             }
 
-            // fallback: volta para conta com mensagem
+            // fallback: volta para conta com mensagem se não veio URL de pagamento
             $_SESSION['topup_success'] = 'Pedido de compra de tokens extras criado. Assim que o pagamento for confirmado, seu saldo será atualizado.';
             header('Location: /conta');
             exit;
@@ -241,5 +248,18 @@ class TokenTopupController extends Controller
                 'error'        => 'Não consegui criar a cobrança para compra de tokens extras. Tente novamente em alguns minutos ou fale com o suporte.',
             ]);
         }
+    }
+
+    public function history(): void
+    {
+        $user = $this->requireLogin();
+
+        $topups = TokenTopup::allByUserId((int)$user['id']);
+
+        $this->view('tokens/historico', [
+            'pageTitle' => 'Histórico de tokens extras',
+            'user'      => $user,
+            'topups'    => $topups,
+        ]);
     }
 }

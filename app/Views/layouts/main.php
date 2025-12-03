@@ -327,6 +327,10 @@ $pageTitle = $pageTitle ?? 'Agente IA - Tuquinha';
                         <span class="icon">👤</span>
                         <span>Minha conta</span>
                     </a>
+                    <a href="/tokens/historico" class="sidebar-button">
+                        <span class="icon">🔋</span>
+                        <span>Histórico de tokens extras</span>
+                    </a>
                     <a href="/logout" class="sidebar-button" style="margin-top: 6px;">
                         <span class="icon">⏻</span>
                         <span>Sair da conta</span>

@@ -7,6 +7,7 @@
 /** @var string|null $cardLast4 */
 /** @var string|null $subscriptionStart */
 /** @var string|null $subscriptionNext */
+/** @var int|null $tokenBalance */
 
 $isFreePlan = empty($plan) || (($plan['slug'] ?? 'free') === 'free');
 $freeGlobalLimit = (int)\App\Models\Setting::get('free_memory_global_chars', '500');
@@ -107,6 +108,23 @@ if ($freeChatLimit <= 0) { $freeChatLimit = 400; }
     </div>
 
     <div style="display:flex; flex-direction:column; gap:12px;">
+        <div style="background:#111118; border-radius:16px; padding:14px; border:1px solid #272727;">
+            <h2 style="font-size:18px; margin-bottom:8px;">Saldo de tokens</h2>
+            <p style="font-size:13px; color:#b0b0b0; margin-bottom:6px;">
+                Este é o total de tokens disponíveis para usar no chat, somando o limite do seu plano
+                com os tokens extras que você já comprou.
+            </p>
+            <div style="font-size:20px; font-weight:650; margin-bottom:4px;">
+                <?= number_format((int)($tokenBalance ?? 0), 0, ',', '.') ?> tokens
+            </div>
+            <div style="font-size:11px; color:#8d8d8d;">
+                A cada resposta do Tuquinha uma parte desses tokens é consumida.
+            </div>
+            <div style="margin-top:8px;">
+                <a href="/tokens/comprar" style="font-size:12px; color:#ff6f60; text-decoration:none;">Comprar mais tokens extras</a>
+            </div>
+        </div>
+
         <div style="background:#111118; border-radius:16px; padding:14px; border:1px solid #272727;">
             <h2 style="font-size:18px; margin-bottom:8px;">Plano atual</h2>
             <?php if ($plan && $subscription): ?>
