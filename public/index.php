@@ -70,6 +70,7 @@ $router->get('/admin/erros', 'AdminErrorReportController@index');
 $router->get('/admin/erros/ver', 'AdminErrorReportController@show');
 $router->post('/admin/erros/estornar', 'AdminErrorReportController@refund');
 $router->post('/admin/erros/resolver', 'AdminErrorReportController@resolve');
+$router->post('/admin/erros/descartar', 'AdminErrorReportController@dismiss');
 $router->get('/chat', 'ChatController@index');
 $router->post('/chat/send', 'ChatController@send');
 $router->post('/chat/audio', 'ChatController@sendAudio');

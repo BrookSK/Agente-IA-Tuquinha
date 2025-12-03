@@ -118,6 +118,13 @@ $planDefaultModel = $plan['default_model'] ?? '';
                 <input type="checkbox" name="is_active" value="1" <?= !isset($plan['is_active']) || !empty($plan['is_active']) ? 'checked' : '' ?>>
                 <span>Plano ativo</span>
             </label>
+            <label style="display:flex; align-items:center; gap:5px;">
+                <input type="checkbox" name="is_default_for_users" value="1" <?= !empty($plan['is_default_for_users']) ? 'checked' : '' ?>>
+                <span>Plano padrão para novos usuários</span>
+            </label>
+        </div>
+        <div style="font-size:11px; color:#777; margin-top:4px;">
+            Apenas um plano será considerado padrão. Se você marcar mais de um, o sistema usa o primeiro pelo ordenamento (sort_order e preço).
         </div>
 
         <div style="margin-top:12px; display:flex; gap:8px;">

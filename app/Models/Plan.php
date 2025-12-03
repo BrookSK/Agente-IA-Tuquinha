@@ -135,6 +135,36 @@ class Plan
         return $row ?: null;
     }
 
+    /**
+     * Plano padrão para usuários comuns (não-admin).
+     * Ordem de prioridade:
+     * 1) Plano ativo com is_default_for_users = 1 (primeiro por sort_order, price_cents ASC)
+     * 2) Plano com slug 'free'
+     * 3) Primeiro plano ativo mais barato
+     */
+    public static function findDefaultForUsers(): ?array
+    {
+        $pdo = Database::getConnection();
+
+        // 1) Plano marcado explicitamente como padrão
+        $stmt = $pdo->query('SELECT * FROM plans WHERE is_active = 1 AND is_default_for_users = 1 ORDER BY sort_order ASC, price_cents ASC LIMIT 1');
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        if ($row) {
+            return $row;
+        }
+
+        // 2) Fallback para slug "free"
+        $free = self::findBySlug('free');
+        if ($free) {
+            return $free;
+        }
+
+        // 3) Fallback geral: primeiro plano ativo mais barato
+        $stmt = $pdo->query('SELECT * FROM plans WHERE is_active = 1 ORDER BY price_cents ASC, sort_order ASC LIMIT 1');
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $row ?: null;
+    }
+
     public static function parseAllowedModels(?string $allowed): array
     {
         if (!$allowed) {

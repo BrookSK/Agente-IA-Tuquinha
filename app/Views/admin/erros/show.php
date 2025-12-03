@@ -71,10 +71,16 @@
                 </p>
             <?php endif; ?>
 
-            <form method="post" action="/admin/erros/resolver" style="display:inline-block;">
+            <form method="post" action="/admin/erros/resolver" style="display:inline-block; margin-right:8px;">
                 <input type="hidden" name="id" value="<?= (int)$report['id'] ?>">
                 <button type="submit" style="cursor:pointer; padding:8px 14px; border-radius:999px; border:1px solid #555; background:#222; color:#eee; font-size:13px;">
                     Marcar como resolvido sem estorno
+                </button>
+            </form>
+            <form method="post" action="/admin/erros/descartar" style="display:inline-block;">
+                <input type="hidden" name="id" value="<?= (int)$report['id'] ?>">
+                <button type="submit" style="cursor:pointer; padding:8px 14px; border-radius:999px; border:1px solid #555; background:#111; color:#b0b0b0; font-size:13px;">
+                    Descartar relato
                 </button>
             </form>
         </div>

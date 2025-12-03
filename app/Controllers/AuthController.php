@@ -81,6 +81,14 @@ class AuthController extends Controller
             }
         } else {
             unset($_SESSION['is_admin']);
+
+            // Usuário comum sempre começa com o plano padrão (free ou equivalente)
+            $defaultPlan = Plan::findDefaultForUsers();
+            if ($defaultPlan && !empty($defaultPlan['slug'])) {
+                $_SESSION['plan_slug'] = $defaultPlan['slug'];
+            } else {
+                unset($_SESSION['plan_slug']);
+            }
         }
 
         $redirectPlan = $_SESSION['pending_plan_slug'] ?? null;
@@ -456,6 +464,14 @@ HTML;
             }
         } else {
             unset($_SESSION['is_admin']);
+
+            // Usuário comum sempre começa com o plano padrão (free ou equivalente)
+            $defaultPlan = Plan::findDefaultForUsers();
+            if ($defaultPlan && !empty($defaultPlan['slug'])) {
+                $_SESSION['plan_slug'] = $defaultPlan['slug'];
+            } else {
+                unset($_SESSION['plan_slug']);
+            }
         }
 
         unset($_SESSION['pending_verify_user_id'], $_SESSION['pending_verify_email']);

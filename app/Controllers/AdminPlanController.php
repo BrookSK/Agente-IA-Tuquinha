@@ -55,6 +55,7 @@ class AdminPlanController extends Controller
         $allowImages = !empty($_POST['allow_images']) ? 1 : 0;
         $allowFiles = !empty($_POST['allow_files']) ? 1 : 0;
         $isActive = !empty($_POST['is_active']) ? 1 : 0;
+        $isDefaultForUsers = !empty($_POST['is_default_for_users']) ? 1 : 0;
         $allowedModels = isset($_POST['allowed_models']) && is_array($_POST['allowed_models'])
             ? array_values(array_filter(array_map('trim', $_POST['allowed_models'])))
             : [];
@@ -81,6 +82,7 @@ class AdminPlanController extends Controller
             'allow_images' => $allowImages,
             'allow_files' => $allowFiles,
             'is_active' => $isActive,
+            'is_default_for_users' => $isDefaultForUsers,
         ];
 
         if ($id > 0) {

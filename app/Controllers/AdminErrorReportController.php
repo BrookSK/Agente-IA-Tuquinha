@@ -144,4 +144,35 @@ class AdminErrorReportController extends Controller
 
         header('Location: /admin/erros/ver?id=' . $id);
     }
+
+    public function dismiss(): void
+    {
+        $this->requireAdmin();
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(405);
+            echo 'Método não permitido';
+            return;
+        }
+
+        $id = isset($_POST['id']) ? (int)$_POST['id'] : 0;
+        if ($id <= 0) {
+            http_response_code(400);
+            echo 'ID inválido';
+            return;
+        }
+
+        $report = ErrorReport::findById($id);
+        if (!$report) {
+            http_response_code(404);
+            echo 'Relato não encontrado';
+            return;
+        }
+
+        if (($report['status'] ?? 'open') === 'open') {
+            ErrorReport::updateStatus($id, 'dismissed');
+        }
+
+        header('Location: /admin/erros/ver?id=' . $id);
+    }
 }
