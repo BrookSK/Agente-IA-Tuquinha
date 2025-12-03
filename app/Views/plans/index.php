@@ -193,9 +193,6 @@
                                     <?php if ($isCurrent): ?>
                                         <span style="margin-left:6px; font-size:10px; padding:2px 6px; border-radius:999px; background:#e53935; color:#050509;">Seu plano atual</span>
                                     <?php endif; ?>
-                                    <?php if ($cycleKey === 'anual'): ?>
-                                        <span style="margin-left:6px; font-size:10px; padding:2px 6px; border-radius:999px; border:1px solid #4caf50; color:#c8e6c9;">Melhor custo-benefício</span>
-                                    <?php endif; ?>
                                 </div>
                                 <div style="font-size: 18px; font-weight: 600; margin-bottom: 4px;">
                                     <?= htmlspecialchars($plan['name']) ?>
