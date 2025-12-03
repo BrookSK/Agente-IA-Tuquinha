@@ -160,6 +160,12 @@ class TokenTopupController extends Controller
             $blocks = $minBlocks;
         }
 
+        // tipo de cobrança
+        $billingType = $_POST['billing_type'] ?? 'PIX';
+        if (!in_array($billingType, ['PIX', 'BOLETO'], true)) {
+            $billingType = 'PIX';
+        }
+
         $tokens = 1000 * $blocks;
         $amount = $pricePer1k * $blocks; // em reais
         $amountCents = (int)round($amount * 100);

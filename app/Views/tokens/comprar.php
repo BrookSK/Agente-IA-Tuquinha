@@ -130,6 +130,11 @@
         if (!input || !totalEl || !pricePer1k) return;
 
         function updateTotal() {
+            var raw = parseInt(input.value || '0', 10);
+            if (isNaN(raw) || raw <= 0) {
+                raw = 1000;
+            }
+
             var blocks = Math.ceil(raw / 1000);
 
             // aplica mínimo em reais
