@@ -368,23 +368,83 @@ class ChatController extends Controller
             if ($userId > 0) {
                 $userData = User::findById($userId) ?: null;
 
-                // Se o plano tiver limite mensal de tokens configurado, bloqueia envio quando saldo chegar a zero
-                if ($planForContext && isset($planForContext['monthly_token_limit']) && (int)$planForContext['monthly_token_limit'] > 0) {
-                    $currentBalance = User::getTokenBalance($userId);
+                $currentBalance = User::getTokenBalance($userId);
+
+                // Plano free: quando acabar os tokens, sugere assinar um plano pago
+                if ($isFreePlan && $currentBalance <= 0) {
+                    $assistantReply = 'Você está usando o plano Free e os seus tokens gratuitos chegaram ao fim. '
+                        . 'Para continuar usando o Tuquinha com mais limite e recursos, é só assinar um plano pago.\n\n'
+                        . 'Clique em "Planos e limites" no menu lateral ou acesse diretamente /planos para escolher o melhor plano para você.';
+
+                    Message::create($conversation->id, 'assistant', $assistantReply, null);
+
+                    if ($isAjax) {
+                        header('Content-Type: application/json; charset=utf-8');
+
+                        $nowLabel = date('d/m/Y H:i');
+                        $responseMessages = [];
+                        $responseMessages[] = [
+                            'role' => 'user',
+                            'content' => $message,
+                            'created_label' => $nowLabel,
+                        ];
+                        $responseMessages[] = [
+                            'role' => 'assistant',
+                            'content' => $assistantReply,
+                            'tokens_used' => 0,
+                            'created_label' => $nowLabel,
+                        ];
+
+                        echo json_encode([
+                            'success' => true,
+                            'messages' => $responseMessages,
+                            'total_tokens_used' => 0,
+                        ]);
+                        exit;
+                    }
+
+                    header('Location: /chat');
+                    exit;
+                }
+
+                // Planos pagos com limite mensal de tokens: sugerem compra de tokens extras
+                if ($planForContext && !$isFreePlan && isset($planForContext['monthly_token_limit']) && (int)$planForContext['monthly_token_limit'] > 0) {
                     if ($currentBalance <= 0) {
-                        $errorMsg = 'Seu saldo de tokens para este plano acabou. Renove o plano ou fale com o suporte para adicionar mais tokens.';
+                        $assistantReply = 'Parece que o seu saldo de tokens deste plano chegou a zero. '
+                            . 'Para continuar usando o Tuquinha sem interrupções, você pode comprar tokens extras na página de planos.\n\n'
+                            . 'Clique em "Planos e limites" no menu lateral ou acesse diretamente /tokens/comprar para adicionar mais tokens ao seu saldo.';
+
+                        // Grava mensagem do assistente no histórico
+                        Message::create($conversation->id, 'assistant', $assistantReply, null);
 
                         if ($isAjax) {
                             header('Content-Type: application/json; charset=utf-8');
+
+                            $nowLabel = date('d/m/Y H:i');
+
+                            $responseMessages = [];
+
+                            $responseMessages[] = [
+                                'role' => 'user',
+                                'content' => $message,
+                                'created_label' => $nowLabel,
+                            ];
+                            $responseMessages[] = [
+                                'role' => 'assistant',
+                                'content' => $assistantReply,
+                                'tokens_used' => 0,
+                                'created_label' => $nowLabel,
+                            ];
+
                             echo json_encode([
-                                'success' => false,
-                                'error' => $errorMsg,
+                                'success' => true,
+                                'messages' => $responseMessages,
+                                'total_tokens_used' => 0,
                             ]);
                             exit;
                         }
 
-                        // Para requisições não-AJAX, apenas redireciona de volta para o chat com uma mensagem simples
-                        $_SESSION['chat_error'] = $errorMsg;
+                        // Para requisições não-AJAX, apenas volta para o chat; a mensagem do assistente já foi gravada
                         header('Location: /chat');
                         exit;
                     }
