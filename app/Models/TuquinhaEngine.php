@@ -16,7 +16,12 @@ class TuquinhaEngine
     public function generateResponse(array $messages, ?string $model = null): string
     {
         // Compatibilidade: mantém a assinatura antiga usando apenas o system prompt padrão
-        return $this->generateResponseWithContext($messages, $model, null, null);
+        $result = $this->generateResponseWithContext($messages, $model, null, null);
+        if (is_array($result) && isset($result['content']) && is_string($result['content'])) {
+            return $result['content'];
+        }
+
+        return is_string($result) ? $result : '';
     }
 
     public function generateResponseWithContext(array $messages, ?string $model = null, ?array $user = null, ?array $conversationSettings = null): array
@@ -95,10 +100,16 @@ class TuquinhaEngine
         $usageTotal = isset($data['usage']['total_tokens']) ? (int)$data['usage']['total_tokens'] : 0;
 
         if (!is_string($content) || $content === '') {
-            return $this->fallbackResponse($messages);
+            return [
+                'content' => $this->fallbackResponse($messages),
+                'total_tokens' => 0,
+            ];
         }
 
-        return $content;
+        return [
+            'content' => $content,
+            'total_tokens' => $usageTotal,
+        ];
     }
 
     private function fallbackResponse(array $messages): string

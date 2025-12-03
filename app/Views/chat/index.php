@@ -808,6 +808,7 @@ $canUseConversationSettings = !empty($canUseConversationSettings);
         };
 
         let lastErrorMessage = '';
+        let lastTokensUsed = 0;
 
         const showErrorReportBox = (message) => {
             lastErrorMessage = message || '';
@@ -864,6 +865,12 @@ $canUseConversationSettings = !empty($canUseConversationSettings);
                         const err = data && data.error ? data.error : 'Não foi possível enviar a mensagem. Tente novamente.';
                         showErrorReportBox(err);
                         return;
+                    }
+
+                    if (typeof data.total_tokens_used === 'number') {
+                        lastTokensUsed = data.total_tokens_used;
+                    } else {
+                        lastTokensUsed = 0;
                     }
 
                     try {
@@ -923,8 +930,9 @@ $canUseConversationSettings = !empty($canUseConversationSettings);
         const formReport = document.getElementById('chat-error-report-form');
         const feedbackEl = document.getElementById('chat-error-report-feedback');
         const commentEl = document.getElementById('error-report-comment');
+        const errorActions = document.getElementById('chat-error-actions');
 
-        if (errorBox && btnOpenReport && btnCloseReport && btnCancelReport && btnSendReport && formReport && feedbackEl && commentEl) {
+        if (errorBox && btnOpenReport && btnCloseReport && btnCancelReport && btnSendReport && formReport && feedbackEl && commentEl && errorActions) {
             btnOpenReport.addEventListener('click', () => {
                 formReport.style.display = 'flex';
                 feedbackEl.style.display = 'none';
@@ -947,7 +955,7 @@ $canUseConversationSettings = !empty($canUseConversationSettings);
                 const payload = new FormData();
                 payload.append('conversation_id', CURRENT_CONVERSATION_ID > 0 ? String(CURRENT_CONVERSATION_ID) : '');
                 payload.append('message_id', '');
-                payload.append('tokens_used', '0');
+                payload.append('tokens_used', String(lastTokensUsed || 0));
                 payload.append('error_message', lastErrorMessage || '');
                 payload.append('user_comment', commentEl.value || '');
 
@@ -971,6 +979,11 @@ $canUseConversationSettings = !empty($canUseConversationSettings);
 
                         if (ok) {
                             commentEl.value = '';
+                            formReport.style.display = 'none';
+                            errorActions.style.display = 'none';
+                            btnSendReport.disabled = true;
+                            btnOpenReport.disabled = true;
+                            btnSendReport.dataset.sentOnce = '1';
                         }
                     })
                     .catch(() => {
@@ -978,8 +991,10 @@ $canUseConversationSettings = !empty($canUseConversationSettings);
                         feedbackEl.style.display = 'block';
                     })
                     .finally(() => {
-                        btnSendReport.disabled = false;
-                        btnSendReport.textContent = 'Enviar relato';
+                        if (!btnSendReport.dataset.sentOnce) {
+                            btnSendReport.disabled = false;
+                            btnSendReport.textContent = 'Enviar relato';
+                        }
                     });
             });
         }

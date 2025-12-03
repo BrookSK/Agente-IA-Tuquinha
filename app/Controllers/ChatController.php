@@ -471,6 +471,7 @@ class ChatController extends Controller
                 echo json_encode([
                     'success' => true,
                     'messages' => $responseMessages,
+                    'total_tokens_used' => $totalTokensUsed,
                 ]);
                 exit;
             }
