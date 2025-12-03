@@ -771,8 +771,12 @@ $canUseConversationSettings = !empty($canUseConversationSettings);
 
                 wrapper.appendChild(container);
             } else if (role === 'user') {
+                const meta = attachmentsOrMeta || {};
+                const createdLabel = typeof meta.created_label === 'string' ? meta.created_label : '';
+
                 wrapper.style.display = 'flex';
-                wrapper.style.justifyContent = 'flex-end';
+                wrapper.style.flexDirection = 'column';
+                wrapper.style.alignItems = 'flex-end';
                 wrapper.style.marginBottom = '10px';
 
                 const bubble = document.createElement('div');
@@ -786,15 +790,51 @@ $canUseConversationSettings = !empty($canUseConversationSettings);
                 bubble.innerHTML = renderMarkdownSafeJs(text);
 
                 wrapper.appendChild(bubble);
+
+                const metaRow = document.createElement('div');
+                metaRow.style.marginTop = '2px';
+                metaRow.style.display = 'flex';
+                metaRow.style.alignItems = 'center';
+                metaRow.style.gap = '6px';
+                metaRow.style.fontSize = '10px';
+                metaRow.style.color = '#777';
+                metaRow.style.maxWidth = '80%';
+                metaRow.style.justifyContent = 'flex-end';
+
+                if (createdLabel) {
+                    const spanDate = document.createElement('span');
+                    spanDate.textContent = createdLabel;
+                    metaRow.appendChild(spanDate);
+                }
+
+                const copyBtn = document.createElement('button');
+                copyBtn.type = 'button';
+                copyBtn.className = 'copy-message-btn';
+                copyBtn.dataset.messageText = text;
+                copyBtn.textContent = 'Copiar';
+                copyBtn.style.border = 'none';
+                copyBtn.style.background = 'transparent';
+                copyBtn.style.color = '#b0b0b0';
+                copyBtn.style.fontSize = '10px';
+                copyBtn.style.cursor = 'pointer';
+                copyBtn.style.padding = '0';
+
+                metaRow.appendChild(copyBtn);
+                wrapper.appendChild(metaRow);
             } else {
                 wrapper.style.display = 'flex';
+                wrapper.style.flexDirection = 'column';
                 wrapper.style.alignItems = 'flex-start';
-                wrapper.style.gap = '8px';
                 wrapper.style.marginBottom = '10px';
 
                 const meta = attachmentsOrMeta || {};
                 const tokensUsed = typeof meta.tokens_used === 'number' ? meta.tokens_used : 0;
                 const createdLabel = typeof meta.created_label === 'string' ? meta.created_label : '';
+
+                const row = document.createElement('div');
+                row.style.display = 'flex';
+                row.style.alignItems = 'flex-start';
+                row.style.gap = '8px';
 
                 const avatar = document.createElement('div');
                 avatar.style.width = '28px';
@@ -825,8 +865,9 @@ $canUseConversationSettings = !empty($canUseConversationSettings);
                 bubble.style.border = '1px solid #272727';
                 bubble.innerHTML = renderMarkdownSafeJs(text);
 
-                wrapper.appendChild(avatar);
-                wrapper.appendChild(bubble);
+                row.appendChild(avatar);
+                row.appendChild(bubble);
+                wrapper.appendChild(row);
 
                 // Linha de meta: tokens usados + horário + botão copiar
                 const metaRow = document.createElement('div');
@@ -864,10 +905,7 @@ $canUseConversationSettings = !empty($canUseConversationSettings);
 
                 metaRow.appendChild(copyBtn);
 
-                const metaWrapper = document.createElement('div');
-                metaWrapper.appendChild(metaRow);
-
-                wrapper.appendChild(metaWrapper);
+                wrapper.appendChild(metaRow);
             }
 
             chatWindow.appendChild(wrapper);

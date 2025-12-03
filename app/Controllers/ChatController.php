@@ -451,10 +451,13 @@ class ChatController extends Controller
             if ($isAjax) {
                 header('Content-Type: application/json; charset=utf-8');
 
+                $nowLabel = date('d/m/Y H:i');
+
                 $responseMessages = [];
                 $responseMessages[] = [
                     'role' => 'user',
                     'content' => $message,
+                    'created_label' => $nowLabel,
                 ];
 
                 if (!empty($attachmentMeta)) {
@@ -469,7 +472,7 @@ class ChatController extends Controller
                     'role' => 'assistant',
                     'content' => $assistantReply,
                     'tokens_used' => $totalTokensUsed,
-                    'created_label' => date('d/m/Y H:i'),
+                    'created_label' => $nowLabel,
                 ];
 
                 echo json_encode([
