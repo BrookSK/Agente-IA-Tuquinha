@@ -65,6 +65,8 @@ class AdminPlanController extends Controller
             ? max(1, (int)$_POST['history_retention_days'])
             : null;
 
+        $billingCycle = $_POST['billing_cycle'] ?? 'monthly';
+
         $priceCents = (int)round(str_replace([',', ' '], ['.', ''], $price) * 100);
         if ($priceCents < 0) {
             $priceCents = 0;
@@ -73,6 +75,27 @@ class AdminPlanController extends Controller
         $monthlyTokenLimit = null;
         if ($monthlyTokenLimitRaw !== '') {
             $monthlyTokenLimit = max(0, (int)$monthlyTokenLimitRaw);
+        }
+
+        // Normaliza slug base removendo possíveis sufixos anteriores de ciclo
+        $baseSlug = $slug;
+        if ($baseSlug !== '' && $baseSlug !== 'free') {
+            if (substr($baseSlug, -11) === '-semestral') {
+                $baseSlug = substr($baseSlug, 0, -11);
+            } elseif (substr($baseSlug, -6) === '-anual') {
+                $baseSlug = substr($baseSlug, 0, -6);
+            } elseif (substr($baseSlug, -7) === '-mensal') {
+                $baseSlug = substr($baseSlug, 0, -7);
+            }
+
+            // Aplica sufixo conforme ciclo escolhido
+            if ($billingCycle === 'semiannual') {
+                $slug = $baseSlug . '-semestral';
+            } elseif ($billingCycle === 'annual') {
+                $slug = $baseSlug . '-anual';
+            } else {
+                $slug = $baseSlug . '-mensal';
+            }
         }
 
         $data = [

@@ -16,13 +16,26 @@ if (!empty($plan['allowed_models'])) {
     }
 }
 $planDefaultModel = $plan['default_model'] ?? '';
+
+// Detecta ciclo atual a partir do slug (para edição)
+$billingCycle = 'monthly';
+$slugForCycle = (string)($plan['slug'] ?? '');
+if ($slugForCycle !== '') {
+    if (substr($slugForCycle, -11) === '-semestral') {
+        $billingCycle = 'semiannual';
+    } elseif (substr($slugForCycle, -6) === '-anual') {
+        $billingCycle = 'annual';
+    } else {
+        $billingCycle = 'monthly';
+    }
+}
 ?>
 <div style="max-width: 640px; margin: 0 auto;">
     <h1 style="font-size: 22px; margin-bottom: 10px; font-weight: 650;">
         <?= $isEdit ? 'Editar plano' : 'Novo plano' ?>
     </h1>
     <p style="color:#b0b0b0; font-size:13px; margin-bottom:14px;">
-        Defina nome, slug, preço e quais recursos esse plano libera no Tuquinha. O ciclo de cobrança (mensal, semestral ou anual) é definido pelo sufixo do slug.
+        Defina nome, ciclo de cobrança, preço e quais recursos esse plano libera no Tuquinha.
     </p>
 
     <form action="/admin/planos/salvar" method="post" style="display:flex; flex-direction:column; gap:10px;">
@@ -38,13 +51,24 @@ $planDefaultModel = $plan['default_model'] ?? '';
         </div>
 
         <div>
-            <label style="font-size:13px; color:#ddd; display:block; margin-bottom:4px;">Slug</label>
+            <label style="font-size:13px; color:#ddd; display:block; margin-bottom:4px;">Ciclo de cobrança</label>
+            <select name="billing_cycle" style="
+                width:100%; padding:8px 10px; border-radius:8px; border:1px solid #272727;
+                background:#050509; color:#f5f5f5; font-size:13px;">
+                <option value="monthly" <?= $billingCycle === 'monthly' ? 'selected' : '' ?>>Mensal</option>
+                <option value="semiannual" <?= $billingCycle === 'semiannual' ? 'selected' : '' ?>>Semestral</option>
+                <option value="annual" <?= $billingCycle === 'annual' ? 'selected' : '' ?>>Anual</option>
+            </select>
+            <div style="font-size:11px; color:#777; margin-top:3px;">Isso define se a cobrança será mensal, a cada 6 meses ou anual no Asaas.</div>
+        </div>
+
+        <div>
+            <label style="font-size:13px; color:#ddd; display:block; margin-bottom:4px;">Slug (técnico)</label>
             <input type="text" name="slug" required value="<?= htmlspecialchars($plan['slug'] ?? '') ?>" style="
                 width:100%; padding:8px 10px; border-radius:8px; border:1px solid #272727;
                 background:#050509; color:#f5f5f5; font-size:14px;">
             <div style="font-size:11px; color:#777; margin-top:3px;">
-                Usado nas URLs e integrações (ex: free, pro-mensal, pro-semestral, pro-anual).<br>
-                <strong>Dica:</strong> termine o slug com <code>-mensal</code>, <code>-semestral</code> ou <code>-anual</code> para definir o ciclo de cobrança desse plano.
+                Usado nas URLs e integrações (ex: free, pro). O sistema pode adicionar um sufixo automático (<code>-mensal</code>, <code>-semestral</code>, <code>-anual</code>) conforme o ciclo escolhido.
             </div>
         </div>
 
