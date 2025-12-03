@@ -248,6 +248,30 @@ $canUseConversationSettings = !empty($canUseConversationSettings);
         </div>
     <?php endif; ?>
 
+    <div id="chat-error-report" style="display:none; margin-top:8px; background:#311; border:1px solid #a33; color:#ffbaba; padding:8px 10px; border-radius:8px; font-size:13px;">
+        <div id="chat-error-text" style="margin-bottom:6px;"></div>
+        <div id="chat-error-actions" style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+            <button type="button" id="btn-open-error-report" style="border:none; border-radius:999px; padding:6px 10px; background:#222; color:#ffcc80; font-size:12px; font-weight:600; cursor:pointer; border:1px solid #ffb74d;">
+                Relatar problema
+            </button>
+            <button type="button" id="btn-close-error-report" style="border:none; border-radius:999px; padding:6px 10px; background:transparent; color:#ffbaba; font-size:12px; cursor:pointer;">
+                Fechar
+            </button>
+        </div>
+        <form id="chat-error-report-form" style="display:none; margin-top:8px; display:flex; flex-direction:column; gap:6px;">
+            <textarea id="error-report-comment" name="user_comment" rows="3" style="width:100%; padding:6px 8px; border-radius:8px; border:1px solid #a33; background:#050509; color:#f5f5f5; font-size:12px; resize:vertical;" placeholder="Explique rapidamente o que aconteceu (opcional, mas ajuda o suporte a entender)."></textarea>
+            <div style="display:flex; gap:8px; justify-content:flex-end; align-items:center;">
+                <button type="button" id="btn-cancel-error-report" style="border:none; border-radius:999px; padding:5px 10px; background:transparent; color:#ffbaba; font-size:12px; cursor:pointer;">
+                    Cancelar
+                </button>
+                <button type="button" id="btn-send-error-report" style="border:none; border-radius:999px; padding:6px 12px; background:linear-gradient(135deg,#e53935,#ff6f60); color:#050509; font-size:12px; font-weight:600; cursor:pointer;">
+                    Enviar relato
+                </button>
+            </div>
+            <div id="chat-error-report-feedback" style="font-size:11px; color:#c1ffda; display:none;"></div>
+        </form>
+    </div>
+
     <form action="/chat/send" method="post" enctype="multipart/form-data" style="margin-top: 12px;">
         <div id="chat-input-bar" style="
             display: flex;
@@ -361,6 +385,8 @@ $canUseConversationSettings = !empty($canUseConversationSettings);
     </form>
 </div>
 <script>
+    const CURRENT_CONVERSATION_ID = <?= isset($conversationId) ? (int)$conversationId : 0 ?>;
+
     const chatWindow = document.getElementById('chat-window');
     if (chatWindow) {
         chatWindow.scrollTop = chatWindow.scrollHeight;
@@ -781,6 +807,25 @@ $canUseConversationSettings = !empty($canUseConversationSettings);
             chatWindow.scrollTop = chatWindow.scrollHeight;
         };
 
+        let lastErrorMessage = '';
+
+        const showErrorReportBox = (message) => {
+            lastErrorMessage = message || '';
+            const box = document.getElementById('chat-error-report');
+            const textEl = document.getElementById('chat-error-text');
+            const formEl = document.getElementById('chat-error-report-form');
+            const feedbackEl = document.getElementById('chat-error-report-feedback');
+            const commentEl = document.getElementById('error-report-comment');
+            if (!box || !textEl || !formEl || !feedbackEl || !commentEl) return;
+
+            textEl.textContent = message;
+            box.style.display = 'block';
+            formEl.style.display = 'none';
+            feedbackEl.style.display = 'none';
+            feedbackEl.textContent = '';
+            commentEl.value = '';
+        };
+
         const sendViaAjax = () => {
             if (isSending) {
                 return;
@@ -817,7 +862,7 @@ $canUseConversationSettings = !empty($canUseConversationSettings);
                 .then((data) => {
                     if (!data || !data.success) {
                         const err = data && data.error ? data.error : 'Não foi possível enviar a mensagem. Tente novamente.';
-                        alert(err);
+                        showErrorReportBox(err);
                         return;
                     }
 
@@ -843,7 +888,7 @@ $canUseConversationSettings = !empty($canUseConversationSettings);
                     }
                 })
                 .catch(() => {
-                    alert('Erro ao enviar mensagem. Verifique sua conexão e tente novamente.');
+                    showErrorReportBox('Erro ao enviar mensagem. Verifique sua conexão e tente novamente.');
                 })
                 .finally(() => {
                     isSending = false;
@@ -869,6 +914,75 @@ $canUseConversationSettings = !empty($canUseConversationSettings);
             e.preventDefault();
             sendViaAjax();
         });
+
+        const errorBox = document.getElementById('chat-error-report');
+        const btnOpenReport = document.getElementById('btn-open-error-report');
+        const btnCloseReport = document.getElementById('btn-close-error-report');
+        const btnCancelReport = document.getElementById('btn-cancel-error-report');
+        const btnSendReport = document.getElementById('btn-send-error-report');
+        const formReport = document.getElementById('chat-error-report-form');
+        const feedbackEl = document.getElementById('chat-error-report-feedback');
+        const commentEl = document.getElementById('error-report-comment');
+
+        if (errorBox && btnOpenReport && btnCloseReport && btnCancelReport && btnSendReport && formReport && feedbackEl && commentEl) {
+            btnOpenReport.addEventListener('click', () => {
+                formReport.style.display = 'flex';
+                feedbackEl.style.display = 'none';
+                feedbackEl.textContent = '';
+                commentEl.focus();
+            });
+
+            const closeBox = () => {
+                errorBox.style.display = 'none';
+                formReport.style.display = 'none';
+                feedbackEl.style.display = 'none';
+                feedbackEl.textContent = '';
+                commentEl.value = '';
+            };
+
+            btnCloseReport.addEventListener('click', closeBox);
+            btnCancelReport.addEventListener('click', closeBox);
+
+            btnSendReport.addEventListener('click', () => {
+                const payload = new FormData();
+                payload.append('conversation_id', CURRENT_CONVERSATION_ID > 0 ? String(CURRENT_CONVERSATION_ID) : '');
+                payload.append('message_id', '');
+                payload.append('tokens_used', '0');
+                payload.append('error_message', lastErrorMessage || '');
+                payload.append('user_comment', commentEl.value || '');
+
+                btnSendReport.disabled = true;
+                btnSendReport.textContent = 'Enviando...';
+
+                fetch('/erro/reportar', {
+                    method: 'POST',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                    },
+                    body: payload,
+                })
+                    .then((res) => res.json().catch(() => null))
+                    .then((data) => {
+                        const ok = data && data.success;
+                        const msg = (data && data.message) ? data.message : (ok ? 'Seu relato foi enviado para a equipe analisar.' : 'Não consegui enviar o relato agora. Tente novamente em alguns minutos.');
+
+                        feedbackEl.textContent = msg;
+                        feedbackEl.style.display = 'block';
+
+                        if (ok) {
+                            commentEl.value = '';
+                        }
+                    })
+                    .catch(() => {
+                        feedbackEl.textContent = 'Não consegui enviar o relato agora. Tente novamente em alguns minutos.';
+                        feedbackEl.style.display = 'block';
+                    })
+                    .finally(() => {
+                        btnSendReport.disabled = false;
+                        btnSendReport.textContent = 'Enviar relato';
+                    });
+            });
+        }
     }
 </script>
 <style>

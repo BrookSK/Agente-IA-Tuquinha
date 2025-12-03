@@ -16,6 +16,8 @@
 /** @var string $smtpPassword */
 /** @var string $smtpFromEmail */
 /** @var string $smtpFromName */
+/** @var string $adminErrorEmail */
+/** @var string $adminErrorWebhook */
 /** @var bool $saved */
 /** @var bool|null $testEmailStatus */
 /** @var string|null $testEmailError */
@@ -125,6 +127,31 @@ $knownModels = [
                     background: #050509; color: #f5f5f5; font-size: 13px;
                 ">
                 <small style="color:#777; font-size:11px;">Máximo de caracteres considerados nas memórias e regras específicas de cada chat para contas Free.</small>
+            </div>
+        </div>
+
+        <div style="margin-top: 12px; padding:10px 12px; border-radius:10px; border:1px solid #272727; background:#0a0a10;">
+            <div style="font-size:13px; color:#b0b0b0; margin-bottom:8px;">
+                <strong>Notificações de erros de análise</strong><br>
+                Configure para onde o sistema deve avisar quando um usuário relatar erro ao analisar arquivos ou mensagens.
+            </div>
+            <div style="display:flex; flex-direction:column; gap:8px;">
+                <div>
+                    <label style="font-size: 12px; color: #b0b0b0;">E-mail do administrador para alertas</label>
+                    <input name="admin_error_email" value="<?= htmlspecialchars($adminErrorEmail) ?>" style="
+                        width: 100%; padding: 8px 10px; border-radius: 8px; border: 1px solid #272727;
+                        background: #050509; color: #f5f5f5; font-size: 13px;
+                    " placeholder="ex: suporte@seusite.com">
+                    <small style="color:#777; font-size:11px;">Quando um usuário relatar um erro de análise, o Tuquinha envia um resumo para este e-mail.</small>
+                </div>
+                <div>
+                    <label style="font-size: 12px; color: #b0b0b0;">URL de webhook para erros</label>
+                    <input name="admin_error_webhook" value="<?= htmlspecialchars($adminErrorWebhook) ?>" style="
+                        width: 100%; padding: 8px 10px; border-radius: 8px; border: 1px solid #272727;
+                        background: #050509; color: #f5f5f5; font-size: 13px;
+                    " placeholder="https://api.seusistema.com/webhooks/tuquinha-erros">
+                    <small style="color:#777; font-size:11px;">Opcional. Se preenchido, o sistema envia um POST em JSON com os detalhes do erro para esta URL.</small>
+                </div>
             </div>
         </div>
 

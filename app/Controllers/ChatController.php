@@ -365,6 +365,28 @@ class ChatController extends Controller
 
             if ($userId > 0) {
                 $userData = User::findById($userId) ?: null;
+
+                // Se o plano tiver limite mensal de tokens configurado, bloqueia envio quando saldo chegar a zero
+                if ($planForContext && isset($planForContext['monthly_token_limit']) && (int)$planForContext['monthly_token_limit'] > 0) {
+                    $currentBalance = User::getTokenBalance($userId);
+                    if ($currentBalance <= 0) {
+                        $errorMsg = 'Seu saldo de tokens para este plano acabou. Renove o plano ou fale com o suporte para adicionar mais tokens.';
+
+                        if ($isAjax) {
+                            header('Content-Type: application/json; charset=utf-8');
+                            echo json_encode([
+                                'success' => false,
+                                'error' => $errorMsg,
+                            ]);
+                            exit;
+                        }
+
+                        // Para requisições não-AJAX, apenas redireciona de volta para o chat com uma mensagem simples
+                        $_SESSION['chat_error'] = $errorMsg;
+                        header('Location: /chat');
+                        exit;
+                    }
+                }
                 $conversationSettings = ConversationSetting::findForConversation($conversation->id, $userId) ?: null;
 
                 // Limites para plano free: corta textos muito longos de memórias/regras
@@ -399,12 +421,15 @@ class ChatController extends Controller
             }
 
             $engine = new TuquinhaEngine();
-            $assistantReply = $engine->generateResponseWithContext(
+            $result = $engine->generateResponseWithContext(
                 $history,
                 $_SESSION['chat_model'] ?? null,
                 $userData,
                 $conversationSettings
             );
+
+            $assistantReply = is_array($result) ? (string)($result['content'] ?? '') : (string)$result;
+            $totalTokensUsed = is_array($result) ? (int)($result['total_tokens'] ?? 0) : 0;
 
             // Normaliza quebras de linha e remove espaços/brancos no início de cada linha
             $assistantReply = str_replace(["\r\n", "\r"], "\n", (string)$assistantReply);
@@ -412,6 +437,14 @@ class ChatController extends Controller
             $assistantReply = trim($assistantReply);
 
             Message::create($conversation->id, 'assistant', $assistantReply);
+
+            // Debita tokens do usuário logado, se houver contador de uso disponível
+            if ($userId > 0 && $totalTokensUsed > 0) {
+                User::debitTokens($userId, $totalTokensUsed, 'chat_completion', [
+                    'conversation_id' => $conversation->id,
+                    'plan_slug' => $planForContext['slug'] ?? null,
+                ]);
+            }
 
             if ($isAjax) {
                 header('Content-Type: application/json; charset=utf-8');

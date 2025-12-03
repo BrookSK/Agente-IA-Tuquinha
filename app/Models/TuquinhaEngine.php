@@ -19,12 +19,15 @@ class TuquinhaEngine
         return $this->generateResponseWithContext($messages, $model, null, null);
     }
 
-    public function generateResponseWithContext(array $messages, ?string $model = null, ?array $user = null, ?array $conversationSettings = null): string
+    public function generateResponseWithContext(array $messages, ?string $model = null, ?array $user = null, ?array $conversationSettings = null): array
     {
         $configuredApiKey = Setting::get('openai_api_key', AI_API_KEY);
 
         if (empty($configuredApiKey)) {
-            return $this->fallbackResponse($messages);
+            return [
+                'content' => $this->fallbackResponse($messages),
+                'total_tokens' => 0,
+            ];
         }
 
         $configuredModel = Setting::get('openai_default_model', AI_MODEL);
@@ -71,18 +74,25 @@ class TuquinhaEngine
 
         if ($result === false) {
             curl_close($ch);
-            return $this->fallbackResponse($messages);
+            return [
+                'content' => $this->fallbackResponse($messages),
+                'total_tokens' => 0,
+            ];
         }
 
         $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         curl_close($ch);
 
         if ($httpCode < 200 || $httpCode >= 300) {
-            return $this->fallbackResponse($messages);
+            return [
+                'content' => $this->fallbackResponse($messages),
+                'total_tokens' => 0,
+            ];
         }
 
         $data = json_decode($result, true);
         $content = $data['choices'][0]['message']['content'] ?? null;
+        $usageTotal = isset($data['usage']['total_tokens']) ? (int)$data['usage']['total_tokens'] : 0;
 
         if (!is_string($content) || $content === '') {
             return $this->fallbackResponse($messages);

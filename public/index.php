@@ -66,11 +66,21 @@ $router->get('/admin/usuarios/ver', 'AdminUserController@show');
 $router->post('/admin/usuarios/toggle', 'AdminUserController@toggleActive');
 $router->post('/admin/usuarios/toggle-admin', 'AdminUserController@toggleAdmin');
 $router->get('/admin/assinaturas', 'AdminSubscriptionController@index');
+$router->get('/admin/erros', 'AdminErrorReportController@index');
+$router->get('/admin/erros/ver', 'AdminErrorReportController@show');
+$router->post('/admin/erros/estornar', 'AdminErrorReportController@refund');
+$router->post('/admin/erros/resolver', 'AdminErrorReportController@resolve');
 $router->get('/chat', 'ChatController@index');
 $router->post('/chat/send', 'ChatController@send');
 $router->post('/chat/audio', 'ChatController@sendAudio');
 
 // Configurações por conversa (regras/memórias específicas do chat)
 $router->post('/chat/settings', 'ChatController@saveSettings');
+
+// Webhook de eventos do Asaas (renovações, pagamentos etc.)
+$router->post('/webhooks/asaas', 'AsaasWebhookController@handle');
+
+// Relato de erros de análise pelos usuários
+$router->post('/erro/reportar', 'ErrorReportController@store');
 
 $router->dispatch($_SERVER['REQUEST_URI'], $_SERVER['REQUEST_METHOD']);

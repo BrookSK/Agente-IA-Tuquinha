@@ -36,6 +36,15 @@ class Subscription
         return $row ?: null;
     }
 
+    public static function findByAsaasId(string $asaasSubscriptionId): ?array
+    {
+        $pdo = Database::getConnection();
+        $stmt = $pdo->prepare('SELECT * FROM subscriptions WHERE asaas_subscription_id = :id LIMIT 1');
+        $stmt->execute(['id' => $asaasSubscriptionId]);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $row ?: null;
+    }
+
     public static function countByStatus(): array
     {
         $pdo = Database::getConnection();

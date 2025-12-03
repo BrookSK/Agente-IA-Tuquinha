@@ -181,4 +181,76 @@ class User
             'id' => $id,
         ]);
     }
+
+    public static function resetTokenBalanceForPlan(int $id, int $monthlyLimit): void
+    {
+        $pdo = Database::getConnection();
+        $stmt = $pdo->prepare('UPDATE users SET token_balance = :balance, last_token_reset_at = NOW() WHERE id = :id LIMIT 1');
+        $stmt->execute([
+            'balance' => $monthlyLimit,
+            'id' => $id,
+        ]);
+    }
+
+    public static function getTokenBalance(int $id): int
+    {
+        $pdo = Database::getConnection();
+        $stmt = $pdo->prepare('SELECT token_balance FROM users WHERE id = :id LIMIT 1');
+        $stmt->execute(['id' => $id]);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        return (int)($row['token_balance'] ?? 0);
+    }
+
+    public static function debitTokens(int $id, int $amount, string $reason, array $meta = []): void
+    {
+        if ($amount <= 0) {
+            return;
+        }
+
+        $pdo = Database::getConnection();
+
+        // Atualiza saldo e total consumido (garantindo que não fique negativo)
+        $stmt = $pdo->prepare('UPDATE users SET
+            token_balance = GREATEST(token_balance - :amount, 0),
+            token_spent_total = token_spent_total + :amount
+            WHERE id = :id LIMIT 1');
+        $stmt->execute([
+            'amount' => $amount,
+            'id' => $id,
+        ]);
+
+        // Log de transação (débito)
+        TokenTransaction::create([
+            'user_id' => $id,
+            'amount' => -$amount,
+            'reason' => $reason,
+            'meta' => $meta ? json_encode($meta, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) : null,
+        ]);
+    }
+
+    public static function creditTokens(int $id, int $amount, string $reason, array $meta = []): void
+    {
+        if ($amount <= 0) {
+            return;
+        }
+
+        $pdo = Database::getConnection();
+
+        // Atualiza saldo (crédito)
+        $stmt = $pdo->prepare('UPDATE users SET
+            token_balance = token_balance + :amount
+            WHERE id = :id LIMIT 1');
+        $stmt->execute([
+            'amount' => $amount,
+            'id' => $id,
+        ]);
+
+        // Log de transação (crédito)
+        TokenTransaction::create([
+            'user_id' => $id,
+            'amount' => $amount,
+            'reason' => $reason,
+            'meta' => $meta ? json_encode($meta, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) : null,
+        ]);
+    }
 }
