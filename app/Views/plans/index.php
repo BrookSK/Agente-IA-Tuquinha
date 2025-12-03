@@ -11,9 +11,10 @@
     <?php
         $hasCurrentPlan = !empty($currentPlan) && is_array($currentPlan);
         $currentSlug = $hasCurrentPlan ? (string)($currentPlan['slug'] ?? '') : '';
-        $isPaidPlan = $hasCurrentPlan && $currentSlug !== 'free';
+        $monthlyLimit = $hasCurrentPlan ? (int)($currentPlan['monthly_token_limit'] ?? 0) : 0;
+        $isPaidPlanWithLimit = $hasCurrentPlan && $currentSlug !== 'free' && $monthlyLimit > 0;
     ?>
-    <?php if ($isPaidPlan): ?>
+    <?php if ($isPaidPlanWithLimit): ?>
         <div style="margin-bottom: 14px; padding:10px 12px; border-radius:12px; background:#111118; border:1px solid #272727; display:flex; flex-wrap:wrap; gap:8px; align-items:center; justify-content:space-between;">
             <div style="font-size:13px; color:#e0e0e0; max-width:70%;">
                 Aproveite seu plano atual para ir além do limite mensal: compre <strong>tokens extras</strong> quando precisar, no modelo pré-pago.
