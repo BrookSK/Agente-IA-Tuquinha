@@ -83,7 +83,8 @@ class Plan
             allow_images = :allow_images,
             allow_files = :allow_files,
             is_active = :is_active,
-            history_retention_days = :history_retention_days
+            history_retention_days = :history_retention_days,
+            is_default_for_users = :is_default_for_users
             WHERE id = :id');
         $stmt->execute([
             'id' => $id,
@@ -92,11 +93,14 @@ class Plan
             'price_cents' => (int)($data['price_cents'] ?? 0),
             'description' => $data['description'] ?? null,
             'benefits' => $data['benefits'] ?? null,
+            'allowed_models' => $data['allowed_models'] ?? null,
+            'default_model' => $data['default_model'] ?? null,
             'allow_audio' => (int)($data['allow_audio'] ?? 0),
             'allow_images' => (int)($data['allow_images'] ?? 0),
             'allow_files' => (int)($data['allow_files'] ?? 0),
             'is_active' => (int)($data['is_active'] ?? 1),
             'history_retention_days' => isset($data['history_retention_days']) ? (int)$data['history_retention_days'] : null,
+            'is_default_for_users' => (int)($data['is_default_for_users'] ?? 0),
         ]);
     }
 
