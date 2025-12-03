@@ -810,8 +810,11 @@ $canUseConversationSettings = !empty($canUseConversationSettings);
         let lastErrorMessage = '';
         let lastTokensUsed = 0;
 
-        const showErrorReportBox = (message) => {
+        const showErrorReportBox = (message, debugInfo) => {
             lastErrorMessage = message || '';
+            if (debugInfo) {
+                lastErrorMessage += "\n\n[DEBUG]\n" + debugInfo;
+            }
             const box = document.getElementById('chat-error-report');
             const textEl = document.getElementById('chat-error-text');
             const formEl = document.getElementById('chat-error-report-form');
@@ -852,6 +855,8 @@ $canUseConversationSettings = !empty($canUseConversationSettings);
                 }
             }
 
+            let lastStatus = 0;
+
             fetch('/chat/send', {
                 method: 'POST',
                 headers: {
@@ -859,11 +864,15 @@ $canUseConversationSettings = !empty($canUseConversationSettings);
                 },
                 body: formData,
             })
-                .then((res) => res.json().catch(() => null))
+                .then((res) => {
+                    lastStatus = res.status || 0;
+                    return res.json().catch(() => null);
+                })
                 .then((data) => {
                     if (!data || !data.success) {
                         const err = data && data.error ? data.error : 'Não foi possível enviar a mensagem. Tente novamente.';
-                        showErrorReportBox(err);
+                        const debug = 'status=' + String(lastStatus || 0) + '; payload=' + JSON.stringify(data || {});
+                        showErrorReportBox(err, debug);
                         return;
                     }
 
@@ -894,8 +903,9 @@ $canUseConversationSettings = !empty($canUseConversationSettings);
                         });
                     }
                 })
-                .catch(() => {
-                    showErrorReportBox('Erro ao enviar mensagem. Verifique sua conexão e tente novamente.');
+                .catch((e) => {
+                    const debug = 'fetch_error=' + (e && e.message ? e.message : 'unknown');
+                    showErrorReportBox('Erro ao enviar mensagem. Verifique sua conexão e tente novamente.', debug);
                 })
                 .finally(() => {
                     isSending = false;
