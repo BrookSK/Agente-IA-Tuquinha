@@ -106,106 +106,144 @@
         </div>
     <?php endif; ?>
 
-    <?php if (!empty($freePlans)): ?>
-        <div class="plans-cycle-section" data-cycle-section="mensal" style="margin-bottom: 12px; display: <?= $selectedCycle === 'mensal' ? 'block' : 'none' ?>;">
-            <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px;">
-                <?php foreach ($freePlans as $plan): ?>
-                    <?php
-                        $price = number_format(($plan['price_cents'] ?? 0) / 100, 2, ',', '.');
-                        $benefits = array_filter(array_map('trim', explode("\n", (string)($plan['benefits'] ?? ''))));
-                        $isCurrent = $currentPlan && ($currentPlan['id'] ?? null) === ($plan['id'] ?? null);
-                    ?>
-                    <div style="background: #111118; border-radius: 16px; padding: 14px; border: 1px solid <?= $isCurrent ? '#e53935' : '#272727' ?>; display: flex; flex-direction: column; justify-content: space-between; box-shadow: <?= $isCurrent ? '0 0 0 1px rgba(229,57,53,0.5)' : 'none' ?>;">
-                        <div>
-                            <div style="font-size: 13px; text-transform: uppercase; letter-spacing: 0.12em; color: #b0b0b0; margin-bottom: 6px;">
-                                Plano inicial
-                                <?php if ($isCurrent): ?>
-                                    <span style="margin-left:6px; font-size:10px; padding:2px 6px; border-radius:999px; background:#e53935; color:#050509;">Seu plano atual</span>
-                                <?php endif; ?>
-                            </div>
-                            <div style="font-size: 18px; font-weight: 600; margin-bottom: 4px;">
-                                <?= htmlspecialchars($plan['name']) ?>
-                            </div>
-                            <div style="margin-bottom: 6px;">
-                                <span style="font-size: 22px; font-weight: 700; color: #e53935;">R$ <?= $price ?></span>
-                                <span style="font-size: 12px; color: #b0b0b0;"> / mês</span>
-                            </div>
-                            <div style="font-size: 11px; color:#777; margin-bottom: 8px;">
-                                Plano gratuito para experimentar o Tuquinha antes de contratar um plano pago.
-                            </div>
-                            <?php if (!empty($plan['description'])): ?>
-                                <div style="font-size: 13px; color: #c0c0c0; margin-bottom: 10px;">
-                                    <?= nl2br(htmlspecialchars($plan['description'])) ?>
-                                </div>
-                            <?php endif; ?>
-                            <?php if ($benefits): ?>
-                                <ul style="list-style: none; padding-left: 0; margin: 0; font-size: 13px; color: #c0c0c0;">
-                                    <?php foreach ($benefits as $b): ?>
-                                        <li style="display: flex; gap: 6px; margin-bottom: 4px;">
-                                            <span style="color: #e53935;">✔</span>
-                                            <span><?= htmlspecialchars($b) ?></span>
-                                        </li>
-                                    <?php endforeach; ?>
-                                </ul>
-                            <?php endif; ?>
-                        </div>
-                        <form action="/checkout" method="get" style="margin-top: 14px;">
-                            <input type="hidden" name="plan" value="<?= htmlspecialchars($plan['slug']) ?>">
-                            <button type="submit" <?= $isCurrent ? 'disabled' : '' ?> style="
-                                width: 100%;
-                                border-radius: 999px;
-                                border: none;
-                                padding: 9px 14px;
-                                background: <?= $isCurrent ? 'rgba(255,255,255,0.06)' : 'linear-gradient(135deg, #e53935, #ff6f60)' ?>;
-                                color: <?= $isCurrent ? '#b0b0b0' : '#050509' ?>;
-                                font-weight: 600;
-                                font-size: 14px;
-                                cursor: <?= $isCurrent ? 'default' : 'pointer' ?>;
-                                margin-top: 4px;
-                                opacity: <?= $isCurrent ? '0.7' : '1' ?>;
-                            ">
-                                <?= $isCurrent ? 'Plano já ativo' : 'Ativar plano gratuito' ?>
-                            </button>
-                        </form>
-                    </div>
-                <?php endforeach; ?>
-            </div>
-        </div>
-    <?php endif; ?>
-
-    <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px;" id="plans-paid-wrapper">
+    <div id="plans-paid-wrapper">
         <?php foreach (['mensal', 'semestral', 'anual'] as $ck): ?>
-            <?php if (empty($plansByCycle[$ck])) continue; ?>
-            <div class="plans-cycle-section" data-cycle-section="<?= htmlspecialchars($ck) ?>" style="display: <?= $ck === $selectedCycle ? 'block' : 'none' ?>;">
-                <?php foreach ($plansByCycle[$ck] as $plan): ?>
-                    <?php
-                        $price = number_format(($plan['price_cents'] ?? 0) / 100, 2, ',', '.');
-                        $benefits = array_filter(array_map('trim', explode("\n", (string)($plan['benefits'] ?? ''))));
-                        $isCurrent = $currentPlan && ($currentPlan['id'] ?? null) === ($plan['id'] ?? null);
-                        $cycleLabel = $plan['_cycle_label'] ?? 'mês';
-                        $cycleKey = $plan['_cycle_key'] ?? 'mensal';
-                    ?>
-                    <div style="background: #111118; border-radius: 16px; padding: 14px; margin-bottom:14px; border: 1px solid <?= $isCurrent ? '#e53935' : '#272727' ?>; display: flex; flex-direction: column; justify-content: space-between; box-shadow: <?= $isCurrent ? '0 0 0 1px rgba(229,57,53,0.5)' : 'none' ?>;">
-                        <div>
-                            <div style="font-size: 13px; text-transform: uppercase; letter-spacing: 0.12em; color: #b0b0b0; margin-bottom: 6px;">
-                                Plano premium
-                                <?php if ($isCurrent): ?>
-                                    <span style="margin-left:6px; font-size:10px; padding:2px 6px; border-radius:999px; background:#e53935; color:#050509;">Seu plano atual</span>
+            <?php
+                $plansForCycle = $plansByCycle[$ck] ?? [];
+                $freeForCycle = ($ck === 'mensal') ? $freePlans : [];
+                if (empty($plansForCycle) && empty($freeForCycle)) {
+                    continue;
+                }
+            ?>
+            <div class="plans-cycle-section" data-cycle-section="<?= htmlspecialchars($ck) ?>" style="display: <?= $ck === $selectedCycle ? 'block' : 'none' ?>; margin-bottom: 12px;">
+                <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px;">
+                    <?php foreach ($freeForCycle as $plan): ?>
+                        <?php
+                            $price = number_format(($plan['price_cents'] ?? 0) / 100, 2, ',', '.');
+                            $benefits = array_filter(array_map('trim', explode("\n", (string)($plan['benefits'] ?? ''))));
+                            $isCurrent = $currentPlan && ($currentPlan['id'] ?? null) === ($plan['id'] ?? null);
+                        ?>
+                        <div style="background: #111118; border-radius: 16px; padding: 14px; border: 1px solid <?= $isCurrent ? '#e53935' : '#272727' ?>; display: flex; flex-direction: column; justify-content: space-between; box-shadow: <?= $isCurrent ? '0 0 0 1px rgba(229,57,53,0.5)' : 'none' ?>;">
+                            <div>
+                                <div style="font-size: 13px; text-transform: uppercase; letter-spacing: 0.12em; color: #b0b0b0; margin-bottom: 6px;">
+                                    Plano inicial
+                                    <?php if ($isCurrent): ?>
+                                        <span style="margin-left:6px; font-size:10px; padding:2px 6px; border-radius:999px; background:#e53935; color:#050509;">Seu plano atual</span>
+                                    <?php endif; ?>
+                                </div>
+                                <div style="font-size: 18px; font-weight: 600; margin-bottom: 4px;">
+                                    <?= htmlspecialchars($plan['name']) ?>
+                                </div>
+                                <div style="margin-bottom: 6px;">
+                                    <span style="font-size: 22px; font-weight: 700; color: #e53935;">R$ <?= $price ?></span>
+                                    <span style="font-size: 12px; color: #b0b0b0;"> / mês</span>
+                                </div>
+                                <div style="font-size: 11px; color:#777; margin-bottom: 8px;">
+                                    Plano gratuito para experimentar o Tuquinha antes de contratar um plano pago.
+                                </div>
+                                <?php if (!empty($plan['description'])): ?>
+                                    <div style="font-size: 13px; color: #c0c0c0; margin-bottom: 10px;">
+                                        <?= nl2br(htmlspecialchars($plan['description'])) ?>
+                                    </div>
                                 <?php endif; ?>
-                                <?php if ($cycleKey === 'anual'): ?>
-                                    <span style="margin-left:6px; font-size:10px; padding:2px 6px; border-radius:999px; border:1px solid #4caf50; color:#c8e6c9;">Melhor custo-benefício</span>
+                                <?php if ($benefits): ?>
+                                    <ul style="list-style: none; padding-left: 0; margin: 0; font-size: 13px; color: #c0c0c0;">
+                                        <?php foreach ($benefits as $b): ?>
+                                            <li style="display: flex; gap: 6px; margin-bottom: 4px;">
+                                                <span style="color: #e53935;">✔</span>
+                                                <span><?= htmlspecialchars($b) ?></span>
+                                            </li>
+                                        <?php endforeach; ?>
+                                    </ul>
                                 <?php endif; ?>
                             </div>
-                            <div style="font-size: 18px; font-weight: 600; margin-bottom: 4px;">
-                                <?= htmlspecialchars($plan['name']) ?>
+                            <form action="/checkout" method="get" style="margin-top: 14px;">
+                                <input type="hidden" name="plan" value="<?= htmlspecialchars($plan['slug']) ?>">
+                                <button type="submit" <?= $isCurrent ? 'disabled' : '' ?> style="
+                                    width: 100%;
+                                    border-radius: 999px;
+                                    border: none;
+                                    padding: 9px 14px;
+                                    background: <?= $isCurrent ? 'rgba(255,255,255,0.06)' : 'linear-gradient(135deg, #e53935, #ff6f60)' ?>;
+                                    color: <?= $isCurrent ? '#b0b0b0' : '#050509' ?>;
+                                    font-weight: 600;
+                                    font-size: 14px;
+                                    cursor: <?= $isCurrent ? 'default' : 'pointer' ?>;
+                                    margin-top: 4px;
+                                    opacity: <?= $isCurrent ? '0.7' : '1' ?>;
+                                ">
+                                    <?= $isCurrent ? 'Plano já ativo' : 'Ativar plano gratuito' ?>
+                                </button>
+                            </form>
+                        </div>
+                    <?php endforeach; ?>
+
+                    <?php foreach ($plansForCycle as $plan): ?>
+                        <?php
+                            $price = number_format(($plan['price_cents'] ?? 0) / 100, 2, ',', '.');
+                            $benefits = array_filter(array_map('trim', explode("\n", (string)($plan['benefits'] ?? ''))));
+                            $isCurrent = $currentPlan && ($currentPlan['id'] ?? null) === ($plan['id'] ?? null);
+                            $cycleLabel = $plan['_cycle_label'] ?? 'mês';
+                            $cycleKey = $plan['_cycle_key'] ?? 'mensal';
+                        ?>
+                        <div style="background: #111118; border-radius: 16px; padding: 14px; border: 1px solid <?= $isCurrent ? '#e53935' : '#272727' ?>; display: flex; flex-direction: column; justify-content: space-between; box-shadow: <?= $isCurrent ? '0 0 0 1px rgba(229,57,53,0.5)' : 'none' ?>;">
+                            <div>
+                                <div style="font-size: 13px; text-transform: uppercase; letter-spacing: 0.12em; color: #b0b0b0; margin-bottom: 6px;">
+                                    Plano premium
+                                    <?php if ($isCurrent): ?>
+                                        <span style="margin-left:6px; font-size:10px; padding:2px 6px; border-radius:999px; background:#e53935; color:#050509;">Seu plano atual</span>
+                                    <?php endif; ?>
+                                    <?php if ($cycleKey === 'anual'): ?>
+                                        <span style="margin-left:6px; font-size:10px; padding:2px 6px; border-radius:999px; border:1px solid #4caf50; color:#c8e6c9;">Melhor custo-benefício</span>
+                                    <?php endif; ?>
+                                </div>
+                                <div style="font-size: 18px; font-weight: 600; margin-bottom: 4px;">
+                                    <?= htmlspecialchars($plan['name']) ?>
+                                </div>
+                                <div style="margin-bottom: 6px;">
+                                    <span style="font-size: 22px; font-weight: 700; color: #e53935;">R$ <?= $price ?></span>
+                                    <span style="font-size: 12px; color: #b0b0b0;"> / <?= htmlspecialchars($cycleLabel) ?></span>
+                                </div>
+                                <div style="font-size: 11px; color:#777; margin-bottom: 8px;">
+                                    <?php if ($cycleKey === 'mensal'): ?>
+                                        Valor cobrado automaticamente todo mês no cartão.
+                                    <?php elseif ($cycleKey === 'semestral'): ?>
+                                        Valor referente a cada semestre de uso. A cobrança é recorrente a cada 6 meses.
+                                    <?php elseif ($cycleKey === 'anual'): ?>
+                                        Valor referente a cada ano de uso. A cobrança é recorrente uma vez por ano, com melhor custo-benefício.
+                                    <?php else: ?>
+                                        Valor recorrente conforme a periodicidade configurada para este plano.
+                                    <?php endif; ?>
+                                </div>
+                                <?php if (!empty($plan['description'])): ?>
+                                    <div style="font-size: 13px; color: #c0c0c0; margin-bottom: 10px;">
+                                        <?= nl2br(htmlspecialchars($plan['description'])) ?>
+                                    </div>
+                                <?php endif; ?>
+                                <?php if ($benefits): ?>
+                                    <ul style="list-style: none; padding-left: 0; margin: 0; font-size: 13px; color: #c0c0c0;">
+                                        <?php foreach ($benefits as $b): ?>
+                                            <li style="display: flex; gap: 6px; margin-bottom: 4px;">
+                                                <span style="color: #e53935;">✔</span>
+                                                <span><?= htmlspecialchars($b) ?></span>
+                                            </li>
+                                        <?php endforeach; ?>
+                                    </ul>
+                                <?php endif; ?>
                             </div>
-                            <div style="margin-bottom: 6px;">
-                                <span style="font-size: 22px; font-weight: 700; color: #e53935;">R$ <?= $price ?></span>
-                                <span style="font-size: 12px; color: #b0b0b0;"> / <?= htmlspecialchars($cycleLabel) ?></span>
-                            </div>
-                            <div style="font-size: 11px; color:#777; margin-bottom: 8px;">
-                                <?php if ($cycleKey === 'mensal'): ?>
-                                    Valor cobrado automaticamente todo mês no cartão.
+                            <form action="/checkout" method="get" style="margin-top: 14px;">
+                                <input type="hidden" name="plan" value="<?= htmlspecialchars($plan['slug']) ?>">
+                                <button type="submit" <?= $isCurrent ? 'disabled' : '' ?> style="
+                                    width: 100%;
+                                    border-radius: 999px;
+                                    border: none;
+                                    padding: 9px 14px;
+                                    background: <?= $isCurrent ? 'rgba(255,255,255,0.06)' : 'linear-gradient(135deg, #e53935, #ff6f60)' ?>;
+                                    color: <?= $isCurrent ? '#b0b0b0' : '#050509' ?>;
+                                    font-weight: 600;
+                                    font-size: 14px;
+                                    cursor: <?= $isCurrent ? 'default' : 'pointer' ?>;
+                                    margin-top: 4px;
                                 <?php elseif ($cycleKey === 'semestral'): ?>
                                     Valor referente a cada semestre de uso. A cobrança é recorrente a cada 6 meses.
                                 <?php elseif ($cycleKey === 'anual'): ?>
@@ -251,17 +289,8 @@
                     </div>
                 <?php endforeach; ?>
             </div>
-        <?php endforeach; ?>
-    </div>
-
-    <script>
-        (function() {
-            var buttons = document.querySelectorAll('.plans-cycle-filter');
-            var sections = document.querySelectorAll('.plans-cycle-section');
-
-            buttons.forEach(function(btn) {
-                btn.addEventListener('click', function() {
-                    var cycle = btn.getAttribute('data-cycle');
+        </div>
+    <?php endforeach; ?>
 
                     buttons.forEach(function(other) {
                         other.classList.remove('plans-cycle-filter--active');
