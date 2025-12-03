@@ -22,7 +22,7 @@ $planDefaultModel = $plan['default_model'] ?? '';
         <?= $isEdit ? 'Editar plano' : 'Novo plano' ?>
     </h1>
     <p style="color:#b0b0b0; font-size:13px; margin-bottom:14px;">
-        Defina nome, slug, preço e quais recursos esse plano libera no Tuquinha.
+        Defina nome, slug, preço e quais recursos esse plano libera no Tuquinha. O ciclo de cobrança (mensal, semestral ou anual) é definido pelo sufixo do slug.
     </p>
 
     <form action="/admin/planos/salvar" method="post" style="display:flex; flex-direction:column; gap:10px;">
@@ -42,14 +42,20 @@ $planDefaultModel = $plan['default_model'] ?? '';
             <input type="text" name="slug" required value="<?= htmlspecialchars($plan['slug'] ?? '') ?>" style="
                 width:100%; padding:8px 10px; border-radius:8px; border:1px solid #272727;
                 background:#050509; color:#f5f5f5; font-size:14px;">
-            <div style="font-size:11px; color:#777; margin-top:3px;">Usado nas URLs e integrações (ex: free, pro, expert).</div>
+            <div style="font-size:11px; color:#777; margin-top:3px;">
+                Usado nas URLs e integrações (ex: free, pro-mensal, pro-semestral, pro-anual).<br>
+                <strong>Dica:</strong> termine o slug com <code>-mensal</code>, <code>-semestral</code> ou <code>-anual</code> para definir o ciclo de cobrança desse plano.
+            </div>
         </div>
 
         <div>
-            <label style="font-size:13px; color:#ddd; display:block; margin-bottom:4px;">Preço mensal (R$)</label>
+            <label style="font-size:13px; color:#ddd; display:block; margin-bottom:4px;">Preço por período (R$)</label>
             <input type="text" name="price" required value="<?= isset($plan['price_cents']) ? number_format($plan['price_cents']/100, 2, ',', '.') : '0,00' ?>" style="
                 width:120px; padding:8px 10px; border-radius:8px; border:1px solid #272727;
                 background:#050509; color:#f5f5f5; font-size:14px;">
+            <div style="font-size:11px; color:#777; margin-top:3px;">
+                Informe o valor cobrado em cada ciclo: mensal, semestral ou anual (de acordo com o sufixo do slug).
+            </div>
         </div>
 
         <div style="display:flex; gap:16px; flex-wrap:wrap;">

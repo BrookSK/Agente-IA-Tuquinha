@@ -23,6 +23,7 @@
                 <tr>
                     <th style="text-align:left; padding:8px 10px; border-bottom:1px solid #272727;">Nome</th>
                     <th style="text-align:left; padding:8px 10px; border-bottom:1px solid #272727;">Slug</th>
+                    <th style="text-align:left; padding:8px 10px; border-bottom:1px solid #272727;">Ciclo</th>
                     <th style="text-align:left; padding:8px 10px; border-bottom:1px solid #272727;">Preço</th>
                     <th style="text-align:left; padding:8px 10px; border-bottom:1px solid #272727;">Recursos</th>
                     <th style="text-align:left; padding:8px 10px; border-bottom:1px solid #272727;">Status</th>
@@ -44,6 +45,16 @@
                         if (!empty($plan['allow_files'])) $flags[] = 'Arquivos';
                         $flagsText = $flags ? implode(' · ', $flags) : '-';
                         $active = !empty($plan['is_active']);
+
+                        $slug = (string)($plan['slug'] ?? '');
+                        $cycleLabel = 'Mensal';
+                        if (substr($slug, -11) === '-semestral') {
+                            $cycleLabel = 'Semestral';
+                        } elseif (substr($slug, -6) === '-anual') {
+                            $cycleLabel = 'Anual';
+                        } elseif ($slug === 'free') {
+                            $cycleLabel = '-';
+                        }
                     ?>
                     <tr style="background:#111118; border-top:1px solid #272727;">
                         <td style="padding:8px 10px;">
@@ -52,8 +63,19 @@
                         <td style="padding:8px 10px; color:#b0b0b0;">
                             <?= htmlspecialchars($plan['slug'] ?? '') ?>
                         </td>
+                        <td style="padding:8px 10px; color:#b0b0b0;">
+                            <?= htmlspecialchars($cycleLabel) ?>
+                        </td>
                         <td style="padding:8px 10px;">
-                            R$ <?= $price ?> / mês
+                            <?php if ($cycleLabel === '-'): ?>
+                                R$ <?= $price ?>
+                            <?php elseif ($cycleLabel === 'Semestral'): ?>
+                                R$ <?= $price ?> / semestre
+                            <?php elseif ($cycleLabel === 'Anual'): ?>
+                                R$ <?= $price ?> / ano
+                            <?php else: ?>
+                                R$ <?= $price ?> / mês
+                            <?php endif; ?>
                         </td>
                         <td style="padding:8px 10px; color:#b0b0b0;">
                             <?= htmlspecialchars($flagsText) ?>
