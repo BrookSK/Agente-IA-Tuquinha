@@ -17,6 +17,7 @@
                 <th style="text-align:center; padding:8px 10px;">Admin</th>
                 <th style="text-align:center; padding:8px 10px;">Status</th>
                 <th style="text-align:left; padding:8px 10px;">Criado em</th>
+                <th style="text-align:left; padding:8px 10px;">Último pagamento</th>
                 <th style="text-align:center; padding:8px 10px;">Ações</th>
             </tr>
         </thead>
@@ -41,6 +42,9 @@
                         </td>
                         <td style="padding:7px 10px; font-size:12px; color:#b0b0b0;">
                             <?= htmlspecialchars($u['created_at'] ?? '') ?>
+                        </td>
+                        <td style="padding:7px 10px; font-size:12px; color:#b0b0b0;">
+                            <?= htmlspecialchars($u['last_payment_at'] ?? '') ?: '—' ?>
                         </td>
                         <td style="padding:7px 10px; text-align:center;">
                             <a href="/admin/usuarios/ver?id=<?= (int)$u['id'] ?>" style="

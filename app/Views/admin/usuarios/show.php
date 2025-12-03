@@ -1,6 +1,7 @@
 <?php /** @var array $user */ ?>
 <?php /** @var array|null $subscription */ ?>
 <?php /** @var array|null $plan */ ?>
+<?php /** @var array $timeline */ ?>
 
 <div style="max-width: 800px; margin: 0 auto;">
     <h1 style="font-size: 22px; margin-bottom: 16px;">Detalhes do usuário</h1>
@@ -77,7 +78,8 @@
                     <span style="font-size:11px; color:#b0b0b0;">(<?= htmlspecialchars($plan['slug']) ?>)</span>
                 <?php endif; ?>
             </p>
-            <p style="font-size:13px; margin-bottom:4px;"><strong>Início:</strong> <?= htmlspecialchars($subscription['started_at'] ?? $subscription['created_at'] ?? '') ?></p>
+            <p style="font-size:13px; margin-bottom:4px;"><strong>Início da assinatura:</strong> <?= htmlspecialchars($subscription['started_at'] ?? $subscription['created_at'] ?? '') ?></p>
+            <p style="font-size:13px; margin-bottom:4px;"><strong>Último pagamento:</strong> <?= htmlspecialchars($subscription['started_at'] ?? $subscription['created_at'] ?? '') ?></p>
             <p style="font-size:13px; margin-bottom:4px;"><strong>CPF:</strong> <?= htmlspecialchars($subscription['customer_cpf'] ?? '') ?></p>
             <p style="font-size:13px; margin-bottom:4px;"><strong>Telefone:</strong> <?= htmlspecialchars($subscription['customer_phone'] ?? '') ?></p>
             <p style="font-size:13px; margin-top:6px;"><strong>Endereço:</strong><br>
@@ -89,6 +91,61 @@
             </p>
         <?php else: ?>
             <p style="font-size:13px; color:#b0b0b0;">Nenhuma assinatura encontrada para este usuário.</p>
+        <?php endif; ?>
+    </div>
+
+    <div style="margin-top:18px; padding:14px 16px; border-radius:12px; background:#111118; border:1px solid #272727;">
+        <h2 style="font-size:16px; margin-bottom:10px;">Histórico de planos e créditos de tokens</h2>
+        <p style="font-size:12px; color:#b0b0b0; margin-bottom:8px;">Linha do tempo combinando mudanças de plano (assinaturas) e compras avulsas de tokens desse usuário.</p>
+
+        <?php if (!empty($timeline)): ?>
+            <div style="border-left:2px solid #272727; margin-left:6px; padding-left:10px; display:flex; flex-direction:column; gap:10px;">
+                <?php foreach ($timeline as $item): ?>
+                    <?php
+                    $type = $item['type'] ?? '';
+                    $raw = $item['raw'] ?? [];
+                    $date = $item['date'] ?? '';
+                    ?>
+                    <div style="position:relative;">
+                        <div style="position:absolute; left:-12px; top:4px; width:8px; height:8px; border-radius:50%; background:<?= $type === 'subscription' ? '#ff6f60' : '#64b5f6' ?>;"></div>
+                        <div style="padding:6px 8px; border-radius:10px; background:#050509; border:1px solid #272727; font-size:13px;">
+                            <div style="display:flex; justify-content:space-between; gap:10px; margin-bottom:4px;">
+                                <span style="font-weight:600;">
+                                    <?php if ($type === 'subscription'): ?>
+                                        Mudança de plano / Assinatura
+                                    <?php else: ?>
+                                        Crédito de tokens avulsos
+                                    <?php endif; ?>
+                                </span>
+                                <span style="font-size:11px; color:#b0b0b0;">
+                                    <?= htmlspecialchars($date ?: '') ?>
+                                </span>
+                            </div>
+
+                            <?php if ($type === 'subscription'): ?>
+                                <div style="font-size:12px; color:#cccccc;">
+                                    <div><strong>Plano:</strong> <?= htmlspecialchars($raw['plan_name'] ?? '') ?> <?php if (!empty($raw['plan_slug'])): ?><span style="font-size:11px; color:#b0b0b0;">(<?= htmlspecialchars($raw['plan_slug']) ?>)</span><?php endif; ?></div>
+                                    <div><strong>Status:</strong> <?= htmlspecialchars($raw['status'] ?? '') ?></div>
+                                    <div><strong>Início:</strong> <?= htmlspecialchars($raw['started_at'] ?? $raw['created_at'] ?? '') ?></div>
+                                </div>
+                            <?php else: ?>
+                                <?php
+                                $amountCents = (int)($raw['amount_cents'] ?? 0);
+                                $amountFormatted = number_format($amountCents / 100, 2, ',', '.');
+                                ?>
+                                <div style="font-size:12px; color:#cccccc;">
+                                    <div><strong>Tokens:</strong> <?= htmlspecialchars((string)($raw['tokens'] ?? '')) ?></div>
+                                    <div><strong>Valor:</strong> R$ <?= htmlspecialchars($amountFormatted) ?></div>
+                                    <div><strong>Status:</strong> <?= htmlspecialchars($raw['status'] ?? '') ?></div>
+                                    <div><strong>Pago em:</strong> <?= htmlspecialchars($raw['paid_at'] ?? '') ?></div>
+                                </div>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                <?php endforeach; ?>
+            </div>
+        <?php else: ?>
+            <p style="font-size:13px; color:#b0b0b0;">Ainda não há histórico de planos ou créditos de tokens para este usuário.</p>
         <?php endif; ?>
     </div>
 </div>

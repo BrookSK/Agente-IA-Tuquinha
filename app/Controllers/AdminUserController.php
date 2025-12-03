@@ -6,6 +6,7 @@ use App\Core\Controller;
 use App\Models\User;
 use App\Models\Subscription;
 use App\Models\Plan;
+use App\Models\TokenTopup;
 
 class AdminUserController extends Controller
 {
@@ -23,6 +24,20 @@ class AdminUserController extends Controller
 
         $query = trim($_GET['q'] ?? '');
         $users = $query !== '' ? User::search($query) : User::all();
+
+        // Anexa informação de último pagamento (última assinatura) por usuário
+        foreach ($users as &$u) {
+            $email = $u['email'] ?? '';
+            $lastPaymentAt = '';
+            if ($email !== '') {
+                $sub = Subscription::findLastByEmail($email);
+                if ($sub) {
+                    $lastPaymentAt = $sub['started_at'] ?? ($sub['created_at'] ?? '');
+                }
+            }
+            $u['last_payment_at'] = $lastPaymentAt;
+        }
+        unset($u);
 
         $this->view('admin/usuarios/index', [
             'pageTitle' => 'Usuários do sistema',
@@ -53,11 +68,40 @@ class AdminUserController extends Controller
             $plan = Plan::findById((int)$lastSub['plan_id']);
         }
 
+        // Histórico completo de planos (assinaturas) e créditos de tokens avulsos
+        $subscriptionsHistory = Subscription::allByEmailWithPlan($user['email']);
+        $topups = TokenTopup::allByUserId((int)$user['id']);
+
+        $timeline = [];
+
+        foreach ($subscriptionsHistory as $s) {
+            $date = $s['started_at'] ?? ($s['created_at'] ?? '');
+            $timeline[] = [
+                'type' => 'subscription',
+                'date' => $date,
+                'raw' => $s,
+            ];
+        }
+
+        foreach ($topups as $t) {
+            $date = $t['paid_at'] ?? ($t['created_at'] ?? '');
+            $timeline[] = [
+                'type' => 'topup',
+                'date' => $date,
+                'raw' => $t,
+            ];
+        }
+
+        usort($timeline, static function (array $a, array $b): int {
+            return strcmp((string)($a['date'] ?? ''), (string)($b['date'] ?? ''));
+        });
+
         $this->view('admin/usuarios/show', [
             'pageTitle' => 'Detalhes do usuário',
             'user' => $user,
             'subscription' => $lastSub,
             'plan' => $plan,
+            'timeline' => $timeline,
         ]);
     }
 

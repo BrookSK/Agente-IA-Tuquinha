@@ -25,6 +25,7 @@
                 <th style="text-align:left; padding:8px 10px;">Plano</th>
                 <th style="text-align:center; padding:8px 10px;">Status</th>
                 <th style="text-align:left; padding:8px 10px;">Início</th>
+                <th style="text-align:left; padding:8px 10px;">Último pagamento</th>
             </tr>
         </thead>
         <tbody>
@@ -41,6 +42,9 @@
                         </td>
                         <td style="padding:7px 10px; text-align:center; text-transform:capitalize;">
                             <?= htmlspecialchars($s['status']) ?>
+                        </td>
+                        <td style="padding:7px 10px; font-size:12px; color:#b0b0b0;">
+                            <?= htmlspecialchars($s['started_at'] ?? $s['created_at'] ?? '') ?>
                         </td>
                         <td style="padding:7px 10px; font-size:12px; color:#b0b0b0;">
                             <?= htmlspecialchars($s['started_at'] ?? $s['created_at'] ?? '') ?>

@@ -85,6 +85,20 @@ class Subscription
         return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
     }
 
+    public static function allByEmailWithPlan(string $email): array
+    {
+        $pdo = Database::getConnection();
+        $sql = 'SELECT s.*, p.name AS plan_name, p.slug AS plan_slug
+                FROM subscriptions s
+                INNER JOIN plans p ON p.id = s.plan_id
+                WHERE s.customer_email = :email
+                ORDER BY s.created_at ASC';
+
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute(['email' => $email]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+    }
+
     public static function updateStatusAndCanceledAt(int $id, string $status, ?string $canceledAt): void
     {
         $pdo = Database::getConnection();
@@ -93,6 +107,17 @@ class Subscription
             'status' => $status,
             'canceled_at' => $canceledAt,
             'id' => $id,
+        ]);
+    }
+
+    public static function cancelOtherActivesForEmail(string $email, int $keepId): void
+    {
+        $pdo = Database::getConnection();
+        $stmt = $pdo->prepare('UPDATE subscriptions SET status = "canceled", canceled_at = NOW()
+            WHERE customer_email = :email AND id <> :keep_id AND status = "active"');
+        $stmt->execute([
+            'email' => $email,
+            'keep_id' => $keepId,
         ]);
     }
 }

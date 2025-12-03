@@ -242,7 +242,12 @@ class CheckoutController extends Controller
                 'started_at' => $subResp['nextDueDate'] ?? null,
             ];
 
-            Subscription::create($subData);
+            $subId = Subscription::create($subData);
+
+            // Se a nova assinatura já estiver ativa, cancela outras assinaturas ativas do mesmo e-mail (troca de plano)
+            if (($subData['status'] ?? '') === 'active') {
+                Subscription::cancelOtherActivesForEmail($customer['email'], $subId);
+            }
 
             $_SESSION['plan_slug'] = $plan['slug'];
 

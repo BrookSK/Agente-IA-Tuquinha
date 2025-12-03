@@ -47,4 +47,12 @@ class TokenTopup
             'id' => $id,
         ]);
     }
+
+    public static function allByUserId(int $userId): array
+    {
+        $pdo = Database::getConnection();
+        $stmt = $pdo->prepare('SELECT * FROM token_topups WHERE user_id = :uid ORDER BY created_at ASC');
+        $stmt->execute(['uid' => $userId]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+    }
 }
