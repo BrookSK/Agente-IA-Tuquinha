@@ -239,11 +239,6 @@
                                     border: none;
                                     padding: 9px 14px;
                                     background: <?= $isCurrent ? 'rgba(255,255,255,0.06)' : 'linear-gradient(135deg, #e53935, #ff6f60)' ?>;
-                                    color: <?= $isCurrent ? '#b0b0b0' : '#050509' ?>;
-                                    font-weight: 600;
-                                    font-size: 14px;
-                                    cursor: <?= $isCurrent ? 'default' : 'pointer' ?>;
-                                    margin-top: 4px;
                                 <?php elseif ($cycleKey === 'semestral'): ?>
                                     Valor referente a cada semestre de uso. A cobrança é recorrente a cada 6 meses.
                                 <?php elseif ($cycleKey === 'anual'): ?>
