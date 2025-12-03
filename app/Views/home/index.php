@@ -23,7 +23,9 @@
     <!-- CTA para instalar o app (PWA) - exibido apenas em mobile via JS -->
     <div id="pwa-install-banner" style="display:none; margin-bottom: 18px;">
         <div style="background:#111118; border-radius:14px; border:1px solid #272727; padding:12px 14px; display:flex; align-items:center; gap:10px;">
-            <div style="width:36px; height:36px; border-radius:12px; background:radial-gradient(circle at 30% 20%, #fff 0, #ff8a65 25%, #e53935 65%, #050509 100%); display:flex; align-items:center; justify-content:center; font-weight:800; color:#050509;">T</div>
+            <div style="width:36px; height:36px; border-radius:12px; overflow:hidden; background:#050509; display:flex; align-items:center; justify-content:center;">
+                <img src="/public/favicon.png" alt="Tuquinha" style="width:100%; height:100%; display:block; object-fit:cover;">
+            </div>
             <div style="flex:1;">
                 <div style="font-size:13px; font-weight:600; margin-bottom:2px;">Leve o Tuquinha pro seu celular</div>
                 <div style="font-size:12px; color:#b0b0b0;">Instale o app na tela inicial e volte pro chat em 1 toque.</div>

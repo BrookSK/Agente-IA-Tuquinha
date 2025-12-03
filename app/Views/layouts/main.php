@@ -62,13 +62,8 @@ $pageTitle = $pageTitle ?? 'Agente IA - Tuquinha';
             width: 36px;
             height: 36px;
             border-radius: 50%;
-            background: radial-gradient(circle at 30% 20%, #fff 0, #ff8a65 25%, #e53935 65%, #050509 100%);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 800;
-            font-size: 18px;
-            color: #050509;
+            overflow: hidden;
+            background: #050509;
             box-shadow: 0 0 20px rgba(229, 57, 53, 0.7);
         }
         .brand-text-title {
@@ -289,7 +284,7 @@ $pageTitle = $pageTitle ?? 'Agente IA - Tuquinha';
     <aside class="sidebar" id="sidebar">
         <div>
             <div class="brand">
-                <div class="brand-logo">T</div>
+                <div class="brand-logo"><img src="/public/favicon.png" alt="Tuquinha" style="width:100%; height:100%; display:block; object-fit:cover;"></div>
                 <div>
                     <div class="brand-text-title">Agente IA - Tuquinha</div>
                     <div class="brand-text-sub">Branding vivo na veia</div>
