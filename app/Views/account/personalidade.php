@@ -53,8 +53,8 @@ $successMessage = $success ?? null;
                     transition:transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
                     scroll-snap-align:center;
                 ">
-                    <div style="width:100%; height:140px; background:radial-gradient(circle at top left,#e53935 0,#050509 60%); display:flex; align-items:center; justify-content:center; font-size:26px;">
-                        ✨
+                    <div style="width:100%; height:260px; overflow:hidden; background:#111118;">
+                        <img src="/public/favicon.png" alt="Padrão do Tuquinha" style="width:100%; height:100%; object-fit:cover; display:block;">
                     </div>
                     <div style="padding:10px 12px 12px 12px;">
                         <div style="font-size:16px; font-weight:650; margin-bottom:4px;">Padrão do Tuquinha</div>
@@ -88,7 +88,7 @@ $successMessage = $success ?? null;
                         transition:transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
                         scroll-snap-align:center;
                     ">
-                        <div style="width:100%; height:200px; overflow:hidden; background:#111118;">
+                        <div style="width:100%; height:260px; overflow:hidden; background:#111118;">
                             <img src="<?= htmlspecialchars($imagePath) ?>" alt="<?= htmlspecialchars($pname) ?>" style="width:100%; height:100%; object-fit:cover; display:block;">
                         </div>
                         <div style="padding:10px 12px 12px 12px;">
