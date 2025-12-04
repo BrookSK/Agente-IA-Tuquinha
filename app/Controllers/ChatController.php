@@ -11,6 +11,7 @@ use App\Models\Attachment;
 use App\Models\Setting;
 use App\Models\User;
 use App\Models\ConversationSetting;
+use App\Models\Personality;
 
 class ChatController extends Controller
 {
@@ -21,17 +22,46 @@ class ChatController extends Controller
         $conversationParam = isset($_GET['c']) ? (int)$_GET['c'] : 0;
         $isNew = isset($_GET['new']);
 
-        // Se acessar /chat sem ?new=1 e sem ?c=, força redirecionar para uma nova conversa
-        if (!$isNew && $conversationParam === 0) {
-            header('Location: /chat?new=1');
+        // Se acessar /chat sem ?new=1 e sem ?c=, e não houver conversa atual, redireciona para seleção de personalidade
+        if (!$isNew && $conversationParam === 0 && empty($_SESSION['current_conversation_id'])) {
+            header('Location: /personalidades');
             exit;
         }
 
         if ($isNew) {
+            $personaIdForNew = null;
+
+            $requestedPersonaId = isset($_GET['persona_id']) ? (int)$_GET['persona_id'] : 0;
+            if ($requestedPersonaId > 0) {
+                $requestedPersona = Personality::findById($requestedPersonaId);
+                if ($requestedPersona && !empty($requestedPersona['active'])) {
+                    $personaIdForNew = (int)$requestedPersona['id'];
+                }
+            }
+
+            // Se não veio persona explícita na URL, tenta a personalidade padrão da conta do usuário (se logado)
+            if ($personaIdForNew === null && $userId > 0 && !empty($_SESSION['default_persona_id'])) {
+                $userDefaultPersonaId = (int)$_SESSION['default_persona_id'];
+                if ($userDefaultPersonaId > 0) {
+                    $userPersona = Personality::findById($userDefaultPersonaId);
+                    if ($userPersona && !empty($userPersona['active'])) {
+                        $personaIdForNew = (int)$userPersona['id'];
+                    }
+                }
+            }
+
+            // Fallback: personalidade padrão global do Tuquinha
+            if ($personaIdForNew === null) {
+                $defaultPersona = Personality::findDefault();
+                if ($defaultPersona) {
+                    $personaIdForNew = (int)$defaultPersona['id'];
+                }
+            }
+
             if ($userId > 0) {
-                $conversation = Conversation::createForUser($userId, $sessionId);
+                $conversation = Conversation::createForUser($userId, $sessionId, $personaIdForNew);
             } else {
-                $conversation = Conversation::createForSession($sessionId);
+                $conversation = Conversation::createForSession($sessionId, $personaIdForNew);
             }
         } elseif ($conversationParam > 0) {
             if ($userId > 0) {
@@ -45,6 +75,7 @@ class ChatController extends Controller
                 $conversation->id = (int)$row['id'];
                 $conversation->session_id = $row['session_id'];
                 $conversation->user_id = isset($row['user_id']) ? (int)$row['user_id'] : null;
+                $conversation->persona_id = isset($row['persona_id']) ? (int)$row['persona_id'] : null;
                 $conversation->title = $row['title'] ?? null;
             } else {
                 if ($userId > 0) {
@@ -114,6 +145,12 @@ class ChatController extends Controller
             $conversationSettings = ConversationSetting::findForConversation($conversation->id, $userId) ?: null;
         }
 
+        $currentPersona = null;
+        if (!empty($conversation->persona_id)) {
+            $currentPersona = Personality::findById((int)$conversation->persona_id) ?: null;
+        }
+        $personalities = Personality::allActive();
+
         $this->view('chat/index', [
             'pageTitle' => 'Chat - Tuquinha',
             'chatHistory' => $history,
@@ -127,6 +164,8 @@ class ChatController extends Controller
             'conversationId' => $conversation->id,
             'conversationSettings' => $conversationSettings,
             'canUseConversationSettings' => $canUseConversationSettings,
+            'currentPersona' => $currentPersona,
+            'personalities' => $personalities,
         ]);
     }
 
@@ -157,6 +196,7 @@ class ChatController extends Controller
                     $conversation->id = (int)$row['id'];
                     $conversation->session_id = $row['session_id'];
                     $conversation->user_id = isset($row['user_id']) ? (int)$row['user_id'] : null;
+                    $conversation->persona_id = isset($row['persona_id']) ? (int)$row['persona_id'] : null;
                     $conversation->title = $row['title'] ?? null;
                 }
             }
@@ -349,9 +389,10 @@ class ChatController extends Controller
 
             $history = Message::allByConversation($conversation->id);
 
-            // Carrega contexto do usuário e da conversa para personalizar o Tuquinha
+            // Carrega contexto do usuário, personalidade e da conversa para personalizar o Tuquinha
             $userData = null;
             $conversationSettings = null;
+            $personaData = null;
 
             $planForContext = null;
             if (!empty($_SESSION['is_admin'])) {
@@ -364,6 +405,10 @@ class ChatController extends Controller
             }
 
             $isFreePlan = $planForContext && ($planForContext['slug'] ?? '') === 'free';
+
+            if (!empty($conversation->persona_id)) {
+                $personaData = Personality::findById((int)$conversation->persona_id) ?: null;
+            }
 
             if ($userId > 0) {
                 $userData = User::findById($userId) ?: null;
@@ -487,7 +532,8 @@ class ChatController extends Controller
                 $history,
                 $_SESSION['chat_model'] ?? null,
                 $userData,
-                $conversationSettings
+                $conversationSettings,
+                $personaData
             );
 
             $assistantReply = is_array($result) ? (string)($result['content'] ?? '') : (string)$result;
@@ -587,6 +633,7 @@ class ChatController extends Controller
                 $conversation->id = (int)$row['id'];
                 $conversation->session_id = $row['session_id'];
                 $conversation->user_id = isset($row['user_id']) ? (int)$row['user_id'] : null;
+                $conversation->persona_id = isset($row['persona_id']) ? (int)$row['persona_id'] : null;
                 $conversation->title = $row['title'] ?? null;
             }
         }
@@ -747,6 +794,47 @@ class ChatController extends Controller
             $redirect .= '?c=' . $conversationId;
         }
         header('Location: ' . $redirect);
+        exit;
+    }
+
+    public function changePersona(): void
+    {
+        $sessionId = session_id();
+        $userId = !empty($_SESSION['user_id']) ? (int)$_SESSION['user_id'] : 0;
+
+        $conversationId = isset($_POST['conversation_id']) ? (int)$_POST['conversation_id'] : 0;
+        $personaIdRaw = isset($_POST['persona_id']) ? (int)$_POST['persona_id'] : 0;
+
+        if ($conversationId <= 0) {
+            header('Location: /chat');
+            exit;
+        }
+
+        $convRow = null;
+        if ($userId > 0) {
+            $convRow = Conversation::findByIdForUser($conversationId, $userId);
+        } else {
+            $convRow = Conversation::findByIdAndSession($conversationId, $sessionId);
+        }
+
+        if (!$convRow) {
+            header('Location: /chat');
+            exit;
+        }
+
+        $personaId = null;
+        if ($personaIdRaw > 0) {
+            $persona = Personality::findById($personaIdRaw);
+            if ($persona && !empty($persona['active'])) {
+                $personaId = (int)$persona['id'];
+            }
+        }
+
+        Conversation::updatePersona($conversationId, $personaId);
+
+        $_SESSION['current_conversation_id'] = $conversationId;
+
+        header('Location: /chat?c=' . $conversationId);
         exit;
     }
 }

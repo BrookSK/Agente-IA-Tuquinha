@@ -16,7 +16,7 @@ class TuquinhaEngine
     public function generateResponse(array $messages, ?string $model = null): string
     {
         // Compatibilidade: mantém a assinatura antiga usando apenas o system prompt padrão
-        $result = $this->generateResponseWithContext($messages, $model, null, null);
+        $result = $this->generateResponseWithContext($messages, $model, null, null, null);
         if (is_array($result) && isset($result['content']) && is_string($result['content'])) {
             return $result['content'];
         }
@@ -24,7 +24,7 @@ class TuquinhaEngine
         return is_string($result) ? $result : '';
     }
 
-    public function generateResponseWithContext(array $messages, ?string $model = null, ?array $user = null, ?array $conversationSettings = null): array
+    public function generateResponseWithContext(array $messages, ?string $model = null, ?array $user = null, ?array $conversationSettings = null, ?array $persona = null): array
     {
         $configuredApiKey = Setting::get('openai_api_key', AI_API_KEY);
 
@@ -41,7 +41,7 @@ class TuquinhaEngine
         $payloadMessages = [];
         $payloadMessages[] = [
             'role' => 'system',
-            'content' => $this->buildSystemPromptWithContext($user, $conversationSettings),
+            'content' => $this->buildSystemPromptWithContext($user, $conversationSettings, $persona),
         ];
 
         foreach ($messages as $m) {
@@ -155,10 +155,34 @@ class TuquinhaEngine
         return implode("\n\n", $parts);
     }
 
-    private function buildSystemPromptWithContext(?array $user, ?array $conversationSettings): string
+    private function buildSystemPromptWithContext(?array $user, ?array $conversationSettings, ?array $persona): string
     {
         $parts = [];
         $parts[] = $this->systemPrompt;
+
+        if ($persona) {
+            $personaLines = [];
+
+            $personaName = isset($persona['name']) ? trim((string)$persona['name']) : '';
+            $personaArea = isset($persona['area']) ? trim((string)$persona['area']) : '';
+            $personaPrompt = isset($persona['prompt']) ? trim((string)$persona['prompt']) : '';
+
+            if ($personaName !== '' || $personaArea !== '') {
+                $title = $personaName;
+                if ($personaArea !== '') {
+                    $title = $title !== '' ? ($title . ' (' . $personaArea . ')') : $personaArea;
+                }
+                $personaLines[] = 'PERSONALIDADE ATUAL DO TUQUINHA: ' . $title . '.';
+            }
+
+            if ($personaPrompt !== '') {
+                $personaLines[] = $personaPrompt;
+            }
+
+            if ($personaLines) {
+                $parts[] = implode("\n\n", $personaLines);
+            }
+        }
 
         if ($user) {
             $userLines = [];

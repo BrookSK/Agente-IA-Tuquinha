@@ -10,9 +10,10 @@ class Conversation
     public int $id;
     public string $session_id;
     public ?int $user_id = null;
+    public ?int $persona_id = null;
     public ?string $title = null;
 
-    public static function findOrCreateBySession(string $sessionId): self
+    public static function findOrCreateBySession(string $sessionId, ?int $personaId = null): self
     {
         $pdo = Database::getConnection();
 
@@ -25,46 +26,57 @@ class Conversation
             $conv->id = (int)$row['id'];
             $conv->session_id = $row['session_id'];
             $conv->user_id = isset($row['user_id']) ? (int)$row['user_id'] : null;
+            $conv->persona_id = isset($row['persona_id']) ? (int)$row['persona_id'] : null;
             $conv->title = $row['title'] ?? null;
             return $conv;
         }
 
-        $stmt = $pdo->prepare('INSERT INTO conversations (session_id) VALUES (:session_id)');
-        $stmt->execute(['session_id' => $sessionId]);
+        $stmt = $pdo->prepare('INSERT INTO conversations (session_id, persona_id) VALUES (:session_id, :persona_id)');
+        $stmt->execute([
+            'session_id' => $sessionId,
+            'persona_id' => $personaId,
+        ]);
 
         $conv = new self();
         $conv->id = (int)$pdo->lastInsertId();
         $conv->session_id = $sessionId;
         $conv->user_id = null;
+        $conv->persona_id = $personaId;
         return $conv;
     }
 
-    public static function createForUser(int $userId, string $sessionId): self
+    public static function createForUser(int $userId, string $sessionId, ?int $personaId = null): self
     {
         $pdo = Database::getConnection();
-        $stmt = $pdo->prepare('INSERT INTO conversations (session_id, user_id) VALUES (:session_id, :user_id)');
+        $stmt = $pdo->prepare('INSERT INTO conversations (session_id, user_id, persona_id) VALUES (:session_id, :user_id, :persona_id)');
         $stmt->execute([
             'session_id' => $sessionId,
             'user_id' => $userId,
+            'persona_id' => $personaId,
         ]);
 
         $conv = new self();
         $conv->id = (int)$pdo->lastInsertId();
         $conv->session_id = $sessionId;
         $conv->user_id = $userId;
+        $conv->persona_id = $personaId;
         $conv->title = null;
         return $conv;
     }
 
-    public static function createForSession(string $sessionId): self
+    public static function createForSession(string $sessionId, ?int $personaId = null): self
     {
         $pdo = Database::getConnection();
-        $stmt = $pdo->prepare('INSERT INTO conversations (session_id) VALUES (:session_id)');
-        $stmt->execute(['session_id' => $sessionId]);
+        $stmt = $pdo->prepare('INSERT INTO conversations (session_id, persona_id) VALUES (:session_id, :persona_id)');
+        $stmt->execute([
+            'session_id' => $sessionId,
+            'persona_id' => $personaId,
+        ]);
 
         $conv = new self();
         $conv->id = (int)$pdo->lastInsertId();
         $conv->session_id = $sessionId;
+        $conv->persona_id = $personaId;
         $conv->title = null;
         return $conv;
     }
@@ -175,6 +187,16 @@ class Conversation
         ]);
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
         return $row ?: null;
+    }
+
+    public static function updatePersona(int $id, ?int $personaId): void
+    {
+        $pdo = Database::getConnection();
+        $stmt = $pdo->prepare('UPDATE conversations SET persona_id = :persona_id WHERE id = :id LIMIT 1');
+        $stmt->execute([
+            'id' => $id,
+            'persona_id' => $personaId !== null && $personaId > 0 ? $personaId : null,
+        ]);
     }
 
     public static function findByIdForUser(int $id, int $userId): ?array

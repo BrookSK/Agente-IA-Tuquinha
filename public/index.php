@@ -52,6 +52,7 @@ $router->post('/conta/assinatura/cancelar', 'AccountController@cancelSubscriptio
 $router->get('/tokens/comprar', 'TokenTopupController@show');
 $router->post('/tokens/comprar', 'TokenTopupController@create');
 $router->get('/tokens/historico', 'TokenTopupController@history');
+$router->get('/personalidades', 'PersonalityController@index');
 $router->get('/admin/login', 'AdminAuthController@login');
 $router->post('/admin/login', 'AdminAuthController@authenticate');
 $router->get('/admin/logout', 'AdminAuthController@logout');
@@ -64,6 +65,12 @@ $router->get('/admin/planos/novo', 'AdminPlanController@form');
 $router->get('/admin/planos/editar', 'AdminPlanController@form');
 $router->post('/admin/planos/salvar', 'AdminPlanController@save');
 $router->get('/admin/planos/ativar', 'AdminPlanController@toggleActive');
+$router->get('/admin/personalidades', 'AdminPersonalityController@index');
+$router->get('/admin/personalidades/novo', 'AdminPersonalityController@form');
+$router->get('/admin/personalidades/editar', 'AdminPersonalityController@form');
+$router->post('/admin/personalidades/salvar', 'AdminPersonalityController@save');
+$router->get('/admin/personalidades/ativar', 'AdminPersonalityController@toggleActive');
+$router->get('/admin/personalidades/padrao', 'AdminPersonalityController@setDefault');
 $router->get('/admin/usuarios', 'AdminUserController@index');
 $router->get('/admin/usuarios/ver', 'AdminUserController@show');
 $router->post('/admin/usuarios/toggle', 'AdminUserController@toggleActive');
@@ -77,6 +84,8 @@ $router->post('/admin/erros/descartar', 'AdminErrorReportController@dismiss');
 $router->get('/chat', 'ChatController@index');
 $router->post('/chat/send', 'ChatController@send');
 $router->post('/chat/audio', 'ChatController@sendAudio');
+
+$router->post('/chat/persona', 'ChatController@changePersona');
 
 // Configurações por conversa (regras/memórias específicas do chat)
 $router->post('/chat/settings', 'ChatController@saveSettings');

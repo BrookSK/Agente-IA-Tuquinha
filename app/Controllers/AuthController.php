@@ -69,6 +69,16 @@ class AuthController extends Controller
         $_SESSION['user_id'] = (int)$user['id'];
         $_SESSION['user_name'] = $user['name'];
         $_SESSION['user_email'] = $user['email'];
+        if (isset($user['default_persona_id']) && $user['default_persona_id']) {
+            $_SESSION['default_persona_id'] = (int)$user['default_persona_id'];
+        } else {
+            unset($_SESSION['default_persona_id']);
+        }
+        if (isset($user['default_persona_id']) && $user['default_persona_id']) {
+            $_SESSION['default_persona_id'] = (int)$user['default_persona_id'];
+        } else {
+            unset($_SESSION['default_persona_id']);
+        }
 
         // Marca sessão como admin se o usuário tiver is_admin = 1 no banco
         if (!empty($user['is_admin'])) {
@@ -455,6 +465,11 @@ HTML;
         $_SESSION['user_id'] = (int)$user['id'];
         $_SESSION['user_name'] = $user['name'];
         $_SESSION['user_email'] = $user['email'];
+        if (isset($user['default_persona_id']) && $user['default_persona_id']) {
+            $_SESSION['default_persona_id'] = (int)$user['default_persona_id'];
+        } else {
+            unset($_SESSION['default_persona_id']);
+        }
 
         if (!empty($user['is_admin'])) {
             $_SESSION['is_admin'] = true;

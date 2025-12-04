@@ -292,15 +292,19 @@ $pageTitle = $pageTitle ?? 'Agente IA - Tuquinha';
             </div>
             <div style="margin-top: 10px;">
                 <div class="sidebar-section-title">Conversa</div>
-                <form action="/chat" method="get" style="margin-bottom: 8px;">
-                    <input type="hidden" name="new" value="1">
-                    <button class="sidebar-button primary" type="submit">
-                        <span class="icon">+</span>
-                        <span>Novo chat com o Tuquinha</span>
-                    </button>
-                </form>
                 <?php
                     $hasUser = !empty($_SESSION['user_id']);
+                    $defaultPersonaId = $_SESSION['default_persona_id'] ?? null;
+                    $newChatHref = '/personalidades';
+                    if ($hasUser && !empty($defaultPersonaId)) {
+                        $newChatHref = '/chat?new=1';
+                    }
+                ?>
+                <a href="<?= htmlspecialchars($newChatHref) ?>" class="sidebar-button primary" style="margin-bottom: 8px;">
+                    <span class="icon">+</span>
+                    <span>Novo chat com o Tuquinha</span>
+                </a>
+                <?php
                     $currentSlug = $_SESSION['plan_slug'] ?? null;
                     $isAdmin = !empty($_SESSION['is_admin']);
                     $canSeeHistory = $hasUser && ($isAdmin || ($currentSlug && $currentSlug !== 'free'));
@@ -350,6 +354,10 @@ $pageTitle = $pageTitle ?? 'Agente IA - Tuquinha';
                     <a href="/admin/planos" class="sidebar-button" style="margin-top: 6px;">
                         <span class="icon">🧩</span>
                         <span>Gerenciar planos</span>
+                    </a>
+                    <a href="/admin/personalidades" class="sidebar-button" style="margin-top: 6px;">
+                        <span class="icon">🎭</span>
+                        <span>Personalidades do Tuquinha</span>
                     </a>
                     <a href="/admin/usuarios" class="sidebar-button" style="margin-top: 6px;">
                         <span class="icon">👥</span>

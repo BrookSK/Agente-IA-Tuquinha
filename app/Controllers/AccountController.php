@@ -6,6 +6,7 @@ use App\Core\Controller;
 use App\Models\User;
 use App\Models\Subscription;
 use App\Models\Plan;
+use App\Models\Personality;
 use App\Services\AsaasClient;
 use App\Services\MailService;
 
@@ -66,6 +67,8 @@ class AccountController extends Controller
 
         $tokenBalance = \App\Models\User::getTokenBalance((int)$user['id']);
 
+        $personalities = Personality::allActive();
+
         $this->view('account/index', [
             'pageTitle' => 'Minha conta',
             'user' => $user,
@@ -75,6 +78,7 @@ class AccountController extends Controller
             'subscriptionStart' => $subscriptionStart,
             'subscriptionNext' => $subscriptionNext,
             'tokenBalance' => $tokenBalance,
+            'personalities' => $personalities,
             'error' => null,
             'success' => null,
         ]);
@@ -88,12 +92,21 @@ class AccountController extends Controller
         $preferredName = trim($_POST['preferred_name'] ?? '');
         $globalMemory = trim($_POST['global_memory'] ?? '');
         $globalInstructions = trim($_POST['global_instructions'] ?? '');
+        $defaultPersonaIdRaw = isset($_POST['default_persona_id']) ? (int)$_POST['default_persona_id'] : 0;
         if ($name === '') {
             $this->reloadWithMessages($user, 'Nome não pode ficar em branco.', null);
             return;
         }
 
-        User::updateProfile((int)$user['id'], $name, $preferredName, $globalMemory, $globalInstructions);
+        $defaultPersonaId = null;
+        if ($defaultPersonaIdRaw > 0) {
+            $persona = Personality::findById($defaultPersonaIdRaw);
+            if ($persona && !empty($persona['active'])) {
+                $defaultPersonaId = (int)$persona['id'];
+            }
+        }
+
+        User::updateProfile((int)$user['id'], $name, $preferredName, $globalMemory, $globalInstructions, $defaultPersonaId);
 
         // Campos extras de cobrança (dados usados no checkout)
         $billingCpf = trim($_POST['billing_cpf'] ?? '');
@@ -121,6 +134,11 @@ class AccountController extends Controller
             $billingState
         );
         $_SESSION['user_name'] = $name;
+        if ($defaultPersonaId) {
+            $_SESSION['default_persona_id'] = $defaultPersonaId;
+        } else {
+            unset($_SESSION['default_persona_id']);
+        }
 
         $user = User::findById((int)$user['id']) ?? $user;
         $this->reloadWithMessages($user, null, 'Dados atualizados com sucesso.');
@@ -189,6 +207,8 @@ class AccountController extends Controller
 
         $tokenBalance = \App\Models\User::getTokenBalance((int)$user['id']);
 
+        $personalities = Personality::allActive();
+
         $this->view('account/index', [
             'pageTitle' => 'Minha conta',
             'user' => $user,
@@ -198,6 +218,7 @@ class AccountController extends Controller
             'subscriptionStart' => $subscriptionStart,
             'subscriptionNext' => $subscriptionNext,
             'tokenBalance' => $tokenBalance,
+            'personalities' => $personalities,
             'error' => $error,
             'success' => $success,
         ]);

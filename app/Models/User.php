@@ -56,16 +56,17 @@ class User
         ]);
     }
 
-    public static function updateProfile(int $id, string $name, ?string $preferredName, ?string $globalMemory, ?string $globalInstructions): void
+    public static function updateProfile(int $id, string $name, ?string $preferredName, ?string $globalMemory, ?string $globalInstructions, ?int $defaultPersonaId = null): void
     {
         $pdo = Database::getConnection();
-        $stmt = $pdo->prepare('UPDATE users SET name = :name, preferred_name = :preferred_name, global_memory = :global_memory, global_instructions = :global_instructions WHERE id = :id LIMIT 1');
+        $stmt = $pdo->prepare('UPDATE users SET name = :name, preferred_name = :preferred_name, global_memory = :global_memory, global_instructions = :global_instructions, default_persona_id = :default_persona_id WHERE id = :id LIMIT 1');
         $stmt->execute([
             'id' => $id,
             'name' => $name,
             'preferred_name' => $preferredName !== '' ? $preferredName : null,
             'global_memory' => $globalMemory !== '' ? $globalMemory : null,
             'global_instructions' => $globalInstructions !== '' ? $globalInstructions : null,
+            'default_persona_id' => $defaultPersonaId && $defaultPersonaId > 0 ? $defaultPersonaId : null,
         ]);
     }
 
