@@ -17,7 +17,7 @@ $isEdit = !empty($persona);
         <?php unset($_SESSION['admin_persona_error']); ?>
     <?php endif; ?>
 
-    <form action="/admin/personalidades/salvar" method="post" style="display:flex; flex-direction:column; gap:10px;">
+    <form action="/admin/personalidades/salvar" method="post" enctype="multipart/form-data" style="display:flex; flex-direction:column; gap:10px;">
         <?php if ($isEdit): ?>
             <input type="hidden" name="id" value="<?= (int)$persona['id'] ?>">
         <?php endif; ?>
@@ -51,6 +51,16 @@ $isEdit = !empty($persona);
                 width:100%; padding:8px 10px; border-radius:8px; border:1px solid #272727;
                 background:#050509; color:#f5f5f5; font-size:14px;">
             <div style="font-size:11px; color:#777; margin-top:3px;">Pode ser um caminho interno do site ou uma URL completa de CDN/imagens.</div>
+        </div>
+
+        <div>
+            <label style="font-size:13px; color:#ddd; display:block; margin-bottom:4px;">Upload de nova imagem</label>
+            <input type="file" name="image_file" accept="image/*" style="
+                width:100%; padding:6px 0; border-radius:8px; border:1px dashed #272727;
+                background:transparent; color:#f5f5f5; font-size:13px;">
+            <div style="font-size:11px; color:#777; margin-top:3px;">
+                Opcional. Se você enviar um arquivo de imagem, ele será salvo no servidor e substituirá a URL acima.
+            </div>
         </div>
 
         <div>

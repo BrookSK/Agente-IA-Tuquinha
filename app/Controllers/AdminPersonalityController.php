@@ -54,15 +54,68 @@ class AdminPersonalityController extends Controller
         $isDefault = !empty($_POST['is_default']) ? 1 : 0;
         $active = !empty($_POST['active']) ? 1 : 0;
 
+        $target = '/admin/personalidades/novo';
+        if ($id > 0) {
+            $target = '/admin/personalidades/editar?id=' . $id;
+        }
+
         if ($name === '' || $area === '' || $slug === '' || $prompt === '') {
             // volta para o formulário com erro simples via sessão
             $_SESSION['admin_persona_error'] = 'Preencha nome, área, slug e prompt.';
-            $target = '/admin/personalidades/novo';
-            if ($id > 0) {
-                $target = '/admin/personalidades/editar?id=' . $id;
-            }
             header('Location: ' . $target);
             exit;
+        }
+
+        // Upload opcional de nova imagem da personalidade
+        if (!empty($_FILES['image_file']) && is_array($_FILES['image_file'])) {
+            $uploadError = (int)($_FILES['image_file']['error'] ?? UPLOAD_ERR_NO_FILE);
+            if ($uploadError !== UPLOAD_ERR_NO_FILE) {
+                if ($uploadError !== UPLOAD_ERR_OK) {
+                    $_SESSION['admin_persona_error'] = 'Erro ao enviar a imagem da personalidade.';
+                    header('Location: ' . $target);
+                    exit;
+                }
+
+                $tmp = $_FILES['image_file']['tmp_name'] ?? '';
+                $originalName = (string)($_FILES['image_file']['name'] ?? 'persona-image');
+                $type = (string)($_FILES['image_file']['type'] ?? '');
+                $size = (int)($_FILES['image_file']['size'] ?? 0);
+
+                $maxSize = 2 * 1024 * 1024; // 2MB
+                if ($size <= 0 || $size > $maxSize) {
+                    $_SESSION['admin_persona_error'] = 'A imagem da personalidade deve ter até 2 MB.';
+                    header('Location: ' . $target);
+                    exit;
+                }
+
+                if (!str_starts_with($type, 'image/')) {
+                    $_SESSION['admin_persona_error'] = 'Envie apenas arquivos de imagem (como JPG ou PNG) para a personalidade.';
+                    header('Location: ' . $target);
+                    exit;
+                }
+
+                $publicDir = __DIR__ . '/../../public/uploads/personalities';
+                if (!is_dir($publicDir)) {
+                    @mkdir($publicDir, 0775, true);
+                }
+
+                $ext = strtolower((string)pathinfo($originalName, PATHINFO_EXTENSION));
+                if ($ext === '') {
+                    $ext = 'png';
+                }
+
+                $fileName = uniqid('persona_', true) . '.' . $ext;
+                $targetPath = $publicDir . '/' . $fileName;
+
+                if (!@move_uploaded_file($tmp, $targetPath)) {
+                    $_SESSION['admin_persona_error'] = 'Não foi possível salvar a imagem enviada. Tente novamente.';
+                    header('Location: ' . $target);
+                    exit;
+                }
+
+                // Caminho web para uso nos cards de personalidade
+                $imagePath = '/public/uploads/personalities/' . $fileName;
+            }
         }
 
         if ($isDefault) {
