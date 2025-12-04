@@ -6,6 +6,7 @@ use App\Core\Controller;
 use App\Models\Course;
 use App\Models\CourseEnrollment;
 use App\Models\CourseLesson;
+use App\Models\CourseLessonComment;
 use App\Models\CourseLive;
 use App\Models\CourseLiveParticipant;
 use App\Models\Plan;
@@ -131,6 +132,19 @@ class CourseController extends Controller
             $isEnrolled = CourseEnrollment::isEnrolled($courseId, (int)$user['id']);
         }
 
+        $commentsByLesson = [];
+        $lessonComments = CourseLessonComment::allByCourseWithUser($courseId);
+        foreach ($lessonComments as $comment) {
+            $lid = (int)($comment['lesson_id'] ?? 0);
+            if ($lid <= 0) {
+                continue;
+            }
+            if (!isset($commentsByLesson[$lid])) {
+                $commentsByLesson[$lid] = [];
+            }
+            $commentsByLesson[$lid][] = $comment;
+        }
+
         $success = $_SESSION['courses_success'] ?? null;
         $error = $_SESSION['courses_error'] ?? null;
         unset($_SESSION['courses_success'], $_SESSION['courses_error']);
@@ -142,6 +156,7 @@ class CourseController extends Controller
             'course' => $course,
             'lessons' => $lessons,
             'lives' => $lives,
+            'commentsByLesson' => $commentsByLesson,
             'isEnrolled' => $isEnrolled,
             'planAllowsCourses' => $planAllowsCourses,
             'success' => $success,
@@ -324,6 +339,87 @@ HTML;
 
         $_SESSION['courses_success'] = 'Sua participação na live foi registrada. Você receberá um e-mail com os detalhes.';
         header('Location: ' . self::buildCourseUrl($course) . '#lives');
+        exit;
+    }
+
+    public function commentLesson(): void
+    {
+        $user = $this->getCurrentUser();
+        if (!$user) {
+            header('Location: /login');
+            exit;
+        }
+
+        $courseId = isset($_POST['course_id']) ? (int)$_POST['course_id'] : 0;
+        $lessonId = isset($_POST['lesson_id']) ? (int)$_POST['lesson_id'] : 0;
+        $body = trim((string)($_POST['body'] ?? ''));
+        $parentId = isset($_POST['parent_id']) ? (int)$_POST['parent_id'] : 0;
+
+        if ($courseId <= 0 || $lessonId <= 0) {
+            $_SESSION['courses_error'] = 'Aula ou curso inválido para comentar.';
+            header('Location: /cursos');
+            exit;
+        }
+
+        if ($body === '') {
+            $_SESSION['courses_error'] = 'Escreva um comentário antes de enviar.';
+            $course = Course::findById($courseId);
+            $target = $course ? self::buildCourseUrl($course) : '/cursos';
+            header('Location: ' . $target);
+            exit;
+        }
+
+        if (strlen($body) > 2000) {
+            $_SESSION['courses_error'] = 'O comentário pode ter no máximo 2000 caracteres.';
+            $course = Course::findById($courseId);
+            $target = $course ? self::buildCourseUrl($course) : '/cursos';
+            header('Location: ' . $target);
+            exit;
+        }
+
+        $course = Course::findById($courseId);
+        if (!$course || empty($course['is_active'])) {
+            $_SESSION['courses_error'] = 'Curso não encontrado.';
+            header('Location: /cursos');
+            exit;
+        }
+
+        $lesson = CourseLesson::findById($lessonId);
+        if (!$lesson || (int)($lesson['course_id'] ?? 0) !== $courseId || empty($lesson['is_published'])) {
+            $_SESSION['courses_error'] = 'Aula não encontrada para este curso.';
+            header('Location: ' . self::buildCourseUrl($course));
+            exit;
+        }
+
+        $isAdmin = !empty($_SESSION['is_admin']);
+        $isOwner = !empty($course['owner_user_id']) && (int)$course['owner_user_id'] === (int)$user['id'];
+        $isEnrolled = CourseEnrollment::isEnrolled($courseId, (int)$user['id']);
+
+        if (!$isAdmin && !$isOwner && !$isEnrolled) {
+            $_SESSION['courses_error'] = 'Você precisa estar inscrito neste curso para comentar.';
+            header('Location: ' . self::buildCourseUrl($course));
+            exit;
+        }
+
+        $parentCommentId = null;
+        if ($parentId > 0) {
+            $parent = CourseLessonComment::findById($parentId);
+            if ($parent && (int)($parent['lesson_id'] ?? 0) === $lessonId) {
+                $parentCommentId = $parentId;
+            }
+        }
+
+        CourseLessonComment::create([
+            'course_id' => $courseId,
+            'lesson_id' => $lessonId,
+            'user_id' => (int)$user['id'],
+            'parent_id' => $parentCommentId,
+            'body' => $body,
+        ]);
+
+        $_SESSION['courses_success'] = 'Comentário enviado com sucesso.';
+        $target = self::buildCourseUrl($course) . '#lesson-' . $lessonId;
+        header('Location: ' . $target);
         exit;
     }
 

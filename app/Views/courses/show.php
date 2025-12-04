@@ -4,6 +4,7 @@
 /** @var array $course */
 /** @var array $lessons */
 /** @var array $lives */
+/** @var array $commentsByLesson */
 /** @var bool $isEnrolled */
 /** @var bool $planAllowsCourses */
 /** @var string|null $success */
@@ -129,8 +130,13 @@ $courseUrl = CourseController::buildCourseUrl($course);
                             $ldesc = trim((string)($lesson['description'] ?? ''));
                             $video = trim((string)($lesson['video_url'] ?? ''));
                             $number = $idx + 1;
+                            $lessonId = (int)($lesson['id'] ?? 0);
+                            $lessonComments = $commentsByLesson[$lessonId] ?? [];
+                            $isAdmin = !empty($_SESSION['is_admin']);
+                            $isOwner = $user && !empty($course['owner_user_id']) && (int)$course['owner_user_id'] === (int)$user['id'];
+                            $canCommentLesson = $user && ($isEnrolled || $isOwner || $isAdmin);
                         ?>
-                        <div style="padding:8px 10px; border-bottom:1px solid #272727;">
+                        <div id="lesson-<?= $lessonId ?>" style="padding:8px 10px; border-bottom:1px solid #272727;">
                             <div style="display:flex; justify-content:space-between; gap:8px; align-items:center;">
                                 <div style="font-size:13px; font-weight:600;">
                                     Aula <?= $number ?>: <?= htmlspecialchars($ltitle) ?>
@@ -144,6 +150,66 @@ $courseUrl = CourseController::buildCourseUrl($course);
                                     <?= htmlspecialchars($ldesc) ?>
                                 </div>
                             <?php endif; ?>
+
+                            <div style="margin-top:6px; padding-top:6px; border-top:1px dashed #272727;">
+                                <div style="font-size:12px; color:#b0b0b0; margin-bottom:4px;">Comentários da aula</div>
+
+                                <?php if (empty($lessonComments)): ?>
+                                    <div style="font-size:12px; color:#555;">Ainda não há comentários nesta aula.</div>
+                                <?php else: ?>
+                                    <div style="display:flex; flex-direction:column; gap:6px; margin-bottom:6px; max-height:220px; overflow:auto;">
+                                        <?php foreach ($lessonComments as $comment): ?>
+                                            <?php
+                                                $author = trim((string)($comment['user_name'] ?? ''));
+                                                $createdAt = $comment['created_at'] ?? '';
+                                            ?>
+                                            <div style="border-radius:8px; border:1px solid #272727; background:#050509; padding:6px 8px; font-size:12px;">
+                                                <div style="display:flex; justify-content:space-between; gap:8px; margin-bottom:2px;">
+                                                    <span style="font-weight:600;">
+                                                        <?= htmlspecialchars($author) ?>
+                                                    </span>
+                                                    <?php if ($createdAt): ?>
+                                                        <span style="font-size:10px; color:#777;">
+                                                            <?= htmlspecialchars($createdAt) ?>
+                                                        </span>
+                                                    <?php endif; ?>
+                                                </div>
+                                                <div style="color:#d0d0d0; white-space:pre-wrap;">
+                                                    <?= nl2br(htmlspecialchars($comment['body'] ?? '')) ?>
+                                                </div>
+                                            </div>
+                                        <?php endforeach; ?>
+                                    </div>
+                                <?php endif; ?>
+
+                                <?php if ($user): ?>
+                                    <?php if ($canCommentLesson): ?>
+                                        <form action="/cursos/aulas/comentar" method="post" style="margin-top:4px;">
+                                            <input type="hidden" name="course_id" value="<?= (int)($course['id'] ?? 0) ?>">
+                                            <input type="hidden" name="lesson_id" value="<?= $lessonId ?>">
+                                            <textarea name="body" rows="2" maxlength="2000" placeholder="Escreva um comentário sobre esta aula..." style="
+                                                width:100%; padding:6px 8px; border-radius:8px; border:1px solid #272727;
+                                                background:#050509; color:#f5f5f5; font-size:12px; resize:vertical;"></textarea>
+                                            <div style="margin-top:4px; display:flex; justify-content:flex-end;">
+                                                <button type="submit" style="
+                                                    border:none; border-radius:999px; padding:5px 12px;
+                                                    background:linear-gradient(135deg,#e53935,#ff6f60); color:#050509;
+                                                    font-weight:600; font-size:11px; cursor:pointer;">
+                                                    Enviar comentário
+                                                </button>
+                                            </div>
+                                        </form>
+                                    <?php else: ?>
+                                        <div style="margin-top:4px; font-size:11px; color:#777;">
+                                            Faça login e inscreva-se no curso para comentar.
+                                        </div>
+                                    <?php endif; ?>
+                                <?php else: ?>
+                                    <div style="margin-top:4px; font-size:11px; color:#777;">
+                                        <a href="/login" style="color:#ff6f60; text-decoration:none;">Entre na sua conta para comentar esta aula.</a>
+                                    </div>
+                                <?php endif; ?>
+                            </div>
                         </div>
                     <?php endforeach; ?>
                 </div>

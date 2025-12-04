@@ -389,6 +389,13 @@ $pageTitle = $pageTitle ?? 'Agente IA - Tuquinha';
                 </a>
 
                 <?php if (!empty($_SESSION['user_id'])): ?>
+                    <a href="/comunidade" class="sidebar-button">
+                        <span class="icon">🌐</span>
+                        <span>Comunidade</span>
+                    </a>
+                <?php endif; ?>
+
+                <?php if (!empty($_SESSION['user_id'])): ?>
                     <div class="sidebar-section-title" style="margin-top: 10px;">Conta</div>
                     <a href="/conta" class="sidebar-button">
                         <span class="icon">👤</span>
@@ -437,6 +444,10 @@ $pageTitle = $pageTitle ?? 'Agente IA - Tuquinha';
                     <a href="/admin/usuarios" class="sidebar-button" style="margin-top: 6px;">
                         <span class="icon">👥</span>
                         <span>Usuários</span>
+                    </a>
+                    <a href="/admin/comunidade/bloqueios" class="sidebar-button" style="margin-top: 6px;">
+                        <span class="icon">🚫</span>
+                        <span>Bloqueios da comunidade</span>
                     </a>
                     <a href="/admin/assinaturas" class="sidebar-button" style="margin-top: 6px;">
                         <span class="icon">📑</span>
