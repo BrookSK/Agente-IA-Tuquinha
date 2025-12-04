@@ -24,25 +24,37 @@ $currentDefaultPersonaId = isset($user['default_persona_id']) ? (int)$user['defa
         <form action="/conta/personalidade" method="post">
             <input type="hidden" name="default_persona_id" id="default-persona-id" value="<?= $currentDefaultPersonaId ?>">
             <div id="persona-default-list" style="
-                margin-top:10px;
+                margin-top:12px;
                 display:flex;
-                gap:10px;
+                gap:18px;
                 overflow-x:auto;
-                padding:4px 2px 8px 2px;
+                padding:8px 2px 12px 2px;
+                scroll-snap-type:x mandatory;
             ">
                 <button type="button" class="persona-card-btn" data-persona-id="0" style="
-                    flex:0 0 220px;
+                    flex:0 0 280px;
+                    max-width:300px;
                     background:#050509;
-                    border-radius:16px;
+                    border-radius:20px;
                     border:1px solid <?= $currentDefaultPersonaId === 0 ? '#ff6f60' : '#272727' ?>;
-                    padding:10px 12px;
+                    overflow:hidden;
                     color:#f5f5f5;
                     font-size:12px;
                     text-align:left;
                     cursor:pointer;
+                    box-shadow:0 18px 35px rgba(0,0,0,0.55);
+                    transition:transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+                    scroll-snap-align:center;
                 ">
-                    <div style="font-size:14px; font-weight:600; margin-bottom:2px;">Padrão do Tuquinha</div>
-                    <div style="font-size:11px; color:#b0b0b0;">Deixa o sistema escolher a melhor personalidade global para você.</div>
+                    <div style="width:100%; height:140px; background:radial-gradient(circle at top left,#e53935 0,#050509 60%); display:flex; align-items:center; justify-content:center; font-size:26px;">
+                        ✨
+                    </div>
+                    <div style="padding:10px 12px 12px 12px;">
+                        <div style="font-size:16px; font-weight:650; margin-bottom:4px;">Padrão do Tuquinha</div>
+                        <div style="font-size:12px; color:#b0b0b0; line-height:1.4;">
+                            Deixa o sistema escolher a melhor personalidade global para você.
+                        </div>
+                    </div>
                 </button>
                 <?php foreach ($personalities as $persona): ?>
                     <?php
@@ -55,31 +67,37 @@ $currentDefaultPersonaId = isset($user['default_persona_id']) ? (int)$user['defa
                         }
                     ?>
                     <button type="button" class="persona-card-btn" data-persona-id="<?= $pid ?>" style="
-                        flex:0 0 240px;
+                        flex:0 0 280px;
+                        max-width:300px;
                         background:#050509;
-                        border-radius:16px;
+                        border-radius:20px;
                         border:1px solid <?= $currentDefaultPersonaId === $pid ? '#ff6f60' : '#272727' ?>;
-                        padding:10px 10px 11px 10px;
+                        overflow:hidden;
                         color:#f5f5f5;
                         font-size:12px;
                         text-align:left;
                         cursor:pointer;
-                        display:flex;
-                        gap:10px;
-                        align-items:center;
+                        box-shadow:0 18px 35px rgba(0,0,0,0.55);
+                        transition:transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+                        scroll-snap-align:center;
                     ">
-                        <div style="width:40px; height:40px; border-radius:50%; overflow:hidden; flex-shrink:0; background:#111118; border:1px solid #272727;">
+                        <div style="width:100%; height:200px; overflow:hidden; background:#111118;">
                             <img src="<?= htmlspecialchars($imagePath) ?>" alt="<?= htmlspecialchars($pname) ?>" style="width:100%; height:100%; object-fit:cover; display:block;">
                         </div>
-                        <div style="flex:1; min-width:0;">
-                            <div style="font-size:14px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
-                                <?= htmlspecialchars($pname) ?>
+                        <div style="padding:10px 12px 12px 12px;">
+                            <div style="display:flex; align-items:center; justify-content:space-between; gap:6px; margin-bottom:4px;">
+                                <div style="font-size:16px; font-weight:650; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                                    <?= htmlspecialchars($pname) ?>
+                                </div>
                             </div>
                             <?php if ($parea !== ''): ?>
-                                <div style="font-size:11px; color:#b0b0b0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                                <div style="font-size:12px; color:#ffcc80; margin-bottom:6px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
                                     <?= htmlspecialchars($parea) ?>
                                 </div>
                             <?php endif; ?>
+                            <div style="font-size:12px; color:#b0b0b0; line-height:1.4;">
+                                Clique para usar essa personalidade como padrão em novos chats.
+                            </div>
                         </div>
                     </button>
                 <?php endforeach; ?>

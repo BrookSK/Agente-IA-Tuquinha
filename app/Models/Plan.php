@@ -103,6 +103,7 @@ class Plan
             'allow_audio' => (int)($data['allow_audio'] ?? 0),
             'allow_images' => (int)($data['allow_images'] ?? 0),
             'allow_files' => (int)($data['allow_files'] ?? 0),
+            'allow_personalities' => (int)($data['allow_personalities'] ?? 1),
             'is_active' => (int)($data['is_active'] ?? 1),
             'history_retention_days' => isset($data['history_retention_days']) ? (int)$data['history_retention_days'] : null,
             'is_default_for_users' => (int)($data['is_default_for_users'] ?? 0),

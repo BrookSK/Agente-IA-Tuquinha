@@ -244,23 +244,61 @@ $pageTitle = $pageTitle ?? 'Agente IA - Tuquinha';
             background: rgba(255, 255, 255, 0.3);
         }
 
-        /* Scrollbar customizado para o conteúdo principal (inclusive barra inferior) */
-        .main-content::-webkit-scrollbar {
+        /* Scrollbar global (janela) para combinar com o tema escuro */
+        html::-webkit-scrollbar,
+        body::-webkit-scrollbar {
             height: 8px;
             width: 8px;
         }
 
-        .main-content::-webkit-scrollbar-track {
-            background: transparent;
+        html::-webkit-scrollbar-track,
+        body::-webkit-scrollbar-track {
+            background: #050509;
         }
 
-        .main-content::-webkit-scrollbar-thumb {
+        html::-webkit-scrollbar-thumb,
+        body::-webkit-scrollbar-thumb {
             background: rgba(255, 255, 255, 0.18);
             border-radius: 999px;
         }
 
-        .main-content::-webkit-scrollbar-thumb:hover {
+        html::-webkit-scrollbar-thumb:hover,
+        body::-webkit-scrollbar-thumb:hover {
             background: rgba(255, 255, 255, 0.3);
+        }
+
+        /* Scrollbar customizado para o conteúdo principal e carrosséis horizontais */
+        .main-content::-webkit-scrollbar,
+        #persona-carousel::-webkit-scrollbar,
+        #persona-default-list::-webkit-scrollbar {
+            height: 8px;
+            width: 8px;
+        }
+
+        .main-content::-webkit-scrollbar-track,
+        #persona-carousel::-webkit-scrollbar-track,
+        #persona-default-list::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .main-content::-webkit-scrollbar-thumb,
+        #persona-carousel::-webkit-scrollbar-thumb,
+        #persona-default-list::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.18);
+            border-radius: 999px;
+        }
+
+        .main-content::-webkit-scrollbar-thumb:hover,
+        #persona-carousel::-webkit-scrollbar-thumb:hover,
+        #persona-default-list::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        /* Scrollbar em navegadores que suportam scrollbar-color (ex: Firefox) */
+        #persona-carousel,
+        #persona-default-list {
+            scrollbar-width: thin;
+            scrollbar-color: rgba(255, 255, 255, 0.4) transparent;
         }
 
         @media (max-width: 900px) {
