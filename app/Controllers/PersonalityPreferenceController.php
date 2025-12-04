@@ -52,11 +52,17 @@ class PersonalityPreferenceController extends Controller
 
         $personalities = Personality::allActive();
 
+        $success = $_SESSION['personality_pref_success'] ?? null;
+        if ($success !== null) {
+            unset($_SESSION['personality_pref_success']);
+        }
+
         $this->view('account/personalidade', [
             'pageTitle' => 'Personalidade padrão do Tuquinha',
             'user' => $user,
             'plan' => $plan,
             'personalities' => $personalities,
+            'success' => $success,
         ]);
     }
 
@@ -85,6 +91,8 @@ class PersonalityPreferenceController extends Controller
         } else {
             unset($_SESSION['default_persona_id']);
         }
+
+        $_SESSION['personality_pref_success'] = 'Personalidade padrão atualizada com sucesso.';
 
         header('Location: /conta/personalidade');
         exit;

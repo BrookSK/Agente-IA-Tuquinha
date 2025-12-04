@@ -352,9 +352,11 @@ $pageTitle = $pageTitle ?? 'Agente IA - Tuquinha';
                 <?php
                     $hasUser = !empty($_SESSION['user_id']);
                     $defaultPersonaId = $_SESSION['default_persona_id'] ?? null;
-                    $newChatHref = '/personalidades';
-                    if ($hasUser && !empty($defaultPersonaId)) {
-                        $newChatHref = '/chat?new=1';
+                    // Convidados vão direto para um chat novo padrão; seleção de personalidade só é usada para usuários logados
+                    $newChatHref = '/chat?new=1';
+                    if ($hasUser && empty($defaultPersonaId)) {
+                        // Usuário logado sem personalidade padrão definida pode passar pela tela de personalidades
+                        $newChatHref = '/personalidades';
                     }
                 ?>
                 <a href="<?= htmlspecialchars($newChatHref) ?>" class="sidebar-button primary" style="margin-bottom: 8px;">

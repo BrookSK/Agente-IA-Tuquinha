@@ -4,6 +4,7 @@
 /** @var array $personalities */
 
 $currentDefaultPersonaId = isset($user['default_persona_id']) ? (int)$user['default_persona_id'] : 0;
+$successMessage = $success ?? null;
 ?>
 <div style="max-width: 900px; margin: 0 auto;">
     <h1 style="font-size: 22px; margin-bottom: 6px; font-weight: 650;">Escolha sua personalidade padrão</h1>
@@ -11,6 +12,12 @@ $currentDefaultPersonaId = isset($user['default_persona_id']) ? (int)$user['defa
         Aqui você escolhe qual personalidade o Tuquinha vai usar por padrão sempre que você abrir um novo chat.
         Você ainda pode trocar a personalidade dentro de cada conversa quando quiser.
     </p>
+
+    <?php if (!empty($successMessage)): ?>
+        <div style="background:#10330f; border:1px solid #3aa857; color:#c8ffd4; padding:8px 10px; border-radius:8px; font-size:13px; margin-bottom:10px;">
+            <?= htmlspecialchars($successMessage) ?>
+        </div>
+    <?php endif; ?>
 
     <div style="font-size:12px; color:#8d8d8d; margin-bottom:10px;">
         Plano atual: <strong><?= htmlspecialchars($plan['name'] ?? '') ?></strong>

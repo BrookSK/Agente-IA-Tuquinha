@@ -10,6 +10,13 @@ class PersonalityController extends Controller
 {
     public function index(): void
     {
+        // Usuários deslogados não podem selecionar personalidade: vão direto para o chat padrão
+        $userId = !empty($_SESSION['user_id']) ? (int)$_SESSION['user_id'] : 0;
+        if ($userId <= 0 && empty($_SESSION['is_admin'])) {
+            header('Location: /chat?new=1');
+            exit;
+        }
+
         $currentPlan = null;
         if (!empty($_SESSION['is_admin'])) {
             $currentPlan = Plan::findTopActive();
