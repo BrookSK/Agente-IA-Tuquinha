@@ -2,9 +2,11 @@
 /** @var array|null $course */
 /** @var float|null $partnerCommissionPercent */
 /** @var float|null $partnerDefaultPercent */
+/** @var string $partnerEmail */
 $isEdit = !empty($course);
 $partnerCommissionPercent = $partnerCommissionPercent ?? null;
 $partnerDefaultPercent = $partnerDefaultPercent ?? null;
+$partnerEmail = $partnerEmail ?? '';
 ?>
 <div style="max-width: 720px; margin: 0 auto;">
     <h1 style="font-size: 22px; margin-bottom: 10px; font-weight: 650;">
@@ -65,12 +67,12 @@ $partnerDefaultPercent = $partnerDefaultPercent ?? null;
         </div>
 
         <div style="display:flex; gap:14px; flex-wrap:wrap;">
-            <div style="flex:1 1 200px;">
-                <label style="font-size:13px; color:#ddd; display:block; margin-bottom:4px;">ID do parceiro (opcional)</label>
-                <input type="number" name="owner_user_id" value="<?= isset($course['owner_user_id']) ? (int)$course['owner_user_id'] : '' ?>" style="
-                    width:140px; padding:8px 10px; border-radius:8px; border:1px solid #272727;
+            <div style="flex:1 1 260px;">
+                <label style="font-size:13px; color:#ddd; display:block; margin-bottom:4px;">E-mail do professor/parceiro (opcional)</label>
+                <input type="email" name="partner_email" value="<?= htmlspecialchars($partnerEmail, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?>" placeholder="ex: prof@exemplo.com" style="
+                    width:100%; max-width:260px; padding:8px 10px; border-radius:8px; border:1px solid #272727;
                     background:#050509; color:#f5f5f5; font-size:13px;">
-                <div style="font-size:11px; color:#777; margin-top:3px;">Use o ID do usuário parceiro (se houver).</div>
+                <div style="font-size:11px; color:#777; margin-top:3px;">Usado para vincular o curso ao painel de parceiro desse usuário.</div>
             </div>
             <div style="flex:1 1 200px;">
                 <label style="font-size:13px; color:#ddd; display:block; margin-bottom:4px;">Preço (R$)</label>

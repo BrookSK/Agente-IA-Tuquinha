@@ -96,6 +96,7 @@ $router->get('/admin/usuarios', 'AdminUserController@index');
 $router->get('/admin/usuarios/ver', 'AdminUserController@show');
 $router->post('/admin/usuarios/toggle', 'AdminUserController@toggleActive');
 $router->post('/admin/usuarios/toggle-admin', 'AdminUserController@toggleAdmin');
+$router->post('/admin/usuarios/toggle-professor', 'AdminUserController@toggleProfessor');
 $router->get('/admin/assinaturas', 'AdminSubscriptionController@index');
 $router->get('/admin/erros', 'AdminErrorReportController@index');
 $router->get('/admin/erros/ver', 'AdminErrorReportController@show');

@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Models\Subscription;
 use App\Models\Plan;
 use App\Models\TokenTopup;
+use App\Models\CoursePartner;
 
 class AdminUserController extends Controller
 {
@@ -62,6 +63,8 @@ class AdminUserController extends Controller
             exit;
         }
 
+        $coursePartner = CoursePartner::findByUserId((int)$user['id']);
+
         $lastSub = Subscription::findLastByEmail($user['email']);
         $plan = null;
         if ($lastSub && !empty($lastSub['plan_id'])) {
@@ -102,6 +105,7 @@ class AdminUserController extends Controller
             'subscription' => $lastSub,
             'plan' => $plan,
             'timeline' => $timeline,
+            'coursePartner' => $coursePartner,
         ]);
     }
 
@@ -129,6 +133,31 @@ class AdminUserController extends Controller
 
         if ($id > 0) {
             User::setAdmin($id, $value === 1);
+        }
+
+        header('Location: /admin/usuarios/ver?id=' . $id);
+        exit;
+    }
+
+    public function toggleProfessor(): void
+    {
+        $this->ensureAdmin();
+
+        $id = isset($_POST['id']) ? (int)$_POST['id'] : 0;
+        $value = isset($_POST['value']) ? (int)$_POST['value'] : 0;
+
+        if ($id > 0) {
+            if ($value === 1) {
+                $existing = CoursePartner::findByUserId($id);
+                if (!$existing) {
+                    CoursePartner::create([
+                        'user_id' => $id,
+                        'default_commission_percent' => 0.0,
+                    ]);
+                }
+            } else {
+                CoursePartner::deleteByUserId($id);
+            }
         }
 
         header('Location: /admin/usuarios/ver?id=' . $id);

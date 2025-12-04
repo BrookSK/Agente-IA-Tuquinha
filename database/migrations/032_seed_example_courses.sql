@@ -1,0 +1,38 @@
+INSERT INTO courses (owner_user_id, title, slug, short_description, description, image_path, is_paid, price_cents, allow_plan_access_only, allow_public_purchase, is_active)
+VALUES
+  (NULL,
+   'Branding na prática para designers',
+   'branding-na-pratica',
+   'Um passo a passo para tirar projetos de branding do papel com segurança.',
+   'Neste curso, você acompanha o fluxo completo de um projeto de branding, da análise de contexto até a entrega final. A ideia é mostrar o caminho das pedras para designers que querem estruturar melhor seus processos sem engessar a criatividade.',
+   NULL,
+   1,
+   9900,
+   1,
+   1,
+   1
+  ),
+  (NULL,
+   'Portfólio vivo de marca',
+   'portfolio-vivo-de-marca',
+   'Construa um portfólio que traga os clientes certos para você.',
+   'Curso focado em ajudar designers de marca a selecionar, organizar e apresentar projetos de um jeito que comunique valor de verdade. Do texto às imagens, você aprende como transformar cases em histórias que vendem seu trabalho.',
+   NULL,
+   0,
+   NULL,
+   1,
+   1,
+   1
+  ),
+  (NULL,
+   'Social media para marcas em construção',
+   'social-media-para-marcas',
+   'Conteúdo de redes sociais pensado a partir da estratégia de marca.',
+   'Aqui o foco é conectar diretamente estratégia de marca e produção de conteúdo diário. Ideal para designers que também cuidam das redes dos clientes ou que querem orientar social medias parceiros.',
+   NULL,
+   1,
+   5900,
+   1,
+   1,
+   1
+  );

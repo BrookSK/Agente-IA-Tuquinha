@@ -39,4 +39,11 @@ class CoursePartner
             'default_commission_percent' => (float)($data['default_commission_percent'] ?? 0.0),
         ]);
     }
+
+    public static function deleteByUserId(int $userId): void
+    {
+        $pdo = Database::getConnection();
+        $stmt = $pdo->prepare('DELETE FROM course_partners WHERE user_id = :user_id');
+        $stmt->execute(['user_id' => $userId]);
+    }
 }

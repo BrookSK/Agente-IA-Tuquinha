@@ -45,6 +45,7 @@ class AdminCourseController extends Controller
 
         $partnerCommissionPercent = null;
         $partnerDefaultPercent = null;
+        $partnerEmail = '';
 
         if ($course && !empty($course['owner_user_id'])) {
             $partner = CoursePartner::findByUserId((int)$course['owner_user_id']);
@@ -61,6 +62,11 @@ class AdminCourseController extends Controller
                     }
                 }
             }
+
+            $owner = User::findById((int)$course['owner_user_id']);
+            if ($owner && !empty($owner['email'])) {
+                $partnerEmail = (string)$owner['email'];
+            }
         }
 
         $this->view('admin/cursos/form', [
@@ -68,6 +74,7 @@ class AdminCourseController extends Controller
             'course' => $course,
             'partnerCommissionPercent' => $partnerCommissionPercent,
             'partnerDefaultPercent' => $partnerDefaultPercent,
+            'partnerEmail' => $partnerEmail,
         ]);
     }
 
@@ -81,13 +88,26 @@ class AdminCourseController extends Controller
         $shortDescription = trim($_POST['short_description'] ?? '');
         $description = trim($_POST['description'] ?? '');
         $imagePath = trim($_POST['image_path'] ?? '');
-        $ownerUserId = isset($_POST['owner_user_id']) ? (int)$_POST['owner_user_id'] : null;
+        $partnerEmail = trim($_POST['partner_email'] ?? '');
         $isPaid = !empty($_POST['is_paid']) ? 1 : 0;
         $priceRaw = trim($_POST['price'] ?? '0');
         $partnerCommissionRaw = trim($_POST['partner_commission_percent'] ?? '');
         $allowPlanAccessOnly = !empty($_POST['allow_plan_access_only']) ? 1 : 0;
         $allowPublicPurchase = !empty($_POST['allow_public_purchase']) ? 1 : 0;
         $isActive = !empty($_POST['is_active']) ? 1 : 0;
+
+        $ownerUserId = null;
+
+        if ($partnerEmail !== '') {
+            $ownerUser = User::findByEmail($partnerEmail);
+            if (!$ownerUser) {
+                $_SESSION['admin_course_error'] = 'Nenhum usuário encontrado com o e-mail informado para professor/parceiro.';
+                $target = $id > 0 ? '/admin/cursos/editar?id=' . $id : '/admin/cursos/novo';
+                header('Location: ' . $target);
+                exit;
+            }
+            $ownerUserId = (int)$ownerUser['id'];
+        }
 
         $priceCents = 0;
         if ($priceRaw !== '') {

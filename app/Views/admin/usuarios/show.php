@@ -2,17 +2,21 @@
 <?php /** @var array|null $subscription */ ?>
 <?php /** @var array|null $plan */ ?>
 <?php /** @var array $timeline */ ?>
+<?php /** @var array|null $coursePartner */ ?>
 
 <div style="max-width: 800px; margin: 0 auto;">
     <h1 style="font-size: 22px; margin-bottom: 16px;">Detalhes do usuário</h1>
 
     <a href="/admin/usuarios" style="font-size:12px; color:#ff6f60; text-decoration:none;">⟵ Voltar para lista</a>
 
+    <?php $isProfessor = !empty($coursePartner); ?>
+
     <div style="margin-top:16px; padding:14px 16px; border-radius:12px; background:#111118; border:1px solid #272727;">
         <h2 style="font-size:16px; margin-bottom:10px;">Dados básicos</h2>
         <p style="font-size:13px; margin-bottom:4px;"><strong>Nome:</strong> <?= htmlspecialchars($user['name']) ?></p>
         <p style="font-size:13px; margin-bottom:4px;"><strong>E-mail:</strong> <?= htmlspecialchars($user['email']) ?></p>
         <p style="font-size:13px; margin-bottom:4px;"><strong>Admin:</strong> <?= !empty($user['is_admin']) ? 'Sim' : 'Não' ?></p>
+        <p style="font-size:13px; margin-bottom:8px;"><strong>Professor/parceiro de cursos:</strong> <?= $isProfessor ? 'Sim' : 'Não' ?></p>
         <p style="font-size:13px; margin-bottom:8px;">
             <strong>Status:</strong>
             <?php $active = isset($user['is_active']) ? (int)$user['is_active'] === 1 : true; ?>
@@ -34,6 +38,14 @@
             <input type="hidden" name="value" value="<?= !empty($user['is_admin']) ? 0 : 1 ?>">
             <button type="submit" style="border:none; border-radius:999px; padding:6px 12px; font-size:13px; font-weight:600; cursor:pointer; background:#111; color:#ffcc80; border:1px solid #ffb74d;">
                 <?= !empty($user['is_admin']) ? 'Remover admin' : 'Tornar admin' ?>
+            </button>
+        </form>
+
+        <form method="post" action="/admin/usuarios/toggle-professor" style="margin-top:8px;">
+            <input type="hidden" name="id" value="<?= (int)$user['id'] ?>">
+            <input type="hidden" name="value" value="<?= $isProfessor ? 0 : 1 ?>">
+            <button type="submit" style="border:none; border-radius:999px; padding:6px 12px; font-size:13px; font-weight:600; cursor:pointer; background:#050509; color:#f5f5f5; border:1px solid #272727;">
+                <?= $isProfessor ? 'Remover tag de professor/parceiro' : 'Marcar como professor/parceiro' ?>
             </button>
         </form>
     </div>

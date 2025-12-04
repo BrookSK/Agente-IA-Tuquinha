@@ -9,7 +9,7 @@
     <h1 style="font-size: 22px; margin-bottom: 10px; font-weight: 650;">Cursos do Tuquinha</h1>
     <p style="color:#b0b0b0; font-size:13px; margin-bottom:14px;">
         Aprofunde sua prática de branding com cursos focados em designers de marca. Alguns cursos são liberados pelo seu plano,
-        outros podem ser adquiridos de forma avulsa, conforme configuração do admin.
+        outros podem ser adquiridos de forma avulsa.
     </p>
 
     <?php if (!empty($success)): ?>
