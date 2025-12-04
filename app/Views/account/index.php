@@ -10,6 +10,16 @@
 /** @var int|null $tokenBalance */
 
 $isFreePlan = empty($plan) || (($plan['slug'] ?? 'free') === 'free');
+
+// Só considera plano pago ativo quando houver assinatura vinculada, com status diferente de cancelado e plano != free
+$hasPaidActivePlan = false;
+if (!empty($plan) && !empty($subscription)) {
+    $slug = (string)($plan['slug'] ?? '');
+    $status = strtolower((string)($subscription['status'] ?? ''));
+    if ($slug !== 'free' && in_array($status, ['active', 'pending'], true)) {
+        $hasPaidActivePlan = true;
+    }
+}
 $freeGlobalLimit = (int)\App\Models\Setting::get('free_memory_global_chars', '500');
 if ($freeGlobalLimit <= 0) { $freeGlobalLimit = 500; }
 $freeChatLimit = (int)\App\Models\Setting::get('free_memory_chat_chars', '400');
@@ -124,9 +134,11 @@ if ($freeChatLimit <= 0) { $freeChatLimit = 400; }
             <div style="font-size:11px; color:#8d8d8d;">
                 A cada resposta do Tuquinha uma parte desses tokens é consumida.
             </div>
-            <div style="margin-top:8px;">
-                <a href="/tokens/comprar" style="font-size:12px; color:#ff6f60; text-decoration:none;">Comprar mais tokens extras</a>
-            </div>
+            <?php if ($hasPaidActivePlan): ?>
+                <div style="margin-top:8px;">
+                    <a href="/tokens/comprar" style="font-size:12px; color:#ff6f60; text-decoration:none;">Comprar mais tokens extras</a>
+                </div>
+            <?php endif; ?>
         </div>
 
         <div style="background:#111118; border-radius:16px; padding:14px; border:1px solid #272727;">

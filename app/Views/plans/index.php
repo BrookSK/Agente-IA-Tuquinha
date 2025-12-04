@@ -2,6 +2,7 @@
 /** @var array $plans */
 /** @var array|null $currentPlan */
 /** @var int $retentionDays */
+/** @var bool $hasPaidActiveSubscription */
 ?>
 <div style="max-width: 880px; margin: 0 auto;">
     <h1 style="font-size: 26px; margin-bottom: 10px; font-weight: 650;">Escolha um plano para turbinar seu acesso ao Tuquinha</h1>
@@ -12,7 +13,9 @@
         $hasCurrentPlan = !empty($currentPlan) && is_array($currentPlan);
         $currentSlug = $hasCurrentPlan ? (string)($currentPlan['slug'] ?? '') : '';
         $monthlyLimit = $hasCurrentPlan ? (int)($currentPlan['monthly_token_limit'] ?? 0) : 0;
-        $isPaidPlanWithLimit = $hasCurrentPlan && $currentSlug !== 'free' && $monthlyLimit > 0;
+
+        // Banner de tokens extras só aparece se houver assinatura paga ativa com limite mensal
+        $isPaidPlanWithLimit = !empty($hasPaidActiveSubscription) && $monthlyLimit > 0;
 
         // Separa plano(s) free e planos pagos por ciclo
         $freePlans = [];

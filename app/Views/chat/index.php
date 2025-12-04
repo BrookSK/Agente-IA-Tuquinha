@@ -54,6 +54,15 @@ $canUseConversationSettings = !empty($canUseConversationSettings);
 $currentPersonaData = $currentPersona ?? null;
 $personaOptions = $personalities ?? [];
 $planAllowsPersonalitiesFlag = !empty($planAllowsPersonalities);
+
+// Determina se o usuário está em um plano pago (não free) para exibir CTA de compra de tokens
+$canShowBuyTokensCta = false;
+if (!empty($currentPlan) && is_array($currentPlan)) {
+    $slug = (string)($currentPlan['slug'] ?? '');
+    if ($slug !== 'free') {
+        $canShowBuyTokensCta = true;
+    }
+}
 ?>
 <div style="max-width: 900px; width: 100%; margin: 0 auto; padding: 0 8px; display: flex; flex-direction: column; min-height: calc(100vh - 56px - 80px); box-sizing: border-box;">
     <?php if (!empty($conversationId) && $planAllowsPersonalitiesFlag && !empty($personaOptions)): ?>
@@ -162,12 +171,14 @@ $planAllowsPersonalitiesFlag = !empty($planAllowsPersonalities);
     <?php if (!empty($chatError)): ?>
         <div style="margin-bottom:8px; background:#311; border:1px solid #a33; color:#ffbaba; padding:8px 10px; border-radius:8px; font-size:13px; display:flex; justify-content:space-between; gap:8px; align-items:center;">
             <span><?= htmlspecialchars($chatError) ?></span>
-            <a href="/tokens/comprar" style="
-                border:none; border-radius:999px; padding:6px 12px;
-                background:linear-gradient(135deg,#e53935,#ff6f60); color:#050509;
-                font-size:12px; font-weight:600; text-decoration:none; white-space:nowrap;">
-                Comprar mais tokens
-            </a>
+            <?php if ($canShowBuyTokensCta): ?>
+                <a href="/tokens/comprar" style="
+                    border:none; border-radius:999px; padding:6px 12px;
+                    background:linear-gradient(135deg,#e53935,#ff6f60); color:#050509;
+                    font-size:12px; font-weight:600; text-decoration:none; white-space:nowrap;">
+                    Comprar mais tokens
+                </a>
+            <?php endif; ?>
         </div>
     <?php endif; ?>
 

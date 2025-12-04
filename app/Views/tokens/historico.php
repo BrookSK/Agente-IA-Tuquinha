@@ -1,6 +1,22 @@
 <?php
 /** @var array $user */
 /** @var array $topups */
+
+// Determina se o usuário possui um plano pago ativo para exibir CTAs de compra
+$hasPaidActivePlan = false;
+if (!empty($user['email'])) {
+    $subscription = \App\Models\Subscription::findLastByEmail($user['email']);
+    if ($subscription && !empty($subscription['plan_id'])) {
+        $plan = \App\Models\Plan::findById((int)$subscription['plan_id']);
+        if ($plan) {
+            $slug = (string)($plan['slug'] ?? '');
+            $status = strtolower((string)($subscription['status'] ?? ''));
+            if ($slug !== 'free' && in_array($status, ['active', 'pending'], true)) {
+                $hasPaidActivePlan = true;
+            }
+        }
+    }
+}
 ?>
 <div style="max-width:760px; margin:0 auto; padding:16px 8px;">
     <h1 style="font-size:22px; margin:18px 0 8px; font-weight:650;">Histórico de tokens extras</h1>
@@ -60,6 +76,8 @@
 
     <div style="margin-top:12px;">
         <a href="/conta" style="font-size:13px; color:#b0b0b0; text-decoration:none; margin-right:10px;">Voltar para minha conta</a>
-        <a href="/tokens/comprar" style="font-size:13px; color:#ff6f60; text-decoration:none;">Comprar mais tokens extras</a>
+        <?php if ($hasPaidActivePlan): ?>
+            <a href="/tokens/comprar" style="font-size:13px; color:#ff6f60; text-decoration:none;">Comprar mais tokens extras</a>
+        <?php endif; ?>
     </div>
 </div>

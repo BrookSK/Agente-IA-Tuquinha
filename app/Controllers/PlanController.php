@@ -14,6 +14,7 @@ class PlanController extends Controller
     {
         $plans = Plan::allActive();
         $currentPlan = null;
+        $hasPaidActiveSubscription = false;
 
         // Se o usuário estiver logado, tenta descobrir o plano pela assinatura (igual à Minha Conta)
         $userId = !empty($_SESSION['user_id']) ? (int)$_SESSION['user_id'] : 0;
@@ -25,6 +26,13 @@ class PlanController extends Controller
                     $planFromSub = Plan::findById((int)$subscription['plan_id']);
                     if ($planFromSub) {
                         $currentPlan = $planFromSub;
+
+                        // Considera como assinatura paga ativa se o plano não for free e a assinatura não estiver cancelada
+                        $status = strtolower((string)($subscription['status'] ?? ''));
+                        $slug = (string)($planFromSub['slug'] ?? '');
+                        if ($slug !== 'free' && in_array($status, ['active', 'pending'], true)) {
+                            $hasPaidActiveSubscription = true;
+                        }
 
                         // Mantém a session em sincronia para outras telas que usam plan_slug
                         if (!empty($currentPlan['slug'])) {
@@ -59,6 +67,7 @@ class PlanController extends Controller
             'plans' => $plans,
             'currentPlan' => $currentPlan,
             'retentionDays' => $retentionDays,
+            'hasPaidActiveSubscription' => $hasPaidActiveSubscription,
         ]);
     }
 }
