@@ -50,11 +50,13 @@ $convSettings = $conversationSettings ?? null;
 $canUseConversationSettings = !empty($canUseConversationSettings);
 /** @var array|null $currentPersona */
 /** @var array|null $personalities */
+/** @var bool $planAllowsPersonalities */
 $currentPersonaData = $currentPersona ?? null;
 $personaOptions = $personalities ?? [];
+$planAllowsPersonalitiesFlag = !empty($planAllowsPersonalities);
 ?>
 <div style="max-width: 900px; width: 100%; margin: 0 auto; padding: 0 8px; display: flex; flex-direction: column; min-height: calc(100vh - 56px - 80px); box-sizing: border-box;">
-    <?php if (!empty($conversationId) && !empty($personaOptions)): ?>
+    <?php if (!empty($conversationId) && $planAllowsPersonalitiesFlag && !empty($personaOptions)): ?>
         <?php $currentPersonaId = isset($currentPersonaData['id']) ? (int)$currentPersonaData['id'] : 0; ?>
         <div style="margin-top:10px; margin-bottom:6px; display:flex; justify-content:space-between; gap:8px; align-items:center; flex-wrap:wrap;">
             <div style="font-size:12px; color:#b0b0b0;">

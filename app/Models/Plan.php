@@ -49,8 +49,8 @@ class Plan
     public static function create(array $data): int
     {
         $pdo = Database::getConnection();
-        $stmt = $pdo->prepare('INSERT INTO plans (name, slug, price_cents, description, benefits, monthly_token_limit, allowed_models, default_model, allow_audio, allow_images, allow_files, is_active, history_retention_days)
-            VALUES (:name, :slug, :price_cents, :description, :benefits, :monthly_token_limit, :allowed_models, :default_model, :allow_audio, :allow_images, :allow_files, :is_active, :history_retention_days)');
+        $stmt = $pdo->prepare('INSERT INTO plans (name, slug, price_cents, description, benefits, monthly_token_limit, allowed_models, default_model, allow_audio, allow_images, allow_files, allow_personalities, is_active, history_retention_days)
+            VALUES (:name, :slug, :price_cents, :description, :benefits, :monthly_token_limit, :allowed_models, :default_model, :allow_audio, :allow_images, :allow_files, :allow_personalities, :is_active, :history_retention_days)');
         $stmt->execute([
             'name' => $data['name'] ?? '',
             'slug' => $data['slug'] ?? '',
@@ -63,6 +63,7 @@ class Plan
             'allow_audio' => (int)($data['allow_audio'] ?? 0),
             'allow_images' => (int)($data['allow_images'] ?? 0),
             'allow_files' => (int)($data['allow_files'] ?? 0),
+            'allow_personalities' => (int)($data['allow_personalities'] ?? 1),
             'is_active' => (int)($data['is_active'] ?? 1),
             'history_retention_days' => isset($data['history_retention_days']) ? (int)$data['history_retention_days'] : null,
         ]);
@@ -84,6 +85,7 @@ class Plan
             allow_audio = :allow_audio,
             allow_images = :allow_images,
             allow_files = :allow_files,
+            allow_personalities = :allow_personalities,
             is_active = :is_active,
             history_retention_days = :history_retention_days,
             is_default_for_users = :is_default_for_users

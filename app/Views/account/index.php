@@ -56,76 +56,10 @@ if ($freeChatLimit <= 0) { $freeChatLimit = 400; }
                     <label style="font-size:13px; color:#ddd; display:block; margin-bottom:4px;">E-mail</label>
                     <input type="email" value="<?= htmlspecialchars($user['email'] ?? '') ?>" disabled style="width:100%; padding:8px 10px; border-radius:8px; border:1px solid #272727; background:#050509; color:#777; font-size:14px;">
                 </div>
-                <?php if (!empty($personalities)): ?>
-                    <?php $currentDefaultPersonaId = isset($user['default_persona_id']) ? (int)$user['default_persona_id'] : 0; ?>
-                    <div style="margin-top:8px;">
-                        <label style="font-size:13px; color:#ddd; display:block; margin:0 0 4px;">Personalidade padrão da conta</label>
-                        <input type="hidden" name="default_persona_id" id="default-persona-id" value="<?= $currentDefaultPersonaId ?>">
-                        <div id="persona-default-list" style="
-                            display:flex;
-                            gap:10px;
-                            overflow-x:auto;
-                            padding:4px 2px 2px 2px;
-                        ">
-                            <button type="button" class="persona-card-btn" data-persona-id="0" style="
-                                flex:0 0 180px;
-                                background:#050509;
-                                border-radius:12px;
-                                border:1px solid <?= $currentDefaultPersonaId === 0 ? '#ff6f60' : '#272727' ?>;
-                                padding:8px 10px;
-                                color:#f5f5f5;
-                                font-size:12px;
-                                text-align:left;
-                                cursor:pointer;
-                            ">
-                                <div style="font-size:13px; font-weight:600; margin-bottom:2px;">Padrão do Tuquinha</div>
-                                <div style="font-size:11px; color:#b0b0b0;">Deixa o sistema escolher a melhor personalidade global para você.</div>
-                            </button>
-                            <?php foreach ($personalities as $persona): ?>
-                                <?php
-                                    $pid = (int)($persona['id'] ?? 0);
-                                    $pname = trim((string)($persona['name'] ?? ''));
-                                    $parea = trim((string)($persona['area'] ?? ''));
-                                    $imagePath = trim((string)($persona['image_path'] ?? ''));
-                                    if ($imagePath === '') {
-                                        $imagePath = '/public/favicon.png';
-                                    }
-                                ?>
-                                <button type="button" class="persona-card-btn" data-persona-id="<?= $pid ?>" style="
-                                    flex:0 0 190px;
-                                    background:#050509;
-                                    border-radius:12px;
-                                    border:1px solid <?= $currentDefaultPersonaId === $pid ? '#ff6f60' : '#272727' ?>;
-                                    padding:8px 8px 9px 8px;
-                                    color:#f5f5f5;
-                                    font-size:12px;
-                                    text-align:left;
-                                    cursor:pointer;
-                                    display:flex;
-                                    gap:8px;
-                                    align-items:center;
-                                ">
-                                    <div style="width:34px; height:34px; border-radius:50%; overflow:hidden; flex-shrink:0; background:#111118; border:1px solid #272727;">
-                                        <img src="<?= htmlspecialchars($imagePath) ?>" alt="<?= htmlspecialchars($pname) ?>" style="width:100%; height:100%; object-fit:cover; display:block;">
-                                    </div>
-                                    <div style="flex:1; min-width:0;">
-                                        <div style="font-size:13px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
-                                            <?= htmlspecialchars($pname) ?>
-                                        </div>
-                                        <?php if ($parea !== ''): ?>
-                                            <div style="font-size:11px; color:#b0b0b0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
-                                                <?= htmlspecialchars($parea) ?>
-                                            </div>
-                                        <?php endif; ?>
-                                    </div>
-                                </button>
-                            <?php endforeach; ?>
-                        </div>
-                        <div style="font-size:11px; color:#8d8d8d; margin-top:4px;">
-                            Clique em uma opção para definir a personalidade que o Tuquinha vai usar por padrão em novos chats.
-                        </div>
-                    </div>
-                <?php endif; ?>
+                <div style="font-size:11px; color:#8d8d8d; margin-top:6px;">
+                    Quer escolher uma personalidade padrão para novos chats? Acesse
+                    <a href="/conta/personalidade" style="color:#ff6f60; text-decoration:none;">configurar personalidade do Tuquinha</a>.
+                </div>
                 <div style="font-size:12px; color:#b0b0b0;">
                     <?php if (!empty($user['email_verified_at'])): ?>
                         <span style="color:#8bc34a; font-weight:500;">E-mail verificado em <?= htmlspecialchars(date('d/m/Y H:i', strtotime($user['email_verified_at']))) ?></span>
@@ -290,26 +224,5 @@ document.addEventListener('DOMContentLoaded', function () {
             ev.preventDefault();
         }
     });
-
-    // Seleção visual da personalidade padrão da conta
-    var personaList = document.getElementById('persona-default-list');
-    var hiddenPersonaInput = document.getElementById('default-persona-id');
-    if (personaList && hiddenPersonaInput) {
-        var buttons = personaList.querySelectorAll('.persona-card-btn');
-        buttons.forEach(function (btn) {
-            btn.addEventListener('click', function () {
-                var id = btn.getAttribute('data-persona-id') || '0';
-                hiddenPersonaInput.value = id;
-
-                buttons.forEach(function (b) {
-                    b.style.borderColor = '#272727';
-                    b.style.boxShadow = '';
-                });
-
-                btn.style.borderColor = '#ff6f60';
-                btn.style.boxShadow = '0 0 0 1px rgba(255,111,96,0.5)';
-            });
-        });
-    }
 });
 </script>

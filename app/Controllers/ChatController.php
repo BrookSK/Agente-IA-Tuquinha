@@ -141,15 +141,20 @@ class ChatController extends Controller
         // Usuários logados podem usar regras/memórias por chat (inclusive plano free)
         $canUseConversationSettings = $userId > 0;
 
+        $planAllowsPersonalities = !empty($currentPlan['allow_personalities']);
+
         if ($conversationSettings === null && $userId > 0) {
             $conversationSettings = ConversationSetting::findForConversation($conversation->id, $userId) ?: null;
         }
 
         $currentPersona = null;
-        if (!empty($conversation->persona_id)) {
-            $currentPersona = Personality::findById((int)$conversation->persona_id) ?: null;
+        $personalities = [];
+        if ($planAllowsPersonalities) {
+            if (!empty($conversation->persona_id)) {
+                $currentPersona = Personality::findById((int)$conversation->persona_id) ?: null;
+            }
+            $personalities = Personality::allActive();
         }
-        $personalities = Personality::allActive();
 
         $this->view('chat/index', [
             'pageTitle' => 'Chat - Tuquinha',
@@ -166,6 +171,7 @@ class ChatController extends Controller
             'canUseConversationSettings' => $canUseConversationSettings,
             'currentPersona' => $currentPersona,
             'personalities' => $personalities,
+            'planAllowsPersonalities' => $planAllowsPersonalities,
         ]);
     }
 

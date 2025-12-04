@@ -75,15 +75,29 @@
                         $prompt = trim((string)($persona['prompt'] ?? ''));
                         $desc = '';
                         if ($prompt !== '') {
+                            // Remove bloco de "Regras principais" do resumo exibido no card
+                            $basePrompt = $prompt;
+                            $marker = 'Regras principais:';
+                            if (function_exists('mb_stripos')) {
+                                $posMarker = mb_stripos($basePrompt, $marker, 0, 'UTF-8');
+                                if ($posMarker !== false) {
+                                    $basePrompt = mb_substr($basePrompt, 0, $posMarker, 'UTF-8');
+                                }
+                            } else {
+                                $posMarker = stripos($basePrompt, $marker);
+                                if ($posMarker !== false) {
+                                    $basePrompt = substr($basePrompt, 0, $posMarker);
+                                }
+                            }
                             if ($hasMb) {
                                 $maxLen = 220;
-                                $desc = mb_substr($prompt, 0, $maxLen, 'UTF-8');
-                                if (mb_strlen($prompt, 'UTF-8') > $maxLen) {
+                                $desc = mb_substr($basePrompt, 0, $maxLen, 'UTF-8');
+                                if (mb_strlen($basePrompt, 'UTF-8') > $maxLen) {
                                     $desc .= '...';
                                 }
                             } else {
-                                $desc = substr($prompt, 0, 220);
-                                if (strlen($prompt) > 220) {
+                                $desc = substr($basePrompt, 0, 220);
+                                if (strlen($basePrompt) > 220) {
                                     $desc .= '...';
                                 }
                             }

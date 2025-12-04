@@ -155,6 +155,10 @@ if ($slugForCycle !== '') {
                 <span>Permitir arquivos</span>
             </label>
             <label style="display:flex; align-items:center; gap:5px;">
+                <input type="checkbox" name="allow_personalities" value="1" <?= !empty($plan['allow_personalities']) ? 'checked' : '' ?>>
+                <span>Permitir personalidades</span>
+            </label>
+            <label style="display:flex; align-items:center; gap:5px;">
                 <input type="checkbox" name="is_active" value="1" <?= !isset($plan['is_active']) || !empty($plan['is_active']) ? 'checked' : '' ?>>
                 <span>Plano ativo</span>
             </label>

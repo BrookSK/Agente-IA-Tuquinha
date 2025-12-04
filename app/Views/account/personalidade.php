@@ -1,0 +1,124 @@
+<?php
+/** @var array $user */
+/** @var array $plan */
+/** @var array $personalities */
+
+$currentDefaultPersonaId = isset($user['default_persona_id']) ? (int)$user['default_persona_id'] : 0;
+?>
+<div style="max-width: 900px; margin: 0 auto;">
+    <h1 style="font-size: 22px; margin-bottom: 6px; font-weight: 650;">Escolha sua personalidade padrão</h1>
+    <p style="color:#b0b0b0; font-size:13px; margin-bottom:10px; max-width:600px;">
+        Aqui você escolhe qual personalidade o Tuquinha vai usar por padrão sempre que você abrir um novo chat.
+        Você ainda pode trocar a personalidade dentro de cada conversa quando quiser.
+    </p>
+
+    <div style="font-size:12px; color:#8d8d8d; margin-bottom:10px;">
+        Plano atual: <strong><?= htmlspecialchars($plan['name'] ?? '') ?></strong>
+    </div>
+
+    <?php if (empty($personalities)): ?>
+        <div style="background:#111118; border-radius:12px; padding:12px 14px; border:1px solid #272727; font-size:14px; color:#b0b0b0;">
+            Ainda não há personalidades ativas cadastradas pelo administrador.
+        </div>
+    <?php else: ?>
+        <form action="/conta/personalidade" method="post">
+            <input type="hidden" name="default_persona_id" id="default-persona-id" value="<?= $currentDefaultPersonaId ?>">
+            <div id="persona-default-list" style="
+                margin-top:10px;
+                display:flex;
+                gap:10px;
+                overflow-x:auto;
+                padding:4px 2px 8px 2px;
+            ">
+                <button type="button" class="persona-card-btn" data-persona-id="0" style="
+                    flex:0 0 220px;
+                    background:#050509;
+                    border-radius:16px;
+                    border:1px solid <?= $currentDefaultPersonaId === 0 ? '#ff6f60' : '#272727' ?>;
+                    padding:10px 12px;
+                    color:#f5f5f5;
+                    font-size:12px;
+                    text-align:left;
+                    cursor:pointer;
+                ">
+                    <div style="font-size:14px; font-weight:600; margin-bottom:2px;">Padrão do Tuquinha</div>
+                    <div style="font-size:11px; color:#b0b0b0;">Deixa o sistema escolher a melhor personalidade global para você.</div>
+                </button>
+                <?php foreach ($personalities as $persona): ?>
+                    <?php
+                        $pid = (int)($persona['id'] ?? 0);
+                        $pname = trim((string)($persona['name'] ?? ''));
+                        $parea = trim((string)($persona['area'] ?? ''));
+                        $imagePath = trim((string)($persona['image_path'] ?? ''));
+                        if ($imagePath === '') {
+                            $imagePath = '/public/favicon.png';
+                        }
+                    ?>
+                    <button type="button" class="persona-card-btn" data-persona-id="<?= $pid ?>" style="
+                        flex:0 0 240px;
+                        background:#050509;
+                        border-radius:16px;
+                        border:1px solid <?= $currentDefaultPersonaId === $pid ? '#ff6f60' : '#272727' ?>;
+                        padding:10px 10px 11px 10px;
+                        color:#f5f5f5;
+                        font-size:12px;
+                        text-align:left;
+                        cursor:pointer;
+                        display:flex;
+                        gap:10px;
+                        align-items:center;
+                    ">
+                        <div style="width:40px; height:40px; border-radius:50%; overflow:hidden; flex-shrink:0; background:#111118; border:1px solid #272727;">
+                            <img src="<?= htmlspecialchars($imagePath) ?>" alt="<?= htmlspecialchars($pname) ?>" style="width:100%; height:100%; object-fit:cover; display:block;">
+                        </div>
+                        <div style="flex:1; min-width:0;">
+                            <div style="font-size:14px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                                <?= htmlspecialchars($pname) ?>
+                            </div>
+                            <?php if ($parea !== ''): ?>
+                                <div style="font-size:11px; color:#b0b0b0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                                    <?= htmlspecialchars($parea) ?>
+                                </div>
+                            <?php endif; ?>
+                        </div>
+                    </button>
+                <?php endforeach; ?>
+            </div>
+
+            <div style="margin-top:10px; display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:wrap;">
+                <div style="font-size:11px; color:#8d8d8d; max-width:60%;">
+                    Clique em uma opção e depois em "Salvar" para atualizar a personalidade padrão da sua conta.
+                </div>
+                <button type="submit" style="
+                    border:none; border-radius:999px; padding:8px 16px;
+                    background:linear-gradient(135deg,#e53935,#ff6f60); color:#050509;
+                    font-weight:600; font-size:13px; cursor:pointer;">
+                    Salvar personalidade padrão
+                </button>
+            </div>
+        </form>
+    <?php endif; ?>
+</div>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    var personaList = document.getElementById('persona-default-list');
+    var hiddenPersonaInput = document.getElementById('default-persona-id');
+    if (personaList && hiddenPersonaInput) {
+        var buttons = personaList.querySelectorAll('.persona-card-btn');
+        buttons.forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                var id = btn.getAttribute('data-persona-id') || '0';
+                hiddenPersonaInput.value = id;
+
+                buttons.forEach(function (b) {
+                    b.style.borderColor = '#272727';
+                    b.style.boxShadow = '';
+                });
+
+                btn.style.borderColor = '#ff6f60';
+                btn.style.boxShadow = '0 0 0 1px rgba(255,111,96,0.5)';
+            });
+        });
+    }
+});
+</script>

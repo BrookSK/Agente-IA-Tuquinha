@@ -244,6 +244,25 @@ $pageTitle = $pageTitle ?? 'Agente IA - Tuquinha';
             background: rgba(255, 255, 255, 0.3);
         }
 
+        /* Scrollbar customizado para o conteúdo principal (inclusive barra inferior) */
+        .main-content::-webkit-scrollbar {
+            height: 8px;
+            width: 8px;
+        }
+
+        .main-content::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .main-content::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.18);
+            border-radius: 999px;
+        }
+
+        .main-content::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
         @media (max-width: 900px) {
             .sidebar {
                 position: fixed;
@@ -330,6 +349,10 @@ $pageTitle = $pageTitle ?? 'Agente IA - Tuquinha';
                     <a href="/conta" class="sidebar-button">
                         <span class="icon">👤</span>
                         <span>Minha conta</span>
+                    </a>
+                    <a href="/conta/personalidade" class="sidebar-button">
+                        <span class="icon">🎭</span>
+                        <span>Personalidade padrão</span>
                     </a>
                     <a href="/tokens/historico" class="sidebar-button">
                         <span class="icon">🔋</span>

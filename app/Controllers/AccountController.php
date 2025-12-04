@@ -92,21 +92,15 @@ class AccountController extends Controller
         $preferredName = trim($_POST['preferred_name'] ?? '');
         $globalMemory = trim($_POST['global_memory'] ?? '');
         $globalInstructions = trim($_POST['global_instructions'] ?? '');
-        $defaultPersonaIdRaw = isset($_POST['default_persona_id']) ? (int)$_POST['default_persona_id'] : 0;
         if ($name === '') {
             $this->reloadWithMessages($user, 'Nome não pode ficar em branco.', null);
             return;
         }
 
-        $defaultPersonaId = null;
-        if ($defaultPersonaIdRaw > 0) {
-            $persona = Personality::findById($defaultPersonaIdRaw);
-            if ($persona && !empty($persona['active'])) {
-                $defaultPersonaId = (int)$persona['id'];
-            }
-        }
+        // Mantém a personalidade padrão já configurada (se houver) sem alterá-la aqui
+        $currentDefaultPersonaId = isset($user['default_persona_id']) ? (int)$user['default_persona_id'] : null;
 
-        User::updateProfile((int)$user['id'], $name, $preferredName, $globalMemory, $globalInstructions, $defaultPersonaId);
+        User::updateProfile((int)$user['id'], $name, $preferredName, $globalMemory, $globalInstructions, $currentDefaultPersonaId);
 
         // Campos extras de cobrança (dados usados no checkout)
         $billingCpf = trim($_POST['billing_cpf'] ?? '');
@@ -134,12 +128,6 @@ class AccountController extends Controller
             $billingState
         );
         $_SESSION['user_name'] = $name;
-        if ($defaultPersonaId) {
-            $_SESSION['default_persona_id'] = $defaultPersonaId;
-        } else {
-            unset($_SESSION['default_persona_id']);
-        }
-
         $user = User::findById((int)$user['id']) ?? $user;
         $this->reloadWithMessages($user, null, 'Dados atualizados com sucesso.');
     }
