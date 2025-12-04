@@ -383,6 +383,10 @@ $pageTitle = $pageTitle ?? 'Agente IA - Tuquinha';
                     <span class="icon">💳</span>
                     <span>Planos e limites</span>
                 </a>
+                <a href="/cursos" class="sidebar-button">
+                    <span class="icon">🎓</span>
+                    <span>Cursos</span>
+                </a>
 
                 <?php if (!empty($_SESSION['user_id'])): ?>
                     <div class="sidebar-section-title" style="margin-top: 10px;">Conta</div>
@@ -397,6 +401,10 @@ $pageTitle = $pageTitle ?? 'Agente IA - Tuquinha';
                     <a href="/tokens/historico" class="sidebar-button">
                         <span class="icon">🔋</span>
                         <span>Histórico de tokens extras</span>
+                    </a>
+                    <a href="/parceiro/cursos" class="sidebar-button">
+                        <span class="icon">🎓</span>
+                        <span>Meus cursos (parceiro)</span>
                     </a>
                     <a href="/logout" class="sidebar-button" style="margin-top: 6px;">
                         <span class="icon">⏻</span>
@@ -417,6 +425,10 @@ $pageTitle = $pageTitle ?? 'Agente IA - Tuquinha';
                     <a href="/admin/planos" class="sidebar-button" style="margin-top: 6px;">
                         <span class="icon">🧩</span>
                         <span>Gerenciar planos</span>
+                    </a>
+                    <a href="/admin/cursos" class="sidebar-button" style="margin-top: 6px;">
+                        <span class="icon">🎓</span>
+                        <span>Cursos</span>
                     </a>
                     <a href="/admin/personalidades" class="sidebar-button" style="margin-top: 6px;">
                         <span class="icon">🎭</span>

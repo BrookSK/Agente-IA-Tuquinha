@@ -1,0 +1,213 @@
+<?php
+/** @var array|null $user */
+/** @var array|null $plan */
+/** @var array $course */
+/** @var array $lessons */
+/** @var array $lives */
+/** @var bool $isEnrolled */
+/** @var bool $planAllowsCourses */
+/** @var string|null $success */
+/** @var string|null $error */
+
+use App\Controllers\CourseController;
+
+$title = trim((string)($course['title'] ?? ''));
+$short = trim((string)($course['short_description'] ?? ''));
+$description = trim((string)($course['description'] ?? ''));
+$image = trim((string)($course['image_path'] ?? ''));
+$isPaid = !empty($course['is_paid']);
+$priceCents = isset($course['price_cents']) ? (int)$course['price_cents'] : 0;
+$allowPlanOnly = !empty($course['allow_plan_access_only']);
+$allowPublicPurchase = !empty($course['allow_public_purchase']);
+$courseUrl = CourseController::buildCourseUrl($course);
+?>
+<div style="max-width: 960px; margin: 0 auto;">
+    <div style="display:flex; flex-wrap:wrap; gap:20px; margin-bottom:18px;">
+        <div style="flex:1 1 260px; min-width:260px; max-width:360px; border-radius:20px; overflow:hidden; border:1px solid #272727; background:#050509; box-shadow:0 18px 35px rgba(0,0,0,0.55);">
+            <div style="width:100%; height:220px; overflow:hidden; background:#111118;">
+                <?php if ($image !== ''): ?>
+                    <img src="<?= htmlspecialchars($image) ?>" alt="<?= htmlspecialchars($title) ?>" style="width:100%; height:100%; object-fit:cover; display:block;">
+                <?php else: ?>
+                    <div style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; font-size:32px; background:radial-gradient(circle at top left,#e53935 0,#050509 60%);">
+                        🎓
+                    </div>
+                <?php endif; ?>
+            </div>
+            <div style="padding:10px 12px 12px 12px; font-size:12px;">
+                <div style="font-size:16px; font-weight:650; margin-bottom:4px;">
+                    <?= htmlspecialchars($title) ?>
+                </div>
+                <?php if ($short !== ''): ?>
+                    <div style="color:#b0b0b0; line-height:1.4; margin-bottom:6px;">
+                        <?= htmlspecialchars($short) ?>
+                    </div>
+                <?php endif; ?>
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-top:4px;">
+                    <div style="font-size:11px; color:#ffcc80;">
+                        <?php if ($isPaid): ?>
+                            R$ <?= number_format(max($priceCents,0)/100, 2, ',', '.') ?>
+                        <?php else: ?>
+                            Gratuito para planos com cursos
+                        <?php endif; ?>
+                    </div>
+                    <div style="font-size:11px; color:#b0b0b0; text-align:right;">
+                        <?php if ($allowPlanOnly): ?>
+                            <div>Planos com flag de cursos</div>
+                        <?php endif; ?>
+                        <?php if ($allowPublicPurchase): ?>
+                            <div>Disponível para compra avulsa</div>
+                        <?php endif; ?>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div style="flex:2 1 320px; min-width:260px;">
+            <?php if (!empty($success)): ?>
+                <div style="background:#10330f; border:1px solid #3aa857; color:#c8ffd4; padding:8px 10px; border-radius:8px; font-size:13px; margin-bottom:10px;">
+                    <?= htmlspecialchars($success) ?>
+                </div>
+            <?php endif; ?>
+
+            <?php if (!empty($error)): ?>
+                <div style="background:#311; border:1px solid #a33; color:#ffbaba; padding:8px 10px; border-radius:8px; font-size:13px; margin-bottom:10px;">
+                    <?= htmlspecialchars($error) ?>
+                </div>
+            <?php endif; ?>
+
+            <h1 style="font-size:22px; margin-bottom:8px; font-weight:650;">Curso: <?= htmlspecialchars($title) ?></h1>
+
+            <?php if ($description !== ''): ?>
+                <div style="font-size:13px; color:#d0d0d0; line-height:1.5; margin-bottom:10px; white-space:pre-line;">
+                    <?= htmlspecialchars($description) ?>
+                </div>
+            <?php endif; ?>
+
+            <div style="margin-top:8px; display:flex; flex-wrap:wrap; gap:8px; align-items:center;">
+                <?php if (!$user): ?>
+                    <a href="/login" style="
+                        display:inline-flex; align-items:center; gap:6px; padding:8px 16px;
+                        border-radius:999px; border:1px solid #ff6f60;
+                        background:linear-gradient(135deg,#e53935,#ff6f60); color:#050509;
+                        font-size:13px; font-weight:600; text-decoration:none;">
+                        Entrar para se inscrever
+                    </a>
+                <?php else: ?>
+                    <?php if ($isEnrolled): ?>
+                        <span style="
+                            display:inline-flex; align-items:center; gap:6px; padding:8px 16px;
+                            border-radius:999px; border:1px solid #3aa857;
+                            background:#10330f; color:#c8ffd4; font-size:13px;">
+                            Você já está inscrito neste curso
+                        </span>
+                    <?php else: ?>
+                        <form action="/cursos/inscrever" method="post" style="display:inline;">
+                            <input type="hidden" name="course_id" value="<?= (int)($course['id'] ?? 0) ?>">
+                            <button type="submit" style="
+                                border:none; border-radius:999px; padding:8px 16px;
+                                background:linear-gradient(135deg,#e53935,#ff6f60); color:#050509;
+                                font-weight:600; font-size:13px; cursor:pointer;">
+                                Quero fazer este curso
+                            </button>
+                        </form>
+                    <?php endif; ?>
+                <?php endif; ?>
+            </div>
+        </div>
+    </div>
+
+    <div style="margin-top:16px; display:flex; flex-wrap:wrap; gap:24px;">
+        <div style="flex:2 1 360px; min-width:260px;">
+            <h2 style="font-size:16px; margin-bottom:8px;">Aulas do curso</h2>
+            <?php if (empty($lessons)): ?>
+                <div style="color:#b0b0b0; font-size:13px;">Nenhuma aula cadastrada ainda.</div>
+            <?php else: ?>
+                <div style="border-radius:12px; border:1px solid #272727; background:#111118; overflow:hidden;">
+                    <?php foreach ($lessons as $idx => $lesson): ?>
+                        <?php
+                            $ltitle = trim((string)($lesson['title'] ?? ''));
+                            $ldesc = trim((string)($lesson['description'] ?? ''));
+                            $video = trim((string)($lesson['video_url'] ?? ''));
+                            $number = $idx + 1;
+                        ?>
+                        <div style="padding:8px 10px; border-bottom:1px solid #272727;">
+                            <div style="display:flex; justify-content:space-between; gap:8px; align-items:center;">
+                                <div style="font-size:13px; font-weight:600;">
+                                    Aula <?= $number ?>: <?= htmlspecialchars($ltitle) ?>
+                                </div>
+                                <?php if ($video !== ''): ?>
+                                    <a href="<?= htmlspecialchars($video) ?>" target="_blank" rel="noopener noreferrer" style="font-size:11px; color:#ff6f60; text-decoration:none;">Assistir</a>
+                                <?php endif; ?>
+                            </div>
+                            <?php if ($ldesc !== ''): ?>
+                                <div style="margin-top:4px; font-size:12px; color:#b0b0b0; line-height:1.4;">
+                                    <?= htmlspecialchars($ldesc) ?>
+                                </div>
+                            <?php endif; ?>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
+            <?php endif; ?>
+        </div>
+
+        <div id="lives" style="flex:1 1 260px; min-width:240px;">
+            <h2 style="font-size:16px; margin-bottom:8px;">Lives deste curso</h2>
+            <?php if (empty($lives)): ?>
+                <div style="color:#b0b0b0; font-size:13px;">Nenhuma live agendada ainda.</div>
+            <?php else: ?>
+                <div style="border-radius:12px; border:1px solid #272727; background:#111118; overflow:hidden;">
+                    <?php foreach ($lives as $live): ?>
+                        <?php
+                            $ltitle = trim((string)($live['title'] ?? ''));
+                            $ldesc = trim((string)($live['description'] ?? ''));
+                            $scheduled = $live['scheduled_at'] ?? '';
+                            $formatted = $scheduled ? date('d/m/Y H:i', strtotime($scheduled)) : '';
+                            $meetLink = trim((string)($live['meet_link'] ?? ''));
+                        ?>
+                        <div style="padding:8px 10px; border-bottom:1px solid #272727;">
+                            <div style="font-size:13px; font-weight:600; margin-bottom:2px;">
+                                <?= htmlspecialchars($ltitle) ?>
+                            </div>
+                            <?php if ($formatted !== ''): ?>
+                                <div style="font-size:12px; color:#ffcc80; margin-bottom:4px;">
+                                    <?= htmlspecialchars($formatted) ?>
+                                </div>
+                            <?php endif; ?>
+                            <?php if ($ldesc !== ''): ?>
+                                <div style="font-size:12px; color:#b0b0b0; margin-bottom:4px; line-height:1.4;">
+                                    <?= htmlspecialchars($ldesc) ?>
+                                </div>
+                            <?php endif; ?>
+                            <div style="margin-top:4px;">
+                                <?php if (!$user): ?>
+                                    <a href="/login" style="font-size:11px; color:#ff6f60; text-decoration:none;">Entrar para participar</a>
+                                <?php elseif (!$isEnrolled): ?>
+                                    <span style="font-size:11px; color:#b0b0b0;">Inscreva-se no curso para participar desta live.</span>
+                                <?php else: ?>
+                                    <form action="/cursos/lives/participar" method="post" style="display:inline;">
+                                        <input type="hidden" name="live_id" value="<?= (int)($live['id'] ?? 0) ?>">
+                                        <button type="submit" style="
+                                            border:none; border-radius:999px; padding:5px 12px;
+                                            background:linear-gradient(135deg,#e53935,#ff6f60); color:#050509;
+                                            font-weight:600; font-size:11px; cursor:pointer;">
+                                            Quero participar da live
+                                        </button>
+                                    </form>
+                                    <?php if ($meetLink !== ''): ?>
+                                        <div style="margin-top:4px; font-size:11px; color:#b0b0b0;">
+                                            Link será enviado por e-mail após a confirmação.
+                                        </div>
+                                    <?php endif; ?>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
+            <?php endif; ?>
+        </div>
+    </div>
+
+    <div style="margin-top:18px; font-size:12px; color:#777;">
+        <a href="/cursos" style="color:#ff6f60; text-decoration:none;">&larr; Voltar para lista de cursos</a>
+    </div>
+</div>

@@ -159,6 +159,10 @@ if ($slugForCycle !== '') {
                 <span>Permitir personalidades</span>
             </label>
             <label style="display:flex; align-items:center; gap:5px;">
+                <input type="checkbox" name="allow_courses" value="1" <?= !empty($plan['allow_courses']) ? 'checked' : '' ?>>
+                <span>Permitir acesso a cursos</span>
+            </label>
+            <label style="display:flex; align-items:center; gap:5px;">
                 <input type="checkbox" name="is_active" value="1" <?= !isset($plan['is_active']) || !empty($plan['is_active']) ? 'checked' : '' ?>>
                 <span>Plano ativo</span>
             </label>
