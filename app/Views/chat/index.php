@@ -270,7 +270,6 @@ if (!empty($currentPlan) && is_array($currentPlan)) {
                             border-radius: 16px 16px 4px 16px;
                             padding: 9px 12px;
                             font-size: 14px;
-                            white-space: pre-wrap;
                             word-wrap: break-word;
                         ">
                             <?php $content = $rawContent; ?>
@@ -306,7 +305,6 @@ if (!empty($currentPlan) && is_array($currentPlan)) {
                             border-radius: 16px 16px 16px 4px;
                             padding: 9px 12px;
                             font-size: 14px;
-                            white-space: pre-wrap;
                             word-wrap: break-word;
                             border: 1px solid #272727;
                         ">

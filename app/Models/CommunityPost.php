@@ -61,4 +61,27 @@ class CommunityPost
         $stmt->execute();
         return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
     }
+
+    public static function findByIdsWithAuthors(array $ids): array
+    {
+        $ids = array_values(array_unique(array_map('intval', $ids)));
+        if (empty($ids)) {
+            return [];
+        }
+
+        $placeholders = implode(',', array_fill(0, count($ids), '?'));
+        $sql = 'SELECT p.*, u.name AS user_name
+            FROM community_posts p
+            JOIN users u ON u.id = p.user_id
+            WHERE p.deleted_at IS NULL AND p.id IN (' . $placeholders . ')
+            ORDER BY p.created_at DESC, p.id DESC';
+
+        $pdo = Database::getConnection();
+        $stmt = $pdo->prepare($sql);
+        foreach ($ids as $i => $id) {
+            $stmt->bindValue($i + 1, $id, PDO::PARAM_INT);
+        }
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+    }
 }

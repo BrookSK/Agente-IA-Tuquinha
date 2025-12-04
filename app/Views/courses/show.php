@@ -174,7 +174,7 @@ $courseUrl = CourseController::buildCourseUrl($course);
                                                         </span>
                                                     <?php endif; ?>
                                                 </div>
-                                                <div style="color:#d0d0d0; white-space:pre-wrap;">
+                                                <div style="color:#d0d0d0; margin:0;">
                                                     <?= nl2br(htmlspecialchars($comment['body'] ?? '')) ?>
                                                 </div>
                                             </div>
@@ -229,6 +229,9 @@ $courseUrl = CourseController::buildCourseUrl($course);
                             $scheduled = $live['scheduled_at'] ?? '';
                             $formatted = $scheduled ? date('d/m/Y H:i', strtotime($scheduled)) : '';
                             $meetLink = trim((string)($live['meet_link'] ?? ''));
+                            $recordingLink = trim((string)($live['recording_link'] ?? ''));
+                            $liveId = (int)($live['id'] ?? 0);
+                            $hasRecordingAccess = $user && $recordingLink !== '' && !empty($myLiveParticipation[$liveId] ?? false);
                         ?>
                         <div style="padding:8px 10px; border-bottom:1px solid #272727;">
                             <div style="font-size:13px; font-weight:600; margin-bottom:2px;">
@@ -251,7 +254,7 @@ $courseUrl = CourseController::buildCourseUrl($course);
                                     <span style="font-size:11px; color:#b0b0b0;">Inscreva-se no curso para participar desta live.</span>
                                 <?php else: ?>
                                     <form action="/cursos/lives/participar" method="post" style="display:inline;">
-                                        <input type="hidden" name="live_id" value="<?= (int)($live['id'] ?? 0) ?>">
+                                        <input type="hidden" name="live_id" value="<?= $liveId ?>">
                                         <button type="submit" style="
                                             border:none; border-radius:999px; padding:5px 12px;
                                             background:linear-gradient(135deg,#e53935,#ff6f60); color:#050509;
@@ -259,13 +262,22 @@ $courseUrl = CourseController::buildCourseUrl($course);
                                             Quero participar da live
                                         </button>
                                     </form>
-                                    <?php if ($meetLink !== ''): ?>
+                                    <?php if ($recordingLink !== ''): ?>
+                                        <div style="margin-top:4px; font-size:11px; color:#b0b0b0;">
+                                            Gravação disponível apenas para quem participou desta live.
+                                        </div>
+                                    <?php elseif ($meetLink !== ''): ?>
                                         <div style="margin-top:4px; font-size:11px; color:#b0b0b0;">
                                             Link será enviado por e-mail após a confirmação.
                                         </div>
                                     <?php endif; ?>
                                 <?php endif; ?>
                             </div>
+                            <?php if ($hasRecordingAccess): ?>
+                                <div style="margin-top:4px; font-size:11px; color:#b0b0b0;">
+                                    <a href="<?= htmlspecialchars($recordingLink) ?>" target="_blank" rel="noopener noreferrer" style="color:#ffcc80; text-decoration:none;">▶ Assistir gravação desta live</a>
+                                </div>
+                            <?php endif; ?>
                         </div>
                     <?php endforeach; ?>
                 </div>

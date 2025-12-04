@@ -84,6 +84,22 @@ class CommunityController extends Controller
         $posts = CommunityPost::latestWithAuthors(50);
         $postIds = array_map(static fn(array $p) => (int)$p['id'], $posts);
 
+        // Coleta IDs de posts originais que foram republicados neste feed
+        $repostSourceIds = [];
+        foreach ($posts as $p) {
+            if (!empty($p['repost_post_id'])) {
+                $repostSourceIds[] = (int)$p['repost_post_id'];
+            }
+        }
+
+        $originalPosts = [];
+        if (!empty($repostSourceIds)) {
+            $originalList = CommunityPost::findByIdsWithAuthors($repostSourceIds);
+            foreach ($originalList as $op) {
+                $originalPosts[(int)($op['id'] ?? 0)] = $op;
+            }
+        }
+
         $likesCount = CommunityPostLike::likesCountByPostIds($postIds);
         $commentsCount = CommunityPostComment::countsByPostIds($postIds);
         $likedByMe = CommunityPostLike::likedPostIdsByUser((int)$user['id'], $postIds);
@@ -111,6 +127,7 @@ class CommunityController extends Controller
             'commentsCount' => $commentsCount,
             'likedByMe' => $likedByMe,
             'commentsByPost' => $commentsByPost,
+            'originalPosts' => $originalPosts,
             'block' => $block,
             'success' => $success,
             'error' => $error,

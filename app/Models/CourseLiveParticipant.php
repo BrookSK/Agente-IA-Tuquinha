@@ -42,6 +42,25 @@ class CourseLiveParticipant
         $stmt->execute(['id' => $id]);
     }
 
+    public static function liveIdsByUser(int $userId): array
+    {
+        if ($userId <= 0) {
+            return [];
+        }
+
+        $pdo = Database::getConnection();
+        $stmt = $pdo->prepare('SELECT live_id FROM course_live_participants WHERE user_id = :user_id');
+        $stmt->execute(['user_id' => $userId]);
+        $rows = $stmt->fetchAll(PDO::FETCH_COLUMN);
+
+        $map = [];
+        foreach ($rows as $lid) {
+            $map[(int)$lid] = true;
+        }
+
+        return $map;
+    }
+
     public static function allByLive(int $liveId): array
     {
         $pdo = Database::getConnection();

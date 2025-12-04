@@ -6,6 +6,7 @@
 /** @var array $commentsCount */
 /** @var array $likedByMe */
 /** @var array $commentsByPost */
+/** @var array $originalPosts */
 /** @var array|null $block */
 /** @var string|null $success */
 /** @var string|null $error */
@@ -54,14 +55,20 @@ $editingPostId = isset($_GET['edit_post_id']) ? (int)($_GET['edit_post_id']) : 0
                             <label style="display:inline-flex; align-items:center; gap:4px; cursor:pointer;">
                                 <span>📷</span>
                                 <span>Imagem</span>
-                                <input type="file" name="image" accept="image/*" style="display:none;">
+                                <input type="file" name="image" accept="image/*" style="display:none;" id="community-image-input">
                             </label>
                             <label style="display:inline-flex; align-items:center; gap:4px; cursor:pointer;">
                                 <span>📎</span>
                                 <span>Arquivo</span>
-                                <input type="file" name="file" style="display:none;">
+                                <input type="file" name="file" style="display:none;" id="community-file-input">
                             </label>
                             <span style="margin-left:auto;">Até 4000 caracteres</span>
+                        </div>
+                        <div id="community-attachment-preview" style="margin-top:4px; display:none; padding:6px 8px; border-radius:8px; border:1px dashed #272727; background:#050509;">
+                            <div id="community-image-preview" style="display:none; margin-bottom:4px;">
+                                <img src="" alt="Pré-visualização da imagem" style="max-width:100%; max-height:180px; border-radius:8px; border:1px solid #272727; object-fit:cover;">
+                            </div>
+                            <div id="community-file-preview" style="display:none; font-size:11px; color:#b0b0b0;"></div>
                         </div>
                         <div style="display:flex; justify-content:flex-end; margin-top:4px;">
                             <button type="submit" style="
@@ -95,6 +102,11 @@ $editingPostId = isset($_GET['edit_post_id']) ? (int)($_GET['edit_post_id']) : 0
                             $isLiked = !empty($likedByMe[$postId]);
                             $postComments = $commentsByPost[$postId] ?? [];
                             $isEditing = $editingPostId === $postId && ($isMine || $isAdmin);
+
+                            $original = null;
+                            if ($repostId > 0 && !empty($originalPosts[$repostId])) {
+                                $original = $originalPosts[$repostId];
+                            }
                         ?>
                         <div id="post-<?= $postId ?>" style="border-radius:12px; border:1px solid #272727; background:#111118; padding:8px 10px; font-size:13px;">
                             <div style="display:flex; justify-content:space-between; gap:8px; margin-bottom:4px;">
@@ -110,6 +122,63 @@ $editingPostId = isset($_GET['edit_post_id']) ? (int)($_GET['edit_post_id']) : 0
 
                             <?php if ($repostId): ?>
                                 <div style="font-size:11px; color:#b0b0b0; margin-bottom:4px;">🔁 Republicação de outro post</div>
+                                <?php if ($original): ?>
+                                    <?php
+                                        $origAuthor = trim((string)($original['user_name'] ?? ''));
+                                        $origCreated = $original['created_at'] ?? '';
+                                        $origBody = trim((string)($original['body'] ?? ''));
+                                        $origImage = trim((string)($original['image_path'] ?? ''));
+                                        $origFile = trim((string)($original['file_path'] ?? ''));
+                                    ?>
+                                    <div style="border-radius:10px; border:1px solid #272727; background:#050509; padding:6px 8px; font-size:12px; margin-bottom:4px;">
+                                        <div style="display:flex; justify-content:space-between; gap:6px; margin-bottom:2px;">
+                                            <span style="font-weight:600;">
+                                                <?= htmlspecialchars($origAuthor) ?>
+                                            </span>
+                                            <?php if ($origCreated): ?>
+                                                <span style="font-size:10px; color:#777;">
+                                                    <?= htmlspecialchars($origCreated) ?>
+                                                </span>
+                                            <?php endif; ?>
+                                        </div>
+                                        <?php if ($origBody !== ''): ?>
+                                            <div style="color:#d0d0d0; font-size:12px; margin:0 0 2px 0;">
+                                                <?= nl2br(htmlspecialchars($origBody)) ?>
+                                            </div>
+                                        <?php endif; ?>
+                                        <?php if ($origImage !== '' || $origFile !== ''): ?>
+                                            <div style="margin-top:2px;">
+                                                <?php if ($origImage !== ''): ?>
+                                                    <div style="margin-bottom:4px;">
+                                                        <img src="<?= htmlspecialchars($origImage) ?>" alt="Imagem do post original" style="max-width:100%; border-radius:8px; border:1px solid #272727;">
+                                                    </div>
+                                                <?php endif; ?>
+                                                <?php if ($origFile !== ''): ?>
+                                                    <div style="font-size:11px;">
+                                                        <a href="<?= htmlspecialchars($origFile) ?>" target="_blank" rel="noopener noreferrer" style="color:#ffcc80; text-decoration:none;">📎 Baixar arquivo original</a>
+                                                    </div>
+                                                <?php endif; ?>
+                                            </div>
+                                        <?php endif; ?>
+                                    </div>
+                                <?php else: ?>
+                                    <div style="font-size:11px; color:#777; margin-bottom:4px;">Post original não está mais disponível.</div>
+                                <?php endif; ?>
+                            <?php endif; ?>
+
+                            <?php if ($image !== '' || $file !== ''): ?>
+                                <div style="margin-bottom:6px;">
+                                    <?php if ($image !== ''): ?>
+                                        <div style="margin-bottom:4px;">
+                                            <img src="<?= htmlspecialchars($image) ?>" alt="Imagem do post" style="max-width:100%; border-radius:10px; border:1px solid #272727;">
+                                        </div>
+                                    <?php endif; ?>
+                                    <?php if ($file !== ''): ?>
+                                        <div style="font-size:12px;">
+                                            <a href="<?= htmlspecialchars($file) ?>" target="_blank" rel="noopener noreferrer" style="color:#ffcc80; text-decoration:none;">📎 Baixar arquivo</a>
+                                        </div>
+                                    <?php endif; ?>
+                                </div>
                             <?php endif; ?>
 
                             <?php if ($isEditing): ?>
@@ -129,20 +198,23 @@ $editingPostId = isset($_GET['edit_post_id']) ? (int)($_GET['edit_post_id']) : 0
                                     </div>
                                 </form>
                             <?php elseif ($body !== ''): ?>
-                                <div style="font-size:13px; color:#d0d0d0; white-space:pre-wrap; margin-bottom:6px;">
+                                <div style="font-size:13px; color:#d0d0d0; margin:0 0 2px 0;">
                                     <?= nl2br(htmlspecialchars($body)) ?>
                                 </div>
                             <?php endif; ?>
 
-                            <?php if ($image !== ''): ?>
-                                <div style="margin-bottom:6px;">
-                                    <img src="<?= htmlspecialchars($image) ?>" alt="Imagem do post" style="max-width:100%; border-radius:10px; border:1px solid #272727;">
-                                </div>
-                            <?php endif; ?>
-
-                            <?php if ($file !== ''): ?>
-                                <div style="margin-bottom:6px; font-size:12px;">
-                                    <a href="<?= htmlspecialchars($file) ?>" target="_blank" rel="noopener noreferrer" style="color:#ffcc80; text-decoration:none;">📎 Baixar arquivo</a>
+                            <?php if ($image !== '' || $file !== ''): ?>
+                                <div style="margin-top:2px;">
+                                    <?php if ($image !== ''): ?>
+                                        <div style="margin-bottom:4px;">
+                                            <img src="<?= htmlspecialchars($image) ?>" alt="Imagem do post" style="max-width:100%; border-radius:10px; border:1px solid #272727;">
+                                        </div>
+                                    <?php endif; ?>
+                                    <?php if ($file !== ''): ?>
+                                        <div style="font-size:12px;">
+                                            <a href="<?= htmlspecialchars($file) ?>" target="_blank" rel="noopener noreferrer" style="color:#ffcc80; text-decoration:none;">📎 Baixar arquivo</a>
+                                        </div>
+                                    <?php endif; ?>
                                 </div>
                             <?php endif; ?>
 
@@ -197,7 +269,7 @@ $editingPostId = isset($_GET['edit_post_id']) ? (int)($_GET['edit_post_id']) : 0
                                                         </span>
                                                     <?php endif; ?>
                                                 </div>
-                                                <div style="color:#d0d0d0; white-space:pre-wrap;">
+                                                <div style="color:#d0d0d0;">
                                                     <?= nl2br(htmlspecialchars($comment['body'] ?? '')) ?>
                                                 </div>
                                             </div>
@@ -248,3 +320,60 @@ $editingPostId = isset($_GET['edit_post_id']) ? (int)($_GET['edit_post_id']) : 0
         <?php endif; ?>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    var imageInput = document.getElementById('community-image-input');
+    var fileInput = document.getElementById('community-file-input');
+    var previewBox = document.getElementById('community-attachment-preview');
+    var imageWrapper = document.getElementById('community-image-preview');
+    var imageTag = imageWrapper ? imageWrapper.querySelector('img') : null;
+    var filePreview = document.getElementById('community-file-preview');
+
+    function updateVisibility() {
+        var hasImage = imageWrapper && imageWrapper.style.display !== 'none';
+        var hasFile = filePreview && filePreview.style.display !== 'none';
+        if (previewBox) {
+            previewBox.style.display = hasImage || hasFile ? 'block' : 'none';
+        }
+    }
+
+    if (imageInput && imageWrapper && imageTag) {
+        imageInput.addEventListener('change', function () {
+            var file = imageInput.files && imageInput.files[0];
+            if (!file) {
+                imageWrapper.style.display = 'none';
+                if (imageTag) {
+                    imageTag.src = '';
+                }
+                updateVisibility();
+                return;
+            }
+
+            var reader = new FileReader();
+            reader.onload = function (e) {
+                imageTag.src = e.target && e.target.result ? e.target.result : '';
+                imageWrapper.style.display = imageTag.src ? 'block' : 'none';
+                updateVisibility();
+            };
+            reader.readAsDataURL(file);
+        });
+    }
+
+    if (fileInput && filePreview) {
+        fileInput.addEventListener('change', function () {
+            var file = fileInput.files && fileInput.files[0];
+            if (!file) {
+                filePreview.textContent = '';
+                filePreview.style.display = 'none';
+                updateVisibility();
+                return;
+            }
+
+            filePreview.textContent = '📎 ' + (file.name || 'Arquivo selecionado');
+            filePreview.style.display = 'block';
+            updateVisibility();
+        });
+    }
+});
+</script>

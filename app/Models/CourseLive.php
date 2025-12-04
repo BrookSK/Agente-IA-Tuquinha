@@ -27,14 +27,16 @@ class CourseLive
     public static function create(array $data): int
     {
         $pdo = Database::getConnection();
-        $stmt = $pdo->prepare('INSERT INTO course_lives (course_id, title, description, scheduled_at, meet_link, google_event_id, is_published)
-            VALUES (:course_id, :title, :description, :scheduled_at, :meet_link, :google_event_id, :is_published)');
+        $stmt = $pdo->prepare('INSERT INTO course_lives (course_id, title, description, scheduled_at, meet_link, recording_link, recording_published_at, google_event_id, is_published)
+            VALUES (:course_id, :title, :description, :scheduled_at, :meet_link, :recording_link, :recording_published_at, :google_event_id, :is_published)');
         $stmt->execute([
             'course_id' => (int)($data['course_id'] ?? 0),
             'title' => $data['title'] ?? '',
             'description' => $data['description'] ?? null,
             'scheduled_at' => $data['scheduled_at'] ?? '',
             'meet_link' => $data['meet_link'] ?? null,
+            'recording_link' => $data['recording_link'] ?? null,
+            'recording_published_at' => $data['recording_published_at'] ?? null,
             'google_event_id' => $data['google_event_id'] ?? null,
             'is_published' => (int)($data['is_published'] ?? 1),
         ]);
@@ -49,6 +51,8 @@ class CourseLive
             description = :description,
             scheduled_at = :scheduled_at,
             meet_link = :meet_link,
+            recording_link = :recording_link,
+            recording_published_at = :recording_published_at,
             google_event_id = :google_event_id,
             is_published = :is_published,
             updated_at = NOW()
@@ -59,6 +63,8 @@ class CourseLive
             'description' => $data['description'] ?? null,
             'scheduled_at' => $data['scheduled_at'] ?? '',
             'meet_link' => $data['meet_link'] ?? null,
+            'recording_link' => $data['recording_link'] ?? null,
+            'recording_published_at' => $data['recording_published_at'] ?? null,
             'google_event_id' => $data['google_event_id'] ?? null,
             'is_published' => (int)($data['is_published'] ?? 1),
         ]);

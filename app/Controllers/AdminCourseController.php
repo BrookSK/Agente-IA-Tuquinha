@@ -373,6 +373,7 @@ HTML;
         $description = trim($_POST['description'] ?? '');
         $scheduledAt = trim($_POST['scheduled_at'] ?? '');
         $meetLink = trim($_POST['meet_link'] ?? '');
+        $recordingLink = trim($_POST['recording_link'] ?? '');
         $isPublished = !empty($_POST['is_published']) ? 1 : 0;
 
         if ($title === '' || $scheduledAt === '') {
@@ -395,12 +396,28 @@ HTML;
             'description' => $description !== '' ? $description : null,
             'scheduled_at' => $scheduledAt,
             'meet_link' => $meetLink,
+            'recording_link' => $recordingLink !== '' ? $recordingLink : null,
+            'recording_published_at' => null,
             'google_event_id' => null,
             'is_published' => $isPublished,
         ];
 
         if ($id > 0) {
+            $existing = CourseLive::findById($id);
+            $hadRecording = !empty($existing['recording_link']);
+            $willHaveRecording = $recordingLink !== '';
+
+            if ($willHaveRecording && empty($data['recording_published_at'])) {
+                $data['recording_published_at'] = date('Y-m-d H:i:s');
+            } elseif (!$willHaveRecording) {
+                $data['recording_published_at'] = null;
+            }
+
             CourseLive::update($id, $data);
+
+            if ($willHaveRecording && !$hadRecording) {
+                $this->notifyRecordingPublished($course, CourseLive::findById($id));
+            }
         } else {
             $liveId = CourseLive::create($data);
 
@@ -466,6 +483,72 @@ HTML;
 
         header('Location: /admin/cursos/lives?course_id=' . $courseId);
         exit;
+    }
+
+    private function notifyRecordingPublished(array $course, ?array $live): void
+    {
+        if (!$live || empty($live['id']) || empty($live['recording_link'])) {
+            return;
+        }
+
+        $liveId = (int)$live['id'];
+        $participants = CourseLiveParticipant::allByLive($liveId);
+        if (empty($participants)) {
+            return;
+        }
+
+        $recordingLink = (string)$live['recording_link'];
+        $when = '';
+        if (!empty($live['scheduled_at'])) {
+            $when = date('d/m/Y H:i', strtotime((string)$live['scheduled_at']));
+        }
+
+        foreach ($participants as $p) {
+            $user = User::findById((int)$p['user_id']);
+            if (!$user || empty($user['email'])) {
+                continue;
+            }
+
+            $subject = 'Gravação disponível: live do curso ' . (string)($course['title'] ?? '');
+            $safeName = htmlspecialchars($user['name'] ?? '', ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+            $safeCourseTitle = htmlspecialchars($course['title'] ?? '', ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+            $safeLiveTitle = htmlspecialchars($live['title'] ?? '', ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+            $safeWhen = htmlspecialchars($when, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+            $safeRecordingLink = htmlspecialchars($recordingLink, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+
+            $whenParagraph = '';
+            if ($when !== '') {
+                $whenParagraph = '<p style="font-size:14px; margin:0 0 10px 0;">Live realizada em: <strong>' . $safeWhen . '</strong></p>';
+            }
+
+            $body = <<<HTML
+<html>
+<body style="margin:0; padding:0; background:#050509; font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; color:#f5f5f5;">
+  <div style="width:100%; padding:24px 0;">
+    <div style="max-width:520px; margin:0 auto; background:#111118; border-radius:16px; border:1px solid #272727; padding:18px 20px;">
+      <div style="display:flex; align-items:center; gap:10px; margin-bottom:12px;">
+        <div style="width:32px; height:32px; line-height:32px; border-radius:50%; background:radial-gradient(circle at 30% 20%, #fff 0, #ff8a65 25%, #e53935 65%, #050509 100%); text-align:center; font-weight:700; font-size:16px; color:#050509;">T</div>
+        <div>
+          <div style="font-weight:700; font-size:15px;">Agente IA - Tuquinha</div>
+          <div style="font-size:11px; color:#b0b0b0;">Branding vivo na veia</div>
+        </div>
+      </div>
+
+      <p style="font-size:14px; margin:0 0 10px 0;">Oi, {$safeName} 👋</p>
+      <p style="font-size:14px; margin:0 0 10px 0;">A gravação da live <strong>{$safeLiveTitle}</strong> do curso <strong>{$safeCourseTitle}</strong> já está disponível.</p>
+      {$whenParagraph}
+      <p style="font-size:14px; margin:0 0 10px 0;">Você pode assistir pelo link abaixo:<br><a href="{$safeRecordingLink}" style="color:#ff6f60; text-decoration:none;">{$safeRecordingLink}</a></p>
+    </div>
+  </div>
+</body>
+</html>
+HTML;
+
+            try {
+                MailService::send($user['email'], $user['name'] ?? '', $subject, $body);
+            } catch (\Throwable $e) {
+            }
+        }
     }
 
     public function sendLiveReminders(): void

@@ -47,6 +47,14 @@ $isEdit = !empty($live);
         </div>
 
         <div>
+            <label style="font-size:13px; color:#ddd; display:block; margin-bottom:4px;">Link da gravação (quando disponível)</label>
+            <input type="text" name="recording_link" value="<?= htmlspecialchars($live['recording_link'] ?? '') ?>" placeholder="Ex: link do YouTube, Vimeo ou arquivo gravado" style="
+                width:100%; padding:8px 10px; border-radius:8px; border:1px solid #272727;
+                background:#050509; color:#f5f5f5; font-size:13px;">
+            <div style="font-size:11px; color:#777; margin-top:3px;">Ao preencher este campo, os participantes da live recebem um e-mail com o link da gravação.</div>
+        </div>
+
+        <div>
             <label style="font-size:13px; color:#ddd; display:block; margin-bottom:4px;">Descrição (opcional)</label>
             <textarea name="description" rows="4" style="
                 width:100%; padding:8px 10px; border-radius:8px; border:1px solid #272727;

@@ -128,8 +128,11 @@ class CourseController extends Controller
         $lives = CourseLive::allByCourse($courseId);
 
         $isEnrolled = false;
+        $myLiveParticipation = [];
         if ($user) {
-            $isEnrolled = CourseEnrollment::isEnrolled($courseId, (int)$user['id']);
+            $userId = (int)$user['id'];
+            $isEnrolled = CourseEnrollment::isEnrolled($courseId, $userId);
+            $myLiveParticipation = CourseLiveParticipant::liveIdsByUser($userId);
         }
 
         $commentsByLesson = [];
@@ -158,6 +161,7 @@ class CourseController extends Controller
             'lives' => $lives,
             'commentsByLesson' => $commentsByLesson,
             'isEnrolled' => $isEnrolled,
+            'myLiveParticipation' => $myLiveParticipation,
             'planAllowsCourses' => $planAllowsCourses,
             'success' => $success,
             'error' => $error,
