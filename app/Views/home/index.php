@@ -37,6 +37,7 @@
     </div>
 
     <form action="/chat" method="get">
+        <input type="hidden" name="new" value="1">
         <button type="submit" style="
             display: inline-flex;
             align-items: center;

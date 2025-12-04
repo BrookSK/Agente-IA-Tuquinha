@@ -141,7 +141,8 @@ class ChatController extends Controller
         // Usuários logados podem usar regras/memórias por chat (inclusive plano free)
         $canUseConversationSettings = $userId > 0;
 
-        $planAllowsPersonalities = !empty($currentPlan['allow_personalities']);
+        // Personalidades só estão disponíveis para usuários logados em planos que liberam essa funcionalidade
+        $planAllowsPersonalities = $userId > 0 && !empty($currentPlan['allow_personalities']);
 
         if ($conversationSettings === null && $userId > 0) {
             $conversationSettings = ConversationSetting::findForConversation($conversation->id, $userId) ?: null;
@@ -810,6 +811,31 @@ class ChatController extends Controller
 
         $conversationId = isset($_POST['conversation_id']) ? (int)$_POST['conversation_id'] : 0;
         $personaIdRaw = isset($_POST['persona_id']) ? (int)$_POST['persona_id'] : 0;
+
+        // Apenas usuários logados podem trocar a personalidade da conversa
+        if ($userId <= 0) {
+            header('Location: /chat');
+            exit;
+        }
+
+        // Verifica se o plano atual permite uso de personalidades
+        $currentPlan = null;
+        if (!empty($_SESSION['is_admin'])) {
+            $currentPlan = Plan::findTopActive();
+        } else {
+            $currentPlan = Plan::findBySessionSlug($_SESSION['plan_slug'] ?? null);
+            if (!$currentPlan) {
+                $currentPlan = Plan::findBySlug('free');
+                if ($currentPlan && !empty($currentPlan['slug'])) {
+                    $_SESSION['plan_slug'] = $currentPlan['slug'];
+                }
+            }
+        }
+
+        if (empty($currentPlan['allow_personalities'])) {
+            header('Location: /chat');
+            exit;
+        }
 
         if ($conversationId <= 0) {
             header('Location: /chat');
