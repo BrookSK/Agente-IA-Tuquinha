@@ -19,6 +19,10 @@
 /** @var string $adminErrorEmail */
 /** @var string $adminErrorWebhook */
 /** @var string $extraTokenPricePer1kGlobal */
+/** @var string $googleClientId */
+/** @var string $googleClientSecret */
+/** @var string $googleRefreshToken */
+/** @var string $googleCalendarId */
 /** @var bool $saved */
 /** @var bool|null $testEmailStatus */
 /** @var string|null $testEmailError */
@@ -59,6 +63,45 @@ $knownModels = [
                 background: #050509; color: #f5f5f5; font-size: 13px;
             " placeholder="sk-...">
             <small style="color:#777; font-size:11px;">Esta chave será usada tanto para o chat quanto para a transcrição de áudio.</small>
+        </div>
+
+        <div style="margin-top: 8px; padding:10px 12px; border-radius:10px; border:1px solid #272727; background:#0a0a10;">
+            <div style="font-size:13px; color:#b0b0b0; margin-bottom:8px;">
+                <strong>Google Meet / Calendar (lives)</strong><br>
+                Configure abaixo a conta PRO do Google que será usada para criar as lives no Google Meet via API.
+            </div>
+            <div style="display:flex; flex-direction:column; gap:8px;">
+                <div>
+                    <label style="font-size: 12px; color: #b0b0b0;">Client ID (OAuth 2.0)</label>
+                    <input name="google_client_id" value="<?= htmlspecialchars($googleClientId) ?>" style="
+                        width: 100%; padding: 8px 10px; border-radius: 8px; border: 1px solid #272727;
+                        background: #050509; color: #f5f5f5; font-size: 13px;
+                    " placeholder="ex: 1234567890-abc.apps.googleusercontent.com">
+                </div>
+                <div>
+                    <label style="font-size: 12px; color: #b0b0b0;">Client Secret</label>
+                    <input name="google_client_secret" type="password" value="<?= htmlspecialchars($googleClientSecret) ?>" style="
+                        width: 100%; padding: 8px 10px; border-radius: 8px; border: 1px solid #272727;
+                        background: #050509; color: #f5f5f5; font-size: 13px;
+                    " placeholder="segredo do cliente OAuth 2.0">
+                </div>
+                <div>
+                    <label style="font-size: 12px; color: #b0b0b0;">Refresh Token</label>
+                    <input name="google_refresh_token" type="password" value="<?= htmlspecialchars($googleRefreshToken) ?>" style="
+                        width: 100%; padding: 8px 10px; border-radius: 8px; border: 1px solid #272727;
+                        background: #050509; color: #f5f5f5; font-size: 13px;
+                    " placeholder="token de atualização obtido no OAuth Playground">
+                    <small style="color:#777; font-size:11px;">Use o OAuth Playground do Google para gerar este token a partir da conta PRO que será dona das lives.</small>
+                </div>
+                <div>
+                    <label style="font-size: 12px; color: #b0b0b0;">Calendar ID</label>
+                    <input name="google_calendar_id" value="<?= htmlspecialchars($googleCalendarId) ?>" style="
+                        width: 100%; padding: 8px 10px; border-radius: 8px; border: 1px solid #272727;
+                        background: #050509; color: #f5f5f5; font-size: 13px;
+                    " placeholder="primary ou e-mail da conta">
+                    <small style="color:#777; font-size:11px;">Normalmente use <strong>primary</strong> para a agenda principal da conta PRO. Você também pode usar o e-mail da conta ou o ID de uma agenda específica.</small>
+                </div>
+            </div>
         </div>
 
         <div>

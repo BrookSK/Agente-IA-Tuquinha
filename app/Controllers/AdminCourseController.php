@@ -12,6 +12,7 @@ use App\Models\CoursePartner;
 use App\Models\CoursePartnerCommission;
 use App\Models\User;
 use App\Services\MailService;
+use App\Services\GoogleCalendarService;
 
 class AdminCourseController extends Controller
 {
@@ -386,23 +387,40 @@ HTML;
             exit;
         }
 
+        $googleEventId = null;
         if ($meetLink === '') {
-            $letters = 'abcdefghijklmnopqrstuvwxyz';
+            $googleService = new GoogleCalendarService();
+            if ($googleService->isConfigured()) {
+                $startIso = date('c', strtotime($scheduledAt));
+                $endIso = date('c', strtotime($scheduledAt . ' +60 minutes'));
+                $summary = $title !== '' ? $title : ('Live do curso ' . (string)($course['title'] ?? ''));
+                $desc = $description !== '' ? $description : 'Live do curso ' . (string)($course['title'] ?? '');
 
-            $code = '';
-            for ($i = 0; $i < 3; $i++) {
-                $code .= $letters[random_int(0, 25)];
-            }
-            $code .= '-';
-            for ($i = 0; $i < 4; $i++) {
-                $code .= $letters[random_int(0, 25)];
-            }
-            $code .= '-';
-            for ($i = 0; $i < 3; $i++) {
-                $code .= $letters[random_int(0, 25)];
+                $event = $googleService->createLiveEvent($summary, $desc, $startIso, $endIso);
+                if ($event && !empty($event['meet_link'])) {
+                    $meetLink = (string)$event['meet_link'];
+                    $googleEventId = (string)($event['event_id'] ?? '');
+                }
             }
 
-            $meetLink = 'https://meet.google.com/' . $code;
+            if ($meetLink === '') {
+                $letters = 'abcdefghijklmnopqrstuvwxyz';
+
+                $code = '';
+                for ($i = 0; $i < 3; $i++) {
+                    $code .= $letters[random_int(0, 25)];
+                }
+                $code .= '-';
+                for ($i = 0; $i < 4; $i++) {
+                    $code .= $letters[random_int(0, 25)];
+                }
+                $code .= '-';
+                for ($i = 0; $i < 3; $i++) {
+                    $code .= $letters[random_int(0, 25)];
+                }
+
+                $meetLink = 'https://meet.google.com/' . $code;
+            }
         }
 
         $data = [
@@ -413,7 +431,7 @@ HTML;
             'meet_link' => $meetLink,
             'recording_link' => $recordingLink !== '' ? $recordingLink : null,
             'recording_published_at' => null,
-            'google_event_id' => null,
+            'google_event_id' => $googleEventId ?: null,
             'is_published' => $isPublished,
         ];
 

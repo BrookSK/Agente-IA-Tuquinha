@@ -48,6 +48,11 @@ class AdminConfigController extends Controller
 
         $extraTokenPricePer1kGlobal = Setting::get('extra_token_price_per_1k_global', '');
 
+        $googleClientId = Setting::get('google_calendar_client_id', '');
+        $googleClientSecret = Setting::get('google_calendar_client_secret', '');
+        $googleRefreshToken = Setting::get('google_calendar_refresh_token', '');
+        $googleCalendarId = Setting::get('google_calendar_calendar_id', 'primary');
+
         $asaas = AsaasConfig::getActive();
 
         $this->view('admin/config', [
@@ -69,6 +74,10 @@ class AdminConfigController extends Controller
             'adminErrorEmail' => $adminErrorEmail,
             'adminErrorWebhook' => $adminErrorWebhook,
             'extraTokenPricePer1kGlobal' => $extraTokenPricePer1kGlobal,
+            'googleClientId' => $googleClientId,
+            'googleClientSecret' => $googleClientSecret,
+            'googleRefreshToken' => $googleRefreshToken,
+            'googleCalendarId' => $googleCalendarId,
             'asaasEnvironment' => $asaas['environment'] ?? 'sandbox',
             'asaasSandboxKey' => $asaas['sandbox_api_key'] ?? '',
             'asaasProdKey' => $asaas['production_api_key'] ?? '',
@@ -114,6 +123,11 @@ class AdminConfigController extends Controller
         $asaasSandboxKey = trim($_POST['asaas_sandbox_key'] ?? '');
         $asaasProdKey = trim($_POST['asaas_prod_key'] ?? '');
 
+        $googleClientId = trim($_POST['google_client_id'] ?? '');
+        $googleClientSecret = trim($_POST['google_client_secret'] ?? '');
+        $googleRefreshToken = trim($_POST['google_refresh_token'] ?? '');
+        $googleCalendarId = trim($_POST['google_calendar_id'] ?? 'primary');
+
         $pdo = Database::getConnection();
         $stmt = $pdo->prepare('INSERT INTO settings (`key`, `value`) VALUES (:key, :value)
             ON DUPLICATE KEY UPDATE `value` = VALUES(`value`)');
@@ -144,6 +158,10 @@ class AdminConfigController extends Controller
             'admin_error_notification_email' => $adminErrorEmail,
             'admin_error_webhook_url' => $adminErrorWebhook,
             'extra_token_price_per_1k_global' => $extraTokenPricePer1kGlobal,
+            'google_calendar_client_id' => $googleClientId,
+            'google_calendar_client_secret' => $googleClientSecret,
+            'google_calendar_refresh_token' => $googleRefreshToken,
+            'google_calendar_calendar_id' => $googleCalendarId !== '' ? $googleCalendarId : 'primary',
         ];
 
         foreach ($settingsToSave as $sKey => $sValue) {
@@ -182,6 +200,10 @@ class AdminConfigController extends Controller
             'adminErrorEmail' => $adminErrorEmail,
             'adminErrorWebhook' => $adminErrorWebhook,
             'extraTokenPricePer1kGlobal' => $extraTokenPricePer1kGlobal,
+            'googleClientId' => $googleClientId,
+            'googleClientSecret' => $googleClientSecret,
+            'googleRefreshToken' => $googleRefreshToken,
+            'googleCalendarId' => $googleCalendarId !== '' ? $googleCalendarId : 'primary',
             'asaasEnvironment' => $asaasEnv === 'production' ? 'production' : 'sandbox',
             'asaasSandboxKey' => $asaasSandboxKey,
             'asaasProdKey' => $asaasProdKey,
