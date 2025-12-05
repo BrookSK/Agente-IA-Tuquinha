@@ -33,3 +33,13 @@ const AI_API_KEY = ''; // preencha em produção ou use outra forma de carregar
 // Credenciais simples de admin para acesso à área /admin
 const ADMIN_USERNAME = 'admin';
 const ADMIN_PASSWORD = 'admin123'; // troque em produção
+
+// Credenciais do Google para criação de lives no Google Meet via API
+// O admin da plataforma deve preencher estes campos com os dados do projeto no Google Cloud.
+// GOOGLE_CALENDAR_CLIENT_ID e GOOGLE_CALENDAR_CLIENT_SECRET vêm da tela de "Credenciais" do Google Cloud (OAuth 2.0 Client ID).
+// GOOGLE_CALENDAR_REFRESH_TOKEN é obtido após uma autorização única da conta PRO que será dona das lives.
+// GOOGLE_CALENDAR_CALENDAR_ID normalmente pode ficar como 'primary' para usar a agenda principal da conta PRO.
+const GOOGLE_CALENDAR_CLIENT_ID = '';
+const GOOGLE_CALENDAR_CLIENT_SECRET = '';
+const GOOGLE_CALENDAR_REFRESH_TOKEN = '';
+const GOOGLE_CALENDAR_CALENDAR_ID = 'primary';

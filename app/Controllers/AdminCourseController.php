@@ -387,7 +387,22 @@ HTML;
         }
 
         if ($meetLink === '') {
-            $meetLink = 'https://meet.google.com/' . substr(bin2hex(random_bytes(6)), 0, 10);
+            $letters = 'abcdefghijklmnopqrstuvwxyz';
+
+            $code = '';
+            for ($i = 0; $i < 3; $i++) {
+                $code .= $letters[random_int(0, 25)];
+            }
+            $code .= '-';
+            for ($i = 0; $i < 4; $i++) {
+                $code .= $letters[random_int(0, 25)];
+            }
+            $code .= '-';
+            for ($i = 0; $i < 3; $i++) {
+                $code .= $letters[random_int(0, 25)];
+            }
+
+            $meetLink = 'https://meet.google.com/' . $code;
         }
 
         $data = [
