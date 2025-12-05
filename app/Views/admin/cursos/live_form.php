@@ -39,11 +39,11 @@ $isEdit = !empty($live);
         </div>
 
         <div>
-            <label style="font-size:13px; color:#ddd; display:block; margin-bottom:4px;">Link da reunião (Meet ou outro)</label>
-            <input type="text" name="meet_link" value="<?= htmlspecialchars($live['meet_link'] ?? '') ?>" placeholder="Opcional. Ex: https://meet.google.com/..." style="
+            <label style="font-size:13px; color:#ddd; display:block; margin-bottom:4px;">Link da reunião (gerado automaticamente)</label>
+            <input type="text" name="meet_link" value="<?= htmlspecialchars($live['meet_link'] ?? '') ?>" readonly style="
                 width:100%; padding:8px 10px; border-radius:8px; border:1px solid #272727;
                 background:#050509; color:#f5f5f5; font-size:13px;">
-            <div style="font-size:11px; color:#777; margin-top:3px;">Se deixar em branco, o sistema gera um link de Meet aleatório.</div>
+            <div style="font-size:11px; color:#777; margin-top:3px;">Na criação da live, deixe este campo em branco: o sistema vai gerar o link do Meet automaticamente. Depois de salva, a live exibirá aqui o link gerado, apenas para você copiar.</div>
         </div>
 
         <div>

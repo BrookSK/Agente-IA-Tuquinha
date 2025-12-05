@@ -150,6 +150,7 @@ class GoogleCalendarService
         curl_close($ch);
 
         if ($httpCode < 200 || $httpCode >= 300 || !$response) {
+            error_log('GoogleCalendarService addAttendeeToEvent GET attendees failed: HTTP ' . $httpCode . ' response=' . substr((string)$response, 0, 500));
             return false;
         }
 
@@ -204,6 +205,7 @@ class GoogleCalendarService
         curl_close($ch);
 
         if ($code2 < 200 || $code2 >= 300 || !$resp2) {
+            error_log('GoogleCalendarService addAttendeeToEvent PATCH failed: HTTP ' . $code2 . ' response=' . substr((string)$resp2, 0, 500));
             return false;
         }
 
