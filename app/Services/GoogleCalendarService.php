@@ -111,6 +111,105 @@ class GoogleCalendarService
         ];
     }
 
+    public function addAttendeeToEvent(string $eventId, string $email, ?string $name = null): bool
+    {
+        if (!$this->isConfigured()) {
+            return false;
+        }
+
+        $eventId = trim($eventId);
+        $email = trim($email);
+        if ($eventId === '' || $email === '') {
+            return false;
+        }
+
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            return false;
+        }
+
+        $accessToken = $this->refreshAccessToken();
+        if ($accessToken === null) {
+            return false;
+        }
+
+        $getUrl = 'https://www.googleapis.com/calendar/v3/calendars/'
+            . rawurlencode($this->calendarId)
+            . '/events/' . rawurlencode($eventId)
+            . '?fields=attendees';
+
+        $ch = curl_init($getUrl);
+        curl_setopt_array($ch, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_HTTPHEADER => [
+                'Authorization: Bearer ' . $accessToken,
+            ],
+        ]);
+
+        $response = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+
+        if ($httpCode < 200 || $httpCode >= 300 || !$response) {
+            return false;
+        }
+
+        $data = json_decode($response, true);
+        if (!is_array($data)) {
+            $data = [];
+        }
+
+        $attendees = [];
+        if (!empty($data['attendees']) && is_array($data['attendees'])) {
+            $attendees = $data['attendees'];
+        }
+
+        $lowerEmail = strtolower($email);
+        foreach ($attendees as $att) {
+            if (!is_array($att)) {
+                continue;
+            }
+            if (!empty($att['email']) && strtolower((string)$att['email']) === $lowerEmail) {
+                return true;
+            }
+        }
+
+        $newAttendee = ['email' => $email];
+        if ($name !== null && $name !== '') {
+            $newAttendee['displayName'] = $name;
+        }
+        $attendees[] = $newAttendee;
+
+        $patchUrl = 'https://www.googleapis.com/calendar/v3/calendars/'
+            . rawurlencode($this->calendarId)
+            . '/events/' . rawurlencode($eventId)
+            . '?sendUpdates=all';
+
+        $payload = [
+            'attendees' => $attendees,
+        ];
+
+        $ch = curl_init($patchUrl);
+        curl_setopt_array($ch, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_CUSTOMREQUEST => 'PATCH',
+            CURLOPT_HTTPHEADER => [
+                'Content-Type: application/json',
+                'Authorization: Bearer ' . $accessToken,
+            ],
+            CURLOPT_POSTFIELDS => json_encode($payload),
+        ]);
+
+        $resp2 = curl_exec($ch);
+        $code2 = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+
+        if ($code2 < 200 || $code2 >= 300 || !$resp2) {
+            return false;
+        }
+
+        return true;
+    }
+
     /**
      * Busca a gravação de uma reunião do Google Meet a partir do link/código da reunião.
      * Retorna a URL de visualização no Google Drive (exportUri) ou null se não encontrar.
@@ -256,7 +355,6 @@ class GoogleCalendarService
             return null;
         }
 
-        // 1) Tenta em anexos do evento
         if (!empty($data['attachments']) && is_array($data['attachments'])) {
             foreach ($data['attachments'] as $att) {
                 if (!is_array($att)) {
@@ -269,7 +367,6 @@ class GoogleCalendarService
             }
         }
 
-        // 2) Tenta achar um link do Drive na descrição do evento
         $description = (string)($data['description'] ?? '');
         if ($description !== '') {
             if (preg_match('~https?://drive\\.google\\.com/[^\s<]+~i', $description, $m)) {
@@ -278,6 +375,71 @@ class GoogleCalendarService
         }
 
         return null;
+    }
+
+    public function grantDriveFileAccessToEmails(string $fileUrl, array $emails): void
+    {
+        if (!$this->isConfigured()) {
+            return;
+        }
+
+        $fileId = $this->extractDriveFileId($fileUrl);
+        if ($fileId === null) {
+            return;
+        }
+
+        $accessToken = $this->refreshAccessToken();
+        if ($accessToken === null) {
+            return;
+        }
+
+        $cleanEmails = [];
+        foreach ($emails as $email) {
+            $email = trim((string)$email);
+            if ($email === '') {
+                continue;
+            }
+            if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                continue;
+            }
+            $lower = strtolower($email);
+            $cleanEmails[$lower] = $lower;
+        }
+
+        if (empty($cleanEmails)) {
+            return;
+        }
+
+        foreach ($cleanEmails as $email) {
+            $payload = [
+                'role' => 'reader',
+                'type' => 'user',
+                'emailAddress' => $email,
+            ];
+
+            $url = 'https://www.googleapis.com/drive/v3/files/'
+                . rawurlencode($fileId)
+                . '/permissions?supportsAllDrives=true&sendNotificationEmail=false';
+
+            $ch = curl_init($url);
+            curl_setopt_array($ch, [
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_CUSTOMREQUEST => 'POST',
+                CURLOPT_HTTPHEADER => [
+                    'Content-Type: application/json',
+                    'Authorization: Bearer ' . $accessToken,
+                ],
+                CURLOPT_POSTFIELDS => json_encode($payload),
+            ]);
+
+            $response = curl_exec($ch);
+            $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            curl_close($ch);
+
+            if ($code < 200 || $code >= 300 || !$response) {
+                continue;
+            }
+        }
     }
 
     private function refreshAccessToken(): ?string
@@ -328,6 +490,28 @@ class GoogleCalendarService
 
         if (preg_match('~^[a-z0-9]{3}-[a-z0-9]{4}-[a-z0-9]{3}$~i', $value)) {
             return strtolower($value);
+        }
+
+        return null;
+    }
+
+    private function extractDriveFileId(string $url): ?string
+    {
+        $url = trim($url);
+        if ($url === '') {
+            return null;
+        }
+
+        if (preg_match('~https?://drive\\.google\\.com/file/d/([^/]+)/~i', $url, $m)) {
+            return $m[1];
+        }
+
+        if (preg_match('~https?://drive\\.google\\.com/open\\?id=([^&]+)~i', $url, $m)) {
+            return $m[1];
+        }
+
+        if (preg_match('~https?://drive\\.google\\.com/uc\\?id=([^&]+)~i', $url, $m)) {
+            return $m[1];
         }
 
         return null;

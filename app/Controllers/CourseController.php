@@ -13,6 +13,7 @@ use App\Models\Plan;
 use App\Models\Subscription;
 use App\Models\User;
 use App\Services\MailService;
+use App\Services\GoogleCalendarService;
 
 class CourseController extends Controller
 {
@@ -275,6 +276,17 @@ HTML;
         $courseId = (int)$course['id'];
         CourseEnrollment::enroll($courseId, (int)$user['id']);
         CourseLiveParticipant::addParticipant($liveId, (int)$user['id']);
+
+        $googleEventId = (string)($live['google_event_id'] ?? '');
+        if ($googleEventId !== '' && !empty($user['email'])) {
+            try {
+                $googleService = new GoogleCalendarService();
+                if ($googleService->isConfigured()) {
+                    $googleService->addAttendeeToEvent($googleEventId, (string)$user['email'], (string)($user['name'] ?? ''));
+                }
+            } catch (\Throwable $e) {
+            }
+        }
 
         $meetLink = (string)($live['meet_link'] ?? '');
 

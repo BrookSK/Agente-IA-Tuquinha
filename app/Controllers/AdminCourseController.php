@@ -471,16 +471,12 @@ HTML;
                     $safeName = htmlspecialchars($user['name'] ?? '', ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
                     $safeCourseTitle = htmlspecialchars($course['title'] ?? '', ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
                     $safeWhen = htmlspecialchars($when, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
-                    $safeMeetLink = htmlspecialchars($meetLink, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+                    $courseUrl = CourseController::buildCourseUrl($course) . '#lives';
+                    $safeCourseUrl = htmlspecialchars($courseUrl, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
 
                     $whenParagraph = '';
                     if ($when !== '') {
                         $whenParagraph = '<p style="font-size:14px; margin:0 0 10px 0;">Data e horário: <strong>' . $safeWhen . '</strong></p>';
-                    }
-
-                    $meetParagraph = '';
-                    if ($meetLink !== '') {
-                        $meetParagraph = '<p style="font-size:14px; margin:0 0 10px 0;">No dia e horário da live, você poderá entrar pelo link abaixo:<br><a href="' . $safeMeetLink . '" style="color:#ff6f60; text-decoration:none;">' . $safeMeetLink . '</a></p>';
                     }
 
                     $body = <<<HTML
@@ -499,7 +495,14 @@ HTML;
       <p style="font-size:14px; margin:0 0 10px 0;">Oi, {$safeName} 👋</p>
       <p style="font-size:14px; margin:0 0 10px 0;">Uma nova live foi agendada para o curso <strong>{$safeCourseTitle}</strong>.</p>
       {$whenParagraph}
-      {$meetParagraph}
+
+      <div style="text-align:center; margin:14px 0 8px 0;">
+        <a href="{$safeCourseUrl}" style="display:inline-block; padding:9px 18px; border-radius:999px; background:linear-gradient(135deg,#e53935,#ff6f60); color:#050509; font-weight:600; font-size:13px; text-decoration:none;">Ver live e se inscrever</a>
+      </div>
+
+      <p style="font-size:12px; color:#777; margin:8px 0 0 0;">Se o botão não funcionar, copie e cole este link no navegador:<br>
+        <a href="{$safeCourseUrl}" style="color:#ff6f60; text-decoration:none;">{$safeCourseUrl}</a>
+      </p>
     </div>
   </div>
 </body>
@@ -536,12 +539,33 @@ HTML;
             $when = date('d/m/Y H:i', strtotime((string)$live['scheduled_at']));
         }
 
+        $usersWithEmail = [];
         foreach ($participants as $p) {
             $user = User::findById((int)$p['user_id']);
             if (!$user || empty($user['email'])) {
                 continue;
             }
+            $usersWithEmail[] = $user;
+        }
 
+        if (empty($usersWithEmail)) {
+            return;
+        }
+
+        $emails = [];
+        foreach ($usersWithEmail as $user) {
+            $emails[] = (string)$user['email'];
+        }
+
+        try {
+            $googleService = new GoogleCalendarService();
+            if ($googleService->isConfigured()) {
+                $googleService->grantDriveFileAccessToEmails($recordingLink, $emails);
+            }
+        } catch (\Throwable $e) {
+        }
+
+        foreach ($usersWithEmail as $user) {
             $subject = 'Gravação disponível: live do curso ' . (string)($course['title'] ?? '');
             $safeName = htmlspecialchars($user['name'] ?? '', ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
             $safeCourseTitle = htmlspecialchars($course['title'] ?? '', ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
