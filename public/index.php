@@ -96,6 +96,7 @@ $router->get('/admin/cursos/lives/nova', 'AdminCourseController@liveForm');
 $router->get('/admin/cursos/lives/editar', 'AdminCourseController@liveForm');
 $router->post('/admin/cursos/lives/salvar', 'AdminCourseController@liveSave');
 $router->post('/admin/cursos/lives/enviar-lembretes', 'AdminCourseController@sendLiveReminders');
+$router->post('/admin/cursos/lives/buscar-gravacao', 'AdminCourseController@fetchLiveRecording');
 $router->get('/admin/personalidades', 'AdminPersonalityController@index');
 $router->get('/admin/personalidades/novo', 'AdminPersonalityController@form');
 $router->get('/admin/personalidades/editar', 'AdminPersonalityController@form');

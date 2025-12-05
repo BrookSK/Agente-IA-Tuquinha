@@ -28,6 +28,13 @@
         <?php unset($_SESSION['admin_course_error']); ?>
     <?php endif; ?>
 
+    <?php if (!empty($_SESSION['admin_course_success'])): ?>
+        <div style="background:#14361f; border:1px solid #2ecc71; color:#c1ffda; padding:8px 10px; border-radius:8px; font-size:13px; margin-bottom:10px;">
+            <?= htmlspecialchars($_SESSION['admin_course_success']) ?>
+        </div>
+        <?php unset($_SESSION['admin_course_success']); ?>
+    <?php endif; ?>
+
     <div style="border-radius:12px; border:1px solid #272727; overflow:hidden;">
         <table style="width:100%; border-collapse:collapse; font-size:13px;">
             <thead style="background:#0b0b10;">
@@ -50,6 +57,7 @@
                         $published = !empty($live['is_published']);
                         $scheduled = $live['scheduled_at'] ?? '';
                         $formatted = $scheduled ? date('d/m/Y H:i', strtotime($scheduled)) : '';
+                        $hasRecording = !empty($live['recording_link']);
                     ?>
                     <tr style="background:#111118; border-top:1px solid #272727;">
                         <td style="padding:8px 10px;">
@@ -77,6 +85,13 @@
                                 <input type="hidden" name="live_id" value="<?= (int)$live['id'] ?>">
                                 <button type="submit" style="border:none; background:none; color:#b0b0b0; font-size:12px; cursor:pointer;">Enviar lembretes</button>
                             </form>
+                            <?php if (!empty($live['meet_link']) && !$hasRecording): ?>
+                                <form action="/admin/cursos/lives/buscar-gravacao" method="post" style="display:inline; margin-left:6px;" onsubmit="return confirm('Tentar buscar automaticamente a gravação desta live na conta Google configurada?');">
+                                    <input type="hidden" name="course_id" value="<?= (int)$course['id'] ?>">
+                                    <input type="hidden" name="live_id" value="<?= (int)$live['id'] ?>">
+                                    <button type="submit" style="border:none; background:none; color:#6be28d; font-size:12px; cursor:pointer;">Buscar gravação</button>
+                                </form>
+                            <?php endif; ?>
                         </td>
                     </tr>
                 <?php endforeach; ?>
