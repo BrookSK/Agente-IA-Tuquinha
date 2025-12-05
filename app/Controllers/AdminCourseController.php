@@ -584,6 +584,73 @@ HTML;
         }
     }
 
+    public function fetchLiveRecording(): void
+    {
+        $this->ensureAdmin();
+
+        $courseId = isset($_POST['course_id']) ? (int)$_POST['course_id'] : 0;
+        $liveId = isset($_POST['live_id']) ? (int)$_POST['live_id'] : 0;
+
+        $course = $courseId > 0 ? Course::findById($courseId) : null;
+        if (!$course) {
+            header('Location: /admin/cursos');
+            exit;
+        }
+
+        $live = $liveId > 0 ? CourseLive::findById($liveId) : null;
+        if (!$live) {
+            header('Location: /admin/cursos/lives?course_id=' . $courseId);
+            exit;
+        }
+
+        if (!empty($live['recording_link'])) {
+            $_SESSION['admin_course_success'] = 'Esta live já possui link de gravação cadastrado.';
+            header('Location: /admin/cursos/lives?course_id=' . $courseId);
+            exit;
+        }
+
+        if (empty($live['meet_link'])) {
+            $_SESSION['admin_course_error'] = 'Não há link de reunião configurado para esta live. Não é possível buscar gravação automática.';
+            header('Location: /admin/cursos/lives?course_id=' . $courseId);
+            exit;
+        }
+
+        $googleService = new GoogleCalendarService();
+        if (!$googleService->isConfigured()) {
+            $_SESSION['admin_course_error'] = 'A API do Google ainda não está configurada nas Configurações do sistema.';
+            header('Location: /admin/cursos/lives?course_id=' . $courseId);
+            exit;
+        }
+
+        $recordingUrl = $googleService->findRecordingExportUriByMeetLink((string)($live['meet_link'] ?? ''));
+        if ($recordingUrl === null) {
+            $_SESSION['admin_course_error'] = 'Não encontrei nenhuma gravação para esta reunião na API do Google. Aguarde alguns minutos após encerrar a gravação e tente novamente.';
+            header('Location: /admin/cursos/lives?course_id=' . $courseId);
+            exit;
+        }
+
+        $update = [
+            'course_id' => (int)($live['course_id'] ?? $courseId),
+            'title' => $live['title'] ?? '',
+            'description' => $live['description'] ?? null,
+            'scheduled_at' => $live['scheduled_at'] ?? '',
+            'meet_link' => $live['meet_link'] ?? null,
+            'recording_link' => $recordingUrl,
+            'recording_published_at' => date('Y-m-d H:i:s'),
+            'google_event_id' => $live['google_event_id'] ?? null,
+            'is_published' => (int)($live['is_published'] ?? 1),
+        ];
+
+        CourseLive::update($liveId, $update);
+
+        $updatedLive = CourseLive::findById($liveId);
+        $this->notifyRecordingPublished($course, $updatedLive ?: $live);
+
+        $_SESSION['admin_course_success'] = 'Gravação encontrada na API do Google e enviada para os participantes.';
+        header('Location: /admin/cursos/lives?course_id=' . $courseId);
+        exit;
+    }
+
     public function sendLiveReminders(): void
     {
         $this->ensureAdmin();
