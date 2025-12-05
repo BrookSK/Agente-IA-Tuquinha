@@ -622,7 +622,16 @@ HTML;
             exit;
         }
 
-        $recordingUrl = $googleService->findRecordingExportUriByMeetLink((string)($live['meet_link'] ?? ''));
+        $recordingUrl = null;
+
+        $eventId = (string)($live['google_event_id'] ?? '');
+        if ($eventId !== '') {
+            $recordingUrl = $googleService->findRecordingUrlByEventId($eventId);
+        }
+
+        if ($recordingUrl === null) {
+            $recordingUrl = $googleService->findRecordingExportUriByMeetLink((string)($live['meet_link'] ?? ''));
+        }
         if ($recordingUrl === null) {
             $_SESSION['admin_course_error'] = 'Não encontrei nenhuma gravação para esta reunião na API do Google. Aguarde alguns minutos após encerrar a gravação e tente novamente.';
             header('Location: /admin/cursos/lives?course_id=' . $courseId);

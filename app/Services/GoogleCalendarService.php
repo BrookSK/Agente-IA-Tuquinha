@@ -209,6 +209,77 @@ class GoogleCalendarService
         return null;
     }
 
+    /**
+     * Tenta obter o link de gravação a partir do evento do Calendar (google_event_id).
+     * O Google normalmente adiciona o link da gravação como anexo ou dentro da descrição
+     * do evento após o processamento do vídeo no Drive.
+     */
+    public function findRecordingUrlByEventId(string $eventId): ?string
+    {
+        if (!$this->isConfigured()) {
+            return null;
+        }
+
+        $eventId = trim($eventId);
+        if ($eventId === '') {
+            return null;
+        }
+
+        $accessToken = $this->refreshAccessToken();
+        if ($accessToken === null) {
+            return null;
+        }
+
+        $url = 'https://www.googleapis.com/calendar/v3/calendars/'
+            . rawurlencode($this->calendarId)
+            . '/events/' . rawurlencode($eventId)
+            . '?fields=description,attachments';
+
+        $ch = curl_init($url);
+        curl_setopt_array($ch, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_HTTPHEADER => [
+                'Authorization: Bearer ' . $accessToken,
+            ],
+        ]);
+
+        $response = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+
+        if ($httpCode < 200 || $httpCode >= 300 || !$response) {
+            return null;
+        }
+
+        $data = json_decode($response, true);
+        if (!is_array($data)) {
+            return null;
+        }
+
+        // 1) Tenta em anexos do evento
+        if (!empty($data['attachments']) && is_array($data['attachments'])) {
+            foreach ($data['attachments'] as $att) {
+                if (!is_array($att)) {
+                    continue;
+                }
+                $fileUrl = $att['fileUrl'] ?? '';
+                if ($fileUrl !== '' && str_starts_with($fileUrl, 'https://drive.google.com')) {
+                    return (string)$fileUrl;
+                }
+            }
+        }
+
+        // 2) Tenta achar um link do Drive na descrição do evento
+        $description = (string)($data['description'] ?? '');
+        if ($description !== '') {
+            if (preg_match('~https?://drive\\.google\\.com/[^\s<]+~i', $description, $m)) {
+                return (string)$m[0];
+            }
+        }
+
+        return null;
+    }
+
     private function refreshAccessToken(): ?string
     {
         $ch = curl_init('https://oauth2.googleapis.com/token');
