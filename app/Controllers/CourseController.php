@@ -191,12 +191,23 @@ class CourseController extends Controller
 
         $allowPlanOnly = !empty($course['allow_plan_access_only']);
         $allowPublicPurchase = !empty($course['allow_public_purchase']);
+        $isPaid = !empty($course['is_paid']);
 
-        $canEnroll = $isAdmin || $planAllowsCourses || $allowPublicPurchase;
-        if (!$canEnroll) {
-            $_SESSION['courses_error'] = 'Seu plano atual não permite inscrição neste curso.';
-            header('Location: /planos');
-            exit;
+        // Admins e assinantes de planos com cursos sempre podem se inscrever
+        if (!$isAdmin && !$planAllowsCourses) {
+            // Usuário sem plano que libera cursos
+            if (!$allowPublicPurchase) {
+                $_SESSION['courses_error'] = 'Seu plano atual não permite inscrição neste curso.';
+                header('Location: /planos');
+                exit;
+            }
+
+            // Curso pago com compra avulsa liberada: redireciona para fluxo de compra
+            if ($isPaid) {
+                header('Location: /cursos/comprar?course_id=' . $courseId);
+                exit;
+            }
+            // Curso gratuito com visibilidade pública: segue para inscrição normal
         }
 
         CourseEnrollment::enroll($courseId, (int)$user['id']);
@@ -278,6 +289,14 @@ HTML;
 
         $courseId = (int)$course['id'];
         CourseEnrollment::enroll($courseId, (int)$user['id']);
+
+        $alreadyParticipant = CourseLiveParticipant::isParticipant($liveId, (int)$user['id']);
+        if ($alreadyParticipant) {
+            $_SESSION['courses_success'] = 'Sua participação nesta live já está confirmada.';
+            header('Location: ' . self::buildCourseUrl($course) . '#lives');
+            exit;
+        }
+
         CourseLiveParticipant::addParticipant($liveId, (int)$user['id']);
 
         $googleEventId = (string)($live['google_event_id'] ?? '');

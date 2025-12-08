@@ -102,15 +102,25 @@ $courseUrl = CourseController::buildCourseUrl($course);
                             Você já está inscrito neste curso
                         </span>
                     <?php else: ?>
-                        <form action="/cursos/inscrever" method="post" style="display:inline;">
-                            <input type="hidden" name="course_id" value="<?= (int)($course['id'] ?? 0) ?>">
-                            <button type="submit" style="
-                                border:none; border-radius:999px; padding:8px 16px;
+                        <?php if ($isPaid && $allowPublicPurchase && !$planAllowsCourses): ?>
+                            <a href="/cursos/comprar?course_id=<?= (int)($course['id'] ?? 0) ?>" style="
+                                display:inline-flex; align-items:center; gap:6px; padding:8px 16px;
+                                border-radius:999px; border:1px solid #ff6f60;
                                 background:linear-gradient(135deg,#e53935,#ff6f60); color:#050509;
-                                font-weight:600; font-size:13px; cursor:pointer;">
-                                Quero fazer este curso
-                            </button>
-                        </form>
+                                font-size:13px; font-weight:600; text-decoration:none;">
+                                Comprar curso avulso
+                            </a>
+                        <?php else: ?>
+                            <form action="/cursos/inscrever" method="post" style="display:inline;">
+                                <input type="hidden" name="course_id" value="<?= (int)($course['id'] ?? 0) ?>">
+                                <button type="submit" style="
+                                    border:none; border-radius:999px; padding:8px 16px;
+                                    background:linear-gradient(135deg,#e53935,#ff6f60); color:#050509;
+                                    font-weight:600; font-size:13px; cursor:pointer;">
+                                    Quero fazer este curso
+                                </button>
+                            </form>
+                        <?php endif; ?>
                     <?php endif; ?>
                 <?php endif; ?>
             </div>
@@ -253,23 +263,36 @@ $courseUrl = CourseController::buildCourseUrl($course);
                                 <?php elseif (!$isEnrolled): ?>
                                     <span style="font-size:11px; color:#b0b0b0;">Inscreva-se no curso para participar desta live.</span>
                                 <?php else: ?>
-                                    <form action="/cursos/lives/participar" method="post" style="display:inline;">
-                                        <input type="hidden" name="live_id" value="<?= $liveId ?>">
-                                        <button type="submit" style="
-                                            border:none; border-radius:999px; padding:5px 12px;
-                                            background:linear-gradient(135deg,#e53935,#ff6f60); color:#050509;
-                                            font-weight:600; font-size:11px; cursor:pointer;">
-                                            Quero participar da live
-                                        </button>
-                                    </form>
-                                    <?php if ($recordingLink !== ''): ?>
-                                        <div style="margin-top:4px; font-size:11px; color:#b0b0b0;">
-                                            Gravação disponível apenas para quem participou desta live.
-                                        </div>
-                                    <?php elseif ($meetLink !== ''): ?>
-                                        <div style="margin-top:4px; font-size:11px; color:#b0b0b0;">
-                                            Link será enviado por e-mail após a confirmação.
-                                        </div>
+                                    <?php if (!empty($myLiveParticipation[$liveId] ?? false)): ?>
+                                        <span style="font-size:11px; color:#c8ffd4;">Você já está inscrito nesta live.</span>
+                                        <?php if ($recordingLink !== ''): ?>
+                                            <div style="margin-top:4px; font-size:11px; color:#b0b0b0;">
+                                                Gravação disponível apenas para quem participou desta live.
+                                            </div>
+                                        <?php elseif ($meetLink !== ''): ?>
+                                            <div style="margin-top:4px; font-size:11px; color:#b0b0b0;">
+                                                No horário da live, você receberá o link por e-mail.
+                                            </div>
+                                        <?php endif; ?>
+                                    <?php else: ?>
+                                        <form action="/cursos/lives/participar" method="post" style="display:inline;">
+                                            <input type="hidden" name="live_id" value="<?= $liveId ?>">
+                                            <button type="submit" style="
+                                                border:none; border-radius:999px; padding:5px 12px;
+                                                background:linear-gradient(135deg,#e53935,#ff6f60); color:#050509;
+                                                font-weight:600; font-size:11px; cursor:pointer;">
+                                                Quero participar da live
+                                            </button>
+                                        </form>
+                                        <?php if ($recordingLink !== ''): ?>
+                                            <div style="margin-top:4px; font-size:11px; color:#b0b0b0;">
+                                                Gravação disponível apenas para quem participou desta live.
+                                            </div>
+                                        <?php elseif ($meetLink !== ''): ?>
+                                            <div style="margin-top:4px; font-size:11px; color:#b0b0b0;">
+                                                Link será enviado por e-mail após a confirmação.
+                                            </div>
+                                        <?php endif; ?>
                                     <?php endif; ?>
                                 <?php endif; ?>
                             </div>

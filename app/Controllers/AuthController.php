@@ -101,10 +101,13 @@ class AuthController extends Controller
             }
         }
 
+        $redirectCourseId = $_SESSION['pending_course_id'] ?? null;
         $redirectPlan = $_SESSION['pending_plan_slug'] ?? null;
-        unset($_SESSION['pending_plan_slug']);
+        unset($_SESSION['pending_course_id'], $_SESSION['pending_plan_slug']);
 
-        if ($redirectPlan) {
+        if ($redirectCourseId) {
+            header('Location: /cursos/comprar?course_id=' . (int)$redirectCourseId);
+        } elseif ($redirectPlan) {
             header('Location: /checkout?plan=' . urlencode($redirectPlan));
         } else {
             header('Location: /');
@@ -491,10 +494,13 @@ HTML;
 
         unset($_SESSION['pending_verify_user_id'], $_SESSION['pending_verify_email']);
 
+        $redirectCourseId = $_SESSION['pending_course_id'] ?? null;
         $redirectPlan = $_SESSION['pending_plan_slug'] ?? null;
-        unset($_SESSION['pending_plan_slug']);
+        unset($_SESSION['pending_course_id'], $_SESSION['pending_plan_slug']);
 
-        if ($redirectPlan) {
+        if ($redirectCourseId) {
+            header('Location: /cursos/comprar?course_id=' . (int)$redirectCourseId);
+        } elseif ($redirectPlan) {
             header('Location: /checkout?plan=' . urlencode((string)$redirectPlan));
         } else {
             header('Location: /');

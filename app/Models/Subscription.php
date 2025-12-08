@@ -55,13 +55,40 @@ class Subscription
     public static function sumActiveRevenueCents(): int
     {
         $pdo = Database::getConnection();
-        $sql = 'SELECT SUM(p.price_cents) AS total
+
+        // Normaliza a receita das assinaturas ativas para uma base MENSAL,
+        // considerando o período do plano inferido pelo slug:
+        // - slug terminando com "-semestral": preço referente a 6 meses
+        // - slug terminando com "-anual": preço referente a 12 meses
+        // - demais casos: tratado como mensal
+        $sql = 'SELECT p.price_cents, p.slug
                 FROM subscriptions s
                 INNER JOIN plans p ON p.id = s.plan_id
                 WHERE s.status = "active"';
+
         $stmt = $pdo->query($sql);
-        $row = $stmt->fetch(PDO::FETCH_ASSOC);
-        return (int)($row['total'] ?? 0);
+        $totalMonthlyCents = 0;
+
+        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+            $priceCents = (int)($row['price_cents'] ?? 0);
+            $slug = (string)($row['slug'] ?? '');
+
+            $months = 1;
+            if (substr($slug, -11) === '-semestral') {
+                $months = 6;
+            } elseif (substr($slug, -6) === '-anual') {
+                $months = 12;
+            }
+
+            if ($months < 1) {
+                $months = 1;
+            }
+
+            $monthlyCents = (int)round($priceCents / $months);
+            $totalMonthlyCents += $monthlyCents;
+        }
+
+        return $totalMonthlyCents;
     }
 
     public static function allWithPlanAndStatus(string $statusFilter = ''): array

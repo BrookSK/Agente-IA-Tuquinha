@@ -94,23 +94,43 @@ $partnerEmail = $partnerEmail ?? '';
             </div>
         </div>
 
-        <div style="display:flex; flex-wrap:wrap; gap:10px; font-size:13px; color:#ddd; margin-top:4px;">
-            <label style="display:flex; align-items:center; gap:5px;">
-                <input type="checkbox" name="is_paid" value="1" <?= !empty($course['is_paid']) ? 'checked' : '' ?>>
-                <span>Curso pago (pode ser vendido avulso)</span>
-            </label>
-            <label style="display:flex; align-items:center; gap:5px;">
-                <input type="checkbox" name="allow_plan_access_only" value="1" <?= !empty($course['allow_plan_access_only']) ? 'checked' : '' ?>>
-                <span>Somente usuários com planos que liberam cursos</span>
-            </label>
-            <label style="display:flex; align-items:center; gap:5px;">
-                <input type="checkbox" name="allow_public_purchase" value="1" <?= !empty($course['allow_public_purchase']) ? 'checked' : '' ?>>
-                <span>Mostrar para quem não tem plano (compra avulsa)</span>
-            </label>
-            <label style="display:flex; align-items:center; gap:5px;">
-                <input type="checkbox" name="is_active" value="1" <?= !isset($course['is_active']) || !empty($course['is_active']) ? 'checked' : '' ?>>
-                <span>Curso ativo</span>
-            </label>
+        <div style="display:flex; flex-direction:column; gap:6px; font-size:13px; color:#ddd; margin-top:4px;">
+            <div style="display:flex; flex-wrap:wrap; gap:10px; align-items:center;">
+                <label style="display:flex; align-items:center; gap:5px;">
+                    <input type="checkbox" name="is_paid" value="1" <?= !empty($course['is_paid']) ? 'checked' : '' ?>>
+                    <span>Curso pago (define um preço avulso para este curso)</span>
+                </label>
+            </div>
+            <div style="font-size:11px; color:#777; margin-left:20px;">
+                Se marcado, o curso terá um valor próprio. Quem tiver plano que libera cursos continua com acesso incluído; quem não tiver plano poderá comprar avulso se você também marcar a opção de compra avulsa abaixo.
+            </div>
+
+            <div style="display:flex; flex-wrap:wrap; gap:10px; align-items:center;">
+                <label style="display:flex; align-items:center; gap:5px;">
+                    <input type="checkbox" name="allow_plan_access_only" value="1" <?= !empty($course['allow_plan_access_only']) ? 'checked' : '' ?>>
+                    <span>Disponível para assinantes de planos com cursos</span>
+                </label>
+            </div>
+            <div style="font-size:11px; color:#777; margin-left:20px;">
+                Assinantes de planos que liberam cursos sempre veem e podem acessar este curso sem pagar nada a mais. Use esta marcação apenas para sinalizar que o curso faz parte do conteúdo incluído nos planos.
+            </div>
+
+            <div style="display:flex; flex-wrap:wrap; gap:10px; align-items:center;">
+                <label style="display:flex; align-items:center; gap:5px;">
+                    <input type="checkbox" name="allow_public_purchase" value="1" <?= !empty($course['allow_public_purchase']) ? 'checked' : '' ?>>
+                    <span>Mostrar também para quem não tem plano (compra avulsa)</span>
+                </label>
+            </div>
+            <div style="font-size:11px; color:#777; margin-left:20px;">
+                Se marcado, usuários sem plano enxergam este curso na vitrine. Se for pago, eles poderão comprar avulso; se for gratuito, poderão se inscrever mesmo sem ter um plano.
+            </div>
+
+            <div style="display:flex; flex-wrap:wrap; gap:10px; align-items:center; margin-top:2px;">
+                <label style="display:flex; align-items:center; gap:5px;">
+                    <input type="checkbox" name="is_active" value="1" <?= !isset($course['is_active']) || !empty($course['is_active']) ? 'checked' : '' ?>>
+                    <span>Curso ativo</span>
+                </label>
+            </div>
         </div>
 
         <div style="margin-top:12px; display:flex; gap:8px;">

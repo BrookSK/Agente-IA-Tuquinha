@@ -22,11 +22,11 @@
             <div style="font-size:22px; font-weight:600; margin-top:4px;"><?= (int)$totalPlans ?></div>
         </div>
         <div style="flex:1; min-width:220px; padding:12px 14px; border-radius:12px; background:#111118; border:1px solid #272727;">
-            <div style="font-size:12px; color:#b0b0b0;">Receita recorrente ativa (estimada)</div>
+            <div style="font-size:12px; color:#b0b0b0;">Receita recorrente ativa mensal (estimada)</div>
             <div style="font-size:22px; font-weight:600; margin-top:4px;">
                 R$ <?= number_format($activeRevenueCents / 100, 2, ',', '.') ?>
             </div>
-            <div style="font-size:11px; color:#b0b0b0; margin-top:4px;">Soma dos planos com status ativo</div>
+            <div style="font-size:11px; color:#b0b0b0; margin-top:4px;">Estimativa mensal normalizada (planos mensais, semestrais e anuais ativos)</div>
         </div>
         <div style="flex:1; min-width:220px; padding:12px 14px; border-radius:12px; background:#111118; border:1px solid #272727; display:flex; flex-direction:column; justify-content:space-between;">
             <div>

@@ -60,6 +60,8 @@ $router->get('/cursos/ver', 'CourseController@show');
 $router->post('/cursos/inscrever', 'CourseController@enroll');
 $router->post('/cursos/lives/participar', 'CourseController@joinLive');
 $router->post('/cursos/aulas/comentar', 'CourseController@commentLesson');
+$router->get('/cursos/comprar', 'CoursePurchaseController@show');
+$router->post('/cursos/comprar', 'CoursePurchaseController@process');
 $router->get('/comunidade', 'CommunityController@index');
 $router->post('/comunidade/postar', 'CommunityController@createPost');
 $router->post('/comunidade/curtir', 'CommunityController@like');

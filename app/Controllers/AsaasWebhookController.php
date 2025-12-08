@@ -8,6 +8,10 @@ use App\Models\Plan;
 use App\Models\User;
 use App\Models\TokenTransaction;
 use App\Models\TokenTopup;
+use App\Models\CoursePurchase;
+use App\Models\Course;
+use App\Models\CourseEnrollment;
+use App\Services\MailService;
 
 class AsaasWebhookController extends Controller
 {
@@ -72,7 +76,93 @@ class AsaasWebhookController extends Controller
             return;
         }
 
-        // 2) Fluxo padrão de assinatura (subscription)
+        // 2) Tratamento de compras avulsas de cursos
+        if ($externalRef !== '' && str_starts_with($externalRef, 'course_purchase:')) {
+            $parts = explode(':', $externalRef, 2);
+            $purchaseId = isset($parts[1]) ? (int)$parts[1] : 0;
+
+            $purchase = null;
+            if (!empty($payment['id'])) {
+                $purchase = CoursePurchase::findByAsaasPaymentId((string)$payment['id']);
+            }
+            if (!$purchase && $purchaseId > 0) {
+                $purchase = CoursePurchase::findById($purchaseId);
+            }
+
+            if ($purchase && !empty($purchase['user_id']) && !empty($purchase['course_id'])) {
+                $userId = (int)$purchase['user_id'];
+                $courseId = (int)$purchase['course_id'];
+
+                $user = User::findById($userId);
+                $course = Course::findById($courseId);
+
+                if ($user && $course) {
+                    // Garante inscrição no curso
+                    CourseEnrollment::enroll($courseId, $userId);
+                    CoursePurchase::markPaid((int)$purchase['id']);
+
+                    // Tenta enviar e-mail de confirmação de inscrição
+                    try {
+                        if (!empty($user['email'])) {
+                            $subject = 'Inscrição confirmada no curso: ' . (string)($course['title'] ?? 'Curso do Tuquinha');
+
+                            $coursePath = '/cursos/ver';
+                            if (!empty($course['slug'])) {
+                                $coursePath .= '?slug=' . urlencode((string)$course['slug']);
+                            } else {
+                                $coursePath .= '?id=' . (int)($course['id'] ?? 0);
+                            }
+
+                            $scheme = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') ? 'https://' : 'http://';
+                            $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+                            $courseUrl = $scheme . $host . $coursePath;
+
+                            $safeName = htmlspecialchars($user['name'] ?? '', ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+                            $safeCourseTitle = htmlspecialchars($course['title'] ?? 'Curso do Tuquinha', ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+                            $safeCourseUrl = htmlspecialchars($courseUrl, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+
+                            $body = <<<HTML
+<html>
+<body style="margin:0; padding:0; background:#050509; font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; color:#f5f5f5;">
+  <div style="width:100%; padding:24px 0;">
+    <div style="max-width:520px; margin:0 auto; background:#111118; border-radius:16px; border:1px solid #272727; padding:18px 20px;">
+      <div style="display:flex; align-items:center; gap:10px; margin-bottom:12px;">
+        <div style="width:32px; height:32px; line-height:32px; border-radius:50%; background:radial-gradient(circle at 30% 20%, #fff 0, #ff8a65 25%, #e53935 65%, #050509 100%); text-align:center; font-weight:700; font-size:16px; color:#050509;">T</div>
+        <div>
+          <div style="font-weight:700; font-size:15px;">Agente IA - Tuquinha</div>
+          <div style="font-size:11px; color:#b0b0b0;">Branding vivo na veia</div>
+        </div>
+      </div>
+
+      <p style="font-size:14px; margin:0 0 10px 0;">Oi, {$safeName} 👋</p>
+      <p style="font-size:14px; margin:0 0 10px 0;">Seu pagamento foi confirmado e sua inscrição no curso <strong>{$safeCourseTitle}</strong> está liberada.</p>
+
+      <div style="text-align:center; margin:14px 0 8px 0;">
+        <a href="{$safeCourseUrl}" style="display:inline-block; padding:9px 18px; border-radius:999px; background:linear-gradient(135deg,#e53935,#ff6f60); color:#050509; font-weight:600; font-size:13px; text-decoration:none;">Acessar curso</a>
+      </div>
+
+      <p style="font-size:12px; color:#777; margin:8px 0 0 0;">Se o botão não funcionar, copie e cole este link no navegador:<br>
+        <a href="{$safeCourseUrl}" style="color:#ff6f60; text-decoration:none;">{$safeCourseUrl}</a>
+      </p>
+    </div>
+  </div>
+</body>
+</html>
+HTML;
+
+                            MailService::send($user['email'], $user['name'] ?? '', $subject, $body);
+                        }
+                    } catch (\Throwable $e) {
+                    }
+                }
+            }
+
+            http_response_code(200);
+            echo 'ok';
+            return;
+        }
+
+        // 3) Fluxo padrão de assinatura (subscription)
         if ($asaasSubscriptionId === '') {
             http_response_code(200);
             echo 'ignored';
