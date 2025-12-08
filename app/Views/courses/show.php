@@ -298,7 +298,7 @@ $courseUrl = CourseController::buildCourseUrl($course);
                             </div>
                             <?php if ($hasRecordingAccess): ?>
                                 <div style="margin-top:4px; font-size:11px; color:#b0b0b0;">
-                                    <a href="<?= htmlspecialchars($recordingLink) ?>" target="_blank" rel="noopener noreferrer" style="color:#ffcc80; text-decoration:none;">▶ Assistir gravação desta live</a>
+                                    <a href="/cursos/lives/ver?live_id=<?= $liveId ?>" style="color:#ffcc80; text-decoration:none;">▶ Assistir gravação desta live</a>
                                 </div>
                             <?php endif; ?>
                         </div>

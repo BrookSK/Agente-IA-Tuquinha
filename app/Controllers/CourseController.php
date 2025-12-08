@@ -383,6 +383,154 @@ HTML;
         exit;
     }
 
+    public function watchLive(): void
+    {
+        $user = $this->getCurrentUser();
+        if (!$user) {
+            header('Location: /login');
+            exit;
+        }
+
+        $liveId = isset($_GET['live_id']) ? (int)$_GET['live_id'] : 0;
+        if ($liveId <= 0) {
+            $_SESSION['courses_error'] = 'Live não encontrada.';
+            header('Location: /cursos');
+            exit;
+        }
+
+        $live = CourseLive::findById($liveId);
+        if (!$live) {
+            $_SESSION['courses_error'] = 'Live não encontrada.';
+            header('Location: /cursos');
+            exit;
+        }
+
+        $course = Course::findById((int)$live['course_id']);
+        if (!$course || empty($course['is_active'])) {
+            $_SESSION['courses_error'] = 'Curso desta live não foi encontrado.';
+            header('Location: /cursos');
+            exit;
+        }
+
+        $courseId = (int)$course['id'];
+        $userId = (int)$user['id'];
+
+        // Garante que o usuário esteja inscrito no curso para assistir à live/gravação
+        $isEnrolled = CourseEnrollment::isEnrolled($courseId, $userId);
+        if (!$isEnrolled) {
+            $_SESSION['courses_error'] = 'Você precisa estar inscrito neste curso para acessar esta live.';
+            header('Location: ' . self::buildCourseUrl($course));
+            exit;
+        }
+
+        // Gravação disponível apenas para quem participou da live
+        if (!CourseLiveParticipant::isParticipant($liveId, $userId)) {
+            $_SESSION['courses_error'] = 'A gravação desta live está disponível apenas para quem participou.';
+            header('Location: ' . self::buildCourseUrl($course) . '#lives');
+            exit;
+        }
+
+        $recordingLink = trim((string)($live['recording_link'] ?? ''));
+        if ($recordingLink === '') {
+            $_SESSION['courses_error'] = 'Esta live ainda não possui gravação disponível.';
+            header('Location: ' . self::buildCourseUrl($course) . '#lives');
+            exit;
+        }
+
+        // Carrega todas as lives do curso para a coluna lateral
+        $lives = CourseLive::allByCourse($courseId);
+
+        // Comentários desta live
+        $liveComments = CourseLessonComment::allByLiveWithUser($liveId);
+
+        $this->view('courses/live_player', [
+            'pageTitle' => 'Live: ' . (string)($live['title'] ?? ''),
+            'user' => $user,
+            'course' => $course,
+            'live' => $live,
+            'lives' => $lives,
+            'liveComments' => $liveComments,
+        ]);
+    }
+
+    public function commentLive(): void
+    {
+        $user = $this->getCurrentUser();
+        if (!$user) {
+            header('Location: /login');
+            exit;
+        }
+
+        $liveId = isset($_POST['live_id']) ? (int)$_POST['live_id'] : 0;
+        $body = trim((string)($_POST['body'] ?? ''));
+        $parentId = isset($_POST['parent_id']) ? (int)$_POST['parent_id'] : 0;
+
+        if ($liveId <= 0) {
+            $_SESSION['courses_error'] = 'Live inválida para comentar.';
+            header('Location: /cursos');
+            exit;
+        }
+
+        $live = CourseLive::findById($liveId);
+        if (!$live) {
+            $_SESSION['courses_error'] = 'Live não encontrada.';
+            header('Location: /cursos');
+            exit;
+        }
+
+        $course = Course::findById((int)$live['course_id']);
+        if (!$course || empty($course['is_active'])) {
+            $_SESSION['courses_error'] = 'Curso desta live não foi encontrado.';
+            header('Location: /cursos');
+            exit;
+        }
+
+        $courseId = (int)$course['id'];
+        $userId = (int)$user['id'];
+
+        if ($body === '') {
+            $_SESSION['courses_error'] = 'Escreva um comentário antes de enviar.';
+            header('Location: /cursos/lives/ver?live_id=' . $liveId);
+            exit;
+        }
+
+        if (strlen($body) > 2000) {
+            $_SESSION['courses_error'] = 'O comentário pode ter no máximo 2000 caracteres.';
+            header('Location: /cursos/lives/ver?live_id=' . $liveId);
+            exit;
+        }
+
+        // Permissões: precisa estar inscrito no curso e ter participado da live
+        $isEnrolled = CourseEnrollment::isEnrolled($courseId, $userId);
+        $isParticipant = CourseLiveParticipant::isParticipant($liveId, $userId);
+        if (!$isEnrolled || !$isParticipant) {
+            $_SESSION['courses_error'] = 'Apenas participantes desta live podem comentar aqui.';
+            header('Location: ' . self::buildCourseUrl($course) . '#lives');
+            exit;
+        }
+
+        $parentCommentId = null;
+        if ($parentId > 0) {
+            $parent = CourseLessonComment::findById($parentId);
+            if ($parent && (int)($parent['live_id'] ?? 0) === $liveId) {
+                $parentCommentId = $parentId;
+            }
+        }
+
+        CourseLessonComment::create([
+            'course_id' => $courseId,
+            'lesson_id' => null,
+            'live_id' => $liveId,
+            'user_id' => $userId,
+            'parent_id' => $parentCommentId,
+            'body' => $body,
+        ]);
+
+        $_SESSION['courses_success'] = 'Comentário enviado com sucesso.';
+        header('Location: /cursos/lives/ver?live_id=' . $liveId);
+        exit;
+    }
+
     public function commentLesson(): void
     {
         $user = $this->getCurrentUser();
