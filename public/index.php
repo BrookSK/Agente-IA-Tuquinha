@@ -60,6 +60,7 @@ $router->get('/cursos/ver', 'CourseController@show');
 $router->post('/cursos/inscrever', 'CourseController@enroll');
 $router->post('/cursos/lives/participar', 'CourseController@joinLive');
 $router->get('/cursos/lives/ver', 'CourseController@watchLive');
+$router->get('/cursos/aulas/ver', 'CourseController@watchLesson');
 $router->post('/cursos/lives/comentar', 'CourseController@commentLive');
 $router->post('/cursos/aulas/comentar', 'CourseController@commentLesson');
 $router->get('/cursos/comprar', 'CoursePurchaseController@show');

@@ -73,7 +73,7 @@
                     background: #050509; color: #f5f5f5; font-size: 13px;
                 ">
                 <div id="tokens-helper" style="font-size:11px; color:#777; margin-top:3px;">
-                    Você pode repetir compras sempre que precisar.
+                    Você pode repetir compras sempre que precisar. O valor mínimo por compra é de <strong>R$ 25,00</strong>.
                 </div>
                 <div id="tokens-total" style="font-size:12px; color:#e0e0e0; margin-top:4px;"></div>
             </div>
@@ -88,6 +88,10 @@
                     <label style="display:flex; align-items:center; gap:5px;">
                         <input type="radio" name="billing_type" value="BOLETO">
                         <span>Boleto bancário</span>
+                    </label>
+                    <label style="display:flex; align-items:center; gap:5px;">
+                        <input type="radio" name="billing_type" value="CREDIT_CARD">
+                        <span>Cartão de crédito (pela tela do Asaas)</span>
                     </label>
                 </div>
                 <div style="font-size:11px; color:#777; margin-top:3px; max-width:420px;">
@@ -125,7 +129,7 @@
         var totalEl = document.getElementById('tokens-total');
         <?php $priceJs = $pricePer1k > 0 ? $pricePer1k : 0; ?>
         var pricePer1k = <?= json_encode($priceJs) ?>;
-        var MIN_AMOUNT_REAIS = 5.01;
+        var MIN_AMOUNT_REAIS = 25.0;
 
         if (!input || !totalEl || !pricePer1k) return;
 

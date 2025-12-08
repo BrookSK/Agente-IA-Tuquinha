@@ -44,6 +44,18 @@ class CourseLessonComment
         return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
     }
 
+    public static function allByLessonWithUser(int $lessonId): array
+    {
+        $pdo = Database::getConnection();
+        $stmt = $pdo->prepare('SELECT c.*, u.name AS user_name
+            FROM course_lesson_comments c
+            JOIN users u ON u.id = c.user_id
+            WHERE c.lesson_id = :lesson_id
+            ORDER BY c.created_at ASC, c.id ASC');
+        $stmt->execute(['lesson_id' => $lessonId]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+    }
+
     public static function allByLiveWithUser(int $liveId): array
     {
         $pdo = Database::getConnection();

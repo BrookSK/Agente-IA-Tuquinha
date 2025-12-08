@@ -265,13 +265,21 @@ class AdminCourseController extends Controller
                 $safeLessonTitle = htmlspecialchars($title, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
                 $safeCourseUrl = htmlspecialchars($courseUrl, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
 
+                $scheme = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') ? 'https://' : 'http://';
+                $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+                $baseUrl = $scheme . $host;
+                $logoUrl = $baseUrl . '/public/favicon.png';
+                $safeLogoUrl = htmlspecialchars($logoUrl, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+
                 $body = <<<HTML
 <html>
 <body style="margin:0; padding:0; background:#050509; font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; color:#f5f5f5;">
   <div style="width:100%; padding:24px 0;">
     <div style="max-width:520px; margin:0 auto; background:#111118; border-radius:16px; border:1px solid #272727; padding:18px 20px;">
       <div style="display:flex; align-items:center; gap:10px; margin-bottom:12px;">
-        <div style="width:32px; height:32px; line-height:32px; border-radius:50%; background:radial-gradient(circle at 30% 20%, #fff 0, #ff8a65 25%, #e53935 65%, #050509 100%); text-align:center; font-weight:700; font-size:16px; color:#050509;">T</div>
+        <div style="width:32px; height:32px; border-radius:50%; overflow:hidden; background:#050509; box-shadow:0 0 18px rgba(229,57,53,0.8);">
+          <img src="{$safeLogoUrl}" alt="Tuquinha" style="width:100%; height:100%; display:block; object-fit:cover;">
+        </div>
         <div>
           <div style="font-weight:700; font-size:15px;">Agente IA - Tuquinha</div>
           <div style="font-size:11px; color:#b0b0b0;">Branding vivo na veia</div>
@@ -478,6 +486,8 @@ HTML;
                     $relativePath = CourseController::buildCourseUrl($course) . '#lives';
                     $courseUrl = $baseUrl . $relativePath;
                     $safeCourseUrl = htmlspecialchars($courseUrl, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+                    $logoUrl = $baseUrl . '/public/favicon.png';
+                    $safeLogoUrl = htmlspecialchars($logoUrl, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
 
                     $whenParagraph = '';
                     if ($when !== '') {
@@ -490,7 +500,9 @@ HTML;
   <div style="width:100%; padding:24px 0;">
     <div style="max-width:520px; margin:0 auto; background:#111118; border-radius:16px; border:1px solid #272727; padding:18px 20px;">
       <div style="display:flex; align-items:center; gap:10px; margin-bottom:12px;">
-        <div style="width:32px; height:32px; line-height:32px; border-radius:50%; background:radial-gradient(circle at 30% 20%, #fff 0, #ff8a65 25%, #e53935 65%, #050509 100%); text-align:center; font-weight:700; font-size:16px; color:#050509;">T</div>
+        <div style="width:32px; height:32px; border-radius:50%; overflow:hidden; background:#050509; box-shadow:0 0 18px rgba(229,57,53,0.8);">
+          <img src="{$safeLogoUrl}" alt="Tuquinha" style="width:100%; height:100%; display:block; object-fit:cover;">
+        </div>
         <div>
           <div style="font-weight:700; font-size:15px;">Agente IA - Tuquinha</div>
           <div style="font-size:11px; color:#b0b0b0;">Branding vivo na veia</div>
@@ -577,6 +589,11 @@ HTML;
             $safeLiveTitle = htmlspecialchars($live['title'] ?? '', ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
             $safeWhen = htmlspecialchars($when, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
             $safeRecordingLink = htmlspecialchars($recordingLink, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+            $scheme = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') ? 'https://' : 'http://';
+            $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+            $baseUrl = $scheme . $host;
+            $logoUrl = $baseUrl . '/public/favicon.png';
+            $safeLogoUrl = htmlspecialchars($logoUrl, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
 
             $whenParagraph = '';
             if ($when !== '') {
@@ -589,7 +606,9 @@ HTML;
   <div style="width:100%; padding:24px 0;">
     <div style="max-width:520px; margin:0 auto; background:#111118; border-radius:16px; border:1px solid #272727; padding:18px 20px;">
       <div style="display:flex; align-items:center; gap:10px; margin-bottom:12px;">
-        <div style="width:32px; height:32px; line-height:32px; border-radius:50%; background:radial-gradient(circle at 30% 20%, #fff 0, #ff8a65 25%, #e53935 65%, #050509 100%); text-align:center; font-weight:700; font-size:16px; color:#050509;">T</div>
+        <div style="width:32px; height:32px; border-radius:50%; overflow:hidden; background:#050509; box-shadow:0 0 18px rgba(229,57,53,0.8);">
+          <img src="{$safeLogoUrl}" alt="Tuquinha" style="width:100%; height:100%; display:block; object-fit:cover;">
+        </div>
         <div>
           <div style="font-weight:700; font-size:15px;">Agente IA - Tuquinha</div>
           <div style="font-size:11px; color:#b0b0b0;">Branding vivo na veia</div>
@@ -738,6 +757,11 @@ HTML;
             $safeLiveTitle = htmlspecialchars($live['title'] ?? '', ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
             $safeWhen = htmlspecialchars($when, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
             $safeMeetLink = htmlspecialchars((string)($live['meet_link'] ?? ''), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+            $scheme = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') ? 'https://' : 'http://';
+            $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+            $baseUrl = $scheme . $host;
+            $logoUrl = $baseUrl . '/public/favicon.png';
+            $safeLogoUrl = htmlspecialchars($logoUrl, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
 
             $whenParagraph = '';
             if ($when !== '') {
@@ -755,7 +779,9 @@ HTML;
   <div style="width:100%; padding:24px 0;">
     <div style="max-width:520px; margin:0 auto; background:#111118; border-radius:16px; border:1px solid #272727; padding:18px 20px;">
       <div style="display:flex; align-items:center; gap:10px; margin-bottom:12px;">
-        <div style="width:32px; height:32px; line-height:32px; border-radius:50%; background:radial-gradient(circle at 30% 20%, #fff 0, #ff8a65 25%, #e53935 65%, #050509 100%); text-align:center; font-weight:700; font-size:16px; color:#050509;">T</div>
+        <div style="width:32px; height:32px; border-radius:50%; overflow:hidden; background:#050509; box-shadow:0 0 18px rgba(229,57,53,0.8);">
+          <img src="{$safeLogoUrl}" alt="Tuquinha" style="width:100%; height:100%; display:block; object-fit:cover;">
+        </div>
         <div>
           <div style="font-weight:700; font-size:15px;">Agente IA - Tuquinha</div>
           <div style="font-size:11px; color:#b0b0b0;">Branding vivo na veia</div>

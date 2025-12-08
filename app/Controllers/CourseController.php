@@ -169,6 +169,60 @@ class CourseController extends Controller
         ]);
     }
 
+    public function watchLesson(): void
+    {
+        $lessonId = isset($_GET['lesson_id']) ? (int)$_GET['lesson_id'] : 0;
+        if ($lessonId <= 0) {
+            header('Location: /cursos');
+            exit;
+        }
+
+        $lesson = CourseLesson::findById($lessonId);
+        if (!$lesson || empty($lesson['is_published'])) {
+            $_SESSION['courses_error'] = 'Aula não encontrada.';
+            header('Location: /cursos');
+            exit;
+        }
+
+        $course = Course::findById((int)$lesson['course_id']);
+        if (!$course || empty($course['is_active'])) {
+            $_SESSION['courses_error'] = 'Curso desta aula não foi encontrado.';
+            header('Location: /cursos');
+            exit;
+        }
+
+        $user = $this->getCurrentUser();
+        $plan = $this->resolvePlanForUser($user);
+        $isAdmin = !empty($_SESSION['is_admin']);
+        $planAllowsCourses = !empty($plan['allow_courses']);
+        $allowPublicPurchase = !empty($course['allow_public_purchase']);
+
+        $canSee = $isAdmin || $planAllowsCourses || $allowPublicPurchase;
+        if (!$canSee) {
+            header('Location: /planos');
+            exit;
+        }
+
+        $courseId = (int)$course['id'];
+        $isEnrolled = false;
+        if ($user) {
+            $isEnrolled = CourseEnrollment::isEnrolled($courseId, (int)$user['id']);
+        }
+
+        $lessons = CourseLesson::allByCourseId($courseId);
+        $lessonComments = CourseLessonComment::allByLessonWithUser($lessonId);
+
+        $this->view('courses/lesson_player', [
+            'pageTitle' => 'Aula: ' . (string)($lesson['title'] ?? ''),
+            'user' => $user,
+            'course' => $course,
+            'lesson' => $lesson,
+            'lessons' => $lessons,
+            'lessonComments' => $lessonComments,
+            'isEnrolled' => $isEnrolled,
+        ]);
+    }
+
     public function enroll(): void
     {
         $user = $this->getCurrentUser();
@@ -218,9 +272,11 @@ class CourseController extends Controller
         $scheme = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') ? 'https://' : 'http://';
         $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
         $courseUrl = $scheme . $host . $coursePath;
+        $logoUrl = $scheme . $host . '/public/favicon.png';
         $safeName = htmlspecialchars($user['name'] ?? '', ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
         $safeCourseTitle = htmlspecialchars($course['title'] ?? 'Curso do Tuquinha', ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
         $safeCourseUrl = htmlspecialchars($courseUrl, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+        $safeLogoUrl = htmlspecialchars($logoUrl, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
 
         $body = <<<HTML
 <html>
@@ -228,7 +284,9 @@ class CourseController extends Controller
   <div style="width:100%; padding:24px 0;">
     <div style="max-width:520px; margin:0 auto; background:#111118; border-radius:16px; border:1px solid #272727; padding:18px 20px;">
       <div style="display:flex; align-items:center; gap:10px; margin-bottom:12px;">
-        <div style="width:32px; height:32px; line-height:32px; border-radius:50%; background:radial-gradient(circle at 30% 20%, #fff 0, #ff8a65 25%, #e53935 65%, #050509 100%); text-align:center; font-weight:700; font-size:16px; color:#050509;">T</div>
+        <div style="width:32px; height:32px; border-radius:50%; overflow:hidden; background:#050509; box-shadow:0 0 18px rgba(229,57,53,0.8);">
+          <img src="{$safeLogoUrl}" alt="Tuquinha" style="width:100%; height:100%; display:block; object-fit:cover;">
+        </div>
         <div>
           <div style="font-weight:700; font-size:15px;">Agente IA - Tuquinha</div>
           <div style="font-size:11px; color:#b0b0b0;">Branding vivo na veia</div>
@@ -318,11 +376,13 @@ HTML;
         $scheme = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') ? 'https://' : 'http://';
         $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
         $courseUrl = $scheme . $host . $coursePath;
+        $logoUrl = $scheme . $host . '/public/favicon.png';
         $safeName = htmlspecialchars($user['name'] ?? '', ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
         $safeCourseTitle = htmlspecialchars($course['title'] ?? '', ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
         $safeLiveTitle = htmlspecialchars($live['title'] ?? '', ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
         $safeCourseUrl = htmlspecialchars($courseUrl, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
         $safeMeetLink = htmlspecialchars($meetLink, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+        $safeLogoUrl = htmlspecialchars($logoUrl, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
 
         $when = '';
         if (!empty($live['scheduled_at'])) {
@@ -346,7 +406,9 @@ HTML;
   <div style="width:100%; padding:24px 0;">
     <div style="max-width:520px; margin:0 auto; background:#111118; border-radius:16px; border:1px solid #272727; padding:18px 20px;">
       <div style="display:flex; align-items:center; gap:10px; margin-bottom:12px;">
-        <div style="width:32px; height:32px; line-height:32px; border-radius:50%; background:radial-gradient(circle at 30% 20%, #fff 0, #ff8a65 25%, #e53935 65%, #050509 100%); text-align:center; font-weight:700; font-size:16px; color:#050509;">T</div>
+        <div style="width:32px; height:32px; border-radius:50%; overflow:hidden; background:#050509; box-shadow:0 0 18px rgba(229,57,53,0.8);">
+          <img src="{$safeLogoUrl}" alt="Tuquinha" style="width:100%; height:100%; display:block; object-fit:cover;">
+        </div>
         <div>
           <div style="font-weight:700; font-size:15px;">Agente IA - Tuquinha</div>
           <div style="font-size:11px; color:#b0b0b0;">Branding vivo na veia</div>

@@ -151,8 +151,8 @@ $courseUrl = CourseController::buildCourseUrl($course);
                                 <div style="font-size:13px; font-weight:600;">
                                     Aula <?= $number ?>: <?= htmlspecialchars($ltitle) ?>
                                 </div>
-                                <?php if ($video !== ''): ?>
-                                    <a href="<?= htmlspecialchars($video) ?>" target="_blank" rel="noopener noreferrer" style="font-size:11px; color:#ff6f60; text-decoration:none;">Assistir</a>
+                                <?php if ($video !== '' && $lessonId > 0): ?>
+                                    <a href="/cursos/aulas/ver?lesson_id=<?= $lessonId ?>" style="font-size:11px; color:#ff6f60; text-decoration:none;">Assistir</a>
                                 <?php endif; ?>
                             </div>
                             <?php if ($ldesc !== ''): ?>

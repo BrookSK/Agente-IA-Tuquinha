@@ -71,7 +71,7 @@ class TokenTopupController extends Controller
 
         $priceGlobal = Setting::get('extra_token_price_per_1k_global', '');
         $pricePer1k = $priceGlobal !== '' ? (float)$priceGlobal : 0.0;
-        $minAmountReais = 5.01; // mínimo em R$
+        $minAmountReais = 25.0; // mínimo em R$
 
         if ($pricePer1k <= 0) {
             $this->view('tokens/comprar', [
@@ -160,9 +160,9 @@ class TokenTopupController extends Controller
             $blocks = $minBlocks;
         }
 
-        // tipo de cobrança: PIX ou BOLETO vindo do formulário
+        // tipo de cobrança: PIX, BOLETO ou CARTÃO vindo do formulário
         $billingType = $_POST['billing_type'] ?? 'PIX';
-        if (!in_array($billingType, ['PIX', 'BOLETO'], true)) {
+        if (!in_array($billingType, ['PIX', 'BOLETO', 'CREDIT_CARD'], true)) {
             $billingType = 'PIX';
         }
 
