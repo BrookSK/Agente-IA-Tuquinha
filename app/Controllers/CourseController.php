@@ -203,7 +203,10 @@ class CourseController extends Controller
 
         $subject = 'Inscrição confirmada no curso: ' . (string)($course['title'] ?? 'Curso do Tuquinha');
 
-        $courseUrl = self::buildCourseUrl($course);
+        $coursePath = self::buildCourseUrl($course);
+        $scheme = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') ? 'https://' : 'http://';
+        $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+        $courseUrl = $scheme . $host . $coursePath;
         $safeName = htmlspecialchars($user['name'] ?? '', ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
         $safeCourseTitle = htmlspecialchars($course['title'] ?? 'Curso do Tuquinha', ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
         $safeCourseUrl = htmlspecialchars($courseUrl, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
@@ -292,7 +295,10 @@ HTML;
 
         $subject = 'Confirmação de participação na live do curso: ' . (string)($course['title'] ?? '');
 
-        $courseUrl = self::buildCourseUrl($course);
+        $coursePath = self::buildCourseUrl($course);
+        $scheme = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') ? 'https://' : 'http://';
+        $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+        $courseUrl = $scheme . $host . $coursePath;
         $safeName = htmlspecialchars($user['name'] ?? '', ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
         $safeCourseTitle = htmlspecialchars($course['title'] ?? '', ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
         $safeLiveTitle = htmlspecialchars($live['title'] ?? '', ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');

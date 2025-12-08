@@ -471,7 +471,12 @@ HTML;
                     $safeName = htmlspecialchars($user['name'] ?? '', ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
                     $safeCourseTitle = htmlspecialchars($course['title'] ?? '', ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
                     $safeWhen = htmlspecialchars($when, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
-                    $courseUrl = CourseController::buildCourseUrl($course) . '#lives';
+
+                    $scheme = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') ? 'https://' : 'http://';
+                    $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+                    $baseUrl = $scheme . $host;
+                    $relativePath = CourseController::buildCourseUrl($course) . '#lives';
+                    $courseUrl = $baseUrl . $relativePath;
                     $safeCourseUrl = htmlspecialchars($courseUrl, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
 
                     $whenParagraph = '';
