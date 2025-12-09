@@ -272,7 +272,7 @@ class CourseController extends Controller
 
         $courseId = (int)$course['id'];
         $lessons = CourseLesson::allByCourseId($courseId);
-        $lives = CourseLive::allByCourse($courseId);
+        $rawLives = CourseLive::allByCourse($courseId);
 
         $completedLessonIds = [];
         $courseProgressPercent = 0;
@@ -297,6 +297,28 @@ class CourseController extends Controller
             $userId = (int)$user['id'];
             $isEnrolled = CourseEnrollment::isEnrolled($courseId, $userId);
             $myLiveParticipation = CourseLiveParticipant::liveIdsByUser($userId);
+        }
+
+        // Lives futuras e publicadas para o painel do curso
+        $lives = [];
+        if ($isEnrolled || $isAdmin) {
+            $nowTs = time();
+            foreach ($rawLives as $live) {
+                if (empty($live['is_published'])) {
+                    continue;
+                }
+                $scheduled = $live['scheduled_at'] ?? null;
+                if (!$scheduled) {
+                    continue;
+                }
+                $scheduledTs = strtotime((string)$scheduled);
+                if ($scheduledTs === false) {
+                    continue;
+                }
+                if ($scheduledTs >= $nowTs) {
+                    $lives[] = $live;
+                }
+            }
         }
 
         $modulesData = $this->buildModulesData($courseId, $user, $isEnrolled, $lessons, $completedLessonIds);
@@ -991,6 +1013,71 @@ HTML;
             'live' => $live,
             'lives' => $lives,
             'liveComments' => $liveComments,
+        ]);
+    }
+
+    public function lives(): void
+    {
+        $user = $this->getCurrentUser();
+        if (!$user) {
+            header('Location: /login');
+            exit;
+        }
+
+        $plan = $this->resolvePlanForUser($user);
+        $isAdmin = !empty($_SESSION['is_admin']);
+        $planAllowsCourses = !empty($plan['allow_courses']);
+
+        $courseId = isset($_GET['course_id']) ? (int)$_GET['course_id'] : 0;
+        $course = $courseId > 0 ? Course::findById($courseId) : null;
+        if (!$course || empty($course['is_active'])) {
+            $_SESSION['courses_error'] = 'Curso não encontrado.';
+            header('Location: /cursos');
+            exit;
+        }
+
+        $allowPlanOnly = !empty($course['allow_plan_access_only']);
+        $allowPublicPurchase = !empty($course['allow_public_purchase']);
+
+        $canSee = $isAdmin || $planAllowsCourses || $allowPublicPurchase;
+        if (!$canSee) {
+            header('Location: /planos');
+            exit;
+        }
+
+        $courseId = (int)$course['id'];
+        $userId = (int)$user['id'];
+        $isEnrolled = CourseEnrollment::isEnrolled($courseId, $userId);
+        if (!$isEnrolled && !$isAdmin) {
+            $_SESSION['courses_error'] = 'Você precisa estar inscrito neste curso para ver as lives.';
+            header('Location: ' . self::buildCourseUrl($course));
+            exit;
+        }
+
+        $allLives = CourseLive::allByCourse($courseId);
+        $lives = [];
+        foreach ($allLives as $live) {
+            if (!empty($live['is_published'])) {
+                $lives[] = $live;
+            }
+        }
+
+        $myLiveParticipation = CourseLiveParticipant::liveIdsByUser($userId);
+
+        $success = $_SESSION['courses_success'] ?? null;
+        $error = $_SESSION['courses_error'] ?? null;
+        unset($_SESSION['courses_success'], $_SESSION['courses_error']);
+
+        $this->view('courses/lives', [
+            'pageTitle' => 'Lives do curso: ' . (string)($course['title'] ?? ''),
+            'user' => $user,
+            'plan' => $plan,
+            'course' => $course,
+            'lives' => $lives,
+            'myLiveParticipation' => $myLiveParticipation,
+            'isEnrolled' => $isEnrolled || $isAdmin,
+            'success' => $success,
+            'error' => $error,
         ]);
     }
 

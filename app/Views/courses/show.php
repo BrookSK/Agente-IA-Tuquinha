@@ -326,52 +326,42 @@ $courseUrl = CourseController::buildCourseUrl($course);
 
         <div id="lives" style="flex:1 1 260px; min-width:240px;">
             <h2 style="font-size:16px; margin-bottom:8px;">Lives deste curso</h2>
-            <?php if (empty($lives)): ?>
-                <div style="color:#b0b0b0; font-size:13px;">Nenhuma live agendada ainda.</div>
+            <?php if (!$user): ?>
+                <div style="color:#b0b0b0; font-size:13px;">Entre na sua conta e inscreva-se neste curso para ver o calendário de lives.</div>
+            <?php elseif (!$isEnrolled && empty($_SESSION['is_admin'])): ?>
+                <div style="color:#b0b0b0; font-size:13px;">Inscreva-se neste curso para ver e participar das lives ao vivo.</div>
             <?php else: ?>
-                <div style="border-radius:12px; border:1px solid #272727; background:#111118; overflow:hidden;">
-                    <?php foreach ($lives as $live): ?>
-                        <?php
-                            $ltitle = trim((string)($live['title'] ?? ''));
-                            $ldesc = trim((string)($live['description'] ?? ''));
-                            $scheduled = $live['scheduled_at'] ?? '';
-                            $formatted = $scheduled ? date('d/m/Y H:i', strtotime($scheduled)) : '';
-                            $meetLink = trim((string)($live['meet_link'] ?? ''));
-                            $recordingLink = trim((string)($live['recording_link'] ?? ''));
-                            $liveId = (int)($live['id'] ?? 0);
-                            $hasRecordingAccess = $user && $recordingLink !== '' && !empty($myLiveParticipation[$liveId] ?? false);
-                        ?>
-                        <div style="padding:8px 10px; border-bottom:1px solid #272727;">
-                            <div style="font-size:13px; font-weight:600; margin-bottom:2px;">
-                                <?= htmlspecialchars($ltitle) ?>
-                            </div>
-                            <?php if ($formatted !== ''): ?>
-                                <div style="font-size:12px; color:#ffcc80; margin-bottom:4px;">
-                                    <?= htmlspecialchars($formatted) ?>
+                <?php if (empty($lives)): ?>
+                    <div style="color:#b0b0b0; font-size:13px;">Nenhuma próxima live agendada no momento.</div>
+                <?php else: ?>
+                    <div style="border-radius:12px; border:1px solid #272727; background:#111118; overflow:hidden;">
+                        <?php foreach ($lives as $live): ?>
+                            <?php
+                                $ltitle = trim((string)($live['title'] ?? ''));
+                                $ldesc = trim((string)($live['description'] ?? ''));
+                                $scheduled = $live['scheduled_at'] ?? '';
+                                $formatted = $scheduled ? date('d/m/Y H:i', strtotime($scheduled)) : '';
+                                $recordingLink = trim((string)($live['recording_link'] ?? ''));
+                                $liveId = (int)($live['id'] ?? 0);
+                                $hasRecordingAccess = $user && $recordingLink !== '' && !empty($myLiveParticipation[$liveId] ?? false);
+                            ?>
+                            <div style="padding:8px 10px; border-bottom:1px solid #272727;">
+                                <div style="font-size:13px; font-weight:600; margin-bottom:2px;">
+                                    <?= htmlspecialchars($ltitle) ?>
                                 </div>
-                            <?php endif; ?>
-                            <?php if ($ldesc !== ''): ?>
-                                <div style="font-size:12px; color:#b0b0b0; margin-bottom:4px; line-height:1.4;">
-                                    <?= htmlspecialchars($ldesc) ?>
-                                </div>
-                            <?php endif; ?>
-                            <div style="margin-top:4px;">
-                                <?php if (!$user): ?>
-                                    <a href="/login" style="font-size:11px; color:#ff6f60; text-decoration:none;">Entrar para participar</a>
-                                <?php elseif (!$isEnrolled): ?>
-                                    <span style="font-size:11px; color:#b0b0b0;">Inscreva-se no curso para participar desta live.</span>
-                                <?php else: ?>
+                                <?php if ($formatted !== ''): ?>
+                                    <div style="font-size:12px; color:#ffcc80; margin-bottom:4px;">
+                                        <?= htmlspecialchars($formatted) ?>
+                                    </div>
+                                <?php endif; ?>
+                                <?php if ($ldesc !== ''): ?>
+                                    <div style="font-size:12px; color:#b0b0b0; margin-bottom:4px; line-height:1.4;">
+                                        <?= htmlspecialchars($ldesc) ?>
+                                    </div>
+                                <?php endif; ?>
+                                <div style="margin-top:4px;">
                                     <?php if (!empty($myLiveParticipation[$liveId] ?? false)): ?>
                                         <span style="font-size:11px; color:#c8ffd4;">Você já está inscrito nesta live.</span>
-                                        <?php if ($recordingLink !== ''): ?>
-                                            <div style="margin-top:4px; font-size:11px; color:#b0b0b0;">
-                                                Gravação disponível apenas para quem participou desta live.
-                                            </div>
-                                        <?php elseif ($meetLink !== ''): ?>
-                                            <div style="margin-top:4px; font-size:11px; color:#b0b0b0;">
-                                                No horário da live, você receberá o link por e-mail.
-                                            </div>
-                                        <?php endif; ?>
                                     <?php else: ?>
                                         <form action="/cursos/lives/participar" method="post" style="display:inline;">
                                             <input type="hidden" name="live_id" value="<?= $liveId ?>">
@@ -382,25 +372,19 @@ $courseUrl = CourseController::buildCourseUrl($course);
                                                 Quero participar da live
                                             </button>
                                         </form>
-                                        <?php if ($recordingLink !== ''): ?>
-                                            <div style="margin-top:4px; font-size:11px; color:#b0b0b0;">
-                                                Gravação disponível apenas para quem participou desta live.
-                                            </div>
-                                        <?php elseif ($meetLink !== ''): ?>
-                                            <div style="margin-top:4px; font-size:11px; color:#b0b0b0;">
-                                                Link será enviado por e-mail após a confirmação.
-                                            </div>
-                                        <?php endif; ?>
                                     <?php endif; ?>
+                                </div>
+                                <?php if ($hasRecordingAccess): ?>
+                                    <div style="margin-top:4px; font-size:11px; color:#b0b0b0;">
+                                        <a href="/cursos/lives/ver?live_id=<?= $liveId ?>" style="color:#ffcc80; text-decoration:none;">▶ Assistir gravação desta live</a>
+                                    </div>
                                 <?php endif; ?>
                             </div>
-                            <?php if ($hasRecordingAccess): ?>
-                                <div style="margin-top:4px; font-size:11px; color:#b0b0b0;">
-                                    <a href="/cursos/lives/ver?live_id=<?= $liveId ?>" style="color:#ffcc80; text-decoration:none;">▶ Assistir gravação desta live</a>
-                                </div>
-                            <?php endif; ?>
-                        </div>
-                    <?php endforeach; ?>
+                        <?php endforeach; ?>
+                    </div>
+                <?php endif; ?>
+                <div style="margin-top:6px; font-size:11px; text-align:right;">
+                    <a href="/cursos/lives?course_id=<?= (int)$course['id'] ?>" style="color:#ff6f60; text-decoration:none;">Ver todas as lives deste curso &rarr;</a>
                 </div>
             <?php endif; ?>
         </div>

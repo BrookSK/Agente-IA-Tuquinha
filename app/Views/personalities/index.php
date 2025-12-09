@@ -126,7 +126,7 @@
                         </div>
                         <div style="padding:10px 12px 12px 12px;">
                             <div style="display:flex; align-items:center; justify-content:space-between; gap:6px; margin-bottom:4px;">
-                                <div style="font-size:16px; font-weight:650; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                                <div style="font-size:18px; font-weight:650; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
                                     <?= htmlspecialchars($name) ?>
                                 </div>
                                 <?php if ($isDefault): ?>

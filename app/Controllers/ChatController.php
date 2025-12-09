@@ -854,6 +854,13 @@ class ChatController extends Controller
             exit;
         }
 
+        $currentPersonaId = isset($convRow['persona_id']) ? (int)$convRow['persona_id'] : 0;
+        if ($currentPersonaId > 0) {
+            $_SESSION['chat_error'] = 'A personalidade deste chat já foi escolhida e não pode mais ser alterada. Crie um novo chat para usar outra personalidade.';
+            header('Location: /chat?c=' . $conversationId);
+            exit;
+        }
+
         $personaId = null;
         if ($personaIdRaw > 0) {
             $persona = Personality::findById($personaIdRaw);

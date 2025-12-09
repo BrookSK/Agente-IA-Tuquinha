@@ -9,8 +9,8 @@ $successMessage = $success ?? null;
 <div style="max-width: 900px; margin: 0 auto;">
     <h1 style="font-size: 22px; margin-bottom: 6px; font-weight: 650;">Escolha sua personalidade padrão</h1>
     <p style="color:#b0b0b0; font-size:13px; margin-bottom:10px; max-width:600px;">
-        Aqui você escolhe qual personalidade o Tuquinha vai usar por padrão sempre que você abrir um novo chat.
-        Você ainda pode trocar a personalidade dentro de cada conversa quando quiser.
+        Aqui você escolhe qual personalidade o Tuquinha vai usar por padrão na sua conta.
+        Quando você definir uma personalidade padrão, todos os novos chats vão começar automaticamente com essa personalidade.
     </p>
 
     <?php if (!empty($successMessage)): ?>

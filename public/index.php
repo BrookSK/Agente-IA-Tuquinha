@@ -59,6 +59,7 @@ $router->get('/cursos', 'CourseController@index');
 $router->get('/cursos/ver', 'CourseController@show');
 $router->post('/cursos/inscrever', 'CourseController@enroll');
 $router->post('/cursos/cancelar-inscricao', 'CourseController@unenroll');
+$router->get('/cursos/lives', 'CourseController@lives');
 $router->post('/cursos/lives/participar', 'CourseController@joinLive');
 $router->get('/cursos/lives/ver', 'CourseController@watchLive');
 $router->get('/cursos/aulas/ver', 'CourseController@watchLesson');

@@ -67,7 +67,7 @@ if (!empty($currentPlan) && is_array($currentPlan)) {
 <div style="max-width: 900px; width: 100%; margin: 0 auto; padding: 0 8px; display: flex; flex-direction: column; min-height: calc(100vh - 56px - 80px); box-sizing: border-box;">
     <?php if (!empty($conversationId) && $planAllowsPersonalitiesFlag && !empty($personaOptions)): ?>
         <?php $currentPersonaId = isset($currentPersonaData['id']) ? (int)$currentPersonaData['id'] : 0; ?>
-        <div style="margin-top:10px; margin-bottom:6px; display:flex; justify-content:space-between; gap:8px; align-items:center; flex-wrap:wrap;">
+        <div style="margin-top:10px; margin-bottom:6px; display:flex; justify-content:flex-start; gap:8px; align-items:center; flex-wrap:wrap;">
             <div style="font-size:12px; color:#b0b0b0;">
                 <?php if ($currentPersonaData): ?>
                     <?php
@@ -85,44 +85,6 @@ if (!empty($currentPlan) && is_array($currentPlan)) {
                     <span>Padrão do Tuquinha / da conta</span>
                 <?php endif; ?>
             </div>
-            <form action="/chat/persona" method="post" style="display:flex; gap:6px; align-items:center;">
-                <input type="hidden" name="conversation_id" value="<?= (int)$conversationId ?>">
-                <select name="persona_id" style="
-                    max-width: 220px;
-                    padding:4px 9px;
-                    border-radius:999px;
-                    border:1px solid #272727;
-                    background:#050509;
-                    color:#f5f5f5;
-                    font-size:11px;
-                ">
-                    <option value="0">Padrão do Tuquinha / da conta</option>
-                    <?php foreach ($personaOptions as $persona): ?>
-                        <?php
-                            $pid = (int)($persona['id'] ?? 0);
-                            $pname = trim((string)($persona['name'] ?? ''));
-                            $parea = trim((string)($persona['area'] ?? ''));
-                            $label = $pname;
-                            if ($parea !== '') {
-                                $label .= ' · ' . $parea;
-                            }
-                        ?>
-                        <option value="<?= $pid ?>" <?= $currentPersonaId === $pid ? 'selected' : '' ?>>
-                            <?= htmlspecialchars($label) ?>
-                        </option>
-                    <?php endforeach; ?>
-                </select>
-                <button type="submit" style="
-                    border:none;
-                    border-radius:999px;
-                    padding:5px 10px;
-                    background:#111118;
-                    color:#f5f5f5;
-                    font-size:11px;
-                    cursor:pointer;
-                    border:1px solid #272727;
-                ">Trocar</button>
-            </form>
         </div>
     <?php endif; ?>
     <?php if (!empty($conversationId) && $canUseConversationSettings): ?>
