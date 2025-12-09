@@ -57,6 +57,56 @@ class CommunitiesController extends Controller
         ]);
     }
 
+    public function create(): void
+    {
+        $user = $this->requireLogin();
+        $userId = (int)$user['id'];
+
+        $name = trim((string)($_POST['name'] ?? ''));
+        $description = trim((string)($_POST['description'] ?? ''));
+
+        if ($name === '') {
+            $_SESSION['communities_error'] = 'Dê um nome para a comunidade.';
+            header('Location: /comunidades');
+            exit;
+        }
+
+        $baseSlug = mb_strtolower($name, 'UTF-8');
+        $baseSlug = preg_replace('/[^a-z0-9]+/i', '-', $baseSlug);
+        $baseSlug = trim((string)$baseSlug, '-');
+        if ($baseSlug === '') {
+            $baseSlug = 'comunidade-' . $userId;
+        }
+
+        $slug = $baseSlug;
+        $suffix = 1;
+        while (Community::findBySlug($slug)) {
+            $slug = $baseSlug . '-' . $suffix;
+            $suffix++;
+            if ($suffix > 50) {
+                $slug = $baseSlug . '-' . bin2hex(random_bytes(3));
+                break;
+            }
+        }
+
+        $communityId = Community::create([
+            'owner_user_id' => $userId,
+            'name' => $name,
+            'slug' => $slug,
+            'description' => $description !== '' ? $description : null,
+            'image_path' => null,
+            'members_count' => 0,
+            'topics_count' => 0,
+            'is_active' => 1,
+        ]);
+
+        CommunityMember::join($communityId, $userId, 'owner');
+
+        $_SESSION['communities_success'] = 'Comunidade criada com sucesso.';
+        header('Location: /comunidades/ver?slug=' . urlencode($slug));
+        exit;
+    }
+
     public function show(): void
     {
         $user = $this->requireLogin();

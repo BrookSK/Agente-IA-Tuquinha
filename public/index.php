@@ -72,8 +72,6 @@ $router->post('/cursos/comprar', 'CoursePurchaseController@process');
 $router->get('/comunidade', 'CommunityController@index');
 $router->post('/comunidade/postar', 'CommunityController@createPost');
 $router->post('/comunidade/curtir', 'CommunityController@like');
-$router->post('/comunidade/comentar', 'CommunityController@comment');
-$router->post('/comunidade/repostar', 'CommunityController@repost');
 $router->post('/comunidade/editar-post', 'CommunityController@editPost');
 $router->post('/comunidade/excluir-post', 'CommunityController@deletePost');
 $router->post('/comunidade/bloquear-usuario', 'CommunityController@blockUser');
@@ -92,6 +90,7 @@ $router->post('/amigos/decidir', 'FriendsController@decide');
 
 $router->get('/comunidades', 'CommunitiesController@index');
 $router->get('/comunidades/ver', 'CommunitiesController@show');
+$router->post('/comunidades/criar', 'CommunitiesController@create');
 $router->post('/comunidades/entrar', 'CommunitiesController@join');
 $router->post('/comunidades/sair', 'CommunitiesController@leave');
 $router->post('/comunidades/topicos/novo', 'CommunitiesController@createTopic');

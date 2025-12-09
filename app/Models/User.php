@@ -25,6 +25,30 @@ class User
         return $row ?: null;
     }
 
+    public static function findByMentionName(string $mention): ?array
+    {
+        $mention = trim($mention);
+        if ($mention === '') {
+            return null;
+        }
+
+        // Permite usar @nome, @nome.sobrenome, @nome_sobrenome, etc. convertendo para espaços
+        $normalized = preg_replace('/[._-]+/u', ' ', $mention);
+        $normalized = trim((string)$normalized);
+        if ($normalized === '') {
+            return null;
+        }
+
+        $pdo = Database::getConnection();
+        $stmt = $pdo->prepare('SELECT * FROM users
+            WHERE preferred_name = :name OR name = :name
+            ORDER BY created_at ASC
+            LIMIT 1');
+        $stmt->execute(['name' => $normalized]);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $row ?: null;
+    }
+
     public static function createUser(string $name, string $email, string $passwordHash): int
     {
         $pdo = Database::getConnection();

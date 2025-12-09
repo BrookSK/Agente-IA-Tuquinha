@@ -18,6 +18,25 @@
             <h1 style="font-size:18px;">Comunidades do Tuquinha</h1>
             <span style="font-size:12px; color:#b0b0b0;">Escolha onde quer se conectar</span>
         </div>
+
+        <div style="margin-bottom:10px; padding:8px 10px; border-radius:12px; border:1px solid #272727; background:#050509;">
+            <h2 style="font-size:14px; margin-bottom:4px;">Criar nova comunidade</h2>
+            <p style="font-size:12px; color:#b0b0b0; margin-bottom:6px;">Crie um espaço temático para seus projetos, turmas ou interesses. Você será o dono da comunidade.</p>
+            <form action="/comunidades/criar" method="post" style="display:flex; flex-direction:column; gap:6px;">
+                <div>
+                    <label for="community-name" style="display:block; font-size:12px; color:#b0b0b0; margin-bottom:2px;">Nome da comunidade</label>
+                    <input id="community-name" name="name" type="text" maxlength="255" required style="width:100%; padding:6px 8px; border-radius:8px; border:1px solid #272727; background:#111118; color:#f5f5f5; font-size:13px;">
+                </div>
+                <div>
+                    <label for="community-description" style="display:block; font-size:12px; color:#b0b0b0; margin-bottom:2px;">Descrição (opcional)</label>
+                    <textarea id="community-description" name="description" rows="2" maxlength="4000" style="width:100%; padding:6px 8px; border-radius:8px; border:1px solid #272727; background:#111118; color:#f5f5f5; font-size:12px; resize:vertical;"></textarea>
+                </div>
+                <div style="display:flex; justify-content:flex-end;">
+                    <button type="submit" style="border:none; border-radius:999px; padding:6px 12px; background:linear-gradient(135deg,#e53935,#ff6f60); color:#050509; font-size:12px; font-weight:600; cursor:pointer;">Criar comunidade</button>
+                </div>
+            </form>
+        </div>
+
         <?php if (empty($communities)): ?>
             <p style="font-size:13px; color:#b0b0b0;">Nenhuma comunidade cadastrada ainda.</p>
         <?php else: ?>

@@ -18,6 +18,8 @@ use App\Models\CourseExamAttempt;
 use App\Models\Plan;
 use App\Models\Subscription;
 use App\Models\User;
+use App\Models\Community;
+use App\Models\CommunityMember;
 use App\Services\MailService;
 use App\Services\GoogleCalendarService;
 
@@ -189,6 +191,34 @@ class CourseController extends Controller
         }
 
         return false;
+    }
+
+    private function ensureCourseCommunityMembership(array $course, int $userId): void
+    {
+        if ($userId <= 0) {
+            return;
+        }
+
+        $community = Community::findOrCreateForCourse($course);
+        if (!$community || empty($community['id'])) {
+            return;
+        }
+
+        CommunityMember::join((int)$community['id'], $userId);
+    }
+
+    private function removeCourseCommunityMembership(array $course, int $userId): void
+    {
+        if ($userId <= 0) {
+            return;
+        }
+
+        $community = Community::findForCourse($course);
+        if (!$community || empty($community['id'])) {
+            return;
+        }
+
+        CommunityMember::leave((int)$community['id'], $userId);
     }
 
     public function index(): void
@@ -684,7 +714,9 @@ class CourseController extends Controller
             // Curso gratuito com visibilidade pública: segue para inscrição normal
         }
 
-        CourseEnrollment::enroll($courseId, (int)$user['id']);
+        $userId = (int)$user['id'];
+        CourseEnrollment::enroll($courseId, $userId);
+        $this->ensureCourseCommunityMembership($course, $userId);
 
         $subject = 'Inscrição confirmada no curso: ' . (string)($course['title'] ?? 'Curso do Tuquinha');
 
@@ -766,6 +798,7 @@ HTML;
         }
 
         CourseEnrollment::unenroll($courseId, $userId);
+        $this->removeCourseCommunityMembership($course, $userId);
 
         $subject = 'Inscrição cancelada no curso: ' . (string)($course['title'] ?? 'Curso do Tuquinha');
 
@@ -847,7 +880,9 @@ HTML;
         }
 
         $courseId = (int)$course['id'];
-        CourseEnrollment::enroll($courseId, (int)$user['id']);
+        $userId = (int)$user['id'];
+        CourseEnrollment::enroll($courseId, $userId);
+        $this->ensureCourseCommunityMembership($course, $userId);
 
         $alreadyParticipant = CourseLiveParticipant::isParticipant($liveId, (int)$user['id']);
         if ($alreadyParticipant) {

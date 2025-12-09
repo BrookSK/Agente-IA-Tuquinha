@@ -81,7 +81,17 @@ class CommunityController extends Controller
     {
         [$user, $plan, $block] = $this->ensureCommunityAccess();
 
-        $posts = CommunityPost::latestWithAuthors(50);
+        $rawTag = isset($_GET['tag']) ? trim((string)$_GET['tag']) : '';
+        $tag = '';
+        if ($rawTag !== '') {
+            $t = $rawTag[0] === '#' ? mb_substr($rawTag, 1, null, 'UTF-8') : $rawTag;
+            $t = trim((string)$t);
+            if ($t !== '') {
+                $tag = $t;
+            }
+        }
+
+        $posts = CommunityPost::latestWithAuthors(100);
         $postIds = array_map(static fn(array $p) => (int)$p['id'], $posts);
 
         // Coleta IDs de posts originais que foram republicados neste feed
@@ -114,6 +124,57 @@ class CommunityController extends Controller
             $commentsByPost[$pid][] = $c;
         }
 
+        // Posts onde o usuário foi mencionado via @
+        $mentionedPosts = [];
+        $displayName = trim((string)($user['preferred_name'] ?? $user['name'] ?? ''));
+        if ($displayName !== '') {
+            $canonical = preg_replace('/\s+/u', ' ', $displayName);
+            $canonicalLower = mb_strtolower((string)$canonical, 'UTF-8');
+            if ($canonicalLower !== '') {
+                foreach ($posts as $p) {
+                    $body = (string)($p['body'] ?? '');
+                    if ($body === '') {
+                        continue;
+                    }
+                    if (!preg_match_all('/@([A-Za-z0-9_.\-]{3,50})/u', $body, $matches)) {
+                        continue;
+                    }
+                    $tokens = $matches[1] ?? [];
+                    $found = false;
+                    foreach ($tokens as $token) {
+                        $norm = preg_replace('/[._-]+/u', ' ', (string)$token);
+                        $norm = trim((string)$norm);
+                        if ($norm === '') {
+                            continue;
+                        }
+                        if (mb_strtolower($norm, 'UTF-8') === $canonicalLower) {
+                            $found = true;
+                            break;
+                        }
+                    }
+                    if ($found) {
+                        $mentionedPosts[] = $p;
+                    }
+                }
+            }
+        }
+
+        // Posts filtrados por hashtag
+        $tagPosts = [];
+        if ($tag !== '') {
+            $tagNeedle = '#' . mb_strtolower($tag, 'UTF-8');
+            foreach ($posts as $p) {
+                $body = (string)($p['body'] ?? '');
+                if ($body === '') {
+                    continue;
+                }
+                $bodyLower = mb_strtolower($body, 'UTF-8');
+                if (strpos($bodyLower, $tagNeedle) !== false) {
+                    $tagPosts[] = $p;
+                }
+            }
+        }
+
         $success = $_SESSION['community_success'] ?? null;
         $error = $_SESSION['community_error'] ?? null;
         unset($_SESSION['community_success'], $_SESSION['community_error']);
@@ -128,6 +189,9 @@ class CommunityController extends Controller
             'likedByMe' => $likedByMe,
             'commentsByPost' => $commentsByPost,
             'originalPosts' => $originalPosts,
+            'mentionedPosts' => $mentionedPosts,
+            'tag' => $tag,
+            'tagPosts' => $tagPosts,
             'block' => $block,
             'success' => $success,
             'error' => $error,
@@ -145,9 +209,8 @@ class CommunityController extends Controller
         }
 
         $body = trim((string)($_POST['body'] ?? ''));
-        $repostId = isset($_POST['repost_post_id']) ? (int)$_POST['repost_post_id'] : 0;
 
-        if ($body === '' && $repostId <= 0) {
+        if ($body === '') {
             $_SESSION['community_error'] = 'Escreva algo antes de postar.';
             header('Location: /comunidade');
             exit;
@@ -172,22 +235,14 @@ class CommunityController extends Controller
             $filePath = $this->handleUpload($_FILES['file'], 'files');
         }
 
-        if ($repostId > 0) {
-            $original = CommunityPost::findById($repostId);
-            if (!$original) {
-                $_SESSION['community_error'] = 'Post original não encontrado para republicação.';
-                header('Location: /comunidade');
-                exit;
-            }
-        }
-
-        CommunityPost::create([
+        $postId = CommunityPost::create([
             'user_id' => (int)$user['id'],
             'body' => $body,
             'image_path' => $imagePath,
             'file_path' => $filePath,
-            'repost_post_id' => $repostId > 0 ? $repostId : null,
         ]);
+
+        $this->notifyMentions($user, $postId, $body);
 
         $_SESSION['community_success'] = 'Post criado com sucesso.';
         header('Location: /comunidade');
@@ -491,6 +546,94 @@ HTML;
         $_SESSION['community_success'] = 'Usuário desbloqueado na comunidade.';
         header('Location: /comunidade');
         exit;
+    }
+
+    private function notifyMentions(array $author, int $postId, string $body): void
+    {
+        $body = trim($body);
+        if ($body === '') {
+            return;
+        }
+
+        if (!preg_match_all('/@([A-Za-z0-9_.\-]{3,50})/u', $body, $matches)) {
+            return;
+        }
+
+        $authorId = (int)($author['id'] ?? 0);
+        $authorName = trim((string)($author['preferred_name'] ?? $author['name'] ?? ''));
+        if ($authorName === '') {
+            $authorName = 'alguém da comunidade';
+        }
+
+        $tokens = array_unique($matches[1] ?? []);
+        if (empty($tokens)) {
+            return;
+        }
+
+        $notified = [];
+        $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+        $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+        $link = $scheme . '://' . $host . '/comunidade#post-' . $postId;
+
+        foreach ($tokens as $token) {
+            $mentioned = User::findByMentionName((string)$token);
+            if (!$mentioned) {
+                continue;
+            }
+            $mentionedId = (int)($mentioned['id'] ?? 0);
+            if ($mentionedId <= 0 || $mentionedId === $authorId) {
+                continue;
+            }
+            if (!empty($notified[$mentionedId])) {
+                continue;
+            }
+
+            $email = trim((string)($mentioned['email'] ?? ''));
+            if ($email === '') {
+                continue;
+            }
+
+            $safeName = htmlspecialchars($mentioned['name'] ?? '', ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+            $safeAuthor = htmlspecialchars($authorName, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+
+            $snippet = mb_substr($body, 0, 300, 'UTF-8');
+            if (mb_strlen($body, 'UTF-8') > 300) {
+                $snippet .= '...';
+            }
+            $safeSnippet = nl2br(htmlspecialchars($snippet, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'));
+
+            $subject = 'Você foi mencionado na comunidade do Tuquinha';
+            $html = <<<HTML
+<html>
+<body style="margin:0; padding:0; background:#050509; font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; color:#f5f5f5;">
+  <div style="width:100%; padding:24px 0;">
+    <div style="max-width:520px; margin:0 auto; background:#111118; border-radius:16px; border:1px solid #272727; padding:18px 20px;">
+      <div style="display:flex; align-items:center; gap:10px; margin-bottom:12px;">
+        <div style="width:32px; height:32px; line-height:32px; border-radius:50%; background:radial-gradient(circle at 30% 20%, #fff 0, #ff8a65 25%, #e53935 65%, #050509 100%); text-align:center; font-weight:700; font-size:16px; color:#050509;">T</div>
+        <div>
+          <div style="font-weight:700; font-size:15px;">Agente IA - Tuquinha</div>
+          <div style="font-size:11px; color:#b0b0b0;">Branding vivo na veia</div>
+        </div>
+      </div>
+
+      <p style="font-size:14px; margin:0 0 10px 0;">Oi, {$safeName} 👋</p>
+      <p style="font-size:14px; margin:0 0 10px 0;"><strong>{$safeAuthor}</strong> te mencionou em um post na Comunidade do Tuquinha.</p>
+      <p style="font-size:13px; margin:0 0 10px 0; color:#b0b0b0;">Trecho do post:</p>
+      <div style="font-size:13px; margin:0 0 12px 0; padding:8px 10px; border-radius:10px; border:1px solid #272727; background:#050509;">{$safeSnippet}</div>
+      <p style="margin:0; font-size:13px;"><a href="{$link}" style="color:#ff6f60; text-decoration:none;">👉 Ver post completo na comunidade</a></p>
+    </div>
+  </div>
+</body>
+</html>
+HTML;
+
+            try {
+                MailService::send($email, $mentioned['name'] ?? '', $subject, $html);
+            } catch (\Throwable $e) {
+            }
+
+            $notified[$mentionedId] = true;
+        }
     }
 
     private function handleUpload(array $file, string $type): ?string

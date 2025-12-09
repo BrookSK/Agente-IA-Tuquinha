@@ -13,7 +13,7 @@
 
 $editingPostId = isset($_GET['edit_post_id']) ? (int)($_GET['edit_post_id']) : 0;
 $activeTab = isset($_GET['tab']) ? trim((string)$_GET['tab']) : 'scraps';
-$allowedTabs = ['perfil', 'scraps', 'amigos', 'comunidades'];
+$allowedTabs = ['perfil', 'scraps', 'mencoes', 'amigos', 'comunidades'];
 if (!in_array($activeTab, $allowedTabs, true)) {
     $activeTab = 'scraps';
 }
@@ -43,6 +43,35 @@ foreach ($posts as $p) {
 }
 $friendsCount = count($friendIds);
 $communitiesCount = 1; // por enquanto, apenas a comunidade global do Tuquinha
+
+if (!function_exists('community_format_body')) {
+    function community_format_body(string $text): string
+    {
+        $pattern = '/(@[A-Za-z0-9_.\-]{3,50}|#[\pL0-9_]{2,50})/u';
+        $parts = preg_split($pattern, $text, -1, PREG_SPLIT_DELIM_CAPTURE);
+        if ($parts === false) {
+            return nl2br(htmlspecialchars($text, ENT_QUOTES, 'UTF-8'));
+        }
+
+        $out = '';
+        foreach ($parts as $part) {
+            if ($part === '') {
+                continue;
+            }
+            $first = $part[0];
+            if ($first === '@') {
+                $out .= '<span style="color:#ff6f60; font-weight:600;">' . htmlspecialchars($part, ENT_QUOTES, 'UTF-8') . '</span>';
+            } elseif ($first === '#') {
+                $tagParam = urlencode($part);
+                $out .= '<a href="/comunidade?tag=' . $tagParam . '" style="color:#90caf9; font-weight:600; text-decoration:none;">' . htmlspecialchars($part, ENT_QUOTES, 'UTF-8') . '</a>';
+            } else {
+                $out .= htmlspecialchars($part, ENT_QUOTES, 'UTF-8');
+            }
+        }
+
+        return nl2br($out);
+    }
+}
 ?>
 <div style="max-width: 980px; margin: 0 auto; padding: 0 4px 16px 4px;">
     <div style="display:flex; flex-wrap:wrap; gap:18px; align-items:flex-start;">
@@ -90,6 +119,7 @@ $communitiesCount = 1; // por enquanto, apenas a comunidade global do Tuquinha
                     $tabs = [
                         'perfil' => 'Perfil',
                         'scraps' => 'Scraps / mural',
+                        'mencoes' => 'Mencionados em mim',
                         'amigos' => 'Amigos',
                         'comunidades' => 'Comunidades',
                     ];
@@ -228,51 +258,82 @@ $communitiesCount = 1; // por enquanto, apenas a comunidade global do Tuquinha
                     </div>
                 </div>
             <?php else: ?>
-                <div style="padding:10px 12px; border-radius:12px; background:#111118; border:1px solid #272727; margin-bottom:14px;">
-                    <h2 style="font-size:15px; margin-bottom:6px;">Novo scrap</h2>
-                    <?php if ($block): ?>
-                        <p style="font-size:12px; color:#777;">Você não pode criar novos scraps enquanto estiver bloqueado.</p>
-                    <?php else: ?>
-                        <form action="/comunidade/postar" method="post" enctype="multipart/form-data" style="display:flex; flex-direction:column; gap:6px;">
-                            <textarea name="body" rows="3" maxlength="4000" placeholder="Deixe um recado para a comunidade..." style="
-                                width:100%; padding:8px 10px; border-radius:8px; border:1px solid #272727;
-                                background:#050509; color:#f5f5f5; font-size:13px; resize:vertical;"></textarea>
-                            <div style="display:flex; flex-wrap:wrap; gap:8px; align-items:center; font-size:11px; color:#b0b0b0;">
-                                <label style="display:inline-flex; align-items:center; gap:4px; cursor:pointer;">
-                                    <span>📷</span>
-                                    <span>Imagem</span>
-                                    <input type="file" name="image" accept="image/*" style="display:none;" id="community-image-input">
-                                </label>
-                                <label style="display:inline-flex; align-items:center; gap:4px; cursor:pointer;">
-                                    <span>📎</span>
-                                    <span>Arquivo</span>
-                                    <input type="file" name="file" style="display:none;" id="community-file-input">
-                                </label>
-                                <span style="margin-left:auto;">Até 4000 caracteres</span>
-                            </div>
-                            <div id="community-attachment-preview" style="margin-top:4px; display:none; padding:6px 8px; border-radius:8px; border:1px dashed #272727; background:#050509;">
-                                <div id="community-image-preview" style="display:none; margin-bottom:4px;">
-                                    <img src="" alt="Pré-visualização da imagem" style="max-width:100%; max-height:180px; border-radius:8px; border:1px solid #272727; object-fit:cover;">
-                                </div>
-                                <div id="community-file-preview" style="display:none; font-size:11px; color:#b0b0b0;"></div>
-                            </div>
-                            <div style="display:flex; justify-content:flex-end; margin-top:4px;">
-                                <button type="submit" style="
-                                    border:none; border-radius:999px; padding:7px 14px;
-                                    background:linear-gradient(135deg,#e53935,#ff6f60); color:#050509;
-                                    font-weight:600; font-size:12px; cursor:pointer;">
-                                    Publicar scrap
-                                </button>
-                            </div>
-                        </form>
-                    <?php endif; ?>
-                </div>
+                <?php
+                    $isMentionsView = $activeTab === 'mencoes';
+                    $items = $posts;
+                    $usingTagFilter = false;
+                    if ($isMentionsView) {
+                        $items = $mentionedPosts ?? [];
+                    } elseif (!empty($tag)) {
+                        $usingTagFilter = true;
+                        $items = $tagPosts ?? [];
+                    }
+                ?>
 
-                <?php if (empty($posts)): ?>
-                    <div style="color:#b0b0b0; font-size:13px;">Ainda não há scraps na comunidade. Seja o primeiro a deixar um recado. 🙂</div>
+                <?php if (!$isMentionsView): ?>
+                    <div style="padding:10px 12px; border-radius:12px; background:#111118; border:1px solid #272727; margin-bottom:14px;">
+                        <h2 style="font-size:15px; margin-bottom:6px;">Novo scrap</h2>
+                        <?php if ($block): ?>
+                            <p style="font-size:12px; color:#777;">Você não pode criar novos scraps enquanto estiver bloqueado.</p>
+                        <?php else: ?>
+                            <form action="/comunidade/postar" method="post" enctype="multipart/form-data" style="display:flex; flex-direction:column; gap:6px;">
+                                <textarea name="body" rows="3" maxlength="4000" placeholder="Deixe um recado para a comunidade..." style="
+                                    width:100%; padding:8px 10px; border-radius:8px; border:1px solid #272727;
+                                    background:#050509; color:#f5f5f5; font-size:13px; resize:vertical;"></textarea>
+                                <div style="display:flex; flex-wrap:wrap; gap:8px; align-items:center; font-size:11px; color:#b0b0b0;">
+                                    <label style="display:inline-flex; align-items:center; gap:4px; cursor:pointer;">
+                                        <span>📷</span>
+                                        <span>Imagem</span>
+                                        <input type="file" name="image" accept="image/*" style="display:none;" id="community-image-input">
+                                    </label>
+                                    <label style="display:inline-flex; align-items:center; gap:4px; cursor:pointer;">
+                                        <span>📎</span>
+                                        <span>Arquivo</span>
+                                        <input type="file" name="file" style="display:none;" id="community-file-input">
+                                    </label>
+                                    <span style="margin-left:auto;">Até 4000 caracteres</span>
+                                </div>
+                                <div id="community-attachment-preview" style="margin-top:4px; display:none; padding:6px 8px; border-radius:8px; border:1px dashed #272727; background:#050509;">
+                                    <div id="community-image-preview" style="display:none; margin-bottom:4px;">
+                                        <img src="" alt="Pré-visualização da imagem" style="max-width:100%; max-height:180px; border-radius:8px; border:1px solid #272727; object-fit:cover;">
+                                    </div>
+                                    <div id="community-file-preview" style="display:none; font-size:11px; color:#b0b0b0;"></div>
+                                </div>
+                                <div style="display:flex; justify-content:flex-end; margin-top:4px;">
+                                    <button type="submit" style="
+                                        border:none; border-radius:999px; padding:7px 14px;
+                                        background:linear-gradient(135deg,#e53935,#ff6f60); color:#050509;
+                                        font-weight:600; font-size:12px; cursor:pointer;">
+                                        Publicar scrap
+                                    </button>
+                                </div>
+                            </form>
+                        <?php endif; ?>
+                    </div>
+                <?php endif; ?>
+
+                <?php if ($isMentionsView): ?>
+                    <div style="margin-bottom:8px; font-size:12px; color:#b0b0b0;">
+                        Aqui aparecem posts recentes da comunidade em que alguém usou <strong>@seu_nome</strong> para te mencionar.
+                    </div>
+                <?php elseif ($usingTagFilter && !empty($tag)): ?>
+                    <div style="margin-bottom:8px; font-size:12px; color:#b0b0b0;">
+                        Filtrando por hashtag <strong>#<?= htmlspecialchars($tag, ENT_QUOTES, 'UTF-8') ?></strong>.
+                        <a href="/comunidade" style="color:#ff6f60; text-decoration:none; margin-left:4px;">Limpar filtro</a>
+                    </div>
+                <?php endif; ?>
+
+                <?php if (empty($items)): ?>
+                    <?php if ($isMentionsView): ?>
+                        <div style="color:#b0b0b0; font-size:13px;">Ainda ninguém te mencionou em posts da comunidade. Quando alguém usar @seu_nome em um post, ele aparece aqui. 🙂</div>
+                    <?php elseif ($usingTagFilter): ?>
+                        <div style="color:#b0b0b0; font-size:13px;">Nenhum post encontrado com essa hashtag ainda.</div>
+                    <?php else: ?>
+                        <div style="color:#b0b0b0; font-size:13px;">Ainda não há scraps na comunidade. Seja o primeiro a deixar um recado. 🙂</div>
+                    <?php endif; ?>
                 <?php else: ?>
                     <div style="display:flex; flex-direction:column; gap:10px;">
-                        <?php foreach ($posts as $post): ?>
+                        <?php foreach ($items as $post): ?>
                         <?php
                             $postId = (int)$post['id'];
                             $author = trim((string)($post['user_name'] ?? ''));
@@ -385,7 +446,7 @@ $communitiesCount = 1; // por enquanto, apenas a comunidade global do Tuquinha
                                 </form>
                             <?php elseif ($body !== ''): ?>
                                 <div style="font-size:13px; color:#d0d0d0; margin:0 0 2px 0;">
-                                    <?= nl2br(htmlspecialchars($body)) ?>
+                                    <?= community_format_body((string)$body) ?>
                                 </div>
                             <?php endif; ?>
 
@@ -412,15 +473,6 @@ $communitiesCount = 1; // por enquanto, apenas a comunidade global do Tuquinha
                                     </button>
                                 </form>
 
-                                <span>💬 <?= $commentsTotal ?></span>
-
-                                <form action="/comunidade/repostar" method="post" style="display:inline;">
-                                    <input type="hidden" name="post_id" value="<?= $postId ?>">
-                                    <button type="submit" style="background:none; border:none; color:#b0b0b0; cursor:pointer; padding:0;">
-                                        🔁 Republicar
-                                    </button>
-                                </form>
-
                                 <?php if ($isMine || !empty($_SESSION['is_admin'])): ?>
                                     <div style="margin-left:auto; display:flex; gap:8px; align-items:center;">
                                         <a href="/comunidade?edit_post_id=<?= $postId ?>#post-<?= $postId ?>" style="color:#b0b0b0; text-decoration:none;">Editar</a>
@@ -440,50 +492,9 @@ $communitiesCount = 1; // por enquanto, apenas a comunidade global do Tuquinha
                                 <?php endif; ?>
                             </div>
 
-                            <div style="margin-top:6px; padding-top:6px; border-top:1px dashed #272727;">
-                                <?php if (!empty($postComments)): ?>
-                                    <div style="display:flex; flex-direction:column; gap:4px; margin-bottom:4px; max-height:160px; overflow:auto;">
-                                        <?php foreach ($postComments as $comment): ?>
-                                            <div style="border-radius:8px; border:1px solid #272727; background:#050509; padding:4px 6px; font-size:12px;">
-                                                <div style="display:flex; justify-content:space-between; gap:8px; margin-bottom:2px;">
-                                                    <span style="font-weight:600;">
-                                                        <?= htmlspecialchars($comment['user_name'] ?? '') ?>
-                                                    </span>
-                                                    <?php if (!empty($comment['created_at'])): ?>
-                                                        <span style="font-size:10px; color:#777;">
-                                                            <?= htmlspecialchars($comment['created_at']) ?>
-                                                        </span>
-                                                    <?php endif; ?>
-                                                </div>
-                                                <div style="color:#d0d0d0;">
-                                                    <?= nl2br(htmlspecialchars($comment['body'] ?? '')) ?>
-                                                </div>
-                                            </div>
-                                        <?php endforeach; ?>
-                                    </div>
-                                <?php endif; ?>
-
-                                <?php if ($block): ?>
-                                    <div style="font-size:11px; color:#777;">Você não pode comentar enquanto estiver bloqueado.</div>
-                                <?php else: ?>
-                                    <form action="/comunidade/comentar" method="post" style="margin-top:4px;">
-                                        <input type="hidden" name="post_id" value="<?= $postId ?>">
-                                        <textarea name="body" rows="2" maxlength="2000" placeholder="Comente algo sobre este post..." style="
-                                            width:100%; padding:6px 8px; border-radius:8px; border:1px solid #272727;
-                                            background:#050509; color:#f5f5f5; font-size:12px; resize:vertical;"></textarea>
-                                        <div style="margin-top:4px; display:flex; justify-content:flex-end;">
-                                            <button type="submit" style="
-                                                border:none; border-radius:999px; padding:5px 12px;
-                                                background:linear-gradient(135deg,#e53935,#ff6f60); color:#050509;
-                                                font-weight:600; font-size:11px; cursor:pointer;">
-                                                Comentar
-                                            </button>
-                                        </div>
-                                    </form>
-                                <?php endif; ?>
-                            </div>
+                            <div style="margin-top:6px; padding-top:6px; border-top:1px dashed #272727;"></div>
                         </div>
-                    <?php endforeach; ?>
+                        <?php endforeach; ?>
                     </div>
                 <?php endif; ?>
             <?php endif; ?>
