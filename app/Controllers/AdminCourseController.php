@@ -10,6 +10,10 @@ use App\Models\CourseLive;
 use App\Models\CourseLiveParticipant;
 use App\Models\CoursePartner;
 use App\Models\CoursePartnerCommission;
+use App\Models\CourseModule;
+use App\Models\CourseModuleExam;
+use App\Models\CourseExamQuestion;
+use App\Models\CourseExamOption;
 use App\Models\User;
 use App\Services\MailService;
 use App\Services\GoogleCalendarService;
@@ -170,6 +174,274 @@ class AdminCourseController extends Controller
         exit;
     }
 
+    public function modules(): void
+    {
+        $this->ensureAdmin();
+        $courseId = isset($_GET['course_id']) ? (int)$_GET['course_id'] : 0;
+        $course = $courseId > 0 ? Course::findById($courseId) : null;
+        if (!$course) {
+            header('Location: /admin/cursos');
+            exit;
+        }
+
+        $modules = CourseModule::allByCourse($courseId);
+        $modulesWithExam = [];
+        foreach ($modules as $m) {
+            $mid = (int)($m['id'] ?? 0);
+            if ($mid <= 0) {
+                continue;
+            }
+            $m['exam'] = CourseModuleExam::findByModuleId($mid);
+            $modulesWithExam[] = $m;
+        }
+
+        $this->view('admin/cursos/modules', [
+            'pageTitle' => 'Módulos do curso: ' . (string)($course['title'] ?? ''),
+            'course' => $course,
+            'modules' => $modulesWithExam,
+        ]);
+    }
+
+    public function moduleForm(): void
+    {
+        $this->ensureAdmin();
+        $courseId = isset($_GET['course_id']) ? (int)$_GET['course_id'] : 0;
+        $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
+        $course = $courseId > 0 ? Course::findById($courseId) : null;
+        if (!$course) {
+            header('Location: /admin/cursos');
+            exit;
+        }
+
+        $module = null;
+        if ($id > 0) {
+            $module = CourseModule::findById($id);
+        }
+
+        $this->view('admin/cursos/module_form', [
+            'pageTitle' => $module ? 'Editar módulo' : 'Novo módulo',
+            'course' => $course,
+            'module' => $module,
+        ]);
+    }
+
+    public function moduleSave(): void
+    {
+        $this->ensureAdmin();
+        $courseId = isset($_POST['course_id']) ? (int)$_POST['course_id'] : 0;
+        $id = isset($_POST['id']) ? (int)$_POST['id'] : 0;
+        $course = $courseId > 0 ? Course::findById($courseId) : null;
+        if (!$course) {
+            header('Location: /admin/cursos');
+            exit;
+        }
+
+        $title = trim($_POST['title'] ?? '');
+        $description = trim($_POST['description'] ?? '');
+        $sortOrder = isset($_POST['sort_order']) ? (int)$_POST['sort_order'] : 0;
+
+        if ($title === '') {
+            $_SESSION['admin_course_error'] = 'Preencha pelo menos o título do módulo.';
+            $target = '/admin/cursos/modulos/novo?course_id=' . $courseId;
+            if ($id > 0) {
+                $target = '/admin/cursos/modulos/editar?course_id=' . $courseId . '&id=' . $id;
+            }
+            header('Location: ' . $target);
+            exit;
+        }
+
+        $data = [
+            'course_id' => $courseId,
+            'title' => $title,
+            'description' => $description !== '' ? $description : null,
+            'sort_order' => $sortOrder,
+        ];
+
+        if ($id > 0) {
+            CourseModule::update($id, $data);
+        } else {
+            CourseModule::create($data);
+        }
+
+        $_SESSION['admin_course_success'] = 'Módulo salvo com sucesso.';
+        header('Location: /admin/cursos/modulos?course_id=' . $courseId);
+        exit;
+    }
+
+    public function moduleDelete(): void
+    {
+        $this->ensureAdmin();
+        $courseId = isset($_POST['course_id']) ? (int)$_POST['course_id'] : 0;
+        $id = isset($_POST['id']) ? (int)$_POST['id'] : 0;
+        if ($id > 0) {
+            CourseModule::delete($id);
+        }
+        $_SESSION['admin_course_success'] = 'Módulo excluído.';
+        header('Location: /admin/cursos/modulos?course_id=' . $courseId);
+        exit;
+    }
+
+    public function moduleExamForm(): void
+    {
+        $this->ensureAdmin();
+        $courseId = isset($_GET['course_id']) ? (int)$_GET['course_id'] : 0;
+        $moduleId = isset($_GET['module_id']) ? (int)$_GET['module_id'] : 0;
+        $course = $courseId > 0 ? Course::findById($courseId) : null;
+        if (!$course) {
+            header('Location: /admin/cursos');
+            exit;
+        }
+        $module = $moduleId > 0 ? CourseModule::findById($moduleId) : null;
+        if (!$module) {
+            header('Location: /admin/cursos/modulos?course_id=' . $courseId);
+            exit;
+        }
+
+        $exam = CourseModuleExam::findByModuleId($moduleId);
+        $examId = $exam && !empty($exam['id']) ? (int)$exam['id'] : 0;
+        $questionRows = [];
+        if ($examId > 0) {
+            $rawQuestions = CourseExamQuestion::allByExam($examId);
+            foreach ($rawQuestions as $q) {
+                $qid = (int)($q['id'] ?? 0);
+                if ($qid <= 0) {
+                    continue;
+                }
+                $optionsRows = CourseExamOption::allByQuestion($qid);
+                $options = [];
+                $correctIndex = null;
+                $idx = 0;
+                foreach ($optionsRows as $opt) {
+                    $options[] = (string)($opt['option_text'] ?? '');
+                    if (!empty($opt['is_correct']) && $correctIndex === null) {
+                        $correctIndex = $idx;
+                    }
+                    $idx++;
+                }
+                while (count($options) < 4) {
+                    $options[] = '';
+                }
+                if ($correctIndex === null) {
+                    $correctIndex = 0;
+                }
+                $questionRows[] = [
+                    'id' => $qid,
+                    'text' => (string)($q['question_text'] ?? ''),
+                    'options' => $options,
+                    'correct' => $correctIndex,
+                ];
+            }
+        }
+        while (count($questionRows) < 5) {
+            $questionRows[] = [
+                'id' => 0,
+                'text' => '',
+                'options' => ['', '', '', ''],
+                'correct' => 0,
+            ];
+        }
+
+        $this->view('admin/cursos/module_exam', [
+            'pageTitle' => 'Prova do módulo: ' . (string)($module['title'] ?? ''),
+            'course' => $course,
+            'module' => $module,
+            'exam' => $exam,
+            'questions' => $questionRows,
+        ]);
+    }
+
+    public function moduleExamSave(): void
+    {
+        $this->ensureAdmin();
+        $courseId = isset($_POST['course_id']) ? (int)$_POST['course_id'] : 0;
+        $moduleId = isset($_POST['module_id']) ? (int)$_POST['module_id'] : 0;
+        $course = $courseId > 0 ? Course::findById($courseId) : null;
+        if (!$course) {
+            header('Location: /admin/cursos');
+            exit;
+        }
+        $module = $moduleId > 0 ? CourseModule::findById($moduleId) : null;
+        if (!$module) {
+            header('Location: /admin/cursos/modulos?course_id=' . $courseId);
+            exit;
+        }
+
+        $passScorePercent = isset($_POST['pass_score_percent']) ? (int)$_POST['pass_score_percent'] : 70;
+        if ($passScorePercent < 0) {
+            $passScorePercent = 0;
+        } elseif ($passScorePercent > 100) {
+            $passScorePercent = 100;
+        }
+
+        $maxAttempts = isset($_POST['max_attempts']) ? (int)$_POST['max_attempts'] : 3;
+        if ($maxAttempts < 1) {
+            $maxAttempts = 1;
+        }
+
+        $isActive = !empty($_POST['is_active']);
+
+        $examId = CourseModuleExam::upsertForModule($moduleId, $passScorePercent, $maxAttempts, $isActive);
+
+        $existingQuestions = CourseExamQuestion::allByExam($examId);
+        $existingIds = [];
+        foreach ($existingQuestions as $q) {
+            $qid = (int)($q['id'] ?? 0);
+            if ($qid > 0) {
+                $existingIds[] = $qid;
+            }
+        }
+        if (!empty($existingIds)) {
+            CourseExamOption::deleteByQuestionIds($existingIds);
+            CourseExamQuestion::deleteByExam($examId);
+        }
+
+        $questionsPost = $_POST['questions'] ?? [];
+        $order = 0;
+        $createdQuestions = 0;
+        foreach ($questionsPost as $qData) {
+            $text = trim((string)($qData['text'] ?? ''));
+            if ($text === '') {
+                continue;
+            }
+            $optionsPost = $qData['options'] ?? [];
+            $correctIndex = isset($qData['correct']) ? (int)$qData['correct'] : -1;
+            $questionId = CourseExamQuestion::create([
+                'exam_id' => $examId,
+                'question_text' => $text,
+                'sort_order' => $order,
+            ]);
+            $order++;
+            $createdQuestions++;
+
+            $optOrder = 0;
+            foreach ($optionsPost as $idx => $optText) {
+                $optText = trim((string)$optText);
+                if ($optText === '') {
+                    continue;
+                }
+                $isCorrectOpt = ($correctIndex === (int)$idx);
+                CourseExamOption::create([
+                    'question_id' => $questionId,
+                    'option_text' => $optText,
+                    'is_correct' => $isCorrectOpt ? 1 : 0,
+                    'sort_order' => $optOrder,
+                ]);
+                $optOrder++;
+            }
+        }
+
+        if ($isActive && $createdQuestions === 0) {
+            CourseModuleExam::upsertForModule($moduleId, $passScorePercent, $maxAttempts, false);
+            $_SESSION['admin_course_error'] = 'Para ativar a prova, cadastre pelo menos uma pergunta com alternativas.';
+            header('Location: /admin/cursos/modulos/prova?course_id=' . $courseId . '&module_id=' . $moduleId);
+            exit;
+        }
+
+        $_SESSION['admin_course_success'] = 'Configurações da prova salvas com sucesso.';
+        header('Location: /admin/cursos/modulos?course_id=' . $courseId);
+        exit;
+    }
+
     public function lessons(): void
     {
         $this->ensureAdmin();
@@ -205,10 +477,13 @@ class AdminCourseController extends Controller
             $lesson = CourseLesson::findById($id);
         }
 
+        $modules = CourseModule::allByCourse($courseId);
+
         $this->view('admin/cursos/lesson_form', [
             'pageTitle' => $lesson ? 'Editar aula' : 'Nova aula',
             'course' => $course,
             'lesson' => $lesson,
+            'modules' => $modules,
         ]);
     }
 
@@ -228,6 +503,7 @@ class AdminCourseController extends Controller
         $videoUrl = trim($_POST['video_url'] ?? '');
         $sortOrder = isset($_POST['sort_order']) ? (int)$_POST['sort_order'] : 0;
         $isPublished = !empty($_POST['is_published']) ? 1 : 0;
+        $moduleId = isset($_POST['module_id']) ? (int)$_POST['module_id'] : 0;
 
         if ($title === '' || $videoUrl === '') {
             $_SESSION['admin_course_error'] = 'Preencha pelo menos título e link do vídeo.';
@@ -241,6 +517,7 @@ class AdminCourseController extends Controller
 
         $data = [
             'course_id' => $courseId,
+            'module_id' => $moduleId > 0 ? $moduleId : null,
             'title' => $title,
             'description' => $description !== '' ? $description : null,
             'video_url' => $videoUrl,

@@ -78,6 +78,7 @@
                         </td>
                         <td style="padding:8px 10px; text-align:right; white-space:nowrap;">
                             <a href="/admin/cursos/editar?id=<?= (int)$c['id'] ?>" style="margin-right:6px; color:#ff6f60; text-decoration:none;">Editar</a>
+                            <a href="/admin/cursos/modulos?course_id=<?= (int)$c['id'] ?>" style="margin-right:6px; color:#b0b0b0; text-decoration:none; font-size:12px;">Módulos</a>
                             <a href="/admin/cursos/aulas?course_id=<?= (int)$c['id'] ?>" style="margin-right:6px; color:#b0b0b0; text-decoration:none; font-size:12px;">Aulas</a>
                             <a href="/admin/cursos/lives?course_id=<?= (int)$c['id'] ?>" style="color:#b0b0b0; text-decoration:none; font-size:12px;">Lives</a>
                         </td>

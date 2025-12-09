@@ -7,8 +7,14 @@ use App\Models\Course;
 use App\Models\CourseEnrollment;
 use App\Models\CourseLesson;
 use App\Models\CourseLessonComment;
+use App\Models\CourseLessonProgress;
 use App\Models\CourseLive;
 use App\Models\CourseLiveParticipant;
+use App\Models\CourseModule;
+use App\Models\CourseModuleExam;
+use App\Models\CourseExamQuestion;
+use App\Models\CourseExamOption;
+use App\Models\CourseExamAttempt;
 use App\Models\Plan;
 use App\Models\Subscription;
 use App\Models\User;
@@ -43,6 +49,146 @@ class CourseController extends Controller
             $plan = Plan::findBySessionSlug($_SESSION['plan_slug'] ?? null) ?: Plan::findBySlug('free');
         }
         return $plan;
+    }
+
+    private function buildModulesData(int $courseId, ?array $user, bool $isEnrolled, array $lessons, array $completedLessonIds): array
+    {
+        $modules = CourseModule::allByCourse($courseId);
+
+        if (empty($modules)) {
+            return [
+                'modules' => [],
+                'unassigned_lessons' => $lessons,
+            ];
+        }
+
+        $lessonsByModule = [];
+        $unassignedLessons = [];
+        foreach ($lessons as $lesson) {
+            $mid = (int)($lesson['module_id'] ?? 0);
+            if ($mid > 0) {
+                if (!isset($lessonsByModule[$mid])) {
+                    $lessonsByModule[$mid] = [];
+                }
+                $lessonsByModule[$mid][] = $lesson;
+            } else {
+                $unassignedLessons[] = $lesson;
+            }
+        }
+
+        $userId = $user && !empty($user['id']) ? (int)$user['id'] : 0;
+        $resultModules = [];
+        $blocked = false;
+
+        foreach ($modules as $module) {
+            $mid = (int)($module['id'] ?? 0);
+            if ($mid <= 0) {
+                continue;
+            }
+
+            $moduleLessons = $lessonsByModule[$mid] ?? [];
+            $totalLessons = count($moduleLessons);
+            $doneLessons = 0;
+            foreach ($moduleLessons as $lessonRow) {
+                $lid = (int)($lessonRow['id'] ?? 0);
+                if ($lid > 0 && isset($completedLessonIds[$lid])) {
+                    $doneLessons++;
+                }
+            }
+            $moduleProgressPercent = 0;
+            if ($totalLessons > 0) {
+                $moduleProgressPercent = (int)floor(($doneLessons / $totalLessons) * 100);
+            }
+
+            $exam = CourseModuleExam::findByModuleId($mid);
+            $examId = $exam && !empty($exam['id']) ? (int)$exam['id'] : 0;
+            $hasExam = $examId > 0 && !empty($exam['is_active']);
+
+            $examAttempts = 0;
+            $hasPassedExam = false;
+            $lastAttempt = null;
+            if ($userId > 0 && $isEnrolled && $examId > 0) {
+                $examAttempts = CourseExamAttempt::countAttemptsForUser($examId, $userId);
+                $hasPassedExam = CourseExamAttempt::hasPassed($examId, $userId);
+                $lastAttempt = CourseExamAttempt::findLastForUser($examId, $userId);
+            }
+
+            $isLocked = ($userId > 0 && $isEnrolled) ? $blocked : false;
+
+            $canTakeExam = false;
+            $maxAttempts = $exam && isset($exam['max_attempts']) ? (int)$exam['max_attempts'] : 0;
+            if ($userId > 0 && $isEnrolled && $hasExam && !$isLocked && !$hasPassedExam) {
+                if ($maxAttempts <= 0 || $examAttempts < $maxAttempts) {
+                    $canTakeExam = true;
+                }
+            }
+
+            if ($userId > 0 && $isEnrolled && $hasExam && !$hasPassedExam) {
+                $blocked = true;
+            }
+
+            $resultModules[] = [
+                'module' => $module,
+                'lessons' => $moduleLessons,
+                'progress_percent' => $moduleProgressPercent,
+                'exam' => $exam,
+                'exam_attempts' => $examAttempts,
+                'last_attempt' => $lastAttempt,
+                'has_passed_exam' => $hasPassedExam,
+                'can_take_exam' => $canTakeExam,
+                'is_locked' => $isLocked,
+            ];
+        }
+
+        return [
+            'modules' => $resultModules,
+            'unassigned_lessons' => $unassignedLessons,
+        ];
+    }
+
+    private function isLessonLockedByModules(array $course, array $lesson, ?array $user): bool
+    {
+        $courseId = (int)($course['id'] ?? 0);
+        $lessonModuleId = (int)($lesson['module_id'] ?? 0);
+        if ($courseId <= 0 || $lessonModuleId <= 0) {
+            return false;
+        }
+
+        if (!$user || empty($user['id'])) {
+            return false;
+        }
+        $userId = (int)$user['id'];
+        if ($userId <= 0) {
+            return false;
+        }
+
+        $modules = CourseModule::allByCourse($courseId);
+        if (empty($modules)) {
+            return false;
+        }
+
+        $blocked = false;
+        foreach ($modules as $module) {
+            $mid = (int)($module['id'] ?? 0);
+            if ($mid <= 0) {
+                continue;
+            }
+
+            if ($mid === $lessonModuleId) {
+                return $blocked;
+            }
+
+            $exam = CourseModuleExam::findByModuleId($mid);
+            $examId = $exam && !empty($exam['id']) ? (int)$exam['id'] : 0;
+            if ($examId > 0 && !empty($exam['is_active'])) {
+                $hasPassed = CourseExamAttempt::hasPassed($examId, $userId);
+                if (!$hasPassed) {
+                    $blocked = true;
+                }
+            }
+        }
+
+        return false;
     }
 
     public function index(): void
@@ -128,6 +274,23 @@ class CourseController extends Controller
         $lessons = CourseLesson::allByCourseId($courseId);
         $lives = CourseLive::allByCourse($courseId);
 
+        $completedLessonIds = [];
+        $courseProgressPercent = 0;
+        if ($user) {
+            $completedLessonIds = CourseLessonProgress::completedLessonIdsByUserAndCourse($courseId, (int)$user['id']);
+            $totalLessons = count($lessons);
+            if ($totalLessons > 0) {
+                $doneLessons = 0;
+                foreach ($lessons as $lessonRow) {
+                    $lid = (int)($lessonRow['id'] ?? 0);
+                    if ($lid > 0 && isset($completedLessonIds[$lid])) {
+                        $doneLessons++;
+                    }
+                }
+                $courseProgressPercent = (int)floor(($doneLessons / $totalLessons) * 100);
+            }
+        }
+
         $isEnrolled = false;
         $myLiveParticipation = [];
         if ($user) {
@@ -135,6 +298,8 @@ class CourseController extends Controller
             $isEnrolled = CourseEnrollment::isEnrolled($courseId, $userId);
             $myLiveParticipation = CourseLiveParticipant::liveIdsByUser($userId);
         }
+
+        $modulesData = $this->buildModulesData($courseId, $user, $isEnrolled, $lessons, $completedLessonIds);
 
         $commentsByLesson = [];
         $lessonComments = CourseLessonComment::allByCourseWithUser($courseId);
@@ -164,6 +329,10 @@ class CourseController extends Controller
             'isEnrolled' => $isEnrolled,
             'myLiveParticipation' => $myLiveParticipation,
             'planAllowsCourses' => $planAllowsCourses,
+            'completedLessonIds' => $completedLessonIds,
+            'courseProgressPercent' => $courseProgressPercent,
+            'modulesData' => $modulesData['modules'] ?? [],
+            'unassignedLessons' => $modulesData['unassigned_lessons'] ?? [],
             'success' => $success,
             'error' => $error,
         ]);
@@ -209,6 +378,16 @@ class CourseController extends Controller
             $isEnrolled = CourseEnrollment::isEnrolled($courseId, (int)$user['id']);
         }
 
+        if ($user && $isEnrolled && $this->isLessonLockedByModules($course, $lesson, $user)) {
+            $_SESSION['courses_error'] = 'Este módulo está bloqueado até você passar na prova do módulo anterior.';
+            header('Location: ' . self::buildCourseUrl($course));
+            exit;
+        }
+
+        if ($user && $isEnrolled) {
+            CourseLessonProgress::markCompleted($courseId, $lessonId, (int)$user['id']);
+        }
+
         $lessons = CourseLesson::allByCourseId($courseId);
         $lessonComments = CourseLessonComment::allByLessonWithUser($lessonId);
 
@@ -221,6 +400,225 @@ class CourseController extends Controller
             'lessonComments' => $lessonComments,
             'isEnrolled' => $isEnrolled,
         ]);
+    }
+
+    public function moduleExam(): void
+    {
+        $user = $this->getCurrentUser();
+        if (!$user) {
+            header('Location: /login');
+            exit;
+        }
+
+        $courseId = isset($_GET['course_id']) ? (int)$_GET['course_id'] : 0;
+        $moduleId = isset($_GET['module_id']) ? (int)$_GET['module_id'] : 0;
+
+        $course = $courseId > 0 ? Course::findById($courseId) : null;
+        if (!$course || empty($course['is_active'])) {
+            $_SESSION['courses_error'] = 'Curso não encontrado.';
+            header('Location: /cursos');
+            exit;
+        }
+
+        $userId = (int)$user['id'];
+        $isEnrolled = CourseEnrollment::isEnrolled($courseId, $userId);
+        if (!$isEnrolled) {
+            $_SESSION['courses_error'] = 'Você precisa estar inscrito neste curso para fazer a prova deste módulo.';
+            header('Location: ' . self::buildCourseUrl($course));
+            exit;
+        }
+
+        $module = $moduleId > 0 ? CourseModule::findById($moduleId) : null;
+        if (!$module || (int)($module['course_id'] ?? 0) !== $courseId) {
+            $_SESSION['courses_error'] = 'Módulo não encontrado neste curso.';
+            header('Location: ' . self::buildCourseUrl($course));
+            exit;
+        }
+
+        $dummyLesson = ['module_id' => $moduleId];
+        if ($this->isLessonLockedByModules($course, $dummyLesson, $user)) {
+            $_SESSION['courses_error'] = 'Este módulo está bloqueado até você passar na prova do módulo anterior.';
+            header('Location: ' . self::buildCourseUrl($course));
+            exit;
+        }
+
+        $exam = CourseModuleExam::findByModuleId($moduleId);
+        if (!$exam || empty($exam['is_active'])) {
+            $_SESSION['courses_error'] = 'Este módulo não possui uma prova ativa configurada.';
+            header('Location: ' . self::buildCourseUrl($course));
+            exit;
+        }
+
+        $examId = (int)$exam['id'];
+        $attempts = CourseExamAttempt::countAttemptsForUser($examId, $userId);
+        $maxAttempts = isset($exam['max_attempts']) ? (int)$exam['max_attempts'] : 0;
+        if ($maxAttempts > 0 && $attempts >= $maxAttempts) {
+            $_SESSION['courses_error'] = 'Você já atingiu o limite de tentativas para esta prova.';
+            header('Location: ' . self::buildCourseUrl($course));
+            exit;
+        }
+
+        if (CourseExamAttempt::hasPassed($examId, $userId)) {
+            $_SESSION['courses_success'] = 'Você já foi aprovado nesta prova de módulo.';
+            header('Location: ' . self::buildCourseUrl($course));
+            exit;
+        }
+
+        $rawQuestions = CourseExamQuestion::allByExam($examId);
+        $questions = [];
+        foreach ($rawQuestions as $q) {
+            $qid = (int)($q['id'] ?? 0);
+            if ($qid <= 0) {
+                continue;
+            }
+            $options = CourseExamOption::allByQuestion($qid);
+            if (empty($options)) {
+                continue;
+            }
+            $questions[] = [
+                'id' => $qid,
+                'text' => (string)($q['question_text'] ?? ''),
+                'options' => $options,
+            ];
+        }
+
+        if (empty($questions)) {
+            $_SESSION['courses_error'] = 'Esta prova ainda não possui perguntas configuradas.';
+            header('Location: ' . self::buildCourseUrl($course));
+            exit;
+        }
+
+        $this->view('courses/module_exam', [
+            'pageTitle' => 'Prova do módulo: ' . (string)($module['title'] ?? ''),
+            'user' => $user,
+            'course' => $course,
+            'module' => $module,
+            'exam' => $exam,
+            'questions' => $questions,
+            'attempts' => $attempts,
+            'maxAttempts' => $maxAttempts,
+        ]);
+    }
+
+    public function moduleExamSubmit(): void
+    {
+        $user = $this->getCurrentUser();
+        if (!$user) {
+            header('Location: /login');
+            exit;
+        }
+
+        $courseId = isset($_POST['course_id']) ? (int)$_POST['course_id'] : 0;
+        $moduleId = isset($_POST['module_id']) ? (int)$_POST['module_id'] : 0;
+
+        $course = $courseId > 0 ? Course::findById($courseId) : null;
+        if (!$course || empty($course['is_active'])) {
+            $_SESSION['courses_error'] = 'Curso não encontrado.';
+            header('Location: /cursos');
+            exit;
+        }
+
+        $userId = (int)$user['id'];
+        $isEnrolled = CourseEnrollment::isEnrolled($courseId, $userId);
+        if (!$isEnrolled) {
+            $_SESSION['courses_error'] = 'Você precisa estar inscrito neste curso para fazer a prova deste módulo.';
+            header('Location: ' . self::buildCourseUrl($course));
+            exit;
+        }
+
+        $module = $moduleId > 0 ? CourseModule::findById($moduleId) : null;
+        if (!$module || (int)($module['course_id'] ?? 0) !== $courseId) {
+            $_SESSION['courses_error'] = 'Módulo não encontrado neste curso.';
+            header('Location: ' . self::buildCourseUrl($course));
+            exit;
+        }
+
+        $dummyLesson = ['module_id' => $moduleId];
+        if ($this->isLessonLockedByModules($course, $dummyLesson, $user)) {
+            $_SESSION['courses_error'] = 'Este módulo está bloqueado até você passar na prova do módulo anterior.';
+            header('Location: ' . self::buildCourseUrl($course));
+            exit;
+        }
+
+        $exam = CourseModuleExam::findByModuleId($moduleId);
+        if (!$exam || empty($exam['is_active'])) {
+            $_SESSION['courses_error'] = 'Este módulo não possui uma prova ativa configurada.';
+            header('Location: ' . self::buildCourseUrl($course));
+            exit;
+        }
+
+        $examId = (int)$exam['id'];
+        $attemptsBefore = CourseExamAttempt::countAttemptsForUser($examId, $userId);
+        $maxAttempts = isset($exam['max_attempts']) ? (int)$exam['max_attempts'] : 0;
+        if ($maxAttempts > 0 && $attemptsBefore >= $maxAttempts) {
+            $_SESSION['courses_error'] = 'Você já atingiu o limite de tentativas para esta prova.';
+            header('Location: ' . self::buildCourseUrl($course));
+            exit;
+        }
+
+        $answers = $_POST['answers'] ?? [];
+
+        $rawQuestions = CourseExamQuestion::allByExam($examId);
+        $totalQuestions = 0;
+        $correctAnswers = 0;
+
+        foreach ($rawQuestions as $q) {
+            $qid = (int)($q['id'] ?? 0);
+            if ($qid <= 0) {
+                continue;
+            }
+
+            $options = CourseExamOption::allByQuestion($qid);
+            if (empty($options)) {
+                continue;
+            }
+
+            $totalQuestions++;
+
+            $selectedOptionId = isset($answers[$qid]) ? (int)$answers[$qid] : 0;
+            if ($selectedOptionId <= 0) {
+                continue;
+            }
+
+            foreach ($options as $opt) {
+                if ((int)($opt['id'] ?? 0) === $selectedOptionId && !empty($opt['is_correct'])) {
+                    $correctAnswers++;
+                    break;
+                }
+            }
+        }
+
+        if ($totalQuestions === 0) {
+            $_SESSION['courses_error'] = 'Esta prova ainda não possui perguntas configuradas.';
+            header('Location: ' . self::buildCourseUrl($course));
+            exit;
+        }
+
+        $scorePercent = (int)floor(($correctAnswers / $totalQuestions) * 100);
+        $passScore = isset($exam['pass_score_percent']) ? (int)$exam['pass_score_percent'] : 0;
+        $isPassed = $scorePercent >= $passScore;
+
+        CourseExamAttempt::create([
+            'exam_id' => $examId,
+            'user_id' => $userId,
+            'score_percent' => $scorePercent,
+            'is_passed' => $isPassed ? 1 : 0,
+        ]);
+
+        $attemptsAfter = $attemptsBefore + 1;
+
+        if ($isPassed) {
+            $_SESSION['courses_success'] = 'Você foi aprovado na prova deste módulo com ' . $scorePercent . "%.";
+        } else {
+            $message = 'Você não atingiu a nota mínima nesta prova. Sua nota foi ' . $scorePercent . '% (mínimo ' . $passScore . '%).';
+            if ($maxAttempts > 0 && $attemptsAfter >= $maxAttempts) {
+                $message .= ' Você atingiu o limite de tentativas para este módulo.';
+            }
+            $_SESSION['courses_error'] = $message;
+        }
+
+        header('Location: ' . self::buildCourseUrl($course));
+        exit;
     }
 
     public function enroll(): void
@@ -318,6 +716,87 @@ HTML;
         }
 
         $_SESSION['courses_success'] = 'Inscrição realizada com sucesso.';
+        header('Location: ' . self::buildCourseUrl($course));
+        exit;
+    }
+
+    public function unenroll(): void
+    {
+        $user = $this->getCurrentUser();
+        if (!$user) {
+            header('Location: /login');
+            exit;
+        }
+
+        $courseId = isset($_POST['course_id']) ? (int)$_POST['course_id'] : 0;
+        $course = $courseId > 0 ? Course::findById($courseId) : null;
+        if (!$course || empty($course['is_active'])) {
+            $_SESSION['courses_error'] = 'Curso não encontrado.';
+            header('Location: /cursos');
+            exit;
+        }
+
+        $userId = (int)$user['id'];
+        if (!CourseEnrollment::isEnrolled($courseId, $userId)) {
+            $_SESSION['courses_error'] = 'Você não está inscrito neste curso.';
+            header('Location: ' . self::buildCourseUrl($course));
+            exit;
+        }
+
+        CourseEnrollment::unenroll($courseId, $userId);
+
+        $subject = 'Inscrição cancelada no curso: ' . (string)($course['title'] ?? 'Curso do Tuquinha');
+
+        $coursePath = self::buildCourseUrl($course);
+        $scheme = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') ? 'https://' : 'http://';
+        $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+        $courseUrl = $scheme . $host . $coursePath;
+        $logoUrl = $scheme . $host . '/public/favicon.png';
+        $safeName = htmlspecialchars($user['name'] ?? '', ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+        $safeCourseTitle = htmlspecialchars($course['title'] ?? 'Curso do Tuquinha', ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+        $safeCourseUrl = htmlspecialchars($courseUrl, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+        $safeLogoUrl = htmlspecialchars($logoUrl, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+
+        $body = <<<HTML
+<html>
+<body style="margin:0; padding:0; background:#050509; font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; color:#f5f5f5;">
+  <div style="width:100%; padding:24px 0;">
+    <div style="max-width:520px; margin:0 auto; background:#111118; border-radius:16px; border:1px solid #272727; padding:18px 20px;">
+      <div style="display:flex; align-items:center; gap:10px; margin-bottom:12px;">
+        <div style="width:32px; height:32px; border-radius:50%; overflow:hidden; background:#050509; box-shadow:0 0 18px rgba(229,57,53,0.8);">
+          <img src="{$safeLogoUrl}" alt="Tuquinha" style="width:100%; height:100%; display:block; object-fit:cover;">
+        </div>
+        <div>
+          <div style="font-weight:700; font-size:15px;">Agente IA - Tuquinha</div>
+          <div style="font-size:11px; color:#b0b0b0;">Branding vivo na veia</div>
+        </div>
+      </div>
+
+      <p style="font-size:14px; margin:0 0 10px 0;">Oi, {$safeName} 👋</p>
+      <p style="font-size:14px; margin:0 0 10px 0;">Sua inscrição no curso <strong>{$safeCourseTitle}</strong> foi cancelada.</p>
+      <p style="font-size:14px; margin:0 0 10px 0;">Você não receberá mais e-mails sobre novas aulas e lives deste curso. Se mudar de ideia, é só acessar a página do curso e se inscrever novamente.</p>
+
+      <div style="text-align:center; margin:14px 0 8px 0;">
+        <a href="{$safeCourseUrl}" style="display:inline-block; padding:9px 18px; border-radius:999px; background:#222230; color:#f5f5f5; font-weight:600; font-size:13px; text-decoration:none; border:1px solid #444;">Ver curso</a>
+      </div>
+
+      <p style="font-size:12px; color:#777; margin:8px 0 0 0;">Se o botão não funcionar, copie e cole este link no navegador:<br>
+        <a href="{$safeCourseUrl}" style="color:#ff6f60; text-decoration:none;">{$safeCourseUrl}</a>
+      </p>
+    </div>
+  </div>
+</body>
+</html>
+HTML;
+
+        try {
+            if (!empty($user['email'])) {
+                MailService::send($user['email'], $user['name'] ?? '', $subject, $body);
+            }
+        } catch (\Throwable $e) {
+        }
+
+        $_SESSION['courses_success'] = 'Sua inscrição neste curso foi cancelada.';
         header('Location: ' . self::buildCourseUrl($course));
         exit;
     }

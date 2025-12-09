@@ -47,7 +47,22 @@ $isEdit = !empty($lesson);
         </div>
 
         <div style="display:flex; gap:14px; flex-wrap:wrap;">
-            <div style="flex:1 1 160px;">
+            <div style="flex:1 1 200px;">
+                <?php $modules = $modules ?? []; $currentModuleId = isset($lesson['module_id']) ? (int)$lesson['module_id'] : 0; ?>
+                <label style="font-size:13px; color:#ddd; display:block; margin-bottom:4px;">Módulo (opcional)</label>
+                <select name="module_id" style="
+                    width:100%; max-width:260px; padding:8px 10px; border-radius:8px; border:1px solid #272727;
+                    background:#050509; color:#f5f5f5; font-size:13px;">
+                    <option value="">Sem módulo</option>
+                    <?php foreach ($modules as $m): ?>
+                        <?php $mid = (int)($m['id'] ?? 0); ?>
+                        <option value="<?= $mid ?>" <?= $mid > 0 && $mid === $currentModuleId ? 'selected' : '' ?>>
+                            <?= htmlspecialchars($m['title'] ?? '') ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+            <div style="flex:1 1 120px;">
                 <label style="font-size:13px; color:#ddd; display:block; margin-bottom:4px;">Ordem</label>
                 <input type="number" name="sort_order" value="<?= isset($lesson['sort_order']) ? (int)$lesson['sort_order'] : 0 ?>" style="
                     width:120px; padding:8px 10px; border-radius:8px; border:1px solid #272727;

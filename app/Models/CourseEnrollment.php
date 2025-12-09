@@ -35,6 +35,20 @@ class CourseEnrollment
         ]);
     }
 
+    public static function unenroll(int $courseId, int $userId): bool
+    {
+        if ($courseId <= 0 || $userId <= 0) {
+            return false;
+        }
+
+        $pdo = Database::getConnection();
+        $stmt = $pdo->prepare('DELETE FROM course_enrollments WHERE course_id = :course_id AND user_id = :user_id');
+        return $stmt->execute([
+            'course_id' => $courseId,
+            'user_id' => $userId,
+        ]);
+    }
+
     public static function allByCourse(int $courseId): array
     {
         $pdo = Database::getConnection();

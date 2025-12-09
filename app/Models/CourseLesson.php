@@ -27,10 +27,11 @@ class CourseLesson
     public static function create(array $data): int
     {
         $pdo = Database::getConnection();
-        $stmt = $pdo->prepare('INSERT INTO course_lessons (course_id, title, description, video_url, sort_order, is_published)
-            VALUES (:course_id, :title, :description, :video_url, :sort_order, :is_published)');
+        $stmt = $pdo->prepare('INSERT INTO course_lessons (course_id, module_id, title, description, video_url, sort_order, is_published)
+            VALUES (:course_id, :module_id, :title, :description, :video_url, :sort_order, :is_published)');
         $stmt->execute([
             'course_id' => (int)($data['course_id'] ?? 0),
+            'module_id' => !empty($data['module_id']) ? (int)$data['module_id'] : null,
             'title' => $data['title'] ?? '',
             'description' => $data['description'] ?? null,
             'video_url' => $data['video_url'] ?? '',
@@ -44,6 +45,7 @@ class CourseLesson
     {
         $pdo = Database::getConnection();
         $stmt = $pdo->prepare('UPDATE course_lessons SET
+            module_id = :module_id,
             title = :title,
             description = :description,
             video_url = :video_url,
@@ -53,6 +55,7 @@ class CourseLesson
             WHERE id = :id');
         $stmt->execute([
             'id' => $id,
+            'module_id' => !empty($data['module_id']) ? (int)$data['module_id'] : null,
             'title' => $data['title'] ?? '',
             'description' => $data['description'] ?? null,
             'video_url' => $data['video_url'] ?? '',

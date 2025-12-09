@@ -78,6 +78,12 @@ $courseUrl = CourseController::buildCourseUrl($course);
 
             <h1 style="font-size:22px; margin-bottom:8px; font-weight:650;">Curso: <?= htmlspecialchars($title) ?></h1>
 
+            <?php if ($user): ?>
+                <div style="font-size:12px; color:#b0b0b0; margin-bottom:6px;">
+                    Progresso no curso: <?= isset($courseProgressPercent) ? (int)$courseProgressPercent : 0 ?>%
+                </div>
+            <?php endif; ?>
+
             <?php if ($description !== ''): ?>
                 <div style="font-size:13px; color:#d0d0d0; line-height:1.5; margin-bottom:10px; white-space:pre-line;">
                     <?= htmlspecialchars($description) ?>
@@ -101,6 +107,15 @@ $courseUrl = CourseController::buildCourseUrl($course);
                             background:#10330f; color:#c8ffd4; font-size:13px;">
                             Você já está inscrito neste curso
                         </span>
+                        <form action="/cursos/cancelar-inscricao" method="post" style="display:inline;" onsubmit="return confirm('Tem certeza que deseja cancelar sua inscrição neste curso?');">
+                            <input type="hidden" name="course_id" value="<?= (int)($course['id'] ?? 0) ?>">
+                            <button type="submit" style="
+                                border:none; border-radius:999px; padding:8px 16px;
+                                background:#311; color:#ffbaba;
+                                font-weight:600; font-size:12px; cursor:pointer;">
+                                Cancelar inscrição
+                            </button>
+                        </form>
                     <?php else: ?>
                         <?php if ($isPaid && $allowPublicPurchase && !$planAllowsCourses): ?>
                             <a href="/cursos/comprar?course_id=<?= (int)($course['id'] ?? 0) ?>" style="
@@ -130,38 +145,181 @@ $courseUrl = CourseController::buildCourseUrl($course);
     <div style="margin-top:16px; display:flex; flex-wrap:wrap; gap:24px;">
         <div style="flex:2 1 360px; min-width:260px;">
             <h2 style="font-size:16px; margin-bottom:8px;">Aulas do curso</h2>
-            <?php if (empty($lessons)): ?>
+            <?php
+                $modulesData = $modulesData ?? [];
+                $unassignedLessons = $unassignedLessons ?? [];
+            ?>
+            <?php if (empty($modulesData) && empty($unassignedLessons)): ?>
                 <div style="color:#b0b0b0; font-size:13px;">Nenhuma aula cadastrada ainda.</div>
             <?php else: ?>
                 <div style="border-radius:12px; border:1px solid #272727; background:#111118; overflow:hidden;">
-                    <?php foreach ($lessons as $idx => $lesson): ?>
-                        <?php
-                            $ltitle = trim((string)($lesson['title'] ?? ''));
-                            $ldesc = trim((string)($lesson['description'] ?? ''));
-                            $video = trim((string)($lesson['video_url'] ?? ''));
-                            $number = $idx + 1;
-                            $lessonId = (int)($lesson['id'] ?? 0);
-                            $lessonComments = $commentsByLesson[$lessonId] ?? [];
-                            $isAdmin = !empty($_SESSION['is_admin']);
-                            $isOwner = $user && !empty($course['owner_user_id']) && (int)$course['owner_user_id'] === (int)$user['id'];
-                            $canCommentLesson = $user && ($isEnrolled || $isOwner || $isAdmin);
-                        ?>
-                        <div id="lesson-<?= $lessonId ?>" style="padding:8px 10px; border-bottom:1px solid #272727;">
-                            <div style="display:flex; justify-content:space-between; gap:8px; align-items:center;">
-                                <div style="font-size:13px; font-weight:600;">
-                                    Aula <?= $number ?>: <?= htmlspecialchars($ltitle) ?>
+                    <?php if (!empty($modulesData)): ?>
+                        <?php foreach ($modulesData as $mIndex => $mData): ?>
+                            <?php
+                                $module = $mData['module'] ?? [];
+                                $moduleLessons = $mData['lessons'] ?? [];
+                                $moduleProgress = isset($mData['progress_percent']) ? (int)$mData['progress_percent'] : 0;
+                                $exam = $mData['exam'] ?? null;
+                                $hasExam = $exam && !empty($exam['is_active']);
+                                $hasPassedExam = !empty($mData['has_passed_exam']);
+                                $canTakeExam = !empty($mData['can_take_exam']);
+                                $isLocked = !empty($mData['is_locked']);
+                                $examAttempts = (int)($mData['exam_attempts'] ?? 0);
+                                $maxAttempts = $exam && isset($exam['max_attempts']) ? (int)$exam['max_attempts'] : 0;
+                            ?>
+                            <div style="padding:10px 12px; border-bottom:1px solid #272727;">
+                                <div style="display:flex; justify-content:space-between; gap:8px; align-items:flex-start; flex-wrap:wrap;">
+                                    <div style="min-width:0;">
+                                        <div style="font-size:14px; font-weight:600; margin-bottom:4px;">
+                                            Módulo <?= $mIndex + 1 ?>: <?= htmlspecialchars($module['title'] ?? '') ?>
+                                        </div>
+                                        <?php if (!empty($module['description'])): ?>
+                                            <div style="font-size:12px; color:#b0b0b0; margin-bottom:4px; line-height:1.4;">
+                                                <?= htmlspecialchars($module['description']) ?>
+                                            </div>
+                                        <?php endif; ?>
+                                        <?php if ($user): ?>
+                                            <div style="font-size:11px; color:#b0b0b0;">
+                                                Progresso do módulo: <?= $moduleProgress ?>%
+                                            </div>
+                                        <?php endif; ?>
+                                        <?php if ($user && $isEnrolled && $isLocked): ?>
+                                            <div style="margin-top:4px;">
+                                                <span style="
+                                                    display:inline-flex; align-items:center; gap:4px;
+                                                    border-radius:999px; padding:2px 8px; font-size:10px;
+                                                    background:#332020; color:#ff8a80;">
+                                                    Módulo bloqueado até passar na prova anterior
+                                                </span>
+                                            </div>
+                                        <?php endif; ?>
+                                    </div>
+                                    <div style="text-align:right; font-size:11px; min-width:150px;">
+                                        <?php if ($hasExam): ?>
+                                            <?php if ($user && $isEnrolled): ?>
+                                                <?php if ($hasPassedExam): ?>
+                                                    <div style="margin-bottom:4px;">
+                                                        <span style="
+                                                            display:inline-flex; align-items:center; gap:4px;
+                                                            border-radius:999px; padding:2px 8px; font-size:10px;
+                                                            background:#16351f; color:#6be28d;">
+                                                            Prova concluída
+                                                        </span>
+                                                    </div>
+                                                <?php elseif ($canTakeExam): ?>
+                                                    <div style="margin-bottom:4px;">
+                                                        <a href="/cursos/modulos/prova?course_id=<?= (int)$course['id'] ?>&module_id=<?= (int)($module['id'] ?? 0) ?>" style="
+                                                            display:inline-flex; align-items:center; gap:4px;
+                                                            border-radius:999px; padding:5px 10px;
+                                                            background:linear-gradient(135deg,#e53935,#ff6f60); color:#050509;
+                                                            font-weight:600; font-size:11px; text-decoration:none;">
+                                                            Fazer prova do módulo
+                                                        </a>
+                                                    </div>
+                                                <?php else: ?>
+                                                    <div style="margin-bottom:4px;">
+                                                        <span style="
+                                                            display:inline-flex; align-items:center; gap:4px;
+                                                            border-radius:999px; padding:2px 8px; font-size:10px;
+                                                            background:#331b1b; color:#ffbaba;">
+                                                            Limite de tentativas atingido
+                                                        </span>
+                                                    </div>
+                                                <?php endif; ?>
+                                                <div style="color:#b0b0b0;">
+                                                    Tentativas: <?= $examAttempts ?>
+                                                    <?php if ($maxAttempts > 0): ?>
+                                                        / <?= $maxAttempts ?>
+                                                    <?php endif; ?>
+                                                </div>
+                                            <?php else: ?>
+                                                <div style="color:#b0b0b0;">
+                                                    Prova disponível após se inscrever no curso.
+                                                </div>
+                                            <?php endif; ?>
+                                        <?php endif; ?>
+                                    </div>
                                 </div>
-                                <?php if ($video !== '' && $lessonId > 0): ?>
-                                    <a href="/cursos/aulas/ver?lesson_id=<?= $lessonId ?>" style="font-size:11px; color:#ff6f60; text-decoration:none;">Assistir</a>
+
+                                <?php if (!empty($moduleLessons)): ?>
+                                    <div style="margin-top:8px; border-radius:8px; border:1px solid #272727; background:#0b0b10; overflow:hidden;">
+                                        <?php foreach ($moduleLessons as $idx => $lesson): ?>
+                                            <?php
+                                                $ltitle = trim((string)($lesson['title'] ?? ''));
+                                                $ldesc = trim((string)($lesson['description'] ?? ''));
+                                                $video = trim((string)($lesson['video_url'] ?? ''));
+                                                $number = $idx + 1;
+                                                $lessonId = (int)($lesson['id'] ?? 0);
+                                                $lessonComments = $commentsByLesson[$lessonId] ?? [];
+                                                $isAdmin = !empty($_SESSION['is_admin']);
+                                                $isOwner = $user && !empty($course['owner_user_id']) && (int)$course['owner_user_id'] === (int)$user['id'];
+                                                $canCommentLesson = $user && ($isEnrolled || $isOwner || $isAdmin);
+                                            ?>
+                                            <div id="lesson-<?= $lessonId ?>" style="padding:8px 10px; border-bottom:1px solid #272727;">
+                                                <div style="display:flex; justify-content:space-between; gap:8px; align-items:center;">
+                                                    <div style="font-size:13px; font-weight:600; display:flex; align-items:center; gap:6px;">
+                                                        <span>Aula <?= $number ?>: <?= htmlspecialchars($ltitle) ?></span>
+                                                        <?php if ($user && !empty($completedLessonIds[$lessonId] ?? false)): ?>
+                                                            <span style="font-size:11px; color:#6be28d;">✔ concluída</span>
+                                                        <?php endif; ?>
+                                                    </div>
+                                                    <?php if ($video !== '' && $lessonId > 0): ?>
+                                                        <a href="/cursos/aulas/ver?lesson_id=<?= $lessonId ?>" style="font-size:11px; color:#ff6f60; text-decoration:none;">Assistir</a>
+                                                    <?php endif; ?>
+                                                </div>
+                                                <?php if ($ldesc !== ''): ?>
+                                                    <div style="margin-top:4px; font-size:12px; color:#b0b0b0; line-height:1.4;">
+                                                        <?= htmlspecialchars($ldesc) ?>
+                                                    </div>
+                                                <?php endif; ?>
+                                            </div>
+                                        <?php endforeach; ?>
+                                    </div>
+                                <?php else: ?>
+                                    <div style="margin-top:6px; font-size:12px; color:#b0b0b0;">Nenhuma aula cadastrada neste módulo.</div>
                                 <?php endif; ?>
                             </div>
-                            <?php if ($ldesc !== ''): ?>
-                                <div style="margin-top:4px; font-size:12px; color:#b0b0b0; line-height:1.4;">
-                                    <?= htmlspecialchars($ldesc) ?>
-                                </div>
-                            <?php endif; ?>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
+
+                    <?php if (!empty($unassignedLessons)): ?>
+                        <div style="padding:10px 12px;">
+                            <div style="font-size:14px; font-weight:600; margin-bottom:4px;">Aulas sem módulo</div>
+                            <div style="border-radius:8px; border:1px solid #272727; background:#0b0b10; overflow:hidden;">
+                                <?php foreach ($unassignedLessons as $idx => $lesson): ?>
+                                    <?php
+                                        $ltitle = trim((string)($lesson['title'] ?? ''));
+                                        $ldesc = trim((string)($lesson['description'] ?? ''));
+                                        $video = trim((string)($lesson['video_url'] ?? ''));
+                                        $number = $idx + 1;
+                                        $lessonId = (int)($lesson['id'] ?? 0);
+                                        $lessonComments = $commentsByLesson[$lessonId] ?? [];
+                                        $isAdmin = !empty($_SESSION['is_admin']);
+                                        $isOwner = $user && !empty($course['owner_user_id']) && (int)$course['owner_user_id'] === (int)$user['id'];
+                                        $canCommentLesson = $user && ($isEnrolled || $isOwner || $isAdmin);
+                                    ?>
+                                    <div id="lesson-<?= $lessonId ?>" style="padding:8px 10px; border-bottom:1px solid #272727;">
+                                        <div style="display:flex; justify-content:space-between; gap:8px; align-items:center;">
+                                            <div style="font-size:13px; font-weight:600; display:flex; align-items:center; gap:6px;">
+                                                <span>Aula <?= $number ?>: <?= htmlspecialchars($ltitle) ?></span>
+                                                <?php if ($user && !empty($completedLessonIds[$lessonId] ?? false)): ?>
+                                                    <span style="font-size:11px; color:#6be28d;">✔ concluída</span>
+                                                <?php endif; ?>
+                                            </div>
+                                            <?php if ($video !== '' && $lessonId > 0): ?>
+                                                <a href="/cursos/aulas/ver?lesson_id=<?= $lessonId ?>" style="font-size:11px; color:#ff6f60; text-decoration:none;">Assistir</a>
+                                            <?php endif; ?>
+                                        </div>
+                                        <?php if ($ldesc !== ''): ?>
+                                            <div style="margin-top:4px; font-size:12px; color:#b0b0b0; line-height:1.4;">
+                                                <?= htmlspecialchars($ldesc) ?>
+                                            </div>
+                                        <?php endif; ?>
+                                    </div>
+                                <?php endforeach; ?>
+                            </div>
                         </div>
-                    <?php endforeach; ?>
+                    <?php endif; ?>
                 </div>
             <?php endif; ?>
         </div>
