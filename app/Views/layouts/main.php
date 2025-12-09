@@ -396,25 +396,57 @@ $pageTitle = $pageTitle ?? 'Agente IA - Tuquinha';
                 <?php endif; ?>
 
                 <?php if (!empty($_SESSION['user_id'])): ?>
+                    <div class="sidebar-section-title" style="margin-top: 10px;">Orkut do Tuquinha</div>
+                    <a href="/perfil" class="sidebar-button">
+                        <span class="icon">
+                            🧑
+                        </span>
+                        <span>Perfil social</span>
+                    </a>
+                    <a href="/amigos" class="sidebar-button">
+                        <span class="icon">
+                            👥
+                        </span>
+                        <span>Amigos</span>
+                    </a>
+                    <a href="/comunidades" class="sidebar-button">
+                        <span class="icon">
+                            💬
+                        </span>
+                        <span>Comunidades Orkut</span>
+                    </a>
+                <?php endif; ?>
+
+                <?php if (!empty($_SESSION['user_id'])): ?>
                     <div class="sidebar-section-title" style="margin-top: 10px;">Conta</div>
                     <a href="/conta" class="sidebar-button">
-                        <span class="icon">👤</span>
+                        <span class="icon">
+                            👤
+                        </span>
                         <span>Minha conta</span>
                     </a>
                     <a href="/conta/personalidade" class="sidebar-button">
-                        <span class="icon">🎭</span>
+                        <span class="icon">
+                            🎭
+                        </span>
                         <span>Personalidade padrão</span>
                     </a>
                     <a href="/tokens/historico" class="sidebar-button">
-                        <span class="icon">🔋</span>
+                        <span class="icon">
+                            🔋
+                        </span>
                         <span>Histórico de tokens extras</span>
                     </a>
                     <a href="/parceiro/cursos" class="sidebar-button">
-                        <span class="icon">🎓</span>
+                        <span class="icon">
+                            🎓
+                        </span>
                         <span>Meus cursos (parceiro)</span>
                     </a>
                     <a href="/logout" class="sidebar-button" style="margin-top: 6px;">
-                        <span class="icon">⏻</span>
+                        <span class="icon">
+                            ⏻
+                        </span>
                         <span>Sair da conta</span>
                     </a>
                 <?php endif; ?>

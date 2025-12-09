@@ -78,6 +78,26 @@ $router->post('/comunidade/editar-post', 'CommunityController@editPost');
 $router->post('/comunidade/excluir-post', 'CommunityController@deletePost');
 $router->post('/comunidade/bloquear-usuario', 'CommunityController@blockUser');
 $router->post('/comunidade/desbloquear-usuario', 'CommunityController@unblockUser');
+
+$router->get('/perfil', 'ProfileController@show');
+$router->post('/perfil/scrap', 'ProfileController@postScrap');
+$router->post('/perfil/depoimento', 'ProfileController@submitTestimonial');
+$router->post('/perfil/depoimento/decidir', 'ProfileController@decideTestimonial');
+
+$router->post('/perfil/salvar', 'ProfileController@saveProfile');
+
+$router->get('/amigos', 'FriendsController@index');
+$router->post('/amigos/solicitar', 'FriendsController@request');
+$router->post('/amigos/decidir', 'FriendsController@decide');
+
+$router->get('/comunidades', 'CommunitiesController@index');
+$router->get('/comunidades/ver', 'CommunitiesController@show');
+$router->post('/comunidades/entrar', 'CommunitiesController@join');
+$router->post('/comunidades/sair', 'CommunitiesController@leave');
+$router->post('/comunidades/topicos/novo', 'CommunitiesController@createTopic');
+$router->get('/comunidades/topicos/ver', 'CommunitiesController@showTopic');
+$router->post('/comunidades/topicos/responder', 'CommunitiesController@replyTopic');
+
 $router->get('/parceiro/cursos', 'CoursePartnerDashboardController@index');
 $router->get('/admin/login', 'AdminAuthController@login');
 $router->post('/admin/login', 'AdminAuthController@authenticate');
