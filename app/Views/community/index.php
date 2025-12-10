@@ -450,21 +450,6 @@ if (!function_exists('community_format_body')) {
                                 </div>
                             <?php endif; ?>
 
-                            <?php if ($image !== '' || $file !== ''): ?>
-                                <div style="margin-top:2px;">
-                                    <?php if ($image !== ''): ?>
-                                        <div style="margin-bottom:4px;">
-                                            <img src="<?= htmlspecialchars($image) ?>" alt="Imagem do post" style="max-width:100%; border-radius:10px; border:1px solid #272727;">
-                                        </div>
-                                    <?php endif; ?>
-                                    <?php if ($file !== ''): ?>
-                                        <div style="font-size:12px;">
-                                            <a href="<?= htmlspecialchars($file) ?>" target="_blank" rel="noopener noreferrer" style="color:#ffcc80; text-decoration:none;">📎 Baixar arquivo</a>
-                                        </div>
-                                    <?php endif; ?>
-                                </div>
-                            <?php endif; ?>
-
                             <div style="display:flex; align-items:center; gap:10px; font-size:11px; color:#b0b0b0; margin-top:4px;">
                                 <form action="/comunidade/curtir" method="post" style="display:inline;">
                                     <input type="hidden" name="post_id" value="<?= $postId ?>">
