@@ -54,15 +54,14 @@ class CommunityController extends Controller
         $isAdmin = !empty($_SESSION['is_admin']);
 
         $plan = $this->resolvePlanForUser($user);
-        $hasPlan = !empty($plan) && !empty($plan['allow_courses']);
 
         $enrollments = CourseEnrollment::allByUser((int)$user['id']);
         $hasCourses = !empty($enrollments);
 
-        // Admin pode acessar a comunidade mesmo sem plano/inscrição,
-        // pois tecnicamente gerencia todos os cursos.
-        if (!$isAdmin && (!$hasPlan || !$hasCourses)) {
-            $_SESSION['community_error'] = 'A comunidade é liberada apenas para quem tem um plano com cursos e está inscrito em pelo menos um curso.';
+        // Admin pode acessar a comunidade sempre.
+        // Para demais usuários, basta estar inscrito em pelo menos um curso.
+        if (!$isAdmin && !$hasCourses) {
+            $_SESSION['community_error'] = 'A comunidade é liberada apenas para alunos inscritos em pelo menos um curso.';
             header('Location: /cursos');
             exit;
         }
