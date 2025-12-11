@@ -7,6 +7,7 @@
 /** @var array $commentsByLesson */
 /** @var bool $isEnrolled */
 /** @var bool $planAllowsCourses */
+/** @var bool $canAccessContent */
 /** @var string|null $success */
 /** @var string|null $error */
 
@@ -78,7 +79,7 @@ $courseUrl = CourseController::buildCourseUrl($course);
 
             <h1 style="font-size:22px; margin-bottom:8px; font-weight:650;">Curso: <?= htmlspecialchars($title) ?></h1>
 
-            <?php if ($user): ?>
+            <?php if ($user && !empty($canAccessContent)): ?>
                 <div style="font-size:12px; color:#b0b0b0; margin-bottom:6px;">
                     Progresso no curso: <?= isset($courseProgressPercent) ? (int)$courseProgressPercent : 0 ?>%
                 </div>
@@ -149,7 +150,15 @@ $courseUrl = CourseController::buildCourseUrl($course);
                 $modulesData = $modulesData ?? [];
                 $unassignedLessons = $unassignedLessons ?? [];
             ?>
-            <?php if (empty($modulesData) && empty($unassignedLessons)): ?>
+            <?php if (empty($user) || empty($canAccessContent)): ?>
+                <div style="color:#b0b0b0; font-size:13px;">
+                    <?php if (empty($user)): ?>
+                        Entre ou faça login para ver as aulas deste curso.
+                    <?php else: ?>
+                        Para ver as aulas, você precisa ter um plano que libera cursos ou concluir a compra avulsa deste curso.
+                    <?php endif; ?>
+                </div>
+            <?php elseif (empty($modulesData) && empty($unassignedLessons)): ?>
                 <div style="color:#b0b0b0; font-size:13px;">Nenhuma aula cadastrada ainda.</div>
             <?php else: ?>
                 <div style="border-radius:12px; border:1px solid #272727; background:#111118; overflow:hidden;">
@@ -328,6 +337,8 @@ $courseUrl = CourseController::buildCourseUrl($course);
             <h2 style="font-size:16px; margin-bottom:8px;">Lives deste curso</h2>
             <?php if (!$user): ?>
                 <div style="color:#b0b0b0; font-size:13px;">Entre na sua conta e inscreva-se neste curso para ver o calendário de lives.</div>
+            <?php elseif (empty($canAccessContent) && empty($_SESSION['is_admin'])): ?>
+                <div style="color:#b0b0b0; font-size:13px;">Para ver e participar das lives, você precisa ter um plano com cursos ou concluir a compra deste curso.</div>
             <?php elseif (!$isEnrolled && empty($_SESSION['is_admin'])): ?>
                 <div style="color:#b0b0b0; font-size:13px;">Inscreva-se neste curso para ver e participar das lives ao vivo.</div>
             <?php else: ?>

@@ -53,6 +53,34 @@ class CourseController extends Controller
         return $plan;
     }
 
+    private function userCanAccessCourseContent(array $course, ?array $user, ?array $plan, bool $isEnrolled): bool
+    {
+        $isAdmin = !empty($_SESSION['is_admin']);
+        if ($isAdmin) {
+            return true;
+        }
+
+        $planAllowsCourses = !empty($plan['allow_courses'] ?? false);
+        if ($planAllowsCourses) {
+            return true;
+        }
+
+        $isPaid = !empty($course['is_paid']);
+        $allowPublicPurchase = !empty($course['allow_public_purchase']);
+
+        if (!$isPaid) {
+            // Curso gratuito: se chegou até aqui, pode acessar conteúdo.
+            return true;
+        }
+
+        // Curso pago sem plano: precisa estar inscrito (compra avulsa confirmada).
+        if ($allowPublicPurchase && $isEnrolled) {
+            return true;
+        }
+
+        return false;
+    }
+
     private function buildModulesData(int $courseId, ?array $user, bool $isEnrolled, array $lessons, array $completedLessonIds): array
     {
         $modules = CourseModule::allByCourse($courseId);
@@ -329,6 +357,8 @@ class CourseController extends Controller
             $myLiveParticipation = CourseLiveParticipant::liveIdsByUser($userId);
         }
 
+        $canAccessContent = $this->userCanAccessCourseContent($course, $user, $plan, $isEnrolled);
+
         // Lives futuras e publicadas para o painel do curso
         $lives = [];
         if ($isEnrolled || $isAdmin) {
@@ -380,6 +410,7 @@ class CourseController extends Controller
             'commentsByLesson' => $commentsByLesson,
             'isEnrolled' => $isEnrolled,
             'myLiveParticipation' => $myLiveParticipation,
+            'canAccessContent' => $canAccessContent,
             'planAllowsCourses' => $planAllowsCourses,
             'completedLessonIds' => $completedLessonIds,
             'courseProgressPercent' => $courseProgressPercent,
@@ -411,23 +442,19 @@ class CourseController extends Controller
             header('Location: /cursos');
             exit;
         }
-
-        $user = $this->getCurrentUser();
-        $plan = $this->resolvePlanForUser($user);
-        $isAdmin = !empty($_SESSION['is_admin']);
-        $planAllowsCourses = !empty($plan['allow_courses']);
-        $allowPublicPurchase = !empty($course['allow_public_purchase']);
-
-        $canSee = $isAdmin || $planAllowsCourses || $allowPublicPurchase;
-        if (!$canSee) {
-            header('Location: /planos');
-            exit;
-        }
-
         $courseId = (int)$course['id'];
         $isEnrolled = false;
+        $user = $this->getCurrentUser();
+        $plan = $this->resolvePlanForUser($user);
         if ($user) {
             $isEnrolled = CourseEnrollment::isEnrolled($courseId, (int)$user['id']);
+        }
+
+        $canAccessContent = $this->userCanAccessCourseContent($course, $user, $plan, $isEnrolled);
+        if (!$canAccessContent) {
+            $_SESSION['courses_error'] = 'Você precisa concluir a compra deste curso ou ter um plano que libera cursos para assistir às aulas.';
+            header('Location: ' . self::buildCourseUrl($course));
+            exit;
         }
 
         if ($user && $isEnrolled && $this->isLessonLockedByModules($course, $lesson, $user)) {
