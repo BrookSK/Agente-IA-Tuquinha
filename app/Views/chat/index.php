@@ -183,6 +183,8 @@ if (!empty($currentPlan) && is_array($currentPlan)) {
                             if ($isCsv) { $label = 'CSV'; }
                             elseif ($isPdf) { $label = 'PDF'; }
                             elseif ($isImage) { $label = 'Imagem'; }
+
+                            $path = trim((string)($att['path'] ?? ''));
                             ?>
                             <div style="
                                 display:flex;
@@ -194,6 +196,11 @@ if (!empty($currentPlan) && is_array($currentPlan)) {
                                 min-width:160px;
                                 max-width:220px;
                             ">
+                                <?php if ($isImage && $path !== ''): ?>
+                                    <a href="<?= htmlspecialchars($path, ENT_QUOTES, 'UTF-8') ?>" target="_blank" rel="noopener noreferrer" style="display:block; margin-bottom:4px; border-radius:8px; overflow:hidden; border:1px solid #272727;">
+                                        <img src="<?= htmlspecialchars($path, ENT_QUOTES, 'UTF-8') ?>" alt="Imagem enviada" style="display:block; width:100%; max-height:140px; object-fit:cover;">
+                                    </a>
+                                <?php endif; ?>
                                 <div style="display:flex; align-items:center; gap:6px; margin-bottom:2px;">
                                     <span style="font-size:14px;">
                                         <?= $isImage ? '🖼️' : ($isCsv ? '📊' : ($isPdf ? '📄' : '📎')) ?>
@@ -202,9 +209,16 @@ if (!empty($currentPlan) && is_array($currentPlan)) {
                                         <?= htmlspecialchars((string)($att['original_name'] ?? 'arquivo')) ?>
                                     </span>
                                 </div>
-                                <div style="font-size:11px; color:#b0b0b0;">
+                                <div style="font-size:11px; color:#b0b0b0; margin-bottom:2px;">
                                     <?= htmlspecialchars(trim($label . ($humanSize ? ' · ' . $humanSize : ''))) ?>
                                 </div>
+                                <?php if ($path !== ''): ?>
+                                    <div style="margin-top:2px; font-size:11px;">
+                                        <a href="<?= htmlspecialchars($path, ENT_QUOTES, 'UTF-8') ?>" target="_blank" rel="noopener noreferrer" style="color:#ffcc80; text-decoration:none;">
+                                            Abrir <?= $isImage ? 'imagem' : 'arquivo' ?>
+                                        </a>
+                                    </div>
+                                <?php endif; ?>
                             </div>
                         <?php endforeach; ?>
                     </div>

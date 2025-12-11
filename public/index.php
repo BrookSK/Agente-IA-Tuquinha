@@ -149,6 +149,8 @@ $router->get('/admin/erros/ver', 'AdminErrorReportController@show');
 $router->post('/admin/erros/estornar', 'AdminErrorReportController@refund');
 $router->post('/admin/erros/resolver', 'AdminErrorReportController@resolve');
 $router->post('/admin/erros/descartar', 'AdminErrorReportController@dismiss');
+$router->get('/admin/anexos', 'AdminAttachmentController@index');
+$router->post('/admin/anexos/excluir', 'AdminAttachmentController@delete');
 $router->get('/admin/comunidade/bloqueios', 'AdminCommunityController@blocks');
 $router->get('/chat', 'ChatController@index');
 $router->post('/chat/send', 'ChatController@send');

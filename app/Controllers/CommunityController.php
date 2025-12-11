@@ -12,6 +12,7 @@ use App\Models\Plan;
 use App\Models\Subscription;
 use App\Models\User;
 use App\Services\MailService;
+use App\Services\MediaStorageService;
 
 class CommunityController extends Controller
 {
@@ -643,28 +644,12 @@ HTML;
 
         $name = (string)($file['name'] ?? '');
         $tmp = (string)($file['tmp_name'] ?? '');
+        $mime = (string)($file['type'] ?? '');
         if ($name === '' || $tmp === '') {
             return null;
         }
 
-        $ext = strtolower(pathinfo($name, PATHINFO_EXTENSION));
-        $safeExt = preg_replace('/[^a-z0-9]+/', '', $ext);
-        if ($safeExt === '') {
-            $safeExt = 'bin';
-        }
-
-        $dir = __DIR__ . '/../../public/uploads/community/' . $type;
-        if (!is_dir($dir)) {
-            @mkdir($dir, 0775, true);
-        }
-
-        $basename = bin2hex(random_bytes(8));
-        $target = $dir . '/' . $basename . '.' . $safeExt;
-        if (!@move_uploaded_file($tmp, $target)) {
-            return null;
-        }
-
-        $publicPath = '/public/uploads/community/' . $type . '/' . $basename . '.' . $safeExt;
-        return $publicPath;
+        $url = MediaStorageService::uploadFile($tmp, $name, $mime);
+        return $url !== null ? $url : null;
     }
 }

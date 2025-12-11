@@ -23,7 +23,7 @@ $partnerEmail = $partnerEmail ?? '';
         <?php unset($_SESSION['admin_course_error']); ?>
     <?php endif; ?>
 
-    <form action="/admin/cursos/salvar" method="post" style="display:flex; flex-direction:column; gap:10px;">
+    <form action="/admin/cursos/salvar" method="post" enctype="multipart/form-data" style="display:flex; flex-direction:column; gap:10px;">
         <?php if ($isEdit): ?>
             <input type="hidden" name="id" value="<?= (int)$course['id'] ?>">
         <?php endif; ?>
@@ -60,10 +60,20 @@ $partnerEmail = $partnerEmail ?? '';
         </div>
 
         <div>
-            <label style="font-size:13px; color:#ddd; display:block; margin-bottom:4px;">Imagem (URL)</label>
-            <input type="text" name="image_path" value="<?= htmlspecialchars($course['image_path'] ?? '') ?>" placeholder="Opcional. Ex: /public/img/curso-branding.png" style="
+            <label style="font-size:13px; color:#ddd; display:block; margin-bottom:4px;">Imagem do curso</label>
+            <input type="text" name="image_path" value="<?= htmlspecialchars($course['image_path'] ?? '') ?>" placeholder="Opcional. Você pode informar uma URL direta ou enviar um arquivo abaixo." style="
                 width:100%; padding:8px 10px; border-radius:8px; border:1px solid #272727;
                 background:#050509; color:#f5f5f5; font-size:14px;">
+            <div style="margin-top:6px; display:flex; flex-wrap:wrap; gap:8px; align-items:center;">
+                <label style="font-size:13px; color:#ddd; display:inline-flex; align-items:center; gap:6px; cursor:pointer;">
+                    <span>📷</span>
+                    <span>Enviar arquivo</span>
+                    <input type="file" name="image_upload" accept="image/*" style="display:none;">
+                </label>
+                <div style="font-size:11px; color:#777;">
+                    Se você enviar um arquivo, a imagem será hospedada no servidor de mídia e este campo será preenchido com a URL gerada.
+                </div>
+            </div>
         </div>
 
         <div style="display:flex; gap:14px; flex-wrap:wrap;">

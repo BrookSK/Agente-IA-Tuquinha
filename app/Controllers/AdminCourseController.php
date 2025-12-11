@@ -17,6 +17,7 @@ use App\Models\CourseExamOption;
 use App\Models\User;
 use App\Services\MailService;
 use App\Services\GoogleCalendarService;
+use App\Services\MediaStorageService;
 
 class AdminCourseController extends Controller
 {
@@ -100,6 +101,23 @@ class AdminCourseController extends Controller
         $allowPlanAccessOnly = !empty($_POST['allow_plan_access_only']) ? 1 : 0;
         $allowPublicPurchase = !empty($_POST['allow_public_purchase']) ? 1 : 0;
         $isActive = !empty($_POST['is_active']) ? 1 : 0;
+
+        // Upload de imagem do curso para o servidor de mídia externo, se um arquivo tiver sido enviado
+        if (!empty($_FILES['image_upload']['tmp_name'])) {
+            $imgError = $_FILES['image_upload']['error'] ?? UPLOAD_ERR_NO_FILE;
+            if ($imgError === UPLOAD_ERR_OK) {
+                $imgTmp = (string)($_FILES['image_upload']['tmp_name'] ?? '');
+                $imgName = (string)($_FILES['image_upload']['name'] ?? '');
+                $imgMime = (string)($_FILES['image_upload']['type'] ?? '');
+
+                if ($imgTmp !== '' && is_file($imgTmp)) {
+                    $remoteImageUrl = MediaStorageService::uploadFile($imgTmp, $imgName, $imgMime);
+                    if ($remoteImageUrl !== null) {
+                        $imagePath = $remoteImageUrl;
+                    }
+                }
+            }
+        }
 
         $ownerUserId = null;
 

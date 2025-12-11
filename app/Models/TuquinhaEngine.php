@@ -26,6 +26,24 @@ class TuquinhaEngine
 
     public function generateResponseWithContext(array $messages, ?string $model = null, ?array $user = null, ?array $conversationSettings = null, ?array $persona = null): array
     {
+        $configuredModel = Setting::get('openai_default_model', AI_MODEL);
+        $modelToUse = $model ?: $configuredModel;
+
+        // Decide provedor com base no nome do modelo
+        if ($this->isClaudeModel($modelToUse)) {
+            return $this->callAnthropicClaude($messages, $modelToUse, $user, $conversationSettings, $persona);
+        }
+
+        return $this->callOpenAI($messages, $modelToUse, $user, $conversationSettings, $persona);
+    }
+
+    private function isClaudeModel(string $model): bool
+    {
+        return str_starts_with($model, 'claude-');
+    }
+
+    private function callOpenAI(array $messages, string $model, ?array $user, ?array $conversationSettings, ?array $persona): array
+    {
         $configuredApiKey = Setting::get('openai_api_key', AI_API_KEY);
 
         if (empty($configuredApiKey)) {
@@ -34,9 +52,6 @@ class TuquinhaEngine
                 'total_tokens' => 0,
             ];
         }
-
-        $configuredModel = Setting::get('openai_default_model', AI_MODEL);
-        $modelToUse = $model ?: $configuredModel;
 
         $payloadMessages = [];
         $payloadMessages[] = [
@@ -58,7 +73,7 @@ class TuquinhaEngine
         }
 
         $body = json_encode([
-            'model' => $modelToUse,
+            'model' => $model,
             'messages' => $payloadMessages,
             'temperature' => 0.7,
         ]);
@@ -98,6 +113,102 @@ class TuquinhaEngine
         $data = json_decode($result, true);
         $content = $data['choices'][0]['message']['content'] ?? null;
         $usageTotal = isset($data['usage']['total_tokens']) ? (int)$data['usage']['total_tokens'] : 0;
+
+        if (!is_string($content) || $content === '') {
+            return [
+                'content' => $this->fallbackResponse($messages),
+                'total_tokens' => 0,
+            ];
+        }
+
+        return [
+            'content' => $content,
+            'total_tokens' => $usageTotal,
+        ];
+    }
+
+    private function callAnthropicClaude(array $messages, string $model, ?array $user, ?array $conversationSettings, ?array $persona): array
+    {
+        $apiKey = Setting::get('anthropic_api_key', ANTHROPIC_API_KEY);
+        if (empty($apiKey)) {
+            return [
+                'content' => $this->fallbackResponse($messages),
+                'total_tokens' => 0,
+            ];
+        }
+
+        $systemPrompt = $this->buildSystemPromptWithContext($user, $conversationSettings, $persona);
+
+        $claudeMessages = [];
+        foreach ($messages as $m) {
+            if (!isset($m['role'], $m['content'])) {
+                continue;
+            }
+            if ($m['role'] !== 'user' && $m['role'] !== 'assistant') {
+                continue;
+            }
+            $role = $m['role'] === 'assistant' ? 'assistant' : 'user';
+            $claudeMessages[] = [
+                'role' => $role,
+                'content' => [
+                    [
+                        'type' => 'text',
+                        'text' => (string)$m['content'],
+                    ],
+                ],
+            ];
+        }
+
+        $body = json_encode([
+            'model' => $model,
+            'system' => $systemPrompt,
+            'messages' => $claudeMessages,
+            'max_tokens' => 2048,
+            'temperature' => 0.7,
+        ]);
+
+        $ch = curl_init('https://api.anthropic.com/v1/messages');
+        curl_setopt_array($ch, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_POST => true,
+            CURLOPT_HTTPHEADER => [
+                'Content-Type: application/json',
+                'x-api-key: ' . $apiKey,
+                'anthropic-version: 2023-06-01',
+            ],
+            CURLOPT_POSTFIELDS => $body,
+            CURLOPT_TIMEOUT => 30,
+        ]);
+
+        $result = curl_exec($ch);
+        if ($result === false) {
+            curl_close($ch);
+            return [
+                'content' => $this->fallbackResponse($messages),
+                'total_tokens' => 0,
+            ];
+        }
+
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+
+        if ($httpCode < 200 || $httpCode >= 300) {
+            return [
+                'content' => $this->fallbackResponse($messages),
+                'total_tokens' => 0,
+            ];
+        }
+
+        $data = json_decode($result, true);
+        $content = null;
+        if (!empty($data['content'][0]['text']) && is_string($data['content'][0]['text'])) {
+            $content = $data['content'][0]['text'];
+        }
+
+        $usageTotal = 0;
+        if (isset($data['usage']['input_tokens']) || isset($data['usage']['output_tokens'])) {
+            $usageTotal = (int)($data['usage']['input_tokens'] ?? 0) + (int)($data['usage']['output_tokens'] ?? 0);
+        }
 
         if (!is_string($content) || $content === '') {
             return [

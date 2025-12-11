@@ -1,6 +1,7 @@
 <?php
 /** @var string $openaiKey */
 /** @var string $defaultModel */
+/** @var string $anthropicKey */
 /** @var string $transcriptionModel */
 /** @var string $systemPrompt */
 /** @var string $systemPromptExtra */
@@ -23,6 +24,7 @@
 /** @var string $googleClientSecret */
 /** @var string $googleRefreshToken */
 /** @var string $googleCalendarId */
+/** @var string $mediaEndpoint */
 /** @var bool $saved */
 /** @var bool|null $testEmailStatus */
 /** @var string|null $testEmailError */
@@ -31,6 +33,8 @@ $knownModels = [
     'gpt-4o-mini',
     'gpt-4o',
     'gpt-4.1',
+    'claude-3-5-sonnet-20240620',
+    'claude-3-haiku-20240307',
 ];
 ?>
 <div style="max-width: 720px; margin: 0 auto;">
@@ -62,7 +66,25 @@ $knownModels = [
                 width: 100%; padding: 8px 10px; border-radius: 8px; border: 1px solid #272727;
                 background: #050509; color: #f5f5f5; font-size: 13px;
             " placeholder="sk-...">
-            <small style="color:#777; font-size:11px;">Esta chave será usada tanto para o chat quanto para a transcrição de áudio.</small>
+            <small style="color:#777; font-size:11px;">Esta chave será usada para o chat (modelos gpt-*) e para a transcrição de áudio.</small>
+        </div>
+
+        <div>
+            <label style="font-size: 12px; color: #b0b0b0;">Chave da API Anthropic (Claude)</label>
+            <input name="anthropic_key" type="password" value="<?= htmlspecialchars($anthropicKey ?? '') ?>" style="
+                width: 100%; padding: 8px 10px; border-radius: 8px; border: 1px solid #272727;
+                background: #050509; color: #f5f5f5; font-size: 13px;
+            " placeholder="sk-ant-...">
+            <small style="color:#777; font-size:11px;">Opcional. Necessária apenas se você quiser liberar modelos Claude (claude-3-*) nos planos e no chat.</small>
+        </div>
+
+        <div>
+            <label style="font-size: 12px; color: #b0b0b0;">Endpoint de upload de mídia</label>
+            <input name="media_endpoint" value="<?= htmlspecialchars($mediaEndpoint ?? '') ?>" style="
+                width: 100%; padding: 8px 10px; border-radius: 8px; border: 1px solid #272727;
+                background: #050509; color: #f5f5f5; font-size: 13px;
+            " placeholder="https://media.seusite.com/upload.php">
+            <small style="color:#777; font-size:11px;">URL do script PHP que recebe uploads (imagens, arquivos e áudios) e retorna JSON com a URL pública.</small>
         </div>
 
         <div style="margin-top: 8px; padding:10px 12px; border-radius:10px; border:1px solid #272727; background:#0a0a10;">

@@ -18,6 +18,7 @@ class AdminConfigController extends Controller
             exit;
         }
         $openaiKey = Setting::get('openai_api_key', '');
+        $anthropicKey = Setting::get('anthropic_api_key', ANTHROPIC_API_KEY);
         $defaultModel = Setting::get('openai_default_model', AI_MODEL);
         $transcriptionModel = Setting::get('openai_transcription_model', 'whisper-1');
         $systemPrompt = Setting::get('tuquinha_system_prompt', TuquinhaEngine::getDefaultPrompt());
@@ -53,11 +54,14 @@ class AdminConfigController extends Controller
         $googleRefreshToken = Setting::get('google_calendar_refresh_token', '');
         $googleCalendarId = Setting::get('google_calendar_calendar_id', 'primary');
 
+        $mediaEndpoint = Setting::get('media_upload_endpoint', defined('MEDIA_UPLOAD_ENDPOINT') ? MEDIA_UPLOAD_ENDPOINT : '');
+
         $asaas = AsaasConfig::getActive();
 
         $this->view('admin/config', [
             'pageTitle' => 'Configuração - OpenAI',
             'openaiKey' => $openaiKey,
+            'anthropicKey' => $anthropicKey,
             'defaultModel' => $defaultModel,
             'transcriptionModel' => $transcriptionModel,
             'systemPrompt' => $systemPrompt,
@@ -78,6 +82,7 @@ class AdminConfigController extends Controller
             'googleClientSecret' => $googleClientSecret,
             'googleRefreshToken' => $googleRefreshToken,
             'googleCalendarId' => $googleCalendarId,
+            'mediaEndpoint' => $mediaEndpoint,
             'asaasEnvironment' => $asaas['environment'] ?? 'sandbox',
             'asaasSandboxKey' => $asaas['sandbox_api_key'] ?? '',
             'asaasProdKey' => $asaas['production_api_key'] ?? '',
@@ -93,7 +98,8 @@ class AdminConfigController extends Controller
             header('Location: /admin/login');
             exit;
         }
-        $key = trim($_POST['openai_key'] ?? '');
+        $openaiKey = trim($_POST['openai_key'] ?? '');
+        $anthropicKey = trim($_POST['anthropic_key'] ?? '');
         $defaultModel = trim($_POST['default_model'] ?? '');
         $transcriptionModel = trim($_POST['transcription_model'] ?? '');
         $systemPrompt = trim($_POST['system_prompt'] ?? '');
@@ -127,6 +133,7 @@ class AdminConfigController extends Controller
         $googleClientSecret = trim($_POST['google_client_secret'] ?? '');
         $googleRefreshToken = trim($_POST['google_refresh_token'] ?? '');
         $googleCalendarId = trim($_POST['google_calendar_id'] ?? 'primary');
+        $mediaEndpoint = trim($_POST['media_endpoint'] ?? '');
 
         $pdo = Database::getConnection();
         $stmt = $pdo->prepare('INSERT INTO settings (`key`, `value`) VALUES (:key, :value)
@@ -141,7 +148,8 @@ class AdminConfigController extends Controller
         }
 
         $settingsToSave = [
-            'openai_api_key' => $key,
+            'openai_api_key' => $openaiKey,
+            'anthropic_api_key' => $anthropicKey,
             'openai_default_model' => $defaultModel !== '' ? $defaultModel : AI_MODEL,
             'openai_transcription_model' => $transcriptionModel !== '' ? $transcriptionModel : 'whisper-1',
             'tuquinha_system_prompt' => $systemPrompt !== '' ? $systemPrompt : TuquinhaEngine::getDefaultPrompt(),
@@ -162,6 +170,7 @@ class AdminConfigController extends Controller
             'google_calendar_client_secret' => $googleClientSecret,
             'google_calendar_refresh_token' => $googleRefreshToken,
             'google_calendar_calendar_id' => $googleCalendarId !== '' ? $googleCalendarId : 'primary',
+            'media_upload_endpoint' => $mediaEndpoint !== '' ? $mediaEndpoint : (defined('MEDIA_UPLOAD_ENDPOINT') ? MEDIA_UPLOAD_ENDPOINT : ''),
         ];
 
         foreach ($settingsToSave as $sKey => $sValue) {
@@ -185,7 +194,8 @@ class AdminConfigController extends Controller
 
         $this->view('admin/config', [
             'pageTitle' => 'Configuração - OpenAI',
-            'openaiKey' => $key,
+            'openaiKey' => $openaiKey,
+            'anthropicKey' => $anthropicKey,
             'defaultModel' => $settingsToSave['openai_default_model'],
             'transcriptionModel' => $settingsToSave['openai_transcription_model'],
             'systemPrompt' => $settingsToSave['tuquinha_system_prompt'],
@@ -204,6 +214,7 @@ class AdminConfigController extends Controller
             'googleClientSecret' => $googleClientSecret,
             'googleRefreshToken' => $googleRefreshToken,
             'googleCalendarId' => $googleCalendarId !== '' ? $googleCalendarId : 'primary',
+            'mediaEndpoint' => $mediaEndpoint !== '' ? $mediaEndpoint : (defined('MEDIA_UPLOAD_ENDPOINT') ? MEDIA_UPLOAD_ENDPOINT : ''),
             'asaasEnvironment' => $asaasEnv === 'production' ? 'production' : 'sandbox',
             'asaasSandboxKey' => $asaasSandboxKey,
             'asaasProdKey' => $asaasProdKey,
@@ -223,6 +234,7 @@ class AdminConfigController extends Controller
         $toEmail = trim($_POST['test_email'] ?? '');
 
         $openaiKey = Setting::get('openai_api_key', '');
+        $anthropicKey = Setting::get('anthropic_api_key', ANTHROPIC_API_KEY);
         $defaultModel = Setting::get('openai_default_model', AI_MODEL);
         $transcriptionModel = Setting::get('openai_transcription_model', 'whisper-1');
         $systemPrompt = Setting::get('tuquinha_system_prompt', TuquinhaEngine::getDefaultPrompt());
@@ -260,6 +272,7 @@ class AdminConfigController extends Controller
         $this->view('admin/config', [
             'pageTitle' => 'Configuração - OpenAI',
             'openaiKey' => $openaiKey,
+            'anthropicKey' => $anthropicKey,
             'defaultModel' => $defaultModel,
             'transcriptionModel' => $transcriptionModel,
             'systemPrompt' => $systemPrompt,

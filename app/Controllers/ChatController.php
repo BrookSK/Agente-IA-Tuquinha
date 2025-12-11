@@ -12,6 +12,7 @@ use App\Models\Setting;
 use App\Models\User;
 use App\Models\ConversationSetting;
 use App\Models\Personality;
+use App\Services\MediaStorageService;
 
 class ChatController extends Controller
 {
@@ -273,10 +274,6 @@ class ChatController extends Controller
 
             if (!empty($_FILES['attachments']) && is_array($_FILES['attachments']['name'])) {
                 $count = count($_FILES['attachments']['name']);
-                $uploadDir = __DIR__ . '/../../storage/uploads/files';
-                if (!is_dir($uploadDir)) {
-                    @mkdir($uploadDir, 0775, true);
-                }
 
                 for ($i = 0; $i < $count; $i++) {
                     $error = $_FILES['attachments']['error'][$i] ?? UPLOAD_ERR_NO_FILE;
@@ -304,29 +301,18 @@ class ChatController extends Controller
                         continue;
                     }
 
-                    $ext = pathinfo($name, PATHINFO_EXTENSION);
-                    $targetPath = $uploadDir . '/' . uniqid('file_', true) . ($ext ? ('.' . $ext) : '');
-                    if (!@move_uploaded_file($tmp, $targetPath)) {
+                    if (!is_string($tmp) || $tmp === '' || !is_file($tmp)) {
                         continue;
                     }
 
-                    $attType = $isImage ? 'image' : 'file';
-
-                    Attachment::create([
-                        'conversation_id' => $conversation->id,
-                        'message_id' => null,
-                        'type' => $attType,
-                        'path' => $targetPath,
-                        'original_name' => $name,
-                        'mime_type' => $type,
-                        'size' => $size,
-                    ]);
+                    // Envia o arquivo para o servidor de mídia externo
+                    $remoteUrl = MediaStorageService::uploadFile($tmp, (string)$name, (string)$type);
 
                     // Monta um resumo amigável para o Tuquinha usar
                     if ($isCsv) {
                         $previewLines = [];
-                        if (is_readable($targetPath)) {
-                            if (($fh = fopen($targetPath, 'r')) !== false) {
+                        if (is_readable($tmp)) {
+                            if (($fh = fopen($tmp, 'r')) !== false) {
                                 $lineCount = 0;
                                 while (($row = fgetcsv($fh)) !== false && $lineCount < 30) {
                                     $previewLines[] = implode(',', $row);
@@ -344,6 +330,23 @@ class ChatController extends Controller
                     } else {
                         $attachmentSummaries[] = "Arquivo '" . $name . "' foi enviado.";
                     }
+
+                    if ($remoteUrl === null) {
+                        // Não registra anexo se não tiver URL pública
+                        continue;
+                    }
+
+                    $attType = $isImage ? 'image' : 'file';
+
+                    Attachment::create([
+                        'conversation_id' => $conversation->id,
+                        'message_id' => null,
+                        'type' => $attType,
+                        'path' => $remoteUrl,
+                        'original_name' => $name,
+                        'mime_type' => $type,
+                        'size' => $size,
+                    ]);
 
                     // metadados para o frontend montar os cards
                     $humanSize = null;
@@ -659,23 +662,23 @@ class ChatController extends Controller
         $mime = $_FILES['audio']['type'] ?? 'audio/webm';
         $size = (int)($_FILES['audio']['size'] ?? 0);
 
-        // Salva o áudio como anexo (opcional)
-        $uploadDir = __DIR__ . '/../../storage/uploads/audio';
-        if (!is_dir($uploadDir)) {
-            @mkdir($uploadDir, 0775, true);
+        // Envia o áudio para o servidor de mídia externo (como anexo da conversa)
+        $remoteAudioUrl = null;
+        if (is_string($tmpPath) && $tmpPath !== '' && is_file($tmpPath)) {
+            $remoteAudioUrl = MediaStorageService::uploadFile($tmpPath, (string)$originalName, (string)$mime);
         }
-        $targetPath = $uploadDir . '/' . uniqid('audio_', true) . '.webm';
-        @move_uploaded_file($tmpPath, $targetPath);
 
-        Attachment::create([
-            'conversation_id' => $conversation->id,
-            'message_id' => null,
-            'type' => 'audio',
-            'path' => $targetPath,
-            'original_name' => $originalName,
-            'mime_type' => $mime,
-            'size' => $size,
-        ]);
+        if ($remoteAudioUrl !== null) {
+            Attachment::create([
+                'conversation_id' => $conversation->id,
+                'message_id' => null,
+                'type' => 'audio',
+                'path' => $remoteAudioUrl,
+                'original_name' => $originalName,
+                'mime_type' => $mime,
+                'size' => $size,
+            ]);
+        }
 
         // Transcrição via OpenAI (se chave configurada)
         $configuredApiKey = Setting::get('openai_api_key', AI_API_KEY);
@@ -698,9 +701,9 @@ class ChatController extends Controller
 
         $transcriptText = '';
 
-        if (file_exists($targetPath)) {
+        if (is_string($tmpPath) && $tmpPath !== '' && file_exists($tmpPath)) {
             $ch = curl_init('https://api.openai.com/v1/audio/transcriptions');
-            $cfile = new \CURLFile($targetPath, $mime, $originalName);
+            $cfile = new \CURLFile($tmpPath, $mime, $originalName);
             $postFields = [
                 'file' => $cfile,
                 'model' => $transcriptionModel,

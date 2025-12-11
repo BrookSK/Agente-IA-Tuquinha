@@ -30,14 +30,17 @@
         </div>
         <div style="flex:1; min-width:220px; padding:12px 14px; border-radius:12px; background:#111118; border:1px solid #272727; display:flex; flex-direction:column; justify-content:space-between;">
             <div>
-                <div style="font-size:12px; color:#b0b0b0;">Relatos de erros de análise</div>
+                <div style="font-size:12px; color:#b0b0b0;">Relatos de erros de análise e anexos do chat</div>
                 <div style="font-size:13px; color:#b0b0b0; margin-top:6px;">
-                    Gerencie problemas reportados pelos usuários e faça estorno de tokens quando necessário.
+                    Acompanhe problemas reportados e limpe anexos antigos (imagens, arquivos e áudios) enviados no chat.
                 </div>
             </div>
-            <div style="margin-top:10px;">
+            <div style="margin-top:10px; display:flex; flex-wrap:wrap; gap:6px;">
                 <a href="/admin/erros" style="display:inline-block; padding:7px 12px; border-radius:999px; border:1px solid #ff6f60; color:#ffcc80; font-size:12px; text-decoration:none;">
                     Ver relatos de erro
+                </a>
+                <a href="/admin/anexos" style="display:inline-block; padding:7px 12px; border-radius:999px; border:1px solid #272727; color:#f5f5f5; font-size:12px; text-decoration:none; background:#15151f;">
+                    Gerenciar anexos do chat
                 </a>
             </div>
         </div>

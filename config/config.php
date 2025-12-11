@@ -28,7 +28,9 @@ $currentDbConfig = $dbConfigs[APP_ENV];
 const AI_PROVIDER = 'openai';
 // Modelo padrão mais econômico; pode ser sobrescrito por plano/usuário
 const AI_MODEL = 'gpt-4o-mini';
-const AI_API_KEY = ''; // preencha em produção ou use outra forma de carregar
+const AI_API_KEY = ''; // chave da API OpenAI (fallback, normalmente configurada via painel admin)
+const ANTHROPIC_API_KEY = ''; // chave da API Anthropic (Claude), opcional; pode ser configurada também via painel admin
+const MEDIA_UPLOAD_ENDPOINT = 'https://media.onsolutionsbrasil.com.br/upload.php';
 
 // Credenciais simples de admin para acesso à área /admin
 const ADMIN_USERNAME = 'admin';
