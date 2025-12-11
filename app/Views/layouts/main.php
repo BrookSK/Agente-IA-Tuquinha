@@ -396,7 +396,7 @@ $pageTitle = $pageTitle ?? 'Agente IA - Tuquinha';
                 <?php endif; ?>
 
                 <?php if (!empty($_SESSION['user_id'])): ?>
-                    <div class="sidebar-section-title" style="margin-top: 10px;">Orkut do Tuquinha</div>
+                    <div class="sidebar-section-title" style="margin-top: 10px;">Rede social do Tuquinha</div>
                     <a href="/perfil" class="sidebar-button">
                         <span class="icon">
                             🧑
@@ -413,7 +413,7 @@ $pageTitle = $pageTitle ?? 'Agente IA - Tuquinha';
                         <span class="icon">
                             💬
                         </span>
-                        <span>Comunidades Orkut</span>
+                        <span>Fóruns e Comunidades</span>
                     </a>
                 <?php endif; ?>
 

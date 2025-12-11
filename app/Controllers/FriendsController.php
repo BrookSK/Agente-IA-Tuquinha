@@ -38,7 +38,7 @@ class FriendsController extends Controller
         unset($_SESSION['friends_success'], $_SESSION['friends_error']);
 
         $this->view('social/friends', [
-            'pageTitle' => 'Amigos - Orkut do Tuquinha',
+            'pageTitle' => 'Amigos do Tuquinha',
             'user' => $user,
             'friends' => $friends,
             'pending' => $pending,

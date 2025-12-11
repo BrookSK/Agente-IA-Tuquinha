@@ -145,7 +145,7 @@ if (!function_exists('community_format_body')) {
         <main style="flex:2 1 320px; min-width:260px;">
             <h1 style="font-size: 20px; margin-bottom: 4px; font-weight: 650;">Comunidade do Tuquinha</h1>
             <p style="color:#b0b0b0; font-size:13px; margin-bottom:10px;">
-                Espaço para trocar dúvidas, processos e histórias com outros alunos do Tuquinha. Inspirado no Orkut, mas com o jeitinho atual da plataforma.
+                Espaço para trocar dúvidas, processos e histórias com outros alunos do Tuquinha, do seu jeito, em um só lugar.
             </p>
 
             <?php if (!empty($success)): ?>

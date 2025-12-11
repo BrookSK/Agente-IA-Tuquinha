@@ -48,7 +48,7 @@ class CommunitiesController extends Controller
         unset($_SESSION['communities_success'], $_SESSION['communities_error']);
 
         $this->view('social/communities', [
-            'pageTitle' => 'Comunidades - Orkut do Tuquinha',
+            'pageTitle' => 'Comunidades do Tuquinha',
             'user' => $user,
             'communities' => $communities,
             'memberships' => $memberships,

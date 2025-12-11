@@ -67,7 +67,7 @@ $profileId = (int)($profileUser['id'] ?? 0);
             <div style="display:flex; flex-direction:column; gap:6px; margin-bottom:8px;">
                 <?php if ($friendStatus === 'accepted'): ?>
                     <div style="font-size:12px; color:#8bc34a; background:#10330f; border-radius:10px; border:1px solid #3aa857; padding:6px 8px; text-align:center;">
-                        Vocês são amigos no Orkut do Tuquinha.
+                        Vocês são amigos na rede social do Tuquinha.
                     </div>
                 <?php elseif ($friendStatus === 'pending' && $requestedById === $currentId): ?>
                     <div style="font-size:12px; color:#ffb74d; background:#311; border-radius:10px; border:1px solid #a33; padding:6px 8px; text-align:center;">
@@ -267,7 +267,7 @@ $profileId = (int)($profileUser['id'] ?? 0);
                 <h3 style="font-size:14px; margin-bottom:6px;">Escrever depoimento</h3>
                 <form action="/perfil/depoimento" method="post" style="display:flex; flex-direction:column; gap:6px;">
                     <input type="hidden" name="to_user_id" value="<?= (int)$profileId ?>">
-                    <textarea name="body" rows="3" placeholder="Conte algo legal sobre essa pessoa, como no Orkut raiz." style="width:100%; padding:6px 8px; border-radius:8px; border:1px solid #272727; background:#050509; color:#f5f5f5; font-size:12px; resize:vertical;"></textarea>
+                    <textarea name="body" rows="3" placeholder="Conte algo legal sobre essa pessoa, do jeitinho que só você sabe." style="width:100%; padding:6px 8px; border-radius:8px; border:1px solid #272727; background:#050509; color:#f5f5f5; font-size:12px; resize:vertical;"></textarea>
                     <label style="font-size:11px; color:#b0b0b0; display:flex; align-items:center; gap:4px;">
                         <input type="checkbox" name="is_public" value="1" checked style="accent-color:#e53935;">
                         Tornar depoimento público se a pessoa aceitar

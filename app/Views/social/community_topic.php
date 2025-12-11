@@ -52,7 +52,7 @@ $slug = (string)($community['slug'] ?? '');
     <section style="background:#111118; border-radius:16px; border:1px solid #272727; padding:12px 14px;">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
             <h2 style="font-size:16px;">Respostas</h2>
-            <span style="font-size:12px; color:#b0b0b0;">Converse como em fórum do Orkut</span>
+            <span style="font-size:12px; color:#b0b0b0;">Converse como em um fórum entre amigos</span>
         </div>
 
         <?php if ($isMember): ?>
