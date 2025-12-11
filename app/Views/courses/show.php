@@ -22,6 +22,63 @@ $priceCents = isset($course['price_cents']) ? (int)$course['price_cents'] : 0;
 $allowPlanOnly = !empty($course['allow_plan_access_only']);
 $allowPublicPurchase = !empty($course['allow_public_purchase']);
 $courseUrl = CourseController::buildCourseUrl($course);
+
+$completedLessonIds = $completedLessonIds ?? [];
+$modulesData = $modulesData ?? [];
+$startLessonId = null;
+$startLessonLabel = 'Começar curso';
+$currentLessonId = null; // próxima aula recomendada para continuar
+$hasCompletedAnyLesson = !empty($completedLessonIds);
+
+if (!empty($user) && !empty($canAccessContent) && !empty($lessons)) {
+    $lockedModuleIds = [];
+    foreach ($modulesData as $mData) {
+        $mod = $mData['module'] ?? [];
+        if (!empty($mData['is_locked']) && !empty($mod['id'])) {
+            $lockedModuleIds[(int)$mod['id']] = true;
+        }
+    }
+
+    foreach ($lessons as $lessonRow) {
+        $lid = (int)($lessonRow['id'] ?? 0);
+        if ($lid <= 0) {
+            continue;
+        }
+        $mid = (int)($lessonRow['module_id'] ?? 0);
+        if ($mid > 0 && isset($lockedModuleIds[$mid])) {
+            continue;
+        }
+
+        if ($hasCompletedAnyLesson && isset($completedLessonIds[$lid])) {
+            continue;
+        }
+
+        $currentLessonId = $lid;
+        break;
+    }
+
+    if ($currentLessonId !== null) {
+        $startLessonId = $currentLessonId;
+        $startLessonLabel = $hasCompletedAnyLesson ? 'Continuar curso' : 'Começar curso';
+    } else {
+        foreach ($lessons as $lessonRow) {
+            $lid = (int)($lessonRow['id'] ?? 0);
+            if ($lid <= 0) {
+                continue;
+            }
+            $mid = (int)($lessonRow['module_id'] ?? 0);
+            if ($mid > 0 && isset($lockedModuleIds[$mid])) {
+                continue;
+            }
+            $startLessonId = $lid;
+            break;
+        }
+
+        if (!empty($completedLessonIds)) {
+            $startLessonLabel = 'Rever curso';
+        }
+    }
+}
 ?>
 <div style="max-width: 960px; margin: 0 auto;">
     <div style="display:flex; flex-wrap:wrap; gap:20px; margin-bottom:18px;">
@@ -101,6 +158,16 @@ $courseUrl = CourseController::buildCourseUrl($course);
                         Entrar para se inscrever
                     </a>
                 <?php else: ?>
+                    <?php if (!empty($canAccessContent) && !empty($startLessonId)): ?>
+                        <a href="/cursos/aulas/ver?lesson_id=<?= (int)$startLessonId ?>" style="
+                            display:inline-flex; align-items:center; gap:6px; padding:8px 16px;
+                            border-radius:999px; border:1px solid #ff6f60;
+                            background:linear-gradient(135deg,#e53935,#ff6f60); color:#050509;
+                            font-size:13px; font-weight:600; text-decoration:none;">
+                            <?= htmlspecialchars($startLessonLabel) ?>
+                        </a>
+                    <?php endif; ?>
+
                     <?php if ($isEnrolled): ?>
                         <span style="
                             display:inline-flex; align-items:center; gap:6px; padding:8px 16px;
@@ -118,24 +185,26 @@ $courseUrl = CourseController::buildCourseUrl($course);
                             </button>
                         </form>
                     <?php else: ?>
-                        <?php if ($isPaid && $allowPublicPurchase && !$planAllowsCourses): ?>
-                            <a href="/cursos/comprar?course_id=<?= (int)($course['id'] ?? 0) ?>" style="
-                                display:inline-flex; align-items:center; gap:6px; padding:8px 16px;
-                                border-radius:999px; border:1px solid #ff6f60;
-                                background:linear-gradient(135deg,#e53935,#ff6f60); color:#050509;
-                                font-size:13px; font-weight:600; text-decoration:none;">
-                                Comprar curso avulso
-                            </a>
-                        <?php else: ?>
-                            <form action="/cursos/inscrever" method="post" style="display:inline;">
-                                <input type="hidden" name="course_id" value="<?= (int)($course['id'] ?? 0) ?>">
-                                <button type="submit" style="
-                                    border:none; border-radius:999px; padding:8px 16px;
+                        <?php if (empty($canAccessContent)): ?>
+                            <?php if ($isPaid && $allowPublicPurchase && !$planAllowsCourses): ?>
+                                <a href="/cursos/comprar?course_id=<?= (int)($course['id'] ?? 0) ?>" style="
+                                    display:inline-flex; align-items:center; gap:6px; padding:8px 16px;
+                                    border-radius:999px; border:1px solid #ff6f60;
                                     background:linear-gradient(135deg,#e53935,#ff6f60); color:#050509;
-                                    font-weight:600; font-size:13px; cursor:pointer;">
-                                    Quero fazer este curso
-                                </button>
-                            </form>
+                                    font-size:13px; font-weight:600; text-decoration:none;">
+                                    Comprar curso avulso
+                                </a>
+                            <?php else: ?>
+                                <form action="/cursos/inscrever" method="post" style="display:inline;">
+                                    <input type="hidden" name="course_id" value="<?= (int)($course['id'] ?? 0) ?>">
+                                    <button type="submit" style="
+                                        border:none; border-radius:999px; padding:8px 16px;
+                                        background:linear-gradient(135deg,#e53935,#ff6f60); color:#050509;
+                                        font-weight:600; font-size:13px; cursor:pointer;">
+                                        Quero fazer este curso
+                                    </button>
+                                </form>
+                            <?php endif; ?>
                         <?php endif; ?>
                     <?php endif; ?>
                 <?php endif; ?>
@@ -263,17 +332,37 @@ $courseUrl = CourseController::buildCourseUrl($course);
                                                 $isAdmin = !empty($_SESSION['is_admin']);
                                                 $isOwner = $user && !empty($course['owner_user_id']) && (int)$course['owner_user_id'] === (int)$user['id'];
                                                 $canCommentLesson = $user && ($isEnrolled || $isOwner || $isAdmin);
+
+                                                $isCompleted = $user && !empty($completedLessonIds[$lessonId] ?? false);
+                                                $isCurrent = $user && !empty($canAccessContent) && $currentLessonId !== null && $lessonId === $currentLessonId && !$isCompleted;
+                                                $actionLabel = '';
+                                                if ($isCompleted) {
+                                                    $actionLabel = 'Assistir novamente';
+                                                } elseif ($isCurrent) {
+                                                    $actionLabel = 'Continuar de onde parei';
+                                                } else {
+                                                    $actionLabel = 'Assistir';
+                                                }
                                             ?>
                                             <div id="lesson-<?= $lessonId ?>" style="padding:8px 10px; border-bottom:1px solid #272727;">
                                                 <div style="display:flex; justify-content:space-between; gap:8px; align-items:center;">
-                                                    <div style="font-size:13px; font-weight:600; display:flex; align-items:center; gap:6px;">
-                                                        <span>Aula <?= $number ?>: <?= htmlspecialchars($ltitle) ?></span>
-                                                        <?php if ($user && !empty($completedLessonIds[$lessonId] ?? false)): ?>
+                                                    <div style="font-size:13px; font-weight:600; display:flex; align-items:center; gap:6px; min-width:0;">
+                                                        <span style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">Aula <?= $number ?>: <?= htmlspecialchars($ltitle) ?></span>
+                                                        <?php if ($isCompleted): ?>
                                                             <span style="font-size:11px; color:#6be28d;">✔ concluída</span>
+                                                        <?php elseif ($isCurrent): ?>
+                                                            <span style="font-size:11px; color:#ffcc80;">Próxima aula</span>
                                                         <?php endif; ?>
                                                     </div>
-                                                    <?php if ($video !== '' && $lessonId > 0): ?>
-                                                        <a href="/cursos/aulas/ver?lesson_id=<?= $lessonId ?>" style="font-size:11px; color:#ff6f60; text-decoration:none;">Assistir</a>
+                                                    <?php if ($video !== '' && $lessonId > 0 && !empty($canAccessContent)): ?>
+                                                        <a href="/cursos/aulas/ver?lesson_id=<?= $lessonId ?>" style="
+                                                            display:inline-flex; align-items:center; gap:6px; padding:4px 10px;
+                                                            border-radius:999px; border:1px solid #ff6f60;
+                                                            background:linear-gradient(135deg,#e53935,#ff6f60); color:#050509;
+                                                            font-size:11px; font-weight:600; text-decoration:none;">
+                                                            <span style="font-size:12px;">▶</span>
+                                                            <span><?= htmlspecialchars($actionLabel) ?></span>
+                                                        </a>
                                                     <?php endif; ?>
                                                 </div>
                                                 <?php if ($ldesc !== ''): ?>
@@ -306,17 +395,37 @@ $courseUrl = CourseController::buildCourseUrl($course);
                                         $isAdmin = !empty($_SESSION['is_admin']);
                                         $isOwner = $user && !empty($course['owner_user_id']) && (int)$course['owner_user_id'] === (int)$user['id'];
                                         $canCommentLesson = $user && ($isEnrolled || $isOwner || $isAdmin);
+
+                                        $isCompleted = $user && !empty($completedLessonIds[$lessonId] ?? false);
+                                        $isCurrent = $user && !empty($canAccessContent) && $currentLessonId !== null && $lessonId === $currentLessonId && !$isCompleted;
+                                        $actionLabel = '';
+                                        if ($isCompleted) {
+                                            $actionLabel = 'Assistir novamente';
+                                        } elseif ($isCurrent) {
+                                            $actionLabel = 'Continuar de onde parei';
+                                        } else {
+                                            $actionLabel = 'Assistir';
+                                        }
                                     ?>
                                     <div id="lesson-<?= $lessonId ?>" style="padding:8px 10px; border-bottom:1px solid #272727;">
                                         <div style="display:flex; justify-content:space-between; gap:8px; align-items:center;">
-                                            <div style="font-size:13px; font-weight:600; display:flex; align-items:center; gap:6px;">
-                                                <span>Aula <?= $number ?>: <?= htmlspecialchars($ltitle) ?></span>
-                                                <?php if ($user && !empty($completedLessonIds[$lessonId] ?? false)): ?>
+                                            <div style="font-size:13px; font-weight:600; display:flex; align-items:center; gap:6px; min-width:0;">
+                                                <span style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">Aula <?= $number ?>: <?= htmlspecialchars($ltitle) ?></span>
+                                                <?php if ($isCompleted): ?>
                                                     <span style="font-size:11px; color:#6be28d;">✔ concluída</span>
+                                                <?php elseif ($isCurrent): ?>
+                                                    <span style="font-size:11px; color:#ffcc80;">Próxima aula</span>
                                                 <?php endif; ?>
                                             </div>
-                                            <?php if ($video !== '' && $lessonId > 0): ?>
-                                                <a href="/cursos/aulas/ver?lesson_id=<?= $lessonId ?>" style="font-size:11px; color:#ff6f60; text-decoration:none;">Assistir</a>
+                                            <?php if ($video !== '' && $lessonId > 0 && !empty($canAccessContent)): ?>
+                                                <a href="/cursos/aulas/ver?lesson_id=<?= $lessonId ?>" style="
+                                                    display:inline-flex; align-items:center; gap:6px; padding:4px 10px;
+                                                    border-radius:999px; border:1px solid #ff6f60;
+                                                    background:linear-gradient(135deg,#e53935,#ff6f60); color:#050509;
+                                                    font-size:11px; font-weight:600; text-decoration:none;">
+                                                    <span style="font-size:12px;">▶</span>
+                                                    <span><?= htmlspecialchars($actionLabel) ?></span>
+                                                </a>
                                             <?php endif; ?>
                                         </div>
                                         <?php if ($ldesc !== ''): ?>
