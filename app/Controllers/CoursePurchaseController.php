@@ -208,17 +208,22 @@ class CoursePurchaseController extends Controller
                 throw new \RuntimeException('Falha ao criar cliente no Asaas.');
             }
 
+            // Define dueDate conforme o tipo de cobrança exigido pelo Asaas
+            $dueDate = date('Y-m-d'); // hoje por padrão
+            if ($billingType === 'BOLETO') {
+                $dueDate = date('Y-m-d', strtotime('+3 days'));
+            } elseif ($billingType === 'PIX') {
+                $dueDate = date('Y-m-d', strtotime('+1 day'));
+            }
+
             $payload = [
                 'customer' => $customerId,
                 'billingType' => $billingType,
                 'value' => $priceCents / 100,
                 'description' => 'Compra avulsa do curso ' . (string)($course['title'] ?? ''),
                 'externalReference' => 'course_purchase:' . $purchaseId,
+                'dueDate' => $dueDate,
             ];
-
-            if ($billingType === 'BOLETO') {
-                $payload['dueDate'] = date('Y-m-d', strtotime('+3 days'));
-            }
 
             $resp = $asaas->createPayment($payload);
             $paymentId = $resp['id'] ?? null;
