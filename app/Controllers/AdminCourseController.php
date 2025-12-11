@@ -94,6 +94,7 @@ class AdminCourseController extends Controller
         $shortDescription = trim($_POST['short_description'] ?? '');
         $description = trim($_POST['description'] ?? '');
         $imagePath = trim($_POST['image_path'] ?? '');
+        $removeImage = !empty($_POST['remove_image']);
         $partnerEmail = trim($_POST['partner_email'] ?? '');
         $isPaid = !empty($_POST['is_paid']) ? 1 : 0;
         $priceRaw = trim($_POST['price'] ?? '0');
@@ -103,7 +104,7 @@ class AdminCourseController extends Controller
         $isActive = !empty($_POST['is_active']) ? 1 : 0;
 
         // Upload de imagem do curso para o servidor de mídia externo, se um arquivo tiver sido enviado
-        if (!empty($_FILES['image_upload']['tmp_name'])) {
+        if (!$removeImage && !empty($_FILES['image_upload']['tmp_name'])) {
             $imgError = $_FILES['image_upload']['error'] ?? UPLOAD_ERR_NO_FILE;
             if ($imgError === UPLOAD_ERR_OK) {
                 $imgTmp = (string)($_FILES['image_upload']['tmp_name'] ?? '');
@@ -153,6 +154,10 @@ class AdminCourseController extends Controller
             $target = $id > 0 ? '/admin/cursos/editar?id=' . $id : '/admin/cursos/novo';
             header('Location: ' . $target);
             exit;
+        }
+
+        if ($removeImage) {
+            $imagePath = '';
         }
 
         $data = [

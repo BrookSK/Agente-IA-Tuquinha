@@ -76,11 +76,17 @@ $partnerEmail = $partnerEmail ?? '';
             </div>
 
             <?php if (!empty($course['image_path'])): ?>
-                <div style="margin-top:8px; display:flex; flex-wrap:wrap; gap:8px; align-items:flex-start;">
-                    <div style="font-size:11px; color:#777; min-width:80px;">Imagem atual:</div>
-                    <div style="border-radius:8px; overflow:hidden; border:1px solid #272727; max-width:200px;">
-                        <img src="<?= htmlspecialchars($course['image_path'], ENT_QUOTES, 'UTF-8') ?>" alt="Imagem atual do curso" style="display:block; width:100%; max-height:150px; object-fit:cover;">
+                <div style="margin-top:8px; display:flex; flex-direction:column; gap:6px;">
+                    <div style="display:flex; flex-wrap:wrap; gap:8px; align-items:flex-start;">
+                        <div style="font-size:11px; color:#777; min-width:80px;">Imagem atual:</div>
+                        <div style="border-radius:8px; overflow:hidden; border:1px solid #272727; max-width:200px;">
+                            <img src="<?= htmlspecialchars($course['image_path'], ENT_QUOTES, 'UTF-8') ?>" alt="Imagem atual do curso" style="display:block; width:100%; max-height:150px; object-fit:cover;">
+                        </div>
                     </div>
+                    <label style="display:flex; align-items:center; gap:6px; font-size:12px; color:#b0b0b0; cursor:pointer; margin-left:2px;">
+                        <input type="checkbox" name="remove_image" value="1">
+                        <span>Remover imagem atual do curso</span>
+                    </label>
                 </div>
             <?php endif; ?>
 
