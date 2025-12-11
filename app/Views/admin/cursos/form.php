@@ -74,6 +74,25 @@ $partnerEmail = $partnerEmail ?? '';
                     Se você enviar um arquivo, a imagem será hospedada no servidor de mídia e este campo será preenchido com a URL gerada.
                 </div>
             </div>
+
+            <?php if (!empty($course['image_path'])): ?>
+                <div style="margin-top:8px; display:flex; flex-wrap:wrap; gap:8px; align-items:flex-start;">
+                    <div style="font-size:11px; color:#777; min-width:80px;">Imagem atual:</div>
+                    <div style="border-radius:8px; overflow:hidden; border:1px solid #272727; max-width:200px;">
+                        <img src="<?= htmlspecialchars($course['image_path'], ENT_QUOTES, 'UTF-8') ?>" alt="Imagem atual do curso" style="display:block; width:100%; max-height:150px; object-fit:cover;">
+                    </div>
+                </div>
+            <?php endif; ?>
+
+            <div id="course-image-preview-wrapper" style="margin-top:8px; display:none;">
+                <div style="font-size:11px; color:#b0b0b0; margin-bottom:4px;">Pré-visualização da nova imagem:</div>
+                <div style="display:flex; flex-wrap:wrap; gap:8px; align-items:flex-start;">
+                    <div style="border-radius:8px; overflow:hidden; border:1px solid #272727; max-width:200px;">
+                        <img id="course-image-preview" src="" alt="Pré-visualização da nova imagem" style="display:block; width:100%; max-height:150px; object-fit:cover;">
+                    </div>
+                    <div id="course-image-filename" style="font-size:11px; color:#777; max-width:260px; word-break:break-all;"></div>
+                </div>
+            </div>
         </div>
 
         <div style="display:flex; gap:14px; flex-wrap:wrap;">
@@ -159,3 +178,31 @@ $partnerEmail = $partnerEmail ?? '';
         </div>
     </form>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    var fileInput = document.querySelector('input[name="image_upload"]');
+    var wrapper = document.getElementById('course-image-preview-wrapper');
+    var imgEl = document.getElementById('course-image-preview');
+    var nameEl = document.getElementById('course-image-filename');
+
+    if (!fileInput || !wrapper || !imgEl || !nameEl) {
+        return;
+    }
+
+    fileInput.addEventListener('change', function () {
+        var file = this.files && this.files[0] ? this.files[0] : null;
+        if (!file) {
+            wrapper.style.display = 'none';
+            imgEl.removeAttribute('src');
+            nameEl.textContent = '';
+            return;
+        }
+
+        var url = URL.createObjectURL(file);
+        imgEl.src = url;
+        nameEl.textContent = file.name;
+        wrapper.style.display = 'block';
+    });
+});
+</script>

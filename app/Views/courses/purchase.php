@@ -130,7 +130,7 @@ $prefillState = $savedCustomer['state'] ?? ($user['billing_state'] ?? '');
                 font-size: 14px;
                 cursor: pointer;
             ">
-                Gerar pagamento
+                Prosseguir para pagamento
             </button>
         </div>
     </form>
