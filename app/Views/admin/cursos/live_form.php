@@ -6,12 +6,26 @@ $isEdit = !empty($live);
 <style>
     /* Ícone de calendário visível no tema escuro do admin */
     input[type="datetime-local"].admin-live-datetime::-webkit-calendar-picker-indicator {
-        filter: invert(1);
-        opacity: 1;
+        opacity: 0;
     }
 
     input[type="datetime-local"].admin-live-datetime {
         color-scheme: dark;
+    }
+
+    .admin-live-datetime-wrapper {
+        position: relative;
+        display: inline-block;
+    }
+
+    .admin-live-datetime-icon {
+        position: absolute;
+        right: 8px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #ffffff;
+        pointer-events: none;
+        z-index: 2;
     }
 </style>
 <div style="max-width: 720px; margin: 0 auto;">
@@ -44,9 +58,19 @@ $isEdit = !empty($live);
 
         <div>
             <label style="font-size:13px; color:#ddd; display:block; margin-bottom:4px;">Data e horário</label>
-            <input type="datetime-local" name="scheduled_at" class="admin-live-datetime" required value="<?= !empty($live['scheduled_at']) ? date('Y-m-d\TH:i', strtotime($live['scheduled_at'])) : '' ?>" style="
-                width:220px; padding:8px 10px; border-radius:8px; border:1px solid #272727;
-                background:#050509; color:#f5f5f5; font-size:13px;">
+            <div class="admin-live-datetime-wrapper">
+                <input type="datetime-local" name="scheduled_at" class="admin-live-datetime" required value="<?= !empty($live['scheduled_at']) ? date('Y-m-d\TH:i', strtotime($live['scheduled_at'])) : '' ?>" style="
+                    width:220px; padding:8px 32px 8px 10px; border-radius:8px; border:1px solid #272727;
+                    background:#050509; color:#f5f5f5; font-size:13px;">
+                <span class="admin-live-datetime-icon" aria-hidden="true">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <rect x="3" y="4" width="18" height="17" rx="2" ry="2" stroke="#ffffff" stroke-width="1.6"/>
+                        <line x1="3" y1="9" x2="21" y2="9" stroke="#ffffff" stroke-width="1.6"/>
+                        <line x1="9" y1="2" x2="9" y2="6" stroke="#ffffff" stroke-width="1.6"/>
+                        <line x1="15" y1="2" x2="15" y2="6" stroke="#ffffff" stroke-width="1.6"/>
+                    </svg>
+                </span>
+            </div>
         </div>
 
         <div>
