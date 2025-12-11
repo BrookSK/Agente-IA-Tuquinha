@@ -11,6 +11,8 @@ $isEdit = !empty($live);
 
     input[type="datetime-local"].admin-live-datetime {
         color-scheme: dark;
+        position: relative;
+        z-index: 1;
     }
 
     .admin-live-datetime-wrapper {
@@ -24,8 +26,8 @@ $isEdit = !empty($live);
         top: 50%;
         transform: translateY(-50%);
         color: #ffffff;
-        pointer-events: none;
         z-index: 2;
+        cursor: pointer;
     }
 </style>
 <div style="max-width: 720px; margin: 0 auto;">
@@ -120,3 +122,30 @@ $isEdit = !empty($live);
         </div>
     </form>
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        var wrapper = document.querySelector('.admin-live-datetime-wrapper');
+        if (!wrapper) return;
+
+        var input = wrapper.querySelector('.admin-live-datetime');
+        var icon = wrapper.querySelector('.admin-live-datetime-icon');
+        if (!input || !icon) return;
+
+        icon.addEventListener('click', function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            try {
+                if (typeof input.showPicker === 'function') {
+                    input.showPicker();
+                } else {
+                    input.focus();
+                    input.click();
+                }
+            } catch (err) {
+                input.focus();
+                input.click();
+            }
+        });
+    });
+</script>
