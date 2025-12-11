@@ -3,6 +3,17 @@
 /** @var array|null $live */
 $isEdit = !empty($live);
 ?>
+<style>
+    /* Ícone de calendário visível no tema escuro do admin */
+    input[type="datetime-local"].admin-live-datetime::-webkit-calendar-picker-indicator {
+        filter: invert(1);
+        opacity: 1;
+    }
+
+    input[type="datetime-local"].admin-live-datetime {
+        color-scheme: dark;
+    }
+</style>
 <div style="max-width: 720px; margin: 0 auto;">
     <h1 style="font-size: 20px; margin-bottom: 8px; font-weight: 650;">
         <?= $isEdit ? 'Editar live' : 'Nova live' ?> - <?= htmlspecialchars($course['title'] ?? '') ?>
@@ -33,7 +44,7 @@ $isEdit = !empty($live);
 
         <div>
             <label style="font-size:13px; color:#ddd; display:block; margin-bottom:4px;">Data e horário</label>
-            <input type="datetime-local" name="scheduled_at" required value="<?= !empty($live['scheduled_at']) ? date('Y-m-d\TH:i', strtotime($live['scheduled_at'])) : '' ?>" style="
+            <input type="datetime-local" name="scheduled_at" class="admin-live-datetime" required value="<?= !empty($live['scheduled_at']) ? date('Y-m-d\TH:i', strtotime($live['scheduled_at'])) : '' ?>" style="
                 width:220px; padding:8px 10px; border-radius:8px; border:1px solid #272727;
                 background:#050509; color:#f5f5f5; font-size:13px;">
         </div>
