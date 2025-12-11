@@ -12,6 +12,14 @@ $courseTitle = trim((string)($course['title'] ?? ''));
 $lessonTitle = trim((string)($lesson['title'] ?? ''));
 $lessonDescription = trim((string)($lesson['description'] ?? ''));
 $videoUrl = trim((string)($lesson['video_url'] ?? ''));
+$embedUrl = $videoUrl;
+if ($embedUrl !== '' && strpos($embedUrl, 'drive.google.com') !== false) {
+    if (preg_match('~https?://drive\.google\.com/file/d/([^/]+)/~', $embedUrl, $m)) {
+        $embedUrl = 'https://drive.google.com/file/d/' . $m[1] . '/preview';
+    } elseif (preg_match('~https?://drive\.google\.com/open\?id=([^&]+)~', $embedUrl, $m)) {
+        $embedUrl = 'https://drive.google.com/file/d/' . $m[1] . '/preview';
+    }
+}
 $currentLessonId = (int)($lesson['id'] ?? 0);
 
 $courseUrl = CourseController::buildCourseUrl($course);
@@ -69,10 +77,10 @@ $canCommentLesson = $user && ($isEnrolled || $isOwner || $isAdmin);
                 </div>
             <?php else: ?>
                 <div style="position:relative; padding-bottom:56.25%; height:0; overflow:hidden; border-radius:10px; background:#000;">
-                    <iframe src="<?= htmlspecialchars($videoUrl) ?>" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen style="position:absolute; top:0; left:0; width:100%; height:100%;"></iframe>
+                    <iframe src="<?= htmlspecialchars($embedUrl) ?>" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen style="position:absolute; top:0; left:0; width:100%; height:100%;"></iframe>
                 </div>
                 <div style="margin-top:6px; font-size:11px; color:#777;">
-                    Se o player não carregar corretamente, você pode <a href="<?= htmlspecialchars($videoUrl) ?>" target="_blank" rel="noopener noreferrer" style="color:#ff6f60; text-decoration:none;">abrir o vídeo em outra aba</a>.
+                    Se o player não carregar corretamente, você pode <a href="<?= htmlspecialchars($embedUrl) ?>" target="_blank" rel="noopener noreferrer" style="color:#ff6f60; text-decoration:none;">abrir o vídeo em outra aba</a>.
                 </div>
             <?php endif; ?>
         </section>

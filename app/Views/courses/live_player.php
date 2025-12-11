@@ -14,6 +14,14 @@ $meetLink = trim((string)($live['meet_link'] ?? ''));
 $currentLiveId = (int)($live['id'] ?? 0);
 
 $playerUrl = $recordingLink !== '' ? $recordingLink : $meetLink;
+$embedUrl = $playerUrl;
+if ($embedUrl !== '' && strpos($embedUrl, 'drive.google.com') !== false) {
+    if (preg_match('~https?://drive\.google\.com/file/d/([^/]+)/~', $embedUrl, $m)) {
+        $embedUrl = 'https://drive.google.com/file/d/' . $m[1] . '/preview';
+    } elseif (preg_match('~https?://drive\.google\.com/open\?id=([^&]+)~', $embedUrl, $m)) {
+        $embedUrl = 'https://drive.google.com/file/d/' . $m[1] . '/preview';
+    }
+}
 ?>
 <div style="max-width: 1120px; margin: 0 auto; display:flex; gap:18px;">
     <aside style="flex:0 0 220px; border-radius:16px; border:1px solid #272727; background:#050509; padding:10px 8px; max-height:80vh; overflow:auto;">
@@ -70,7 +78,7 @@ $playerUrl = $recordingLink !== '' ? $recordingLink : $meetLink;
                 </div>
             <?php else: ?>
                 <div style="position:relative; padding-bottom:56.25%; height:0; overflow:hidden; border-radius:10px; background:#000;">
-                    <iframe src="<?= htmlspecialchars($playerUrl) ?>" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen style="position:absolute; top:0; left:0; width:100%; height:100%;"></iframe>
+                    <iframe src="<?= htmlspecialchars($embedUrl) ?>" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen style="position:absolute; top:0; left:0; width:100%; height:100%;"></iframe>
                 </div>
             <?php endif; ?>
         </section>
