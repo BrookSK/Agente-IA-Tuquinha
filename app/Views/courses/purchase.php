@@ -4,6 +4,8 @@
 /** @var array|null $savedCustomer */
 /** @var string|null $error */
 
+use App\Controllers\CourseController;
+
 $courseTitle = trim((string)($course['title'] ?? ''));
 $priceCents = isset($course['price_cents']) ? (int)$course['price_cents'] : 0;
 $price = number_format(max($priceCents, 0) / 100, 2, ',', '.');
