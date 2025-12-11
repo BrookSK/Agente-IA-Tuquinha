@@ -115,21 +115,6 @@ $prefillState = $savedCustomer['state'] ?? ($user['billing_state'] ?? '');
             </div>
         </div>
 
-        <div style="grid-column: 1 / -1; margin-top: 10px; display:flex; justify-content:flex-end;">
-            <button type="submit" style="
-                border: none;
-                border-radius: 999px;
-                padding: 10px 20px;
-                background: linear-gradient(135deg, #e53935, #ff6f60);
-                color: #050509;
-                font-weight: 600;
-                font-size: 14px;
-                cursor: pointer;
-            ">
-                Prosseguir para pagamento
-            </button>
-        </div>
-
         <div style="grid-column: 1 / -1; margin-top: 10px; display: flex; justify-content: space-between; align-items: center; gap: 8px;">
             <a href="<?= CourseController::buildCourseUrl($course) ?>" style="
                 font-size: 13px; color:#b0b0b0; text-decoration:none; padding:8px 12px;
