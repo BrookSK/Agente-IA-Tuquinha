@@ -61,4 +61,20 @@ class CoursePurchase
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
         return $row ?: null;
     }
+
+    public static function userHasPaidPurchase(int $userId, int $courseId): bool
+    {
+        if ($userId <= 0 || $courseId <= 0) {
+            return false;
+        }
+
+        $pdo = Database::getConnection();
+        $stmt = $pdo->prepare('SELECT id FROM course_purchases WHERE user_id = :user_id AND course_id = :course_id AND status = "paid" LIMIT 1');
+        $stmt->execute([
+            'user_id' => $userId,
+            'course_id' => $courseId,
+        ]);
+
+        return (bool)$stmt->fetch(PDO::FETCH_ASSOC);
+    }
 }

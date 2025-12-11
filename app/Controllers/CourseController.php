@@ -20,6 +20,7 @@ use App\Models\Subscription;
 use App\Models\User;
 use App\Models\Community;
 use App\Models\CommunityMember;
+use App\Models\CoursePurchase;
 use App\Services\MailService;
 use App\Services\GoogleCalendarService;
 
@@ -73,9 +74,13 @@ class CourseController extends Controller
             return true;
         }
 
-        // Curso pago sem plano: precisa estar inscrito (compra avulsa confirmada).
-        if ($allowPublicPurchase && $isEnrolled) {
-            return true;
+        // Curso pago sem plano: precisa ter compra avulsa paga registrada.
+        if ($allowPublicPurchase && $user && !empty($user['id']) && !empty($course['id'])) {
+            $userId = (int)$user['id'];
+            $courseId = (int)$course['id'];
+            if (CoursePurchase::userHasPaidPurchase($userId, $courseId)) {
+                return true;
+            }
         }
 
         return false;
