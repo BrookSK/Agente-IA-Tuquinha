@@ -451,8 +451,15 @@ class CourseController extends Controller
         $isEnrolled = false;
         $user = $this->getCurrentUser();
         $plan = $this->resolvePlanForUser($user);
+        $completedLessonIds = [];
+        $isLessonCompleted = false;
         if ($user) {
-            $isEnrolled = CourseEnrollment::isEnrolled($courseId, (int)$user['id']);
+            $userId = (int)$user['id'];
+            $isEnrolled = CourseEnrollment::isEnrolled($courseId, $userId);
+            $completedLessonIds = CourseLessonProgress::completedLessonIdsByUserAndCourse($courseId, $userId);
+            if (!empty($completedLessonIds[$lessonId])) {
+                $isLessonCompleted = true;
+            }
         }
 
         $canAccessContent = $this->userCanAccessCourseContent($course, $user, $plan, $isEnrolled);
@@ -468,11 +475,38 @@ class CourseController extends Controller
             exit;
         }
 
+        $lessons = CourseLesson::allByCourseId($courseId);
+
+        // Calcula próxima etapa: próxima aula desbloqueada ou prova do módulo
+        $nextUrl = null;
+        $nextIsExam = false;
         if ($user && $isEnrolled) {
-            CourseLessonProgress::markCompleted($courseId, $lessonId, (int)$user['id']);
+            $nextLesson = null;
+            $countLessons = count($lessons);
+            for ($i = 0; $i < $countLessons; $i++) {
+                $lid = (int)($lessons[$i]['id'] ?? 0);
+                if ($lid === $lessonId) {
+                    if ($i + 1 < $countLessons) {
+                        $nextLesson = $lessons[$i + 1];
+                    }
+                    break;
+                }
+            }
+
+            if ($nextLesson && !$this->isLessonLockedByModules($course, $nextLesson, $user)) {
+                $nextUrl = '/cursos/aulas/ver?lesson_id=' . (int)($nextLesson['id'] ?? 0);
+            }
+
+            $currentModuleId = (int)($lesson['module_id'] ?? 0);
+            if (!$nextUrl && $currentModuleId > 0) {
+                $exam = CourseModuleExam::findByModuleId($currentModuleId);
+                if ($exam && !empty($exam['is_active'])) {
+                    $nextUrl = '/cursos/modulos/prova?course_id=' . $courseId . '&module_id=' . $currentModuleId;
+                    $nextIsExam = true;
+                }
+            }
         }
 
-        $lessons = CourseLesson::allByCourseId($courseId);
         $lessonComments = CourseLessonComment::allByLessonWithUser($lessonId);
 
         $this->view('courses/lesson_player', [
@@ -483,7 +517,64 @@ class CourseController extends Controller
             'lessons' => $lessons,
             'lessonComments' => $lessonComments,
             'isEnrolled' => $isEnrolled,
+            'isLessonCompleted' => $isLessonCompleted,
+            'nextUrl' => $nextUrl,
+            'nextIsExam' => $nextIsExam,
         ]);
+    }
+
+    public function completeLesson(): void
+    {
+        $user = $this->getCurrentUser();
+        if (!$user) {
+            header('Location: /login');
+            exit;
+        }
+
+        $lessonId = isset($_POST['lesson_id']) ? (int)$_POST['lesson_id'] : 0;
+        $courseId = isset($_POST['course_id']) ? (int)$_POST['course_id'] : 0;
+
+        if ($lessonId <= 0 || $courseId <= 0) {
+            header('Location: /cursos');
+            exit;
+        }
+
+        $lesson = CourseLesson::findById($lessonId);
+        $course = Course::findById($courseId);
+
+        if (
+            !$lesson ||
+            !$course ||
+            empty($course['is_active']) ||
+            empty($lesson['is_published']) ||
+            (int)($lesson['course_id'] ?? 0) !== $courseId
+        ) {
+            $_SESSION['courses_error'] = 'Aula não encontrada para este curso.';
+            header('Location: /cursos');
+            exit;
+        }
+
+        $plan = $this->resolvePlanForUser($user);
+        $isEnrolled = CourseEnrollment::isEnrolled($courseId, (int)$user['id']);
+
+        $canAccessContent = $this->userCanAccessCourseContent($course, $user, $plan, $isEnrolled);
+        if (!$canAccessContent) {
+            $_SESSION['courses_error'] = 'Você precisa concluir a compra deste curso ou ter um plano que libera cursos para marcar esta aula como concluída.';
+            header('Location: ' . self::buildCourseUrl($course));
+            exit;
+        }
+
+        if ($this->isLessonLockedByModules($course, $lesson, $user)) {
+            $_SESSION['courses_error'] = 'Este módulo está bloqueado até você passar na prova do módulo anterior.';
+            header('Location: ' . self::buildCourseUrl($course));
+            exit;
+        }
+
+        CourseLessonProgress::markCompleted($courseId, $lessonId, (int)$user['id']);
+
+        $_SESSION['courses_success'] = 'Marcamos esta aula como concluída para você.';
+        header('Location: /cursos/aulas/ver?lesson_id=' . $lessonId);
+        exit;
     }
 
     public function moduleExam(): void

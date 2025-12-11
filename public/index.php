@@ -63,6 +63,7 @@ $router->get('/cursos/lives', 'CourseController@lives');
 $router->post('/cursos/lives/participar', 'CourseController@joinLive');
 $router->get('/cursos/lives/ver', 'CourseController@watchLive');
 $router->get('/cursos/aulas/ver', 'CourseController@watchLesson');
+$router->post('/cursos/aulas/concluir', 'CourseController@completeLesson');
 $router->get('/cursos/modulos/prova', 'CourseController@moduleExam');
 $router->post('/cursos/modulos/prova', 'CourseController@moduleExamSubmit');
 $router->post('/cursos/lives/comentar', 'CourseController@commentLive');

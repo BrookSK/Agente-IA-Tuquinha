@@ -82,6 +82,46 @@ $canCommentLesson = $user && ($isEnrolled || $isOwner || $isAdmin);
                 <div style="margin-top:6px; font-size:11px; color:#777;">
                     Se o player não carregar corretamente, você pode <a href="<?= htmlspecialchars($embedUrl) ?>" target="_blank" rel="noopener noreferrer" style="color:#ff6f60; text-decoration:none;">abrir o vídeo em outra aba</a>.
                 </div>
+
+                <?php if (!empty($user) && !empty($isEnrolled)): ?>
+                    <div style="margin-top:10px; padding-top:8px; border-top:1px dashed #272727; display:flex; flex-wrap:wrap; gap:10px; align-items:center; justify-content:space-between;">
+                        <div style="font-size:12px; color:#b0b0b0;">
+                            <?php if (!empty($isLessonCompleted)): ?>
+                                Esta aula já está marcada como concluída.
+                            <?php else: ?>
+                                Esta aula ainda não foi marcada como concluída.
+                            <?php endif; ?>
+                        </div>
+                        <div style="display:flex; flex-wrap:wrap; gap:8px; align-items:center;">
+                            <?php if (empty($isLessonCompleted)): ?>
+                                <form action="/cursos/aulas/concluir" method="post" style="display:inline;">
+                                    <input type="hidden" name="course_id" value="<?= (int)($course['id'] ?? 0) ?>">
+                                    <input type="hidden" name="lesson_id" value="<?= $currentLessonId ?>">
+                                    <button type="submit" style="
+                                        border:none; border-radius:999px; padding:6px 14px;
+                                        background:#16351f; color:#6be28d;
+                                        font-weight:600; font-size:12px; cursor:pointer;">
+                                        Marcar como concluída
+                                    </button>
+                                </form>
+                            <?php endif; ?>
+
+                            <?php if (!empty($nextUrl)): ?>
+                                <a href="<?= htmlspecialchars($nextUrl) ?>" style="
+                                    display:inline-flex; align-items:center; gap:6px; padding:6px 14px;
+                                    border-radius:999px; border:1px solid #ff6f60;
+                                    background:linear-gradient(135deg,#e53935,#ff6f60); color:#050509;
+                                    font-weight:600; font-size:12px; text-decoration:none;">
+                                    <?php if (!empty($nextIsExam)): ?>
+                                        Ir para a prova do módulo
+                                    <?php else: ?>
+                                        Ir para a próxima aula
+                                    <?php endif; ?>
+                                </a>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                <?php endif; ?>
             <?php endif; ?>
         </section>
 
