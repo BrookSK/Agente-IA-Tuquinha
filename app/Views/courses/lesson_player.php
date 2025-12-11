@@ -83,7 +83,7 @@ $canCommentLesson = $user && ($isEnrolled || $isOwner || $isAdmin);
                     Se o player não carregar corretamente, você pode <a href="<?= htmlspecialchars($embedUrl) ?>" target="_blank" rel="noopener noreferrer" style="color:#ff6f60; text-decoration:none;">abrir o vídeo em outra aba</a>.
                 </div>
 
-                <?php if (!empty($user) && !empty($isEnrolled)): ?>
+                <?php if (!empty($user) && !empty($canAccessContent)): ?>
                     <div style="margin-top:10px; padding-top:8px; border-top:1px dashed #272727; display:flex; flex-wrap:wrap; gap:10px; align-items:center; justify-content:space-between;">
                         <div style="font-size:12px; color:#b0b0b0;">
                             <?php if (!empty($isLessonCompleted)): ?>
@@ -104,6 +104,16 @@ $canCommentLesson = $user && ($isEnrolled || $isOwner || $isAdmin);
                                         Marcar como concluída
                                     </button>
                                 </form>
+                            <?php endif; ?>
+
+                            <?php if (!empty($prevUrl)): ?>
+                                <a href="<?= htmlspecialchars($prevUrl) ?>" style="
+                                    display:inline-flex; align-items:center; gap:6px; padding:6px 14px;
+                                    border-radius:999px; border:1px solid #272727;
+                                    background:#050509; color:#f5f5f5;
+                                    font-weight:500; font-size:12px; text-decoration:none;">
+                                    ← Aula anterior
+                                </a>
                             <?php endif; ?>
 
                             <?php if (!empty($nextUrl)): ?>

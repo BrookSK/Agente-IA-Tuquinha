@@ -447,10 +447,12 @@ class CourseController extends Controller
             header('Location: /cursos');
             exit;
         }
+
         $courseId = (int)$course['id'];
         $isEnrolled = false;
         $user = $this->getCurrentUser();
         $plan = $this->resolvePlanForUser($user);
+
         $completedLessonIds = [];
         $isLessonCompleted = false;
         if ($user) {
@@ -477,26 +479,44 @@ class CourseController extends Controller
 
         $lessons = CourseLesson::allByCourseId($courseId);
 
-        // Calcula próxima etapa: próxima aula desbloqueada ou prova do módulo
+        // Navegação: aula anterior, próxima aula desbloqueada ou prova do módulo
+        $prevUrl = null;
         $nextUrl = null;
         $nextIsExam = false;
-        if ($user && $isEnrolled) {
-            $nextLesson = null;
+
+        if ($user && $canAccessContent) {
             $countLessons = count($lessons);
+            $currentIndex = null;
+
             for ($i = 0; $i < $countLessons; $i++) {
                 $lid = (int)($lessons[$i]['id'] ?? 0);
                 if ($lid === $lessonId) {
-                    if ($i + 1 < $countLessons) {
-                        $nextLesson = $lessons[$i + 1];
-                    }
+                    $currentIndex = $i;
                     break;
                 }
             }
 
-            if ($nextLesson && !$this->isLessonLockedByModules($course, $nextLesson, $user)) {
-                $nextUrl = '/cursos/aulas/ver?lesson_id=' . (int)($nextLesson['id'] ?? 0);
+            if ($currentIndex !== null) {
+                if ($currentIndex - 1 >= 0) {
+                    $prevLesson = $lessons[$currentIndex - 1];
+                    $prevLessonId = (int)($prevLesson['id'] ?? 0);
+                    if ($prevLessonId > 0) {
+                        $prevUrl = '/cursos/aulas/ver?lesson_id=' . $prevLessonId;
+                    }
+                }
+
+                if ($currentIndex + 1 < $countLessons) {
+                    $nextLesson = $lessons[$currentIndex + 1];
+                    if (!$this->isLessonLockedByModules($course, $nextLesson, $user)) {
+                        $nextLessonId = (int)($nextLesson['id'] ?? 0);
+                        if ($nextLessonId > 0) {
+                            $nextUrl = '/cursos/aulas/ver?lesson_id=' . $nextLessonId;
+                        }
+                    }
+                }
             }
 
+            // Se não houver próxima aula desbloqueada, tenta mandar para a prova do módulo atual
             $currentModuleId = (int)($lesson['module_id'] ?? 0);
             if (!$nextUrl && $currentModuleId > 0) {
                 $exam = CourseModuleExam::findByModuleId($currentModuleId);
@@ -518,6 +538,8 @@ class CourseController extends Controller
             'lessonComments' => $lessonComments,
             'isEnrolled' => $isEnrolled,
             'isLessonCompleted' => $isLessonCompleted,
+            'canAccessContent' => $canAccessContent,
+            'prevUrl' => $prevUrl,
             'nextUrl' => $nextUrl,
             'nextIsExam' => $nextIsExam,
         ]);
