@@ -43,4 +43,22 @@ class CourseLessonProgress
         }
         return $ids;
     }
+
+    public static function clearByCourseModuleAndUser(int $courseId, int $moduleId, int $userId): void
+    {
+        if ($courseId <= 0 || $moduleId <= 0 || $userId <= 0) {
+            return;
+        }
+
+        $pdo = Database::getConnection();
+        $sql = 'DELETE lp FROM course_lesson_progress lp
+                INNER JOIN course_lessons l ON l.id = lp.lesson_id
+                WHERE lp.course_id = :course_id AND lp.user_id = :user_id AND l.module_id = :module_id';
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute([
+            'course_id' => $courseId,
+            'user_id' => $userId,
+            'module_id' => $moduleId,
+        ]);
+    }
 }

@@ -66,4 +66,18 @@ class CourseExamAttempt
         ]);
         return (bool)$stmt->fetch(PDO::FETCH_ASSOC);
     }
+
+    public static function resetAttemptsForUser(int $examId, int $userId): void
+    {
+        if ($examId <= 0 || $userId <= 0) {
+            return;
+        }
+
+        $pdo = Database::getConnection();
+        $stmt = $pdo->prepare('DELETE FROM course_exam_attempts WHERE exam_id = :exam_id AND user_id = :user_id');
+        $stmt->execute([
+            'exam_id' => $examId,
+            'user_id' => $userId,
+        ]);
+    }
 }

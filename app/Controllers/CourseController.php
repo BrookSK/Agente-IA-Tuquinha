@@ -815,7 +815,9 @@ class CourseController extends Controller
         } else {
             $message = 'Você não atingiu a nota mínima nesta prova. Sua nota foi ' . $scorePercent . '% (mínimo ' . $passScore . '%).';
             if ($maxAttempts > 0 && $attemptsAfter >= $maxAttempts) {
-                $message .= ' Você atingiu o limite de tentativas para este módulo.';
+                CourseLessonProgress::clearByCourseModuleAndUser($courseId, $moduleId, $userId);
+                CourseExamAttempt::resetAttemptsForUser($examId, $userId);
+                $message .= ' Você atingiu o limite de tentativas para este módulo. Para tentar novamente, refaça todas as aulas deste módulo; elas foram marcadas como não concluídas para você.';
             }
             $_SESSION['courses_error'] = $message;
         }
