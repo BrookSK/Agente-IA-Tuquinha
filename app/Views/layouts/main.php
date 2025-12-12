@@ -2,7 +2,14 @@
 /** @var string $viewFile */
 /** @var string|null $pageTitle */
 
+use App\Models\CoursePartner;
+
 $pageTitle = $pageTitle ?? 'Agente IA - Tuquinha';
+
+$isCoursePartner = false;
+if (!empty($_SESSION['user_id'])) {
+    $isCoursePartner = (bool)CoursePartner::findByUserId((int)$_SESSION['user_id']);
+}
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -389,13 +396,6 @@ $pageTitle = $pageTitle ?? 'Agente IA - Tuquinha';
                 </a>
 
                 <?php if (!empty($_SESSION['user_id'])): ?>
-                    <a href="/comunidade" class="sidebar-button">
-                        <span class="icon">🌐</span>
-                        <span>Comunidade</span>
-                    </a>
-                <?php endif; ?>
-
-                <?php if (!empty($_SESSION['user_id'])): ?>
                     <div class="sidebar-section-title" style="margin-top: 10px;">Rede social do Tuquinha</div>
                     <a href="/perfil" class="sidebar-button">
                         <span class="icon">
@@ -437,12 +437,14 @@ $pageTitle = $pageTitle ?? 'Agente IA - Tuquinha';
                         </span>
                         <span>Histórico de tokens extras</span>
                     </a>
-                    <a href="/parceiro/cursos" class="sidebar-button">
-                        <span class="icon">
-                            🎓
-                        </span>
-                        <span>Meus cursos (parceiro)</span>
-                    </a>
+                    <?php if (!empty($isCoursePartner)): ?>
+                        <a href="/parceiro/cursos" class="sidebar-button">
+                            <span class="icon">
+                                🎓
+                            </span>
+                            <span>Meus cursos (parceiro)</span>
+                        </a>
+                    <?php endif; ?>
                     <a href="/logout" class="sidebar-button" style="margin-top: 6px;">
                         <span class="icon">
                             ⏻

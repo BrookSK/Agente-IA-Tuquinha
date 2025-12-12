@@ -8,6 +8,10 @@ use App\Models\Community;
 use App\Models\CommunityMember;
 use App\Models\CommunityTopic;
 use App\Models\CommunityTopicPost;
+use App\Models\Course;
+use App\Models\Plan;
+use App\Models\Subscription;
+use App\Models\CoursePurchase;
 
 class CommunitiesController extends Controller
 {
@@ -26,6 +30,76 @@ class CommunitiesController extends Controller
         }
 
         return $user;
+    }
+
+    private function findCourseForCommunity(array $community): ?array
+    {
+        $slug = trim((string)($community['slug'] ?? ''));
+        if ($slug === '') {
+            return null;
+        }
+        if (strpos($slug, 'curso-') !== 0) {
+            return null;
+        }
+
+        $rest = substr($slug, 6);
+        if (strpos($rest, 'id-') === 0) {
+            $idPart = substr($rest, 3);
+            $courseId = (int)$idPart;
+            if ($courseId > 0) {
+                return Course::findById($courseId);
+            }
+            return null;
+        }
+
+        return Course::findBySlug($rest);
+    }
+
+    private function resolvePlanForUser(?array $user): ?array
+    {
+        $plan = null;
+        if ($user && !empty($user['email'])) {
+            $sub = Subscription::findLastByEmail($user['email']);
+            if ($sub && !empty($sub['plan_id'])) {
+                $plan = Plan::findById((int)$sub['plan_id']);
+            }
+        }
+        if (!$plan) {
+            $plan = Plan::findBySessionSlug($_SESSION['plan_slug'] ?? null) ?: Plan::findBySlug('free');
+        }
+        return $plan;
+    }
+
+    private function userCanAccessCourseCommunity(array $course, array $user): bool
+    {
+        $plan = $this->resolvePlanForUser($user);
+
+        $isAdmin = !empty($_SESSION['is_admin']);
+        if ($isAdmin) {
+            return true;
+        }
+
+        $planAllowsCourses = !empty($plan['allow_courses'] ?? false);
+        if ($planAllowsCourses) {
+            return true;
+        }
+
+        $isPaid = !empty($course['is_paid']);
+        $allowPublicPurchase = !empty($course['allow_public_purchase']);
+
+        if (!$isPaid) {
+            return true;
+        }
+
+        if ($allowPublicPurchase && !empty($user['id']) && !empty($course['id'])) {
+            $userId = (int)$user['id'];
+            $courseId = (int)$course['id'];
+            if (CoursePurchase::userHasPaidPurchase($userId, $courseId)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     public function index(): void
@@ -125,6 +199,15 @@ class CommunitiesController extends Controller
             exit;
         }
 
+        // Se for comunidade vinculada a curso, exige acesso ao curso até para visualizar
+        $course = $this->findCourseForCommunity($community);
+        if ($course && !empty($course['is_active']) && !$this->userCanAccessCourseCommunity($course, $user)) {
+            $_SESSION['communities_error'] = 'Você precisa ter acesso a este curso para visualizar esta comunidade.';
+            $courseUrl = CourseController::buildCourseUrl($course);
+            header('Location: ' . $courseUrl);
+            exit;
+        }
+
         $communityId = (int)$community['id'];
         $isMember = CommunityMember::isMember($communityId, $userId);
         $members = CommunityMember::allMembersWithUser($communityId);
@@ -162,6 +245,15 @@ class CommunitiesController extends Controller
         if (!$community || empty($community['is_active'])) {
             $_SESSION['communities_error'] = 'Comunidade não encontrada.';
             header('Location: /comunidades');
+            exit;
+        }
+
+        // Se for uma comunidade vinculada a curso, só permite participação para quem tem acesso ao curso
+        $course = $this->findCourseForCommunity($community);
+        if ($course && !empty($course['is_active']) && !$this->userCanAccessCourseCommunity($course, $user)) {
+            $_SESSION['communities_error'] = 'Você precisa ter acesso a este curso para participar desta comunidade.';
+            $courseUrl = CourseController::buildCourseUrl($course);
+            header('Location: ' . $courseUrl);
             exit;
         }
 
@@ -217,6 +309,15 @@ class CommunitiesController extends Controller
         if (!$community || empty($community['is_active'])) {
             $_SESSION['communities_error'] = 'Comunidade não encontrada.';
             header('Location: /comunidades');
+            exit;
+        }
+
+        // Se for comunidade de curso, exige acesso ao curso para criar tópicos
+        $course = $this->findCourseForCommunity($community);
+        if ($course && !empty($course['is_active']) && !$this->userCanAccessCourseCommunity($course, $user)) {
+            $_SESSION['communities_error'] = 'Você precisa ter acesso a este curso para criar tópicos nesta comunidade.';
+            $courseUrl = CourseController::buildCourseUrl($course);
+            header('Location: ' . $courseUrl);
             exit;
         }
 
@@ -282,6 +383,15 @@ class CommunitiesController extends Controller
             exit;
         }
 
+        // Se for comunidade de curso, exige acesso ao curso até para visualizar o tópico
+        $course = $this->findCourseForCommunity($community);
+        if ($course && !empty($course['is_active']) && !$this->userCanAccessCourseCommunity($course, $user)) {
+            $_SESSION['communities_error'] = 'Você precisa ter acesso a este curso para visualizar este tópico.';
+            $courseUrl = CourseController::buildCourseUrl($course);
+            header('Location: ' . $courseUrl);
+            exit;
+        }
+
         $communityId = (int)$community['id'];
         $isMember = CommunityMember::isMember($communityId, $userId);
         $posts = CommunityTopicPost::allByTopicWithUser($topicId);
@@ -327,6 +437,15 @@ class CommunitiesController extends Controller
         if (!$community || empty($community['is_active'])) {
             $_SESSION['communities_error'] = 'Comunidade deste tópico não foi encontrada.';
             header('Location: /comunidades');
+            exit;
+        }
+
+        // Se for comunidade de curso, exige acesso ao curso também para responder
+        $course = $this->findCourseForCommunity($community);
+        if ($course && !empty($course['is_active']) && !$this->userCanAccessCourseCommunity($course, $user)) {
+            $_SESSION['communities_error'] = 'Você precisa ter acesso a este curso para responder neste tópico.';
+            $courseUrl = CourseController::buildCourseUrl($course);
+            header('Location: ' . $courseUrl);
             exit;
         }
 
