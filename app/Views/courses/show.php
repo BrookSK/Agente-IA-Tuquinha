@@ -182,7 +182,6 @@ if (!empty($user) && !empty($canAccessContent) && !empty($lessons)) {
                             </a>
                         <?php endif; ?>
 
-                    <?php if ($isEnrolled): ?>
                         <span style="
                             display:inline-flex; align-items:center; gap:6px; padding:8px 16px;
                             border-radius:999px; border:1px solid #3aa857;
