@@ -42,7 +42,8 @@ class CoursePurchaseController extends Controller
             exit;
         }
 
-        $isPaid = !empty($course['is_paid']);
+        $priceCents = isset($course['price_cents']) ? (int)$course['price_cents'] : 0;
+        $isPaid = !empty($course['is_paid']) && $priceCents > 0;
         $allowPublicPurchase = !empty($course['allow_public_purchase']);
 
         // Compra avulsa só faz sentido para cursos pagos que estejam marcados como disponíveis para compra pública
@@ -100,7 +101,8 @@ class CoursePurchaseController extends Controller
             exit;
         }
 
-        $isPaid = !empty($course['is_paid']);
+        $priceCents = isset($course['price_cents']) ? (int)$course['price_cents'] : 0;
+        $isPaid = !empty($course['is_paid']) && $priceCents > 0;
         $allowPublicPurchase = !empty($course['allow_public_purchase']);
 
         if (!$isPaid || !$allowPublicPurchase) {

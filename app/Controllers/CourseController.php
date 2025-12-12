@@ -66,8 +66,15 @@ class CourseController extends Controller
             return true;
         }
 
-        $isPaid = !empty($course['is_paid']);
+        $priceCents = isset($course['price_cents']) ? (int)$course['price_cents'] : 0;
         $allowPublicPurchase = !empty($course['allow_public_purchase']);
+        $isPaidFlag = !empty($course['is_paid']);
+
+        if ($allowPublicPurchase && $priceCents <= 0) {
+            return true;
+        }
+
+        $isPaid = $isPaidFlag && $priceCents > 0;
 
         if (!$isPaid) {
             // Curso gratuito: se chegou até aqui, pode acessar conteúdo.
@@ -840,7 +847,8 @@ class CourseController extends Controller
 
         $allowPlanOnly = !empty($course['allow_plan_access_only']);
         $allowPublicPurchase = !empty($course['allow_public_purchase']);
-        $isPaid = !empty($course['is_paid']);
+        $priceCents = isset($course['price_cents']) ? (int)$course['price_cents'] : 0;
+        $isPaid = !empty($course['is_paid']) && $priceCents > 0;
 
         // Admins e assinantes de planos com cursos sempre podem se inscrever
         if (!$isAdmin && !$planAllowsCourses) {

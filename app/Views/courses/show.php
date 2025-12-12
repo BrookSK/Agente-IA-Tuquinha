@@ -103,10 +103,10 @@ if (!empty($user) && !empty($canAccessContent) && !empty($lessons)) {
                 <?php endif; ?>
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-top:4px;">
                     <div style="font-size:11px; color:#ffcc80;">
-                        <?php if ($isPaid): ?>
+                        <?php if ($isPaid && $priceCents > 0): ?>
                             R$ <?= number_format(max($priceCents,0)/100, 2, ',', '.') ?>
                         <?php else: ?>
-                            Gratuito para planos com cursos
+                            Gratuito
                         <?php endif; ?>
                     </div>
                     <div style="font-size:11px; color:#b0b0b0; text-align:right;">
@@ -186,7 +186,7 @@ if (!empty($user) && !empty($canAccessContent) && !empty($lessons)) {
                         </form>
                     <?php else: ?>
                         <?php if (empty($canAccessContent)): ?>
-                            <?php if ($isPaid && $allowPublicPurchase && !$planAllowsCourses): ?>
+                            <?php if ($isPaid && $priceCents > 0 && $allowPublicPurchase && !$planAllowsCourses): ?>
                                 <a href="/cursos/comprar?course_id=<?= (int)($course['id'] ?? 0) ?>" style="
                                     display:inline-flex; align-items:center; gap:6px; padding:8px 16px;
                                     border-radius:999px; border:1px solid #ff6f60;
