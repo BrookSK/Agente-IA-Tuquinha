@@ -157,7 +157,8 @@ $partnerEmail = $partnerEmail ?? '';
                 </label>
             </div>
             <div style="font-size:11px; color:#777; margin-left:20px;">
-                Se marcado, usuários sem plano enxergam este curso na vitrine. Se for pago, eles poderão comprar avulso; se for gratuito, poderão se inscrever mesmo sem ter um plano.
+                Se marcado, usuários sem plano enxergam este curso na vitrine. Se for pago (preço &gt; 0), eles poderão comprar avulso.
+                Se o preço estiver em 0, o curso será tratado como gratuito mesmo com a opção de curso pago marcada: nesse caso, os alunos poderão se inscrever diretamente, sem passar por pagamento.
             </div>
 
             <div style="display:flex; flex-wrap:wrap; gap:10px; align-items:center; margin-top:2px;">

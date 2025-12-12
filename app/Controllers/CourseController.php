@@ -70,15 +70,14 @@ class CourseController extends Controller
         $allowPublicPurchase = !empty($course['allow_public_purchase']);
         $isPaidFlag = !empty($course['is_paid']);
 
-        if ($allowPublicPurchase && $priceCents <= 0) {
-            return true;
-        }
-
         $isPaid = $isPaidFlag && $priceCents > 0;
 
+        // Cursos sem preço (gratuitos): para usuários comuns, exigem inscrição para liberar o conteúdo
         if (!$isPaid) {
-            // Curso gratuito: se chegou até aqui, pode acessar conteúdo.
-            return true;
+            if (!$user || empty($user['id'])) {
+                return false;
+            }
+            return $isEnrolled;
         }
 
         // Curso pago sem plano: precisa ter compra avulsa paga registrada.
