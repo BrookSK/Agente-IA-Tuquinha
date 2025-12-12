@@ -362,10 +362,12 @@ class CourseController extends Controller
 
         $isEnrolled = false;
         $myLiveParticipation = [];
+        $hasPaidPurchase = false;
         if ($user) {
             $userId = (int)$user['id'];
             $isEnrolled = CourseEnrollment::isEnrolled($courseId, $userId);
             $myLiveParticipation = CourseLiveParticipant::liveIdsByUser($userId);
+            $hasPaidPurchase = CoursePurchase::userHasPaidPurchase($userId, $courseId);
         }
 
         $canAccessContent = $this->userCanAccessCourseContent($course, $user, $plan, $isEnrolled);
@@ -421,6 +423,7 @@ class CourseController extends Controller
             'commentsByLesson' => $commentsByLesson,
             'isEnrolled' => $isEnrolled,
             'myLiveParticipation' => $myLiveParticipation,
+            'hasPaidPurchase' => $hasPaidPurchase,
             'canAccessContent' => $canAccessContent,
             'planAllowsCourses' => $planAllowsCourses,
             'completedLessonIds' => $completedLessonIds,
@@ -461,6 +464,7 @@ class CourseController extends Controller
 
         $completedLessonIds = [];
         $isLessonCompleted = false;
+        $hasPaidPurchase = false;
         if ($user) {
             $userId = (int)$user['id'];
             $isEnrolled = CourseEnrollment::isEnrolled($courseId, $userId);
@@ -468,11 +472,19 @@ class CourseController extends Controller
             if (!empty($completedLessonIds[$lessonId])) {
                 $isLessonCompleted = true;
             }
+            $hasPaidPurchase = CoursePurchase::userHasPaidPurchase($userId, $courseId);
         }
 
         $canAccessContent = $this->userCanAccessCourseContent($course, $user, $plan, $isEnrolled);
         if (!$canAccessContent) {
             $_SESSION['courses_error'] = 'Você precisa concluir a compra deste curso ou ter um plano que libera cursos para assistir às aulas.';
+            header('Location: ' . self::buildCourseUrl($course));
+            exit;
+        }
+
+        // Se o usuário comprou avulso e cancelou a inscrição, ele só pode rever aulas já concluídas
+        if ($user && $hasPaidPurchase && !$isEnrolled && !$isLessonCompleted) {
+            $_SESSION['courses_error'] = 'Você cancelou sua inscrição neste curso. Você ainda pode rever as aulas que já concluiu, mas para assistir novas aulas precisa se inscrever novamente.';
             header('Location: ' . self::buildCourseUrl($course));
             exit;
         }
@@ -583,11 +595,23 @@ class CourseController extends Controller
         }
 
         $plan = $this->resolvePlanForUser($user);
-        $isEnrolled = CourseEnrollment::isEnrolled($courseId, (int)$user['id']);
+        $userId = (int)$user['id'];
+        $isEnrolled = CourseEnrollment::isEnrolled($courseId, $userId);
 
         $canAccessContent = $this->userCanAccessCourseContent($course, $user, $plan, $isEnrolled);
         if (!$canAccessContent) {
             $_SESSION['courses_error'] = 'Você precisa concluir a compra deste curso ou ter um plano que libera cursos para marcar esta aula como concluída.';
+            header('Location: ' . self::buildCourseUrl($course));
+            exit;
+        }
+
+        $hasPaidPurchase = CoursePurchase::userHasPaidPurchase($userId, $courseId);
+        $completedLessonIds = CourseLessonProgress::completedLessonIdsByUserAndCourse($courseId, $userId);
+        $isLessonAlreadyCompleted = !empty($completedLessonIds[$lessonId]);
+
+        // Usuário que comprou avulso mas cancelou a inscrição não pode marcar novas aulas como concluídas
+        if ($hasPaidPurchase && !$isEnrolled && !$isLessonAlreadyCompleted) {
+            $_SESSION['courses_error'] = 'Você cancelou sua inscrição neste curso. Você ainda pode rever as aulas que já concluiu, mas para concluir novas aulas precisa se inscrever novamente.';
             header('Location: ' . self::buildCourseUrl($course));
             exit;
         }
@@ -860,10 +884,14 @@ class CourseController extends Controller
                 exit;
             }
 
-            // Curso pago com compra avulsa liberada: redireciona para fluxo de compra
+            // Curso pago com compra avulsa liberada: só redireciona para compra se ainda não houver compra paga
             if ($isPaid) {
-                header('Location: /cursos/comprar?course_id=' . $courseId);
-                exit;
+                $userIdForPurchase = (int)$user['id'];
+                if (!CoursePurchase::userHasPaidPurchase($userIdForPurchase, $courseId)) {
+                    header('Location: /cursos/comprar?course_id=' . $courseId);
+                    exit;
+                }
+                // Se já houver compra paga, segue para inscrição normal sem novo pagamento
             }
             // Curso gratuito com visibilidade pública: segue para inscrição normal
         }

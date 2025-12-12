@@ -25,10 +25,23 @@ $courseUrl = CourseController::buildCourseUrl($course);
 
 $completedLessonIds = $completedLessonIds ?? [];
 $modulesData = $modulesData ?? [];
+$hasPaidPurchase = $hasPaidPurchase ?? false;
+
 $startLessonId = null;
 $startLessonLabel = 'Começar curso';
 $currentLessonId = null; // próxima aula recomendada para continuar
 $hasCompletedAnyLesson = !empty($completedLessonIds);
+$firstCompletedLessonId = null;
+
+if (!empty($completedLessonIds)) {
+    foreach ($lessons as $lessonRow) {
+        $lid = (int)($lessonRow['id'] ?? 0);
+        if ($lid > 0 && isset($completedLessonIds[$lid])) {
+            $firstCompletedLessonId = $lid;
+            break;
+        }
+    }
+}
 
 if (!empty($user) && !empty($canAccessContent) && !empty($lessons)) {
     $lockedModuleIds = [];
@@ -158,15 +171,16 @@ if (!empty($user) && !empty($canAccessContent) && !empty($lessons)) {
                         Entrar para se inscrever
                     </a>
                 <?php else: ?>
-                    <?php if (!empty($canAccessContent) && !empty($startLessonId)): ?>
-                        <a href="/cursos/aulas/ver?lesson_id=<?= (int)$startLessonId ?>" style="
-                            display:inline-flex; align-items:center; gap:6px; padding:8px 16px;
-                            border-radius:999px; border:1px solid #ff6f60;
-                            background:linear-gradient(135deg,#e53935,#ff6f60); color:#050509;
-                            font-size:13px; font-weight:600; text-decoration:none;">
-                            <?= htmlspecialchars($startLessonLabel) ?>
-                        </a>
-                    <?php endif; ?>
+                    <?php if ($isEnrolled): ?>
+                        <?php if (!empty($canAccessContent) && !empty($startLessonId)): ?>
+                            <a href="/cursos/aulas/ver?lesson_id=<?= (int)$startLessonId ?>" style="
+                                display:inline-flex; align-items:center; gap:6px; padding:8px 16px;
+                                border-radius:999px; border:1px solid #ff6f60;
+                                background:linear-gradient(135deg,#e53935,#ff6f60); color:#050509;
+                                font-size:13px; font-weight:600; text-decoration:none;">
+                                <?= htmlspecialchars($startLessonLabel) ?>
+                            </a>
+                        <?php endif; ?>
 
                     <?php if ($isEnrolled): ?>
                         <span style="
@@ -185,25 +199,46 @@ if (!empty($user) && !empty($canAccessContent) && !empty($lessons)) {
                             </button>
                         </form>
                     <?php else: ?>
-                        <?php if (empty($canAccessContent)): ?>
-                            <?php if ($isPaid && $priceCents > 0 && $allowPublicPurchase && !$planAllowsCourses): ?>
-                                <a href="/cursos/comprar?course_id=<?= (int)($course['id'] ?? 0) ?>" style="
+                        <?php if ($hasPaidPurchase): ?>
+                            <?php if (!empty($firstCompletedLessonId)): ?>
+                                <a href="/cursos/aulas/ver?lesson_id=<?= (int)$firstCompletedLessonId ?>" style="
                                     display:inline-flex; align-items:center; gap:6px; padding:8px 16px;
                                     border-radius:999px; border:1px solid #ff6f60;
                                     background:linear-gradient(135deg,#e53935,#ff6f60); color:#050509;
                                     font-size:13px; font-weight:600; text-decoration:none;">
-                                    Comprar curso avulso
+                                    Rever aulas concluídas
                                 </a>
-                            <?php else: ?>
-                                <form action="/cursos/inscrever" method="post" style="display:inline;">
-                                    <input type="hidden" name="course_id" value="<?= (int)($course['id'] ?? 0) ?>">
-                                    <button type="submit" style="
-                                        border:none; border-radius:999px; padding:8px 16px;
+                            <?php endif; ?>
+                            <form action="/cursos/inscrever" method="post" style="display:inline;">
+                                <input type="hidden" name="course_id" value="<?= (int)($course['id'] ?? 0) ?>">
+                                <button type="submit" style="
+                                    border:none; border-radius:999px; padding:8px 16px;
+                                    background:linear-gradient(135deg,#e53935,#ff6f60); color:#050509;
+                                    font-weight:600; font-size:13px; cursor:pointer;">
+                                    Reinscrever neste curso
+                                </button>
+                            </form>
+                        <?php else: ?>
+                            <?php if (empty($canAccessContent)): ?>
+                                <?php if ($isPaid && $priceCents > 0 && $allowPublicPurchase && !$planAllowsCourses): ?>
+                                    <a href="/cursos/comprar?course_id=<?= (int)($course['id'] ?? 0) ?>" style="
+                                        display:inline-flex; align-items:center; gap:6px; padding:8px 16px;
+                                        border-radius:999px; border:1px solid #ff6f60;
                                         background:linear-gradient(135deg,#e53935,#ff6f60); color:#050509;
-                                        font-weight:600; font-size:13px; cursor:pointer;">
-                                        Quero fazer este curso
-                                    </button>
-                                </form>
+                                        font-size:13px; font-weight:600; text-decoration:none;">
+                                        Comprar curso avulso
+                                    </a>
+                                <?php else: ?>
+                                    <form action="/cursos/inscrever" method="post" style="display:inline;">
+                                        <input type="hidden" name="course_id" value="<?= (int)($course['id'] ?? 0) ?>">
+                                        <button type="submit" style="
+                                            border:none; border-radius:999px; padding:8px 16px;
+                                            background:linear-gradient(135deg,#e53935,#ff6f60); color:#050509;
+                                            font-weight:600; font-size:13px; cursor:pointer;">
+                                            Quero fazer este curso
+                                        </button>
+                                    </form>
+                                <?php endif; ?>
                             <?php endif; ?>
                         <?php endif; ?>
                     <?php endif; ?>
