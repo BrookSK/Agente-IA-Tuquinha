@@ -30,6 +30,17 @@ if (!empty($_SESSION['user_id'])) {
             --text-secondary: #b0b0b0;
             --border-subtle: #272727;
         }
+
+        /* Tema claro (hot / cold) controlado via atributo data-theme="light" no body */
+        body[data-theme="light"] {
+            --bg-main: #fdf7f7;
+            --bg-secondary: #ffffff;
+            --accent: #e53935;
+            --accent-soft: #ff8a65;
+            --text-primary: #1f2933;
+            --text-secondary: #4b5563;
+            --border-subtle: #e5e7eb;
+        }
         * {
             margin: 0;
             padding: 0;
@@ -45,7 +56,7 @@ if (!empty($_SESSION['user_id'])) {
 
         .sidebar {
             width: 260px;
-            background: radial-gradient(circle at top left, #e53935 0, #050509 40%);
+            background: radial-gradient(circle at top left, var(--accent) 0, var(--bg-main) 40%);
             border-right: 1px solid var(--border-subtle);
             padding: 16px 14px;
             display: flex;
@@ -70,7 +81,7 @@ if (!empty($_SESSION['user_id'])) {
             height: 36px;
             border-radius: 50%;
             overflow: hidden;
-            background: #050509;
+            background: var(--bg-main);
             box-shadow: 0 0 20px rgba(229, 57, 53, 0.7);
         }
         .brand-text-title {
@@ -154,7 +165,7 @@ if (!empty($_SESSION['user_id'])) {
             margin-left: 260px;
             display: flex;
             flex-direction: column;
-            background: radial-gradient(circle at top, rgba(229, 57, 53, 0.1) 0, #050509 50%);
+            background: radial-gradient(circle at top, rgba(229, 57, 53, 0.1) 0, var(--bg-main) 50%);
             min-height: 100vh;
         }
 
@@ -260,7 +271,7 @@ if (!empty($_SESSION['user_id'])) {
 
         html::-webkit-scrollbar-track,
         body::-webkit-scrollbar-track {
-            background: #050509;
+            background: var(--bg-main);
         }
 
         html::-webkit-scrollbar-thumb,
@@ -513,7 +524,11 @@ if (!empty($_SESSION['user_id'])) {
                 </button>
                 <div class="main-header-title"><?= htmlspecialchars($pageTitle) ?></div>
             </div>
-            <div>
+            <div style="display:flex; align-items:center; gap:10px;">
+                <button type="button" id="theme-toggle" class="env-pill" style="display:inline-flex; align-items:center; gap:6px; cursor:pointer; background:transparent;">
+                    <span id="theme-toggle-icon">🌙</span>
+                    <span id="theme-toggle-label">Tema escuro</span>
+                </button>
                 <?php if (!empty($_SESSION['user_id'])): ?>
                     <div class="env-pill">
                         <?php $nomeSaudacao = $_SESSION['user_name'] ?? 'designer'; ?>
@@ -553,6 +568,49 @@ if (!empty($_SESSION['user_id'])) {
         });
 
         overlay.addEventListener('click', closeSidebar);
+    })();
+
+    // Tema claro/escuro com persistência em localStorage
+    (function () {
+        var body = document.body;
+        var toggleBtn = document.getElementById('theme-toggle');
+        var iconSpan = document.getElementById('theme-toggle-icon');
+        var labelSpan = document.getElementById('theme-toggle-label');
+        if (!body || !toggleBtn || !iconSpan || !labelSpan) return;
+
+        function applyTheme(theme) {
+            if (theme === 'light') {
+                body.setAttribute('data-theme', 'light');
+                iconSpan.textContent = '☀️';
+                labelSpan.textContent = 'Tema claro';
+            } else {
+                body.removeAttribute('data-theme');
+                iconSpan.textContent = '🌙';
+                labelSpan.textContent = 'Tema escuro';
+            }
+        }
+
+        var savedTheme = null;
+        try {
+            savedTheme = window.localStorage ? localStorage.getItem('tuquinha_theme') : null;
+        } catch (e) {}
+
+        if (savedTheme === 'light' || savedTheme === 'dark') {
+            applyTheme(savedTheme);
+        } else {
+            applyTheme('dark');
+        }
+
+        toggleBtn.addEventListener('click', function () {
+            var current = body.getAttribute('data-theme') === 'light' ? 'light' : 'dark';
+            var next = current === 'light' ? 'dark' : 'light';
+            applyTheme(next);
+            try {
+                if (window.localStorage) {
+                    localStorage.setItem('tuquinha_theme', next);
+                }
+            } catch (e) {}
+        });
     })();
 
     // Registro do Service Worker para PWA
