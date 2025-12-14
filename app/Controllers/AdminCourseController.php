@@ -528,8 +528,22 @@ class AdminCourseController extends Controller
         $isPublished = !empty($_POST['is_published']) ? 1 : 0;
         $moduleId = isset($_POST['module_id']) ? (int)$_POST['module_id'] : 0;
 
+        // Se um arquivo de vídeo foi enviado, tenta fazer upload para o servidor de mídia
+        if (isset($_FILES['video_upload']) && !empty($_FILES['video_upload']['tmp_name'])) {
+            $tmp = (string)($_FILES['video_upload']['tmp_name'] ?? '');
+            $originalName = (string)($_FILES['video_upload']['name'] ?? '');
+            $mime = (string)($_FILES['video_upload']['type'] ?? '');
+
+            if ($tmp !== '' && is_uploaded_file($tmp)) {
+                $remoteVideoUrl = MediaStorageService::uploadFile($tmp, $originalName, $mime);
+                if ($remoteVideoUrl !== null) {
+                    $videoUrl = $remoteVideoUrl;
+                }
+            }
+        }
+
         if ($title === '' || $videoUrl === '') {
-            $_SESSION['admin_course_error'] = 'Preencha pelo menos título e link do vídeo.';
+            $_SESSION['admin_course_error'] = 'Preencha o título e informe um link ou envie um arquivo de vídeo.';
             $target = '/admin/cursos/aulas/nova?course_id=' . $courseId;
             if ($id > 0) {
                 $target = '/admin/cursos/aulas/editar?course_id=' . $courseId . '&id=' . $id;

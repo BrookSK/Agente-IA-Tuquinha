@@ -18,7 +18,7 @@ $isEdit = !empty($lesson);
         <?php unset($_SESSION['admin_course_error']); ?>
     <?php endif; ?>
 
-    <form action="/admin/cursos/aulas/salvar" method="post" style="display:flex; flex-direction:column; gap:10px;">
+    <form action="/admin/cursos/aulas/salvar" method="post" enctype="multipart/form-data" style="display:flex; flex-direction:column; gap:10px;">
         <input type="hidden" name="course_id" value="<?= (int)$course['id'] ?>">
         <?php if ($isEdit): ?>
             <input type="hidden" name="id" value="<?= (int)$lesson['id'] ?>">
@@ -36,6 +36,14 @@ $isEdit = !empty($lesson);
             <input type="text" name="video_url" required value="<?= htmlspecialchars($lesson['video_url'] ?? '') ?>" placeholder="Ex: https://www.youtube.com/watch?v=..." style="
                 width:100%; padding:8px 10px; border-radius:8px; border:1px solid var(--border-subtle);
                 background:var(--surface-subtle); color:var(--text-primary); font-size:13px;">
+            <small style="display:block; margin-top:4px; font-size:11px; color:var(--text-secondary);">
+                Você também pode enviar um arquivo de vídeo; se o upload for concluído com sucesso, o link acima será preenchido automaticamente.
+            </small>
+        </div>
+
+        <div>
+            <label style="font-size:13px; color:var(--text-primary); display:block; margin-bottom:4px;">Ou envie um arquivo de vídeo (.mp4, .webm, .ogg)</label>
+            <input type="file" name="video_upload" accept="video/mp4,video/webm,video/ogg" style="font-size:12px; color:var(--text-primary);">
         </div>
 
         <div>
