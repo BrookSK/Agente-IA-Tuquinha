@@ -7,10 +7,18 @@ use PDO;
 
 class Community
 {
-    public static function allActive(): array
+    public static function allActive(?string $category = null): array
     {
         $pdo = Database::getConnection();
-        $stmt = $pdo->query('SELECT * FROM communities WHERE is_active = 1 ORDER BY name ASC');
+
+        $category = $category !== null ? trim($category) : '';
+        if ($category !== '') {
+            $stmt = $pdo->prepare('SELECT * FROM communities WHERE is_active = 1 AND category = :category ORDER BY name ASC');
+            $stmt->execute(['category' => $category]);
+        } else {
+            $stmt = $pdo->query('SELECT * FROM communities WHERE is_active = 1 ORDER BY name ASC');
+        }
+
         return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
     }
 
@@ -42,19 +50,62 @@ class Community
     public static function create(array $data): int
     {
         $pdo = Database::getConnection();
-        $stmt = $pdo->prepare('INSERT INTO communities (owner_user_id, name, slug, description, image_path, members_count, topics_count, is_active)
-            VALUES (:owner_user_id, :name, :slug, :description, :image_path, :members_count, :topics_count, :is_active)');
+        $stmt = $pdo->prepare('INSERT INTO communities (
+                owner_user_id,
+                name,
+                slug,
+                description,
+                language,
+                category,
+                community_type,
+                posting_policy,
+                forum_type,
+                image_path,
+                cover_image_path,
+                members_count,
+                topics_count,
+                is_active
+            ) VALUES (
+                :owner_user_id,
+                :name,
+                :slug,
+                :description,
+                :language,
+                :category,
+                :community_type,
+                :posting_policy,
+                :forum_type,
+                :image_path,
+                :cover_image_path,
+                :members_count,
+                :topics_count,
+                :is_active
+            )');
         $stmt->execute([
             'owner_user_id' => $data['owner_user_id'] ?? null,
             'name' => $data['name'] ?? '',
             'slug' => $data['slug'] ?? '',
             'description' => $data['description'] ?? null,
+            'language' => $data['language'] ?? null,
+            'category' => $data['category'] ?? null,
+            'community_type' => $data['community_type'] ?? 'public',
+            'posting_policy' => $data['posting_policy'] ?? 'any_member',
+            'forum_type' => $data['forum_type'] ?? 'non_anonymous',
             'image_path' => $data['image_path'] ?? null,
+            'cover_image_path' => $data['cover_image_path'] ?? null,
             'members_count' => (int)($data['members_count'] ?? 0),
             'topics_count' => (int)($data['topics_count'] ?? 0),
             'is_active' => (int)($data['is_active'] ?? 1),
         ]);
         return (int)$pdo->lastInsertId();
+    }
+
+    public static function allCategories(): array
+    {
+        $pdo = Database::getConnection();
+        $stmt = $pdo->query('SELECT DISTINCT category FROM communities WHERE is_active = 1 AND category IS NOT NULL AND category <> "" ORDER BY category ASC');
+        $rows = $stmt->fetchAll(PDO::FETCH_COLUMN) ?: [];
+        return array_map(static fn($c) => (string)$c, $rows);
     }
 
     private static function buildCourseCommunitySlug(array $course): string
@@ -101,7 +152,13 @@ class Community
             'name' => $name,
             'slug' => $slug,
             'description' => $description !== '' ? $description : null,
+            'language' => null,
+            'category' => 'Cursos',
+            'community_type' => 'public',
+            'posting_policy' => 'any_member',
+            'forum_type' => 'non_anonymous',
             'image_path' => null,
+            'cover_image_path' => null,
             'members_count' => 0,
             'topics_count' => 0,
             'is_active' => 1,

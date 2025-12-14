@@ -91,12 +91,24 @@ $router->post('/amigos/decidir', 'FriendsController@decide');
 
 $router->get('/comunidades', 'CommunitiesController@index');
 $router->get('/comunidades/ver', 'CommunitiesController@show');
+$router->get('/comunidades/nova', 'CommunitiesController@createForm');
 $router->post('/comunidades/criar', 'CommunitiesController@create');
 $router->post('/comunidades/entrar', 'CommunitiesController@join');
 $router->post('/comunidades/sair', 'CommunitiesController@leave');
 $router->post('/comunidades/topicos/novo', 'CommunitiesController@createTopic');
 $router->get('/comunidades/topicos/ver', 'CommunitiesController@showTopic');
 $router->post('/comunidades/topicos/responder', 'CommunitiesController@replyTopic');
+$router->get('/comunidades/membros', 'CommunitiesController@members');
+$router->get('/comunidades/enquetes', 'CommunitiesController@polls');
+$router->post('/comunidades/enquetes/criar', 'CommunitiesController@createPoll');
+$router->post('/comunidades/enquetes/votar', 'CommunitiesController@votePoll');
+$router->get('/comunidades/convites', 'CommunitiesController@invites');
+$router->post('/comunidades/convites/enviar', 'CommunitiesController@sendInvite');
+$router->get('/comunidades/aceitar-convite', 'CommunitiesController@acceptInvite');
+$router->post('/comunidades/membros/denunciar', 'CommunitiesController@reportMember');
+$router->post('/comunidades/membros/bloquear', 'CommunitiesController@blockMember');
+$router->post('/comunidades/membros/desbloquear', 'CommunitiesController@unblockMember');
+$router->post('/comunidades/membros/denuncias/resolver', 'CommunitiesController@resolveReport');
 
 $router->get('/parceiro/cursos', 'CoursePartnerDashboardController@index');
 $router->get('/admin/login', 'AdminAuthController@login');

@@ -72,6 +72,74 @@ class CommunityMember
         return (bool)$stmt->fetchColumn();
     }
 
+    public static function findMember(int $communityId, int $userId): ?array
+    {
+        if ($communityId <= 0 || $userId <= 0) {
+            return null;
+        }
+
+        $pdo = Database::getConnection();
+        $stmt = $pdo->prepare('SELECT * FROM community_members
+            WHERE community_id = :cid AND user_id = :uid AND left_at IS NULL
+            LIMIT 1');
+        $stmt->execute([
+            'cid' => $communityId,
+            'uid' => $userId,
+        ]);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $row ?: null;
+    }
+
+    public static function isBlocked(int $communityId, int $userId): bool
+    {
+        if ($communityId <= 0 || $userId <= 0) {
+            return false;
+        }
+
+        $pdo = Database::getConnection();
+        $stmt = $pdo->prepare('SELECT 1 FROM community_members
+            WHERE community_id = :cid AND user_id = :uid AND left_at IS NULL AND is_blocked = 1
+            LIMIT 1');
+        $stmt->execute([
+            'cid' => $communityId,
+            'uid' => $userId,
+        ]);
+        return (bool)$stmt->fetchColumn();
+    }
+
+    public static function block(int $communityId, int $userId, ?string $reason = null): void
+    {
+        if ($communityId <= 0 || $userId <= 0) {
+            return;
+        }
+
+        $pdo = Database::getConnection();
+        $stmt = $pdo->prepare('UPDATE community_members
+            SET is_blocked = 1, blocked_reason = :reason
+            WHERE community_id = :cid AND user_id = :uid AND left_at IS NULL');
+        $stmt->execute([
+            'cid' => $communityId,
+            'uid' => $userId,
+            'reason' => $reason !== '' ? $reason : null,
+        ]);
+    }
+
+    public static function unblock(int $communityId, int $userId): void
+    {
+        if ($communityId <= 0 || $userId <= 0) {
+            return;
+        }
+
+        $pdo = Database::getConnection();
+        $stmt = $pdo->prepare('UPDATE community_members
+            SET is_blocked = 0, blocked_reason = NULL
+            WHERE community_id = :cid AND user_id = :uid AND left_at IS NULL');
+        $stmt->execute([
+            'cid' => $communityId,
+            'uid' => $userId,
+        ]);
+    }
+
     public static function communitiesForUser(int $userId): array
     {
         if ($userId <= 0) {

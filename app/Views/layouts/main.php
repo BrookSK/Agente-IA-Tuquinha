@@ -550,15 +550,15 @@ if (!empty($_SESSION['user_id'])) {
                         <span class="icon">👥</span>
                         <span>Usuários</span>
                     </a>
-                    <a href="/admin/comunidade/bloqueios" class="sidebar-button" style="margin-top: 6px;">
+                    <!-- <a href="/admin/comunidade/bloqueios" class="sidebar-button" style="margin-top: 6px;">
                         <span class="icon">🚫</span>
                         <span>Bloqueios da comunidade</span>
-                    </a>
+                    </a> -->
                     <a href="/admin/assinaturas" class="sidebar-button" style="margin-top: 6px;">
                         <span class="icon">📑</span>
                         <span>Assinaturas</span>
-                    <!-- </a>
-                    <a href="/debug/asaas" class="sidebar-button" style="margin-top: 6px;">
+                    </a>
+                    <!-- <a href="/debug/asaas" class="sidebar-button" style="margin-top: 6px;">
                         <span class="icon">🧪</span>
                         <span>Debug Asaas</span>
                     </a> -->

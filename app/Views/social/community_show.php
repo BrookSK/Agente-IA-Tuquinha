@@ -5,6 +5,62 @@ $slug = (string)($community['slug'] ?? '');
 $membersCount = is_array($members) ? count($members) : 0;
 $topicsCount = is_array($topics) ? count($topics) : 0;
 
+$languageCode = (string)($community['language'] ?? '');
+$category = (string)($community['category'] ?? '');
+$communityType = (string)($community['community_type'] ?? 'public');
+$postingPolicy = (string)($community['posting_policy'] ?? 'any_member');
+$forumType = (string)($community['forum_type'] ?? 'non_anonymous');
+$coverImage = (string)($community['cover_image_path'] ?? $community['image_path'] ?? '');
+
+if ($communityType !== 'private') {
+    $communityType = 'public';
+}
+if (!in_array($postingPolicy, ['any_member', 'owner_moderators'], true)) {
+    $postingPolicy = 'any_member';
+}
+if (!in_array($forumType, ['non_anonymous', 'anonymous'], true)) {
+    $forumType = 'non_anonymous';
+}
+
+// Rótulos amigáveis
+$languageLabel = '';
+if ($languageCode === 'pt-BR') {
+    $languageLabel = 'Português (Brasil)';
+} elseif ($languageCode === 'en') {
+    $languageLabel = 'Inglês';
+} elseif ($languageCode === 'es') {
+    $languageLabel = 'Espanhol';
+} elseif ($languageCode !== '') {
+    $languageLabel = $languageCode;
+}
+
+$typeLabel = $communityType === 'private' ? 'Privada (apenas com convite)' : 'Pública';
+$postingLabel = $postingPolicy === 'owner_moderators'
+    ? 'Apenas dono e moderadores postam'
+    : 'Qualquer membro pode postar';
+$forumLabel = $forumType === 'anonymous'
+    ? 'Anônimo para membros'
+    : 'Não-anônimo (mostra o nome)';
+
+// Dono e moderadores (pelos membros carregados)
+$ownerId = (int)($community['owner_user_id'] ?? 0);
+$ownerName = null;
+$moderatorNames = [];
+if (is_array($members)) {
+    foreach ($members as $m) {
+        $mid = (int)($m['user_id'] ?? 0);
+        $mname = (string)($m['user_name'] ?? '');
+        $role = (string)($m['role'] ?? 'member');
+        if ($mid === $ownerId && $mname !== '') {
+            $ownerName = $mname;
+        }
+        if ($role === 'moderator' && $mname !== '') {
+            $moderatorNames[] = $mname;
+        }
+    }
+}
+$moderatorsText = !empty($moderatorNames) ? implode(', ', $moderatorNames) : '';
+
 ?>
 <div style="max-width: 980px; margin: 0 auto; display:flex; flex-direction:column; gap:14px;">
     <?php if (!empty($error)): ?>
@@ -19,7 +75,11 @@ $topicsCount = is_array($topics) ? count($topics) : 0;
     <?php endif; ?>
 
     <section style="background:var(--surface-card); border-radius:16px; border:1px solid var(--border-subtle); padding:12px 14px; display:flex; gap:12px; align-items:flex-start; flex-wrap:wrap;">
-        <div style="width:64px; height:64px; border-radius:14px; background:radial-gradient(circle at 30% 20%, #fff 0, #ff8a65 25%, #e53935 65%, #050509 100%);"></div>
+        <div style="width:64px; height:64px; border-radius:14px; overflow:hidden; background:radial-gradient(circle at 30% 20%, #fff 0, #ff8a65 25%, #e53935 65%, #050509 100%);">
+            <?php if ($coverImage !== ''): ?>
+                <img src="<?= htmlspecialchars($coverImage, ENT_QUOTES, 'UTF-8') ?>" alt="Capa da comunidade" style="width:100%; height:100%; object-fit:cover; display:block;">
+            <?php endif; ?>
+        </div>
         <div style="flex:1 1 200px; min-width:0;">
             <div style="display:flex; justify-content:space-between; align-items:center; gap:8px;">
                 <div>
@@ -37,7 +97,51 @@ $topicsCount = is_array($topics) ? count($topics) : 0;
                     <div><?= (int)$topicsCount ?> tópico(s)</div>
                 </div>
             </div>
-            <div style="margin-top:8px; display:flex; gap:8px; align-items:center;">
+
+            <div style="margin-top:8px; display:grid; grid-template-columns:repeat(auto-fit, minmax(160px, 1fr)); gap:6px; font-size:12px; color:var(--text-secondary);">
+                <div>
+                    <div style="font-size:11px; text-transform:uppercase; letter-spacing:0.08em; opacity:0.8;">Idioma</div>
+                    <div><?= $languageLabel !== '' ? htmlspecialchars($languageLabel, ENT_QUOTES, 'UTF-8') : 'Não informado' ?></div>
+                </div>
+                <div>
+                    <div style="font-size:11px; text-transform:uppercase; letter-spacing:0.08em; opacity:0.8;">Categoria</div>
+                    <div><?= $category !== '' ? htmlspecialchars($category, ENT_QUOTES, 'UTF-8') : 'Sem categoria' ?></div>
+                </div>
+                <div>
+                    <div style="font-size:11px; text-transform:uppercase; letter-spacing:0.08em; opacity:0.8;">Tipo</div>
+                    <div><?= htmlspecialchars($typeLabel, ENT_QUOTES, 'UTF-8') ?></div>
+                </div>
+                <div>
+                    <div style="font-size:11px; text-transform:uppercase; letter-spacing:0.08em; opacity:0.8;">Privacidade do conteúdo</div>
+                    <div><?= htmlspecialchars($postingLabel, ENT_QUOTES, 'UTF-8') ?></div>
+                </div>
+                <div>
+                    <div style="font-size:11px; text-transform:uppercase; letter-spacing:0.08em; opacity:0.8;">Fórum</div>
+                    <div><?= htmlspecialchars($forumLabel, ENT_QUOTES, 'UTF-8') ?></div>
+                </div>
+                <div>
+                    <div style="font-size:11px; text-transform:uppercase; letter-spacing:0.08em; opacity:0.8;">Dono</div>
+                    <div>
+                        <?php if ($ownerName !== null): ?>
+                            <?= htmlspecialchars($ownerName, ENT_QUOTES, 'UTF-8') ?>
+                        <?php else: ?>
+                            Não informado
+                        <?php endif; ?>
+                    </div>
+                </div>
+                <div>
+                    <div style="font-size:11px; text-transform:uppercase; letter-spacing:0.08em; opacity:0.8;">Moderadores</div>
+                    <div>
+                        <?php if ($moderatorsText !== ''): ?>
+                            <?= htmlspecialchars($moderatorsText, ENT_QUOTES, 'UTF-8') ?>
+                        <?php else: ?>
+                            Nenhum moderador definido
+                        <?php endif; ?>
+                    </div>
+                </div>
+            </div>
+
+            <div style="margin-top:8px; display:flex; flex-wrap:wrap; gap:8px; align-items:center;">
                 <a href="/comunidades" style="font-size:12px; color:#ff6f60; text-decoration:none;">Voltar para lista de comunidades</a>
                 <?php if ($isMember): ?>
                     <span style="font-size:12px; color:#8bc34a;">Você é membro desta comunidade.</span>
@@ -47,12 +151,16 @@ $topicsCount = is_array($topics) ? count($topics) : 0;
                         <button type="submit" style="border:none; border-radius:999px; padding:5px 10px; background:linear-gradient(135deg,#e53935,#ff6f60); color:#050509; font-size:12px; font-weight:600; cursor:pointer;">Participar da comunidade</button>
                     </form>
                 <?php endif; ?>
+
+                <a href="#topics-section" style="font-size:12px; padding:4px 9px; border-radius:999px; border:1px solid var(--border-subtle); background:var(--surface-subtle); color:var(--text-primary); text-decoration:none;">Ver fóruns/tópicos</a>
+                <a href="/comunidades/membros?slug=<?= urlencode($slug) ?>" style="font-size:12px; padding:4px 9px; border-radius:999px; border:1px solid var(--border-subtle); background:var(--surface-subtle); color:var(--text-primary); text-decoration:none;">Ver todos os membros</a>
+                <a href="/comunidades/enquetes?slug=<?= urlencode($slug) ?>" style="font-size:12px; padding:4px 9px; border-radius:999px; border:1px solid var(--border-subtle); background:var(--surface-subtle); color:var(--text-primary); text-decoration:none;">Enquetes da comunidade</a>
             </div>
         </div>
     </section>
 
     <div style="display:grid; grid-template-columns:minmax(0,2fr) minmax(0,1.1fr); gap:12px; align-items:flex-start;">
-        <section style="background:var(--surface-card); border-radius:16px; border:1px solid var(--border-subtle); padding:12px 14px;">
+        <section id="topics-section" style="background:var(--surface-card); border-radius:16px; border:1px solid var(--border-subtle); padding:12px 14px;">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
                 <h2 style="font-size:16px;">Tópicos</h2>
                 <?php if ($isMember): ?>
@@ -98,7 +206,7 @@ $topicsCount = is_array($topics) ? count($topics) : 0;
             <?php endif; ?>
         </section>
 
-        <aside style="background:var(--surface-card); border-radius:16px; border:1px solid var(--border-subtle); padding:12px 14px;">
+        <aside id="members-section" style="background:var(--surface-card); border-radius:16px; border:1px solid var(--border-subtle); padding:12px 14px;">
             <h3 style="font-size:14px; margin-bottom:6px;">Membros</h3>
             <?php if (empty($members)): ?>
                 <p style="font-size:12px; color:var(--text-secondary);">Nenhum membro listado ainda.</p>
