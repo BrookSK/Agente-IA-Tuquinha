@@ -12,8 +12,18 @@ $courseTitle = trim((string)($course['title'] ?? ''));
 $lessonTitle = trim((string)($lesson['title'] ?? ''));
 $lessonDescription = trim((string)($lesson['description'] ?? ''));
 $videoUrl = trim((string)($lesson['video_url'] ?? ''));
+
+// Detecta se o link é um arquivo de vídeo direto (ex.: .mp4, .webm, .ogg).
+$isDirectVideoFile = false;
+if ($videoUrl !== '') {
+    if (preg_match('~\.(mp4|webm|ogg)(?:\?.*)?$~i', $videoUrl)) {
+        $isDirectVideoFile = true;
+    }
+}
+
+// Para links que não são arquivo direto, mantém o comportamento de embed (Drive, YouTube embed, etc.).
 $embedUrl = $videoUrl;
-if ($embedUrl !== '' && strpos($embedUrl, 'drive.google.com') !== false) {
+if (!$isDirectVideoFile && $embedUrl !== '' && strpos($embedUrl, 'drive.google.com') !== false) {
     if (preg_match('~https?://drive\.google\.com/file/d/([^/]+)/~', $embedUrl, $m)) {
         $embedUrl = 'https://drive.google.com/file/d/' . $m[1] . '/preview';
     } elseif (preg_match('~https?://drive\.google\.com/open\?id=([^&]+)~', $embedUrl, $m)) {
@@ -76,12 +86,83 @@ $canCommentLesson = $user && ($isEnrolled || $isOwner || $isAdmin);
                     Nenhum vídeo foi configurado para esta aula ainda.
                 </div>
             <?php else: ?>
-                <div style="position:relative; padding-bottom:56.25%; height:0; overflow:hidden; border-radius:10px; background:#000;">
-                    <iframe src="<?= htmlspecialchars($embedUrl) ?>" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen style="position:absolute; top:0; left:0; width:100%; height:100%;"></iframe>
-                </div>
-                <div style="margin-top:6px; font-size:11px; color:#777;">
-                    Se o player não carregar corretamente, você pode <a href="<?= htmlspecialchars($embedUrl) ?>" target="_blank" rel="noopener noreferrer" style="color:#ff6f60; text-decoration:none;">abrir o vídeo em outra aba</a>.
-                </div>
+                <?php if ($isDirectVideoFile): ?>
+                    <div style="position:relative; padding-bottom:56.25%; height:0; overflow:hidden; border-radius:10px; background:#000;">
+                        <video
+                            id="lesson-video"
+                            src="<?= htmlspecialchars($videoUrl) ?>"
+                            preload="metadata"
+                            playsinline
+                            style="position:absolute; top:0; left:0; width:100%; height:100%; background:#000;">
+                        </video>
+                    </div>
+
+                    <div style="margin-top:8px; display:flex; flex-wrap:wrap; align-items:center; gap:10px;">
+                        <button
+                            type="button"
+                            id="lesson-play-pause"
+                            style="
+                                border:none; border-radius:999px; padding:6px 14px;
+                                background:linear-gradient(135deg,#e53935,#ff6f60); color:#050509;
+                                font-weight:600; font-size:12px; cursor:pointer;">
+                            Reproduzir
+                        </button>
+
+                        <div style="display:flex; align-items:center; gap:6px; font-size:12px; color:#b0b0b0;">
+                            <span>Volume</span>
+                            <input
+                                type="range"
+                                id="lesson-volume"
+                                min="0"
+                                max="1"
+                                step="0.05"
+                                value="1"
+                                style="width:140px; cursor:pointer;">
+                        </div>
+                    </div>
+
+                    <script>
+                        (function () {
+                            var video = document.getElementById('lesson-video');
+                            var btn = document.getElementById('lesson-play-pause');
+                            var vol = document.getElementById('lesson-volume');
+
+                            if (!video || !btn || !vol) {
+                                return;
+                            }
+
+                            function updateButton() {
+                                btn.textContent = video.paused ? 'Reproduzir' : 'Pausar';
+                            }
+
+                            btn.addEventListener('click', function () {
+                                if (video.paused) {
+                                    video.play();
+                                } else {
+                                    video.pause();
+                                }
+                            });
+
+                            video.addEventListener('play', updateButton);
+                            video.addEventListener('pause', updateButton);
+
+                            vol.addEventListener('input', function () {
+                                var value = parseFloat(this.value);
+                                if (!isNaN(value)) {
+                                    video.volume = value;
+                                }
+                            });
+
+                            // Volume inicial
+                            video.volume = parseFloat(vol.value) || 1;
+                            updateButton();
+                        })();
+                    </script>
+                <?php else: ?>
+                    <div style="position:relative; padding-bottom:56.25%; height:0; overflow:hidden; border-radius:10px; background:#000;">
+                        <iframe src="<?= htmlspecialchars($embedUrl) ?>" frameborder="0" allow="autoplay; encrypted-media" style="position:absolute; top:0; left:0; width:100%; height:100%;"></iframe>
+                    </div>
+                <?php endif; ?>
 
                 <?php if (!empty($user) && !empty($canAccessContent)): ?>
                     <div style="margin-top:10px; padding-top:8px; border-top:1px dashed #272727; display:flex; flex-wrap:wrap; gap:10px; align-items:center; justify-content:space-between;">
