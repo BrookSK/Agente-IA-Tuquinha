@@ -7,17 +7,27 @@ use App\Models\Setting;
 class MediaStorageService
 {
     /**
-     * Envia um arquivo local para o servidor de mídia externo e retorna a URL pública
-     * ou null em caso de falha.
+     * Envia um arquivo local para o servidor de mídia externo usando o endpoint padrão
+     * configurado (MEDIA_UPLOAD_ENDPOINT / setting media_upload_endpoint).
      */
     public static function uploadFile(string $localPath, string $originalName, string $mimeType = ''): ?string
+    {
+        return self::uploadFileToEndpoint($localPath, $originalName, $mimeType, '');
+    }
+
+    /**
+     * Envia um arquivo local para um endpoint específico ou, se não informado,
+     * para o endpoint padrão configurado.
+     */
+    public static function uploadFileToEndpoint(string $localPath, string $originalName, string $mimeType = '', string $endpoint = ''): ?string
     {
         if (!is_file($localPath) || !is_readable($localPath)) {
             return null;
         }
 
         $defaultEndpoint = defined('MEDIA_UPLOAD_ENDPOINT') ? MEDIA_UPLOAD_ENDPOINT : '';
-        $configured = trim(Setting::get('media_upload_endpoint', $defaultEndpoint));
+        $base = trim(Setting::get('media_upload_endpoint', $defaultEndpoint));
+        $configured = $endpoint !== '' ? $endpoint : $base;
         if ($configured === '') {
             return null;
         }

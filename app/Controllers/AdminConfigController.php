@@ -55,6 +55,7 @@ class AdminConfigController extends Controller
         $googleCalendarId = Setting::get('google_calendar_calendar_id', 'primary');
 
         $mediaEndpoint = Setting::get('media_upload_endpoint', defined('MEDIA_UPLOAD_ENDPOINT') ? MEDIA_UPLOAD_ENDPOINT : '');
+        $mediaVideoEndpoint = Setting::get('media_video_upload_endpoint', defined('MEDIA_VIDEO_UPLOAD_ENDPOINT') ? MEDIA_VIDEO_UPLOAD_ENDPOINT : '');
 
         $asaas = AsaasConfig::getActive();
 
@@ -83,6 +84,7 @@ class AdminConfigController extends Controller
             'googleRefreshToken' => $googleRefreshToken,
             'googleCalendarId' => $googleCalendarId,
             'mediaEndpoint' => $mediaEndpoint,
+            'mediaVideoEndpoint' => $mediaVideoEndpoint,
             'asaasEnvironment' => $asaas['environment'] ?? 'sandbox',
             'asaasSandboxKey' => $asaas['sandbox_api_key'] ?? '',
             'asaasProdKey' => $asaas['production_api_key'] ?? '',
@@ -134,6 +136,7 @@ class AdminConfigController extends Controller
         $googleRefreshToken = trim($_POST['google_refresh_token'] ?? '');
         $googleCalendarId = trim($_POST['google_calendar_id'] ?? 'primary');
         $mediaEndpoint = trim($_POST['media_endpoint'] ?? '');
+        $mediaVideoEndpoint = trim($_POST['media_video_endpoint'] ?? '');
 
         $pdo = Database::getConnection();
         $stmt = $pdo->prepare('INSERT INTO settings (`key`, `value`) VALUES (:key, :value)
@@ -171,6 +174,7 @@ class AdminConfigController extends Controller
             'google_calendar_refresh_token' => $googleRefreshToken,
             'google_calendar_calendar_id' => $googleCalendarId !== '' ? $googleCalendarId : 'primary',
             'media_upload_endpoint' => $mediaEndpoint !== '' ? $mediaEndpoint : (defined('MEDIA_UPLOAD_ENDPOINT') ? MEDIA_UPLOAD_ENDPOINT : ''),
+            'media_video_upload_endpoint' => $mediaVideoEndpoint !== '' ? $mediaVideoEndpoint : (defined('MEDIA_VIDEO_UPLOAD_ENDPOINT') ? MEDIA_VIDEO_UPLOAD_ENDPOINT : ''),
         ];
 
         foreach ($settingsToSave as $sKey => $sValue) {
@@ -215,6 +219,7 @@ class AdminConfigController extends Controller
             'googleRefreshToken' => $googleRefreshToken,
             'googleCalendarId' => $googleCalendarId !== '' ? $googleCalendarId : 'primary',
             'mediaEndpoint' => $mediaEndpoint !== '' ? $mediaEndpoint : (defined('MEDIA_UPLOAD_ENDPOINT') ? MEDIA_UPLOAD_ENDPOINT : ''),
+            'mediaVideoEndpoint' => $mediaVideoEndpoint !== '' ? $mediaVideoEndpoint : (defined('MEDIA_VIDEO_UPLOAD_ENDPOINT') ? MEDIA_VIDEO_UPLOAD_ENDPOINT : ''),
             'asaasEnvironment' => $asaasEnv === 'production' ? 'production' : 'sandbox',
             'asaasSandboxKey' => $asaasSandboxKey,
             'asaasProdKey' => $asaasProdKey,

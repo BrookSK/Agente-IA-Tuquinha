@@ -87,6 +87,15 @@ $knownModels = [
             <small style="color:#777; font-size:11px;">URL do script PHP que recebe uploads (imagens, arquivos e áudios) e retorna JSON com a URL pública.</small>
         </div>
 
+        <div>
+            <label style="font-size: 12px; color: #b0b0b0;">Endpoint de upload de <strong>vídeos</strong> (opcional)</label>
+            <input name="media_video_endpoint" value="<?= htmlspecialchars($mediaVideoEndpoint ?? '') ?>" style="
+                width: 100%; padding: 8px 10px; border-radius: 8px; border: 1px solid #272727;
+                background: #050509; color: #f5f5f5; font-size: 13px;
+            " placeholder="https://media.seusite.com/video.php">
+            <small style="color:#777; font-size:11px;">Se deixar em branco, o sistema usa o endpoint geral acima ou o padrão configurado em código.</small>
+        </div>
+
         <div style="margin-top: 8px; padding:10px 12px; border-radius:10px; border:1px solid #272727; background:#0a0a10;">
             <div style="font-size:13px; color:#b0b0b0; margin-bottom:8px;">
                 <strong>Google Meet / Calendar (lives)</strong><br>

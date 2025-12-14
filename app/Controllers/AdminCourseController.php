@@ -15,6 +15,7 @@ use App\Models\CourseModuleExam;
 use App\Models\CourseExamQuestion;
 use App\Models\CourseExamOption;
 use App\Models\User;
+use App\Models\Setting;
 use App\Services\MailService;
 use App\Services\GoogleCalendarService;
 use App\Services\MediaStorageService;
@@ -528,14 +529,15 @@ class AdminCourseController extends Controller
         $isPublished = !empty($_POST['is_published']) ? 1 : 0;
         $moduleId = isset($_POST['module_id']) ? (int)$_POST['module_id'] : 0;
 
-        // Se um arquivo de vídeo foi enviado, tenta fazer upload para o servidor de mídia
         if (isset($_FILES['video_upload']) && !empty($_FILES['video_upload']['tmp_name'])) {
             $tmp = (string)($_FILES['video_upload']['tmp_name'] ?? '');
             $originalName = (string)($_FILES['video_upload']['name'] ?? '');
             $mime = (string)($_FILES['video_upload']['type'] ?? '');
 
             if ($tmp !== '' && is_uploaded_file($tmp)) {
-                $remoteVideoUrl = MediaStorageService::uploadFile($tmp, $originalName, $mime);
+                $defaultVideoEndpoint = defined('MEDIA_VIDEO_UPLOAD_ENDPOINT') ? MEDIA_VIDEO_UPLOAD_ENDPOINT : '';
+                $endpoint = trim(Setting::get('media_video_upload_endpoint', $defaultVideoEndpoint));
+                $remoteVideoUrl = MediaStorageService::uploadFileToEndpoint($tmp, $originalName, $mime, $endpoint);
                 if ($remoteVideoUrl !== null) {
                     $videoUrl = $remoteVideoUrl;
                 }
