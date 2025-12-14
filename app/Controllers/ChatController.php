@@ -425,11 +425,11 @@ class ChatController extends Controller
 
                 $currentBalance = User::getTokenBalance($userId);
 
-                // Plano free: quando acabar os tokens, sugere assinar um plano pago
+                // Plano free: quando acabar os tokens, sugere assinar um plano pago (com link clicável)
                 if ($isFreePlan && $currentBalance <= 0) {
                     $assistantReply = 'Você está usando o plano Free e os seus tokens gratuitos chegaram ao fim. '
                         . 'Para continuar usando o Tuquinha com mais limite e recursos, é só assinar um plano pago.\n\n'
-                        . 'Clique em "Planos e limites" no menu lateral ou acesse diretamente /planos para escolher o melhor plano para você.';
+                        . 'Você pode clicar em **Planos e limites** no menu lateral ou acessar diretamente [a página de planos](/planos) para escolher o melhor plano para você.';
 
                     Message::create($conversation->id, 'assistant', $assistantReply, null);
 
@@ -462,12 +462,12 @@ class ChatController extends Controller
                     exit;
                 }
 
-                // Planos pagos com limite mensal de tokens: sugerem compra de tokens extras
+                // Planos pagos com limite mensal de tokens: sugerem compra de tokens extras (com link clicável)
                 if ($planForContext && !$isFreePlan && isset($planForContext['monthly_token_limit']) && (int)$planForContext['monthly_token_limit'] > 0) {
                     if ($currentBalance <= 0) {
                         $assistantReply = 'Parece que o seu saldo de tokens deste plano chegou a zero. '
-                            . 'Para continuar usando o Tuquinha sem interrupções, você pode comprar tokens extras na página de planos.\n\n'
-                            . 'Clique em "Planos e limites" no menu lateral ou acesse diretamente /tokens/comprar para adicionar mais tokens ao seu saldo.';
+                            . 'Para continuar usando o Tuquinha sem interrupções, você pode comprar tokens extras.\n\n'
+                            . 'Clique em **Planos e limites** no menu lateral ou vá direto para [comprar tokens extras](/tokens/comprar) e adicionar mais tokens ao seu saldo.';
 
                         // Grava mensagem do assistente no histórico
                         Message::create($conversation->id, 'assistant', $assistantReply, null);
