@@ -33,7 +33,7 @@ $isEdit = !empty($lesson);
 
         <div>
             <label style="font-size:13px; color:var(--text-primary); display:block; margin-bottom:4px;">Link do vídeo</label>
-            <input type="text" name="video_url" required value="<?= htmlspecialchars($lesson['video_url'] ?? '') ?>" placeholder="Ex: https://www.youtube.com/watch?v=..." style="
+            <input type="text" name="video_url" value="<?= htmlspecialchars($lesson['video_url'] ?? '') ?>" placeholder="Ex: https://www.youtube.com/watch?v=..." style="
                 width:100%; padding:8px 10px; border-radius:8px; border:1px solid var(--border-subtle);
                 background:var(--surface-subtle); color:var(--text-primary); font-size:13px;">
             <small style="display:block; margin-top:4px; font-size:11px; color:var(--text-secondary);">
