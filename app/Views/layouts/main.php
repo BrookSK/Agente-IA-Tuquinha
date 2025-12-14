@@ -32,6 +32,8 @@ if (!empty($_SESSION['user_id'])) {
             --surface-card: #111118;
             --surface-subtle: #050509;
             --input-bg: #050509;
+            --scrollbar-track: #050509;
+            --scrollbar-thumb: rgba(255, 255, 255, 0.18);
         }
 
         /* Tema claro (hot / cold) controlado via atributo data-theme="light" no body */
@@ -42,10 +44,12 @@ if (!empty($_SESSION['user_id'])) {
             --accent-soft: #ff8a65;
             --text-primary: #1f2933;
             --text-secondary: #4b5563;
-            --border-subtle: #e5e7eb;
+            --border-subtle: #d1d5db;
             --surface-card: #ffffff;
             --surface-subtle: #fff5f5;
             --input-bg: #fff5f5;
+            --scrollbar-track: #f3f4f6;
+            --scrollbar-thumb: rgba(148, 163, 184, 0.9);
         }
         * {
             margin: 0;
@@ -273,12 +277,12 @@ if (!empty($_SESSION['user_id'])) {
         }
 
         .sidebar::-webkit-scrollbar-thumb {
-            background: rgba(255, 255, 255, 0.18);
+            background: var(--scrollbar-thumb);
             border-radius: 999px;
         }
 
         .sidebar::-webkit-scrollbar-thumb:hover {
-            background: rgba(255, 255, 255, 0.3);
+            background: var(--scrollbar-thumb);
         }
 
         /* Scrollbar global (janela) para combinar com o tema escuro */
@@ -290,12 +294,12 @@ if (!empty($_SESSION['user_id'])) {
 
         html::-webkit-scrollbar-track,
         body::-webkit-scrollbar-track {
-            background: var(--bg-main);
+            background: var(--scrollbar-track);
         }
 
         html::-webkit-scrollbar-thumb,
         body::-webkit-scrollbar-thumb {
-            background: rgba(255, 255, 255, 0.18);
+            background: var(--scrollbar-thumb);
             border-radius: 999px;
         }
 
@@ -321,7 +325,7 @@ if (!empty($_SESSION['user_id'])) {
         .main-content::-webkit-scrollbar-thumb,
         #persona-carousel::-webkit-scrollbar-thumb,
         #persona-default-list::-webkit-scrollbar-thumb {
-            background: rgba(255, 255, 255, 0.18);
+            background: var(--scrollbar-thumb);
             border-radius: 999px;
         }
 
@@ -335,7 +339,12 @@ if (!empty($_SESSION['user_id'])) {
         #persona-carousel,
         #persona-default-list {
             scrollbar-width: thin;
-            scrollbar-color: rgba(255, 255, 255, 0.4) transparent;
+            scrollbar-color: var(--scrollbar-thumb) transparent;
+        }
+
+        /* Bordas das pills um pouco mais visíveis no tema claro */
+        body[data-theme="light"] .env-pill {
+            border-color: rgba(148, 163, 184, 0.7);
         }
 
         @media (max-width: 900px) {
