@@ -13,17 +13,40 @@ $lessonTitle = trim((string)($lesson['title'] ?? ''));
 $lessonDescription = trim((string)($lesson['description'] ?? ''));
 $videoUrl = trim((string)($lesson['video_url'] ?? ''));
 
-// Detecta se o link é um arquivo de vídeo direto (ex.: .mp4, .webm, .ogg).
+// URL que será usada diretamente no elemento <video> do player próprio.
+$videoSourceUrl = $videoUrl;
+
+// Trata links do Google Drive, extraindo o ID do arquivo.
+$isDrive = false;
+$driveFileId = null;
+if ($videoSourceUrl !== '' && strpos($videoSourceUrl, 'drive.google.com') !== false) {
+    if (preg_match('~https?://drive\.google\.com/file/d/([^/]+)/~', $videoSourceUrl, $m)) {
+        $driveFileId = $m[1] ?? null;
+    } elseif (preg_match('~https?://drive\.google\.com/open\?id=([^&]+)~', $videoSourceUrl, $m)) {
+        $driveFileId = $m[1] ?? null;
+    }
+
+    if (!empty($driveFileId)) {
+        $isDrive = true;
+        // Tenta usar o endpoint de download/stream do Drive como fonte direta do vídeo.
+        $videoSourceUrl = 'https://drive.google.com/uc?export=download&id=' . urlencode($driveFileId);
+    }
+}
+
+// Detecta se (após ajustes) a URL parece um arquivo de vídeo direto (.mp4, .webm, .ogg).
 $isDirectVideoFile = false;
-if ($videoUrl !== '') {
-    if (preg_match('~\.(mp4|webm|ogg)(?:\?.*)?$~i', $videoUrl)) {
+if ($videoSourceUrl !== '') {
+    if (preg_match('~\.(mp4|webm|ogg)(?:\?.*)?$~i', $videoSourceUrl)) {
         $isDirectVideoFile = true;
     }
 }
 
-// Para links que não são arquivo direto, mantém o comportamento de embed (Drive, YouTube embed, etc.).
+// Usar player próprio quando for arquivo direto OU link tratado de Google Drive.
+$useCustomPlayer = $isDirectVideoFile || $isDrive;
+
+// Para links que não usam o player próprio, mantém o comportamento de embed (Drive, YouTube embed, etc.).
 $embedUrl = $videoUrl;
-if (!$isDirectVideoFile && $embedUrl !== '' && strpos($embedUrl, 'drive.google.com') !== false) {
+if (!$useCustomPlayer && $embedUrl !== '' && strpos($embedUrl, 'drive.google.com') !== false) {
     if (preg_match('~https?://drive\.google\.com/file/d/([^/]+)/~', $embedUrl, $m)) {
         $embedUrl = 'https://drive.google.com/file/d/' . $m[1] . '/preview';
     } elseif (preg_match('~https?://drive\.google\.com/open\?id=([^&]+)~', $embedUrl, $m)) {
@@ -86,11 +109,11 @@ $canCommentLesson = $user && ($isEnrolled || $isOwner || $isAdmin);
                     Nenhum vídeo foi configurado para esta aula ainda.
                 </div>
             <?php else: ?>
-                <?php if ($isDirectVideoFile): ?>
+                <?php if ($useCustomPlayer): ?>
                     <div style="position:relative; padding-bottom:56.25%; height:0; overflow:hidden; border-radius:10px; background:#000;">
                         <video
                             id="lesson-video"
-                            src="<?= htmlspecialchars($videoUrl) ?>"
+                            src="<?= htmlspecialchars($videoSourceUrl) ?>"
                             preload="metadata"
                             playsinline
                             style="position:absolute; top:0; left:0; width:100%; height:100%; background:#000;">
