@@ -95,8 +95,8 @@ if (!empty($user) && !empty($canAccessContent) && !empty($lessons)) {
 ?>
 <div style="max-width: 960px; margin: 0 auto;">
     <div style="display:flex; flex-wrap:wrap; gap:20px; margin-bottom:18px;">
-        <div style="flex:1 1 260px; min-width:260px; max-width:360px; border-radius:20px; overflow:hidden; border:1px solid #272727; background:#050509; box-shadow:0 18px 35px rgba(0,0,0,0.55);">
-            <div style="width:100%; height:220px; overflow:hidden; background:#111118;">
+        <div style="flex:1 1 260px; min-width:260px; max-width:360px; border-radius:20px; overflow:hidden; border:1px solid var(--border-subtle); background:var(--surface-card); box-shadow:0 18px 35px rgba(0,0,0,0.25);">
+            <div style="width:100%; height:220px; overflow:hidden; background:var(--surface-subtle);">
                 <?php if ($image !== ''): ?>
                     <img src="<?= htmlspecialchars($image) ?>" alt="<?= htmlspecialchars($title) ?>" style="width:100%; height:100%; object-fit:cover; display:block;">
                 <?php else: ?>
@@ -110,7 +110,7 @@ if (!empty($user) && !empty($canAccessContent) && !empty($lessons)) {
                     <?= htmlspecialchars($title) ?>
                 </div>
                 <?php if ($short !== ''): ?>
-                    <div style="color:#b0b0b0; line-height:1.4; margin-bottom:6px;">
+                    <div style="color:var(--text-secondary); line-height:1.4; margin-bottom:6px;">
                         <?= htmlspecialchars($short) ?>
                     </div>
                 <?php endif; ?>
@@ -122,7 +122,7 @@ if (!empty($user) && !empty($canAccessContent) && !empty($lessons)) {
                             Gratuito
                         <?php endif; ?>
                     </div>
-                    <div style="font-size:11px; color:#b0b0b0; text-align:right;">
+                    <div style="font-size:11px; color:var(--text-secondary); text-align:right;">
                         <?php if ($allowPlanOnly): ?>
                             <div>Planos com flag de cursos</div>
                         <?php endif; ?>
@@ -150,13 +150,13 @@ if (!empty($user) && !empty($canAccessContent) && !empty($lessons)) {
             <h1 style="font-size:22px; margin-bottom:8px; font-weight:650;">Curso: <?= htmlspecialchars($title) ?></h1>
 
             <?php if ($user && !empty($canAccessContent)): ?>
-                <div style="font-size:12px; color:#b0b0b0; margin-bottom:6px;">
+                <div style="font-size:12px; color:var(--text-secondary); margin-bottom:6px;">
                     Progresso no curso: <?= isset($courseProgressPercent) ? (int)$courseProgressPercent : 0 ?>%
                 </div>
             <?php endif; ?>
 
             <?php if ($description !== ''): ?>
-                <div style="font-size:13px; color:#d0d0d0; line-height:1.5; margin-bottom:10px; white-space:pre-line;">
+                <div style="font-size:13px; color:var(--text-secondary); line-height:1.5; margin-bottom:10px; white-space:pre-line;">
                     <?= htmlspecialchars($description) ?>
                 </div>
             <?php endif; ?>
@@ -254,7 +254,7 @@ if (!empty($user) && !empty($canAccessContent) && !empty($lessons)) {
                 $unassignedLessons = $unassignedLessons ?? [];
             ?>
             <?php if (empty($user) || empty($canAccessContent)): ?>
-                <div style="color:#b0b0b0; font-size:13px;">
+                <div style="color:var(--text-secondary); font-size:13px;">
                     <?php if (empty($user)): ?>
                         Entre ou faça login para ver as aulas deste curso.
                     <?php else: ?>
@@ -262,9 +262,9 @@ if (!empty($user) && !empty($canAccessContent) && !empty($lessons)) {
                     <?php endif; ?>
                 </div>
             <?php elseif (empty($modulesData) && empty($unassignedLessons)): ?>
-                <div style="color:#b0b0b0; font-size:13px;">Nenhuma aula cadastrada ainda.</div>
+                <div style="color:var(--text-secondary); font-size:13px;">Nenhuma aula cadastrada ainda.</div>
             <?php else: ?>
-                <div style="border-radius:12px; border:1px solid #272727; background:#111118; overflow:hidden;">
+                <div style="border-radius:12px; border:1px solid var(--border-subtle); background:var(--surface-card); overflow:hidden;">
                     <?php if (!empty($modulesData)): ?>
                         <?php foreach ($modulesData as $mIndex => $mData): ?>
                             <?php
@@ -354,7 +354,7 @@ if (!empty($user) && !empty($canAccessContent) && !empty($lessons)) {
                                 </div>
 
                                 <?php if (!empty($moduleLessons)): ?>
-                                    <div style="margin-top:8px; border-radius:8px; border:1px solid #272727; background:#0b0b10; overflow:hidden;">
+                                    <div style="margin-top:8px; border-radius:8px; border:1px solid var(--border-subtle); background:var(--surface-subtle); overflow:hidden;">
                                         <?php foreach ($moduleLessons as $idx => $lesson): ?>
                                             <?php
                                                 $ltitle = trim((string)($lesson['title'] ?? ''));
@@ -378,7 +378,7 @@ if (!empty($user) && !empty($canAccessContent) && !empty($lessons)) {
                                                     $actionLabel = 'Assistir';
                                                 }
                                             ?>
-                                            <div id="lesson-<?= $lessonId ?>" style="padding:8px 10px; border-bottom:1px solid #272727;">
+                                            <div id="lesson-<?= $lessonId ?>" style="padding:8px 10px; border-bottom:1px solid var(--border-subtle);">
                                                 <div style="display:flex; justify-content:space-between; gap:8px; align-items:center;">
                                                     <div style="font-size:13px; font-weight:600; display:flex; align-items:center; gap:6px; min-width:0;">
                                                         <span style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">Aula <?= $number ?>: <?= htmlspecialchars($ltitle) ?></span>
@@ -400,7 +400,7 @@ if (!empty($user) && !empty($canAccessContent) && !empty($lessons)) {
                                                     <?php endif; ?>
                                                 </div>
                                                 <?php if ($ldesc !== ''): ?>
-                                                    <div style="margin-top:4px; font-size:12px; color:#b0b0b0; line-height:1.4;">
+                                                    <div style="margin-top:4px; font-size:12px; color:var(--text-secondary); line-height:1.4;">
                                                         <?= htmlspecialchars($ldesc) ?>
                                                     </div>
                                                 <?php endif; ?>
@@ -417,7 +417,7 @@ if (!empty($user) && !empty($canAccessContent) && !empty($lessons)) {
                     <?php if (!empty($unassignedLessons)): ?>
                         <div style="padding:10px 12px;">
                             <div style="font-size:14px; font-weight:600; margin-bottom:4px;">Aulas sem módulo</div>
-                            <div style="border-radius:8px; border:1px solid #272727; background:#0b0b10; overflow:hidden;">
+                            <div style="border-radius:8px; border:1px solid var(--border-subtle); background:var(--surface-subtle); overflow:hidden;">
                                 <?php foreach ($unassignedLessons as $idx => $lesson): ?>
                                     <?php
                                         $ltitle = trim((string)($lesson['title'] ?? ''));
@@ -463,7 +463,7 @@ if (!empty($user) && !empty($canAccessContent) && !empty($lessons)) {
                                             <?php endif; ?>
                                         </div>
                                         <?php if ($ldesc !== ''): ?>
-                                            <div style="margin-top:4px; font-size:12px; color:#b0b0b0; line-height:1.4;">
+                                            <div style="margin-top:4px; font-size:12px; color:var(--text-secondary); line-height:1.4;">
                                                 <?= htmlspecialchars($ldesc) ?>
                                             </div>
                                         <?php endif; ?>
@@ -479,16 +479,16 @@ if (!empty($user) && !empty($canAccessContent) && !empty($lessons)) {
         <div id="lives" style="flex:1 1 260px; min-width:240px;">
             <h2 style="font-size:16px; margin-bottom:8px;">Lives deste curso</h2>
             <?php if (!$user): ?>
-                <div style="color:#b0b0b0; font-size:13px;">Entre na sua conta e inscreva-se neste curso para ver o calendário de lives.</div>
+                <div style="color:var(--text-secondary); font-size:13px;">Entre na sua conta e inscreva-se neste curso para ver o calendário de lives.</div>
             <?php elseif (empty($canAccessContent) && empty($_SESSION['is_admin'])): ?>
-                <div style="color:#b0b0b0; font-size:13px;">Para ver e participar das lives, você precisa ter um plano com cursos ou concluir a compra deste curso.</div>
+                <div style="color:var(--text-secondary); font-size:13px;">Para ver e participar das lives, você precisa ter um plano com cursos ou concluir a compra deste curso.</div>
             <?php elseif (!$isEnrolled && empty($_SESSION['is_admin'])): ?>
-                <div style="color:#b0b0b0; font-size:13px;">Inscreva-se neste curso para ver e participar das lives ao vivo.</div>
+                <div style="color:var(--text-secondary); font-size:13px;">Inscreva-se neste curso para ver e participar das lives ao vivo.</div>
             <?php else: ?>
                 <?php if (empty($lives)): ?>
-                    <div style="color:#b0b0b0; font-size:13px;">Nenhuma próxima live agendada no momento.</div>
+                    <div style="color:var(--text-secondary); font-size:13px;">Nenhuma próxima live agendada no momento.</div>
                 <?php else: ?>
-                    <div style="border-radius:12px; border:1px solid #272727; background:#111118; overflow:hidden;">
+                    <div style="border-radius:12px; border:1px solid var(--border-subtle); background:var(--surface-card); overflow:hidden;">
                         <?php foreach ($lives as $live): ?>
                             <?php
                                 $ltitle = trim((string)($live['title'] ?? ''));
@@ -509,7 +509,7 @@ if (!empty($user) && !empty($canAccessContent) && !empty($lessons)) {
                                     </div>
                                 <?php endif; ?>
                                 <?php if ($ldesc !== ''): ?>
-                                    <div style="font-size:12px; color:#b0b0b0; margin-bottom:4px; line-height:1.4;">
+                                    <div style="font-size:12px; color:var(--text-secondary); margin-bottom:4px; line-height:1.4;">
                                         <?= htmlspecialchars($ldesc) ?>
                                     </div>
                                 <?php endif; ?>

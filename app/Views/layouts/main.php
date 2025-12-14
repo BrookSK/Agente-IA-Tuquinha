@@ -64,6 +64,26 @@ if (!empty($_SESSION['user_id'])) {
         }
         a { color: inherit; text-decoration: none; }
 
+        /* Overrides globais para views antigas no tema claro (inline styles escuros) */
+        body[data-theme="light"] [style*="background:#111118"] {
+            background: var(--surface-card) !important;
+        }
+        body[data-theme="light"] [style*="background:#050509"] {
+            background: var(--surface-subtle) !important;
+        }
+        body[data-theme="light"] [style*="background:#0b0b10"] {
+            background: var(--surface-subtle) !important;
+        }
+        body[data-theme="light"] [style*="border:1px solid #272727"] {
+            border-color: var(--border-subtle) !important;
+        }
+        body[data-theme="light"] [style*="color:#f5f5f5"] {
+            color: var(--text-primary) !important;
+        }
+        body[data-theme="light"] [style*="color:#b0b0b0"] {
+            color: var(--text-secondary) !important;
+        }
+
         .sidebar {
             width: 260px;
             background: radial-gradient(circle at top left, var(--accent) 0, var(--bg-main) 40%);
