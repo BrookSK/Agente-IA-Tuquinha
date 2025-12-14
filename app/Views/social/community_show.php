@@ -18,7 +18,7 @@ $topicsCount = is_array($topics) ? count($topics) : 0;
         </div>
     <?php endif; ?>
 
-    <section style="background:#111118; border-radius:16px; border:1px solid #272727; padding:12px 14px; display:flex; gap:12px; align-items:flex-start; flex-wrap:wrap;">
+    <section style="background:var(--surface-card); border-radius:16px; border:1px solid var(--border-subtle); padding:12px 14px; display:flex; gap:12px; align-items:flex-start; flex-wrap:wrap;">
         <div style="width:64px; height:64px; border-radius:14px; background:radial-gradient(circle at 30% 20%, #fff 0, #ff8a65 25%, #e53935 65%, #050509 100%);"></div>
         <div style="flex:1 1 200px; min-width:0;">
             <div style="display:flex; justify-content:space-between; align-items:center; gap:8px;">
@@ -27,12 +27,12 @@ $topicsCount = is_array($topics) ? count($topics) : 0;
                         <?= htmlspecialchars($communityName, ENT_QUOTES, 'UTF-8') ?>
                     </h1>
                     <?php if (!empty($community['description'])): ?>
-                        <p style="font-size:13px; color:#b0b0b0;">
+                        <p style="font-size:13px; color:var(--text-secondary);">
                             <?= nl2br(htmlspecialchars((string)$community['description'], ENT_QUOTES, 'UTF-8')) ?>
                         </p>
                     <?php endif; ?>
                 </div>
-                <div style="text-align:right; font-size:12px; color:#b0b0b0;">
+                <div style="text-align:right; font-size:12px; color:var(--text-secondary);">
                     <div><?= (int)$membersCount ?> membro(s)</div>
                     <div><?= (int)$topicsCount ?> tópico(s)</div>
                 </div>
@@ -52,37 +52,37 @@ $topicsCount = is_array($topics) ? count($topics) : 0;
     </section>
 
     <div style="display:grid; grid-template-columns:minmax(0,2fr) minmax(0,1.1fr); gap:12px; align-items:flex-start;">
-        <section style="background:#111118; border-radius:16px; border:1px solid #272727; padding:12px 14px;">
+        <section style="background:var(--surface-card); border-radius:16px; border:1px solid var(--border-subtle); padding:12px 14px;">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
                 <h2 style="font-size:16px;">Tópicos</h2>
                 <?php if ($isMember): ?>
-                    <span style="font-size:12px; color:#b0b0b0;">Crie um novo assunto para conversar</span>
+                    <span style="font-size:12px; color:var(--text-secondary);">Crie um novo assunto para conversar</span>
                 <?php else: ?>
-                    <span style="font-size:12px; color:#b0b0b0;">Entre na comunidade para criar tópicos</span>
+                    <span style="font-size:12px; color:var(--text-secondary);">Entre na comunidade para criar tópicos</span>
                 <?php endif; ?>
             </div>
 
             <?php if ($isMember): ?>
                 <form action="/comunidades/topicos/novo" method="post" style="margin-bottom:10px; display:flex; flex-direction:column; gap:6px;">
                     <input type="hidden" name="community_id" value="<?= (int)($community['id'] ?? 0) ?>">
-                    <input type="text" name="title" placeholder="Título do tópico" style="width:100%; padding:6px 8px; border-radius:8px; border:1px solid #272727; background:#050509; color:#f5f5f5; font-size:13px;">
-                    <textarea name="body" rows="3" placeholder="Mensagem inicial do tópico (opcional)" style="width:100%; padding:6px 8px; border-radius:8px; border:1px solid #272727; background:#050509; color:#f5f5f5; font-size:13px; resize:vertical;"></textarea>
-                    <button type="submit" style="align-self:flex-end; border:none; border-radius:999px; padding:5px 10px; background:#111118; border:1px solid #272727; color:#f5f5f5; font-size:12px; cursor:pointer;">Criar tópico</button>
+                    <input type="text" name="title" placeholder="Título do tópico" style="width:100%; padding:6px 8px; border-radius:8px; border:1px solid var(--border-subtle); background:var(--input-bg); color:var(--text-primary); font-size:13px;">
+                    <textarea name="body" rows="3" placeholder="Mensagem inicial do tópico (opcional)" style="width:100%; padding:6px 8px; border-radius:8px; border:1px solid var(--border-subtle); background:var(--input-bg); color:var(--text-primary); font-size:13px; resize:vertical;"></textarea>
+                    <button type="submit" style="align-self:flex-end; border:none; border-radius:999px; padding:5px 10px; background:var(--surface-subtle); border:1px solid var(--border-subtle); color:var(--text-primary); font-size:12px; cursor:pointer;">Criar tópico</button>
                 </form>
             <?php endif; ?>
 
             <?php if (empty($topics)): ?>
-                <p style="font-size:13px; color:#b0b0b0;">Nenhum tópico criado ainda. Comece o primeiro!</p>
+                <p style="font-size:13px; color:var(--text-secondary);">Nenhum tópico criado ainda. Comece o primeiro!</p>
             <?php else: ?>
                 <div style="display:flex; flex-direction:column; gap:6px;">
                     <?php foreach ($topics as $t): ?>
                         <a href="/comunidades/topicos/ver?topic_id=<?= (int)($t['id'] ?? 0) ?>" style="text-decoration:none;">
-                            <div style="background:#050509; border-radius:12px; border:1px solid #272727; padding:8px 10px;">
+                            <div style="background:var(--surface-subtle); border-radius:12px; border:1px solid var(--border-subtle); padding:8px 10px;">
                                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:3px;">
-                                    <div style="font-size:13px; font-weight:600; color:#f5f5f5;">
+                                    <div style="font-size:13px; font-weight:600; color:var(--text-primary);">
                                         <?= htmlspecialchars((string)($t['title'] ?? 'Tópico'), ENT_QUOTES, 'UTF-8') ?>
                                     </div>
-                                    <div style="font-size:11px; color:#b0b0b0;">
+                                    <div style="font-size:11px; color:var(--text-secondary);">
                                         <?php if (!empty($t['created_at'])): ?>
                                             <?= htmlspecialchars(date('d/m/Y H:i', strtotime((string)$t['created_at'])), ENT_QUOTES, 'UTF-8') ?>
                                         <?php endif; ?>
@@ -98,10 +98,10 @@ $topicsCount = is_array($topics) ? count($topics) : 0;
             <?php endif; ?>
         </section>
 
-        <aside style="background:#111118; border-radius:16px; border:1px solid #272727; padding:12px 14px;">
+        <aside style="background:var(--surface-card); border-radius:16px; border:1px solid var(--border-subtle); padding:12px 14px;">
             <h3 style="font-size:14px; margin-bottom:6px;">Membros</h3>
             <?php if (empty($members)): ?>
-                <p style="font-size:12px; color:#b0b0b0;">Nenhum membro listado ainda.</p>
+                <p style="font-size:12px; color:var(--text-secondary);">Nenhum membro listado ainda.</p>
             <?php else: ?>
                 <div style="display:flex; flex-direction:column; gap:6px;">
                     <?php foreach ($members as $m): ?>
@@ -111,11 +111,11 @@ $topicsCount = is_array($topics) ? count($topics) : 0;
                         $initial = mb_strtoupper(mb_substr($name, 0, 1, 'UTF-8'), 'UTF-8');
                         ?>
                         <a href="/perfil?user_id=<?= $memberId ?>" style="text-decoration:none;">
-                            <div style="display:flex; align-items:center; gap:8px; padding:4px 6px; border-radius:10px; border:1px solid #272727; background:#050509;">
+                            <div style="display:flex; align-items:center; gap:8px; padding:4px 6px; border-radius:10px; border:1px solid var(--border-subtle); background:var(--surface-subtle);">
                                 <div style="width:24px; height:24px; border-radius:50%; background:radial-gradient(circle at 30% 20%, #fff 0, #ff8a65 25%, #e53935 65%, #050509 100%); display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:700; color:#050509;">
                                     <?= htmlspecialchars($initial, ENT_QUOTES, 'UTF-8') ?>
                                 </div>
-                                <span style="font-size:12px; color:#f5f5f5;">
+                                <span style="font-size:12px; color:var(--text-primary);">
                                     <?= htmlspecialchars($name, ENT_QUOTES, 'UTF-8') ?>
                                 </span>
                             </div>

@@ -29,6 +29,9 @@ if (!empty($_SESSION['user_id'])) {
             --text-primary: #f5f5f5;
             --text-secondary: #b0b0b0;
             --border-subtle: #272727;
+            --surface-card: #111118;
+            --surface-subtle: #050509;
+            --input-bg: #050509;
         }
 
         /* Tema claro (hot / cold) controlado via atributo data-theme="light" no body */
@@ -40,6 +43,9 @@ if (!empty($_SESSION['user_id'])) {
             --text-primary: #1f2933;
             --text-secondary: #4b5563;
             --border-subtle: #e5e7eb;
+            --surface-card: #ffffff;
+            --surface-subtle: #fff5f5;
+            --input-bg: #fff5f5;
         }
         * {
             margin: 0;
@@ -131,6 +137,16 @@ if (!empty($_SESSION['user_id'])) {
             color: #050509;
             font-weight: 600;
         }
+        body[data-theme="light"] .sidebar-button {
+            background: #f3f4f6;
+            border-color: var(--border-subtle);
+            color: #111827;
+        }
+        body[data-theme="light"] .sidebar-button.primary {
+            background: linear-gradient(135deg, #fecaca, #fed7d7);
+            border-color: transparent;
+            color: #111827;
+        }
         .sidebar-button:hover {
             background: rgba(255, 255, 255, 0.06);
             border-color: rgba(255, 255, 255, 0.18);
@@ -181,6 +197,9 @@ if (!empty($_SESSION['user_id'])) {
             position: sticky;
             top: 0;
             z-index: 15;
+        }
+        body[data-theme="light"] .main-header {
+            background: linear-gradient(to bottom, rgba(255, 255, 255, 0.96), rgba(255, 255, 255, 0.92));
         }
         .main-header-title {
             font-size: 14px;
