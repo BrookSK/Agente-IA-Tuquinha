@@ -99,8 +99,127 @@ class ProfileController extends Controller
         $favoriteBooks = trim((string)($_POST['favorite_books'] ?? ''));
         $website = trim((string)($_POST['website'] ?? ''));
 
+        $language = trim((string)($_POST['language'] ?? ''));
+        $profileCategory = trim((string)($_POST['profile_category'] ?? ''));
+
+        $profilePrivacy = (string)($_POST['profile_privacy'] ?? 'public');
+        if (!in_array($profilePrivacy, ['public', 'private'], true)) {
+            $profilePrivacy = 'public';
+        }
+
+        $visibilityScope = (string)($_POST['visibility_scope'] ?? 'everyone');
+        if (!in_array($visibilityScope, ['everyone', 'community', 'friends'], true)) {
+            $visibilityScope = 'everyone';
+        }
+
+        $relationshipStatus = trim((string)($_POST['relationship_status'] ?? ''));
+        $birthday = trim((string)($_POST['birthday'] ?? ''));
+        $age = isset($_POST['age']) ? (int)$_POST['age'] : 0;
+        $children = trim((string)($_POST['children'] ?? ''));
+        $ethnicity = trim((string)($_POST['ethnicity'] ?? ''));
+        $mood = trim((string)($_POST['mood'] ?? ''));
+        $sexualOrientation = trim((string)($_POST['sexual_orientation'] ?? ''));
+        $style = trim((string)($_POST['style'] ?? ''));
+        $smokes = trim((string)($_POST['smokes'] ?? ''));
+        $drinks = trim((string)($_POST['drinks'] ?? ''));
+        $pets = trim((string)($_POST['pets'] ?? ''));
+        $hometown = trim((string)($_POST['hometown'] ?? ''));
+        $location = trim((string)($_POST['location'] ?? ''));
+        $sports = trim((string)($_POST['sports'] ?? ''));
+        $passions = trim((string)($_POST['passions'] ?? ''));
+        $activities = trim((string)($_POST['activities'] ?? ''));
+        $instagramRaw = trim((string)($_POST['instagram'] ?? ''));
+        $facebookRaw = trim((string)($_POST['facebook'] ?? ''));
+        $youtubeRaw = trim((string)($_POST['youtube'] ?? ''));
+
         if ($website !== '' && !preg_match('/^https?:\/\//i', $website)) {
             $website = 'https://' . $website;
+        }
+
+        // Normaliza URLs de redes sociais (aceita link completo ou apenas usuário)
+        $instagram = null;
+        if ($instagramRaw !== '') {
+            if (preg_match('/^https?:\/\//i', $instagramRaw)) {
+                $instagram = $instagramRaw;
+            } else {
+                $username = ltrim($instagramRaw, '@');
+                $instagram = 'https://instagram.com/' . $username;
+            }
+        }
+
+        $facebook = null;
+        if ($facebookRaw !== '') {
+            if (preg_match('/^https?:\/\//i', $facebookRaw)) {
+                $facebook = $facebookRaw;
+            } else {
+                $username = ltrim($facebookRaw, '@');
+                $facebook = 'https://facebook.com/' . $username;
+            }
+        }
+
+        $youtube = null;
+        if ($youtubeRaw !== '') {
+            if (preg_match('/^https?:\/\//i', $youtubeRaw)) {
+                $youtube = $youtubeRaw;
+            } else {
+                $channel = ltrim($youtubeRaw, '@');
+                $youtube = 'https://youtube.com/' . $channel;
+            }
+        }
+
+        // Avatar atual (caso não envie um novo, preserva o existente)
+        $existingProfile = UserSocialProfile::findByUserId($userId);
+        $avatarPath = $existingProfile['avatar_path'] ?? null;
+
+        // Upload opcional de nova foto de perfil
+        if (!empty($_FILES['avatar_file']) && is_array($_FILES['avatar_file'])) {
+            $uploadError = (int)($_FILES['avatar_file']['error'] ?? UPLOAD_ERR_NO_FILE);
+            if ($uploadError !== UPLOAD_ERR_NO_FILE) {
+                if ($uploadError !== UPLOAD_ERR_OK) {
+                    $_SESSION['social_error'] = 'Erro ao enviar a foto de perfil.';
+                    header('Location: /perfil');
+                    exit;
+                }
+
+                $tmp = $_FILES['avatar_file']['tmp_name'] ?? '';
+                $originalName = (string)($_FILES['avatar_file']['name'] ?? 'avatar');
+                $type = (string)($_FILES['avatar_file']['type'] ?? '');
+                $size = (int)($_FILES['avatar_file']['size'] ?? 0);
+
+                $maxSize = 2 * 1024 * 1024; // 2MB
+                if ($size <= 0 || $size > $maxSize) {
+                    $_SESSION['social_error'] = 'A foto de perfil deve ter até 2 MB.';
+                    header('Location: /perfil');
+                    exit;
+                }
+
+                if (!str_starts_with($type, 'image/')) {
+                    $_SESSION['social_error'] = 'Envie apenas arquivos de imagem (como JPG ou PNG) para a foto de perfil.';
+                    header('Location: /perfil');
+                    exit;
+                }
+
+                $publicDir = __DIR__ . '/../../public/uploads/avatars';
+                if (!is_dir($publicDir)) {
+                    @mkdir($publicDir, 0775, true);
+                }
+
+                $ext = strtolower((string)pathinfo($originalName, PATHINFO_EXTENSION));
+                if ($ext === '') {
+                    $ext = 'png';
+                }
+
+                $fileName = uniqid('avatar_', true) . '.' . $ext;
+                $targetPath = $publicDir . '/' . $fileName;
+
+                if (!@move_uploaded_file($tmp, $targetPath)) {
+                    $_SESSION['social_error'] = 'Não foi possível salvar a foto de perfil enviada. Tente novamente.';
+                    header('Location: /perfil');
+                    exit;
+                }
+
+                $avatarPath = '/public/uploads/avatars/' . $fileName;
+            }
         }
 
         try {
@@ -111,6 +230,30 @@ class ProfileController extends Controller
                 'favorite_movies' => $favoriteMovies !== '' ? $favoriteMovies : null,
                 'favorite_books' => $favoriteBooks !== '' ? $favoriteBooks : null,
                 'website' => $website !== '' ? $website : null,
+                'avatar_path' => $avatarPath,
+                'language' => $language !== '' ? $language : null,
+                'profile_category' => $profileCategory !== '' ? $profileCategory : null,
+                'profile_privacy' => $profilePrivacy,
+                'visibility_scope' => $visibilityScope,
+                'relationship_status' => $relationshipStatus !== '' ? $relationshipStatus : null,
+                'birthday' => $birthday !== '' ? $birthday : null,
+                'age' => $age > 0 ? $age : null,
+                'children' => $children !== '' ? $children : null,
+                'ethnicity' => $ethnicity !== '' ? $ethnicity : null,
+                'mood' => $mood !== '' ? $mood : null,
+                'sexual_orientation' => $sexualOrientation !== '' ? $sexualOrientation : null,
+                'style' => $style !== '' ? $style : null,
+                'smokes' => $smokes !== '' ? $smokes : null,
+                'drinks' => $drinks !== '' ? $drinks : null,
+                'pets' => $pets !== '' ? $pets : null,
+                'hometown' => $hometown !== '' ? $hometown : null,
+                'location' => $location !== '' ? $location : null,
+                'sports' => $sports !== '' ? $sports : null,
+                'passions' => $passions !== '' ? $passions : null,
+                'activities' => $activities !== '' ? $activities : null,
+                'instagram' => $instagram ?? null,
+                'facebook' => $facebook ?? null,
+                'youtube' => $youtube ?? null,
             ]);
 
             $_SESSION['social_success'] = 'Seu perfil social foi atualizado.';

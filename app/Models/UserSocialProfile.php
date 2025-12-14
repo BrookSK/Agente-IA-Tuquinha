@@ -37,12 +37,44 @@ class UserSocialProfile
                 favorite_movies = :favorite_movies,
                 favorite_books = :favorite_books,
                 website = :website,
+                avatar_path = :avatar_path,
+                language = :language,
+                profile_category = :profile_category,
+                profile_privacy = :profile_privacy,
+                visibility_scope = :visibility_scope,
+                relationship_status = :relationship_status,
+                birthday = :birthday,
+                age = :age,
+                children = :children,
+                ethnicity = :ethnicity,
+                mood = :mood,
+                sexual_orientation = :sexual_orientation,
+                style = :style,
+                smokes = :smokes,
+                drinks = :drinks,
+                pets = :pets,
+                hometown = :hometown,
+                location = :location,
+                sports = :sports,
+                passions = :passions,
+                activities = :activities,
+                instagram = :instagram,
+                facebook = :facebook,
+                youtube = :youtube,
                 updated_at = NOW()
                 WHERE user_id = :user_id');
         } else {
             $stmt = $pdo->prepare('INSERT INTO user_social_profiles
-                (user_id, about_me, interests, favorite_music, favorite_movies, favorite_books, website, visits_count, last_visit_at)
-                VALUES (:user_id, :about_me, :interests, :favorite_music, :favorite_movies, :favorite_books, :website, 0, NULL)');
+                (user_id, about_me, interests, favorite_music, favorite_movies, favorite_books, website,
+                 avatar_path, language, profile_category, profile_privacy, visibility_scope, relationship_status,
+                 birthday, age, children, ethnicity, mood, sexual_orientation, style, smokes, drinks, pets,
+                 hometown, location, sports, passions, activities, instagram, facebook, youtube,
+                 visits_count, last_visit_at)
+                VALUES (:user_id, :about_me, :interests, :favorite_music, :favorite_movies, :favorite_books, :website,
+                 :avatar_path, :language, :profile_category, :profile_privacy, :visibility_scope, :relationship_status,
+                 :birthday, :age, :children, :ethnicity, :mood, :sexual_orientation, :style, :smokes, :drinks, :pets,
+                 :hometown, :location, :sports, :passions, :activities, :instagram, :facebook, :youtube,
+                 0, NULL)');
         }
 
         $stmt->execute([
@@ -53,6 +85,30 @@ class UserSocialProfile
             'favorite_movies' => $data['favorite_movies'] ?? null,
             'favorite_books' => $data['favorite_books'] ?? null,
             'website' => $data['website'] ?? null,
+            'avatar_path' => $data['avatar_path'] ?? null,
+            'language' => $data['language'] ?? null,
+            'profile_category' => $data['profile_category'] ?? null,
+            'profile_privacy' => $data['profile_privacy'] ?? null,
+            'visibility_scope' => $data['visibility_scope'] ?? null,
+            'relationship_status' => $data['relationship_status'] ?? null,
+            'birthday' => $data['birthday'] ?? null,
+            'age' => $data['age'] ?? null,
+            'children' => $data['children'] ?? null,
+            'ethnicity' => $data['ethnicity'] ?? null,
+            'mood' => $data['mood'] ?? null,
+            'sexual_orientation' => $data['sexual_orientation'] ?? null,
+            'style' => $data['style'] ?? null,
+            'smokes' => $data['smokes'] ?? null,
+            'drinks' => $data['drinks'] ?? null,
+            'pets' => $data['pets'] ?? null,
+            'hometown' => $data['hometown'] ?? null,
+            'location' => $data['location'] ?? null,
+            'sports' => $data['sports'] ?? null,
+            'passions' => $data['passions'] ?? null,
+            'activities' => $data['activities'] ?? null,
+            'instagram' => $data['instagram'] ?? null,
+            'facebook' => $data['facebook'] ?? null,
+            'youtube' => $data['youtube'] ?? null,
         ]);
     }
 
