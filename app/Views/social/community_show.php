@@ -61,6 +61,8 @@ if (is_array($members)) {
 }
 $moderatorsText = !empty($moderatorNames) ? implode(', ', $moderatorNames) : '';
 
+$canModerate = !empty($canModerate);
+
 ?>
 <div style="max-width: 980px; margin: 0 auto; display:flex; flex-direction:column; gap:14px;">
     <?php if (!empty($error)): ?>
@@ -143,6 +145,9 @@ $moderatorsText = !empty($moderatorNames) ? implode(', ', $moderatorNames) : '';
 
             <div style="margin-top:8px; display:flex; flex-wrap:wrap; gap:8px; align-items:center;">
                 <a href="/comunidades" style="font-size:12px; color:#ff6f60; text-decoration:none;">Voltar para lista de comunidades</a>
+                <?php if ($canModerate): ?>
+                    <a href="/comunidades/editar?slug=<?= urlencode($slug) ?>" style="font-size:12px; color:#ff6f60; text-decoration:none;">Editar comunidade</a>
+                <?php endif; ?>
                 <?php if ($isMember): ?>
                     <span style="font-size:12px; color:#8bc34a;">Você é membro desta comunidade.</span>
                 <?php else: ?>
@@ -151,7 +156,6 @@ $moderatorsText = !empty($moderatorNames) ? implode(', ', $moderatorNames) : '';
                         <button type="submit" style="border:none; border-radius:999px; padding:5px 10px; background:linear-gradient(135deg,#e53935,#ff6f60); color:#050509; font-size:12px; font-weight:600; cursor:pointer;">Participar da comunidade</button>
                     </form>
                 <?php endif; ?>
-
                 <a href="#topics-section" style="font-size:12px; padding:4px 9px; border-radius:999px; border:1px solid var(--border-subtle); background:var(--surface-subtle); color:var(--text-primary); text-decoration:none;">Ver fóruns/tópicos</a>
                 <a href="/comunidades/membros?slug=<?= urlencode($slug) ?>" style="font-size:12px; padding:4px 9px; border-radius:999px; border:1px solid var(--border-subtle); background:var(--surface-subtle); color:var(--text-primary); text-decoration:none;">Ver todos os membros</a>
                 <a href="/comunidades/enquetes?slug=<?= urlencode($slug) ?>" style="font-size:12px; padding:4px 9px; border-radius:999px; border:1px solid var(--border-subtle); background:var(--surface-subtle); color:var(--text-primary); text-decoration:none;">Enquetes da comunidade</a>

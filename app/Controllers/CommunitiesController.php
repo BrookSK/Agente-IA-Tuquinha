@@ -5,6 +5,7 @@ namespace App\Controllers;
 use App\Core\Controller;
 use App\Models\User;
 use App\Models\Community;
+use App\Models\CommunityCategory;
 use App\Models\CommunityMember;
 use App\Models\CommunityTopic;
 use App\Models\CommunityTopicPost;
@@ -164,7 +165,7 @@ class CommunitiesController extends Controller
         $error = $_SESSION['communities_error'] ?? null;
         unset($_SESSION['communities_success'], $_SESSION['communities_error']);
 
-        $categories = Community::allCategories();
+        $categories = CommunityCategory::allActiveNames();
 
         $this->view('social/communities', [
             'pageTitle' => 'Comunidades do Tuquinha',
@@ -182,7 +183,7 @@ class CommunitiesController extends Controller
     {
         $user = $this->requireLogin();
 
-        $categories = Community::allCategories();
+        $categories = CommunityCategory::allActiveNames();
 
         $error = $_SESSION['communities_error'] ?? null;
         unset($_SESSION['communities_error']);
@@ -319,6 +320,142 @@ class CommunitiesController extends Controller
         exit;
     }
 
+    public function editForm(): void
+    {
+        $user = $this->requireLogin();
+
+        $slug = trim((string)($_GET['slug'] ?? ''));
+        if ($slug === '') {
+            header('Location: /comunidades');
+            exit;
+        }
+
+        $community = Community::findBySlug($slug);
+        if (!$community || empty($community['is_active'])) {
+            $_SESSION['communities_error'] = 'Comunidade não encontrada.';
+            header('Location: /comunidades');
+            exit;
+        }
+
+        $this->ensureCommunityModerator($community, $user);
+
+        $categories = CommunityCategory::allActiveNames();
+
+        $error = $_SESSION['communities_error'] ?? null;
+        unset($_SESSION['communities_error']);
+
+        $old = $_SESSION['communities_edit_old'] ?? [];
+        unset($_SESSION['communities_edit_old']);
+
+        if (empty($old)) {
+            $old = [
+                'name' => (string)($community['name'] ?? ''),
+                'description' => (string)($community['description'] ?? ''),
+                'language' => (string)($community['language'] ?? ''),
+                'category' => (string)($community['category'] ?? ''),
+                'community_type' => (string)($community['community_type'] ?? 'public'),
+                'posting_policy' => (string)($community['posting_policy'] ?? 'any_member'),
+                'forum_type' => (string)($community['forum_type'] ?? 'non_anonymous'),
+            ];
+        }
+
+        $this->view('social/community_edit', [
+            'pageTitle' => 'Editar comunidade',
+            'user' => $user,
+            'community' => $community,
+            'categories' => $categories,
+            'error' => $error,
+            'old' => $old,
+        ]);
+    }
+
+    public function edit(): void
+    {
+        $user = $this->requireLogin();
+
+        $communityId = isset($_POST['community_id']) ? (int)$_POST['community_id'] : 0;
+        if ($communityId <= 0) {
+            $_SESSION['communities_error'] = 'Comunidade inválida.';
+            header('Location: /comunidades');
+            exit;
+        }
+
+        $community = Community::findById($communityId);
+        if (!$community || empty($community['is_active'])) {
+            $_SESSION['communities_error'] = 'Comunidade não encontrada.';
+            header('Location: /comunidades');
+            exit;
+        }
+
+        $this->ensureCommunityModerator($community, $user);
+
+        $name = trim((string)($_POST['name'] ?? ''));
+        $description = trim((string)($_POST['description'] ?? ''));
+        $language = trim((string)($_POST['language'] ?? ''));
+        $category = trim((string)($_POST['category'] ?? ''));
+        $communityType = (string)($_POST['community_type'] ?? 'public');
+        $postingPolicy = (string)($_POST['posting_policy'] ?? 'any_member');
+        $forumType = (string)($_POST['forum_type'] ?? 'non_anonymous');
+
+        if ($communityType !== 'private') {
+            $communityType = 'public';
+        }
+        if (!in_array($postingPolicy, ['any_member', 'owner_moderators'], true)) {
+            $postingPolicy = 'any_member';
+        }
+        if (!in_array($forumType, ['non_anonymous', 'anonymous'], true)) {
+            $forumType = 'non_anonymous';
+        }
+
+        $old = [
+            'name' => $name,
+            'description' => $description,
+            'language' => $language,
+            'category' => $category,
+            'community_type' => $communityType,
+            'posting_policy' => $postingPolicy,
+            'forum_type' => $forumType,
+        ];
+
+        if ($name === '') {
+            $_SESSION['communities_error'] = 'Dê um nome para a comunidade.';
+            $_SESSION['communities_edit_old'] = $old;
+            header('Location: /comunidades/editar?slug=' . urlencode((string)($community['slug'] ?? '')));
+            exit;
+        }
+
+        $coverImagePath = (string)($community['cover_image_path'] ?? $community['image_path'] ?? '');
+        if (!empty($_FILES['cover_image']) && is_array($_FILES['cover_image'])) {
+            $uploadError = (int)($_FILES['cover_image']['error'] ?? UPLOAD_ERR_NO_FILE);
+            if ($uploadError === UPLOAD_ERR_OK) {
+                $tmp = (string)($_FILES['cover_image']['tmp_name'] ?? '');
+                $originalName = (string)($_FILES['cover_image']['name'] ?? '');
+                $type = (string)($_FILES['cover_image']['type'] ?? '');
+                if ($tmp !== '' && is_uploaded_file($tmp)) {
+                    $url = MediaStorageService::uploadFile($tmp, $originalName, $type);
+                    if ($url !== null) {
+                        $coverImagePath = $url;
+                    }
+                }
+            }
+        }
+
+        Community::update($communityId, [
+            'name' => $name,
+            'description' => $description !== '' ? $description : null,
+            'language' => $language !== '' ? $language : null,
+            'category' => $category !== '' ? $category : null,
+            'community_type' => $communityType,
+            'posting_policy' => $postingPolicy,
+            'forum_type' => $forumType,
+            'cover_image_path' => $coverImagePath !== '' ? $coverImagePath : null,
+        ]);
+
+        $_SESSION['communities_success'] = 'Comunidade atualizada com sucesso.';
+        header('Location: /comunidades/ver?slug=' . urlencode((string)($community['slug'] ?? '')));
+        exit;
+    }
+
     public function show(): void
     {
         $user = $this->requireLogin();
@@ -351,6 +488,20 @@ class CommunitiesController extends Controller
         $members = CommunityMember::allMembersWithUser($communityId);
         $topics = CommunityTopic::allByCommunity($communityId, 50);
 
+        $canModerate = !empty($_SESSION['is_admin']);
+        if (!$canModerate) {
+            $ownerId = (int)($community['owner_user_id'] ?? 0);
+            if ($ownerId === $userId) {
+                $canModerate = true;
+            } else {
+                $member = CommunityMember::findMember($communityId, $userId);
+                $role = (string)($member['role'] ?? 'member');
+                if ($role === 'moderator') {
+                    $canModerate = true;
+                }
+            }
+        }
+
         $success = $_SESSION['communities_success'] ?? null;
         $error = $_SESSION['communities_error'] ?? null;
         unset($_SESSION['communities_success'], $_SESSION['communities_error']);
@@ -362,6 +513,7 @@ class CommunitiesController extends Controller
             'members' => $members,
             'topics' => $topics,
             'isMember' => $isMember,
+            'canModerate' => $canModerate,
             'success' => $success,
             'error' => $error,
         ]);

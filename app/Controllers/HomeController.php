@@ -9,7 +9,7 @@ class HomeController extends Controller
     public function index(): void
     {
         $this->view('home/index', [
-            'pageTitle' => 'Agente IA - Tuquinha',
+            'pageTitle' => 'Resenha 2.0 - Tuquinha',
         ]);
     }
 }

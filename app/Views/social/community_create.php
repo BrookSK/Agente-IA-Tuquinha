@@ -48,14 +48,17 @@ $moderatorsEmails = (string)($old['moderators_emails'] ?? '');
                 </div>
                 <div style="flex:0 0 220px;">
                     <label for="category" style="display:block; font-size:12px; color:var(--text-secondary); margin-bottom:3px;">Categoria</label>
-                    <input id="category" name="category" list="community-categories" type="text" value="<?= htmlspecialchars($category, ENT_QUOTES, 'UTF-8') ?>" placeholder="Ex: Pessoas, Estudos, Música" style="width:100%; padding:6px 8px; border-radius:8px; border:1px solid var(--border-subtle); background:var(--surface-subtle); color:var(--text-primary); font-size:13px;">
-                    <?php if (!empty($categories)): ?>
-                        <datalist id="community-categories">
+                    <select id="category" name="category" style="width:100%; padding:6px 8px; border-radius:8px; border:1px solid var(--border-subtle); background:var(--surface-subtle); color:var(--text-primary); font-size:13px;">
+                        <option value="">Selecione</option>
+                        <?php if (!empty($categories)): ?>
                             <?php foreach ($categories as $c): ?>
-                                <option value="<?= htmlspecialchars((string)$c, ENT_QUOTES, 'UTF-8') ?>"></option>
+                                <?php $cStr = (string)$c; ?>
+                                <option value="<?= htmlspecialchars($cStr, ENT_QUOTES, 'UTF-8') ?>" <?= $category === $cStr ? 'selected' : '' ?>>
+                                    <?= htmlspecialchars($cStr, ENT_QUOTES, 'UTF-8') ?>
+                                </option>
                             <?php endforeach; ?>
-                        </datalist>
-                    <?php endif; ?>
+                        <?php endif; ?>
+                    </select>
                 </div>
             </div>
 

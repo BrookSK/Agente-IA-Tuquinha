@@ -4,7 +4,7 @@
 
 use App\Models\CoursePartner;
 
-$pageTitle = $pageTitle ?? 'Agente IA - Tuquinha';
+$pageTitle = $pageTitle ?? 'Resenha 2.0 - Tuquinha';
 
 $isCoursePartner = false;
 if (!empty($_SESSION['user_id'])) {
@@ -421,7 +421,7 @@ if (!empty($_SESSION['user_id'])) {
             <div class="brand">
                 <div class="brand-logo"><img src="/public/favicon.png" alt="Tuquinha" style="width:100%; height:100%; display:block; object-fit:cover;"></div>
                 <div>
-                    <div class="brand-text-title">Agente IA - Tuquinha</div>
+                    <div class="brand-text-title">Resenha 2.0 - Tuquinha</div>
                     <div class="brand-text-sub">Branding vivo na veia</div>
                 </div>
             </div>
@@ -557,6 +557,10 @@ if (!empty($_SESSION['user_id'])) {
                     <a href="/admin/assinaturas" class="sidebar-button" style="margin-top: 6px;">
                         <span class="icon">📑</span>
                         <span>Assinaturas</span>
+                    </a>
+                    <a href="/admin/comunidade/categorias" class="sidebar-button" style="margin-top: 6px;">
+                        <span class="icon">💬</span>
+                        <span>Categorias de comunidades</span>
                     </a>
                     <!-- <a href="/debug/asaas" class="sidebar-button" style="margin-top: 6px;">
                         <span class="icon">🧪</span>

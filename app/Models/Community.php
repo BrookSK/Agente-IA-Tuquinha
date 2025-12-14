@@ -102,10 +102,37 @@ class Community
 
     public static function allCategories(): array
     {
+        return CommunityCategory::allActiveNames();
+    }
+
+    public static function update(int $id, array $data): void
+    {
+        if ($id <= 0) {
+            return;
+        }
+
         $pdo = Database::getConnection();
-        $stmt = $pdo->query('SELECT DISTINCT category FROM communities WHERE is_active = 1 AND category IS NOT NULL AND category <> "" ORDER BY category ASC');
-        $rows = $stmt->fetchAll(PDO::FETCH_COLUMN) ?: [];
-        return array_map(static fn($c) => (string)$c, $rows);
+        $stmt = $pdo->prepare('UPDATE communities SET
+                name = :name,
+                description = :description,
+                language = :language,
+                category = :category,
+                community_type = :community_type,
+                posting_policy = :posting_policy,
+                forum_type = :forum_type,
+                cover_image_path = :cover_image_path
+            WHERE id = :id');
+        $stmt->execute([
+            'id' => $id,
+            'name' => $data['name'] ?? '',
+            'description' => $data['description'] ?? null,
+            'language' => $data['language'] ?? null,
+            'category' => $data['category'] ?? null,
+            'community_type' => $data['community_type'] ?? 'public',
+            'posting_policy' => $data['posting_policy'] ?? 'any_member',
+            'forum_type' => $data['forum_type'] ?? 'non_anonymous',
+            'cover_image_path' => $data['cover_image_path'] ?? null,
+        ]);
     }
 
     private static function buildCourseCommunitySlug(array $course): string

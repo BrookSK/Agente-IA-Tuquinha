@@ -922,7 +922,7 @@ class CourseController extends Controller
           <img src="{$safeLogoUrl}" alt="Tuquinha" style="width:100%; height:100%; display:block; object-fit:cover;">
         </div>
         <div>
-          <div style="font-weight:700; font-size:15px;">Agente IA - Tuquinha</div>
+          <div style="font-weight:700; font-size:15px;">Resenha 2.0 - Tuquinha</div>
           <div style="font-size:11px; color:#b0b0b0;">Branding vivo na veia</div>
         </div>
       </div>
@@ -1004,7 +1004,7 @@ HTML;
           <img src="{$safeLogoUrl}" alt="Tuquinha" style="width:100%; height:100%; display:block; object-fit:cover;">
         </div>
         <div>
-          <div style="font-weight:700; font-size:15px;">Agente IA - Tuquinha</div>
+          <div style="font-weight:700; font-size:15px;">Resenha 2.0 - Tuquinha</div>
           <div style="font-size:11px; color:#b0b0b0;">Branding vivo na veia</div>
         </div>
       </div>
@@ -1128,7 +1128,7 @@ HTML;
           <img src="{$safeLogoUrl}" alt="Tuquinha" style="width:100%; height:100%; display:block; object-fit:cover;">
         </div>
         <div>
-          <div style="font-weight:700; font-size:15px;">Agente IA - Tuquinha</div>
+          <div style="font-weight:700; font-size:15px;">Resenha 2.0 - Tuquinha</div>
           <div style="font-size:11px; color:#b0b0b0;">Branding vivo na veia</div>
         </div>
       </div>
