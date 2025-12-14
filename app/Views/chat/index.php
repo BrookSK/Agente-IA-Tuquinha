@@ -191,8 +191,8 @@ if (!empty($currentPlan) && is_array($currentPlan)) {
                                 flex-direction:column;
                                 padding:6px 10px;
                                 border-radius:12px;
-                                background: <?= $isImage ? '\'#152028\'' : '\'#181820\'' ?>;
-                                border:1px solid #272727;
+                                background: var(--surface-subtle);
+                                border:1px solid var(--border-subtle);
                                 min-width:160px;
                                 max-width:220px;
                             ">
@@ -242,11 +242,12 @@ if (!empty($currentPlan) && is_array($currentPlan)) {
                     <div style="display: flex; flex-direction: column; align-items: flex-end; margin-bottom: 10px;">
                         <div style="
                             max-width: 80%;
-                            background: #1e1e24;
+                            background: var(--surface-card);
                             border-radius: 16px 16px 4px 16px;
                             padding: 9px 12px;
                             font-size: 14px;
                             word-wrap: break-word;
+                            border: 1px solid var(--border-subtle);
                         ">
                             <?php $content = $rawContent; ?>
                             <?= render_markdown_safe($content) ?>
@@ -268,7 +269,7 @@ if (!empty($currentPlan) && is_array($currentPlan)) {
                             border-radius: 50%;
                             overflow: hidden;
                             flex-shrink: 0;
-                            background: #050509;
+                            background: var(--surface-subtle);
                             display:flex;
                             align-items:center;
                             justify-content:center;
@@ -277,12 +278,12 @@ if (!empty($currentPlan) && is_array($currentPlan)) {
                         </div>
                         <div style="
                             max-width: 80%;
-                            background: #111118;
+                            background: var(--surface-card);
                             border-radius: 16px 16px 16px 4px;
                             padding: 9px 12px;
                             font-size: 14px;
                             word-wrap: break-word;
-                            border: 1px solid #272727;
+                            border: 1px solid var(--border-subtle);
                         ">
                             <?php
                             $content = trim((string)($message['content'] ?? ''));
@@ -345,19 +346,19 @@ if (!empty($currentPlan) && is_array($currentPlan)) {
             display: flex;
             align-items: stretch;
             gap: 8px;
-            background: #111118;
+            background: var(--surface-card);
             border-radius: 18px;
-            border: 1px solid #272727;
+            border: 1px solid var(--border-subtle);
             padding: 8px 10px;
         ">
             <div style="display: flex; flex-direction: column; gap: 6px; margin-right: <?= $hasMediaOrFiles ? '8px' : '0'; ?>;">
                 <?php if (!empty($allowedModels)): ?>
                     <select name="model" style="
                         min-width: 150px;
-                        background: #050509;
-                        color: #f5f5f5;
+                        background: var(--surface-subtle);
+                        color: var(--text-primary);
                         border-radius: 999px;
-                        border: 1px solid #272727;
+                        border: 1px solid var(--border-subtle);
                         padding: 4px 9px;
                         font-size: 11px;
                     ">
@@ -376,8 +377,8 @@ if (!empty($currentPlan) && is_array($currentPlan)) {
                             width: 30px;
                             height: 30px;
                             border-radius: 999px;
-                            border: 1px solid #272727;
-                            background: #050509;
+                            border: 1px solid var(--border-subtle);
+                            background: var(--surface-subtle);
                             color: #e53935;
                             display: flex;
                             align-items: center;
@@ -405,9 +406,9 @@ if (!empty($currentPlan) && is_array($currentPlan)) {
                             width: 30px;
                             height: 30px;
                             border-radius: 999px;
-                            border: 1px solid #272727;
-                            background: #050509;
-                            color: #f5f5f5;
+                            border: 1px solid var(--border-subtle);
+                            background: var(--surface-subtle);
+                            color: var(--text-primary);
                             display: flex;
                             align-items: center;
                             justify-content: center;
@@ -420,7 +421,7 @@ if (!empty($currentPlan) && is_array($currentPlan)) {
                     <?php endif; ?>
                 </div>
 
-                <div id="file-list" style="max-width: 260px; font-size: 11px; color: #b0b0b0; display:flex; flex-wrap:wrap; gap:4px;"></div>
+                <div id="file-list" style="max-width: 260px; font-size: 11px; color: var(--text-secondary); display:flex; flex-wrap:wrap; gap:4px;"></div>
                 <?php endif; ?>
             </div>
             <textarea id="chat-message" name="message" rows="1" required style="
@@ -429,7 +430,7 @@ if (!empty($currentPlan) && is_array($currentPlan)) {
                 border: none;
                 outline: none;
                 background: transparent;
-                color: #f5f5f5;
+                color: var(--text-primary);
                 font-size: 14px;
                 max-height: 140px;
             " placeholder="Pergunta pro Tuquinha sobre branding, identidade visual, posicionamento..."><?php if (!empty($draftMessage)) { echo htmlspecialchars($draftMessage); } ?></textarea>

@@ -7,7 +7,7 @@ $isEdit = !empty($lesson);
     <h1 style="font-size: 20px; margin-bottom: 8px; font-weight: 650;">
         <?= $isEdit ? 'Editar aula' : 'Nova aula' ?> - <?= htmlspecialchars($course['title'] ?? '') ?>
     </h1>
-    <p style="color:#b0b0b0; font-size:13px; margin-bottom:10px;">
+    <p style="color:var(--text-secondary); font-size:13px; margin-bottom:10px;">
         Informe título, link do vídeo (YouTube ou outro player) e, opcionalmente, uma descrição.
     </p>
 
@@ -25,34 +25,34 @@ $isEdit = !empty($lesson);
         <?php endif; ?>
 
         <div>
-            <label style="font-size:13px; color:#ddd; display:block; margin-bottom:4px;">Título da aula</label>
+            <label style="font-size:13px; color:var(--text-primary); display:block; margin-bottom:4px;">Título da aula</label>
             <input type="text" name="title" required value="<?= htmlspecialchars($lesson['title'] ?? '') ?>" style="
-                width:100%; padding:8px 10px; border-radius:8px; border:1px solid #272727;
-                background:#050509; color:#f5f5f5; font-size:14px;">
+                width:100%; padding:8px 10px; border-radius:8px; border:1px solid var(--border-subtle);
+                background:var(--surface-subtle); color:var(--text-primary); font-size:14px;">
         </div>
 
         <div>
-            <label style="font-size:13px; color:#ddd; display:block; margin-bottom:4px;">Link do vídeo</label>
+            <label style="font-size:13px; color:var(--text-primary); display:block; margin-bottom:4px;">Link do vídeo</label>
             <input type="text" name="video_url" required value="<?= htmlspecialchars($lesson['video_url'] ?? '') ?>" placeholder="Ex: https://www.youtube.com/watch?v=..." style="
-                width:100%; padding:8px 10px; border-radius:8px; border:1px solid #272727;
-                background:#050509; color:#f5f5f5; font-size:13px;">
+                width:100%; padding:8px 10px; border-radius:8px; border:1px solid var(--border-subtle);
+                background:var(--surface-subtle); color:var(--text-primary); font-size:13px;">
         </div>
 
         <div>
-            <label style="font-size:13px; color:#ddd; display:block; margin-bottom:4px;">Descrição (opcional)</label>
+            <label style="font-size:13px; color:var(--text-primary); display:block; margin-bottom:4px;">Descrição (opcional)</label>
             <textarea name="description" rows="4" style="
-                width:100%; padding:8px 10px; border-radius:8px; border:1px solid #272727;
-                background:#050509; color:#f5f5f5; font-size:13px; resize:vertical;">
+                width:100%; padding:8px 10px; border-radius:8px; border:1px solid var(--border-subtle);
+                background:var(--surface-subtle); color:var(--text-primary); font-size:13px; resize:vertical;">
 <?= htmlspecialchars($lesson['description'] ?? '') ?></textarea>
         </div>
 
         <div style="display:flex; gap:14px; flex-wrap:wrap;">
             <div style="flex:1 1 200px;">
                 <?php $modules = $modules ?? []; $currentModuleId = isset($lesson['module_id']) ? (int)$lesson['module_id'] : 0; ?>
-                <label style="font-size:13px; color:#ddd; display:block; margin-bottom:4px;">Módulo (opcional)</label>
+                <label style="font-size:13px; color:var(--text-primary); display:block; margin-bottom:4px;">Módulo (opcional)</label>
                 <select name="module_id" style="
-                    width:100%; max-width:260px; padding:8px 10px; border-radius:8px; border:1px solid #272727;
-                    background:#050509; color:#f5f5f5; font-size:13px;">
+                    width:100%; max-width:260px; padding:8px 10px; border-radius:8px; border:1px solid var(--border-subtle);
+                    background:var(--surface-subtle); color:var(--text-primary); font-size:13px;">
                     <option value="">Sem módulo</option>
                     <?php foreach ($modules as $m): ?>
                         <?php $mid = (int)($m['id'] ?? 0); ?>
@@ -63,13 +63,13 @@ $isEdit = !empty($lesson);
                 </select>
             </div>
             <div style="flex:1 1 120px;">
-                <label style="font-size:13px; color:#ddd; display:block; margin-bottom:4px;">Ordem</label>
+                <label style="font-size:13px; color:var(--text-primary); display:block; margin-bottom:4px;">Ordem</label>
                 <input type="number" name="sort_order" value="<?= isset($lesson['sort_order']) ? (int)$lesson['sort_order'] : 0 ?>" style="
-                    width:120px; padding:8px 10px; border-radius:8px; border:1px solid #272727;
-                    background:#050509; color:#f5f5f5; font-size:13px;">
+                    width:120px; padding:8px 10px; border-radius:8px; border:1px solid var(--border-subtle);
+                    background:var(--surface-subtle); color:var(--text-primary); font-size:13px;">
             </div>
             <div style="flex:1 1 160px; display:flex; align-items:flex-end;">
-                <label style="display:flex; align-items:center; gap:5px; font-size:13px; color:#ddd;">
+                <label style="display:flex; align-items:center; gap:5px; font-size:13px; color:var(--text-secondary);">
                     <input type="checkbox" name="is_published" value="1" <?= !isset($lesson['is_published']) || !empty($lesson['is_published']) ? 'checked' : '' ?>>
                     <span>Aula publicada</span>
                 </label>
@@ -85,7 +85,7 @@ $isEdit = !empty($lesson);
             </button>
             <a href="/admin/cursos/aulas?course_id=<?= (int)$course['id'] ?>" style="
                 display:inline-flex; align-items:center; padding:8px 14px;
-                border-radius:999px; border:1px solid #272727; color:#f5f5f5;
+                border-radius:999px; border:1px solid var(--border-subtle); background:var(--surface-subtle); color:var(--text-primary);
                 font-size:13px; text-decoration:none;">
                 Cancelar
             </a>

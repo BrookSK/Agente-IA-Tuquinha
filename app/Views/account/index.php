@@ -54,16 +54,16 @@ if ($freeChatLimit <= 0) { $freeChatLimit = 400; }
 
             <form action="/conta" method="post" style="display:flex; flex-direction:column; gap:10px;">
                 <div>
-                    <label style="font-size:13px; color:#ddd; display:block; margin-bottom:4px;">Nome</label>
+                    <label style="font-size:13px; color:var(--text-secondary); display:block; margin-bottom:4px;">Nome</label>
                     <input type="text" name="name" value="<?= htmlspecialchars($user['name'] ?? '') ?>" required style="width:100%; padding:8px 10px; border-radius:8px; border:1px solid #272727; background:#050509; color:#f5f5f5; font-size:14px;">
                 </div>
                 <div>
-                    <label style="font-size:13px; color:#ddd; display:block; margin-bottom:4px;">Como o Tuquinha deve te chamar?</label>
+                    <label style="font-size:13px; color:var(--text-secondary); display:block; margin-bottom:4px;">Como o Tuquinha deve te chamar?</label>
                     <input type="text" name="preferred_name" value="<?= htmlspecialchars($user['preferred_name'] ?? '') ?>" placeholder="Opcional. Ex: Rafa, Dr. João, você decide." style="width:100%; padding:8px 10px; border-radius:8px; border:1px solid #272727; background:#050509; color:#f5f5f5; font-size:14px;">
                     <div style="font-size:11px; color:#8d8d8d; margin-top:3px;">Se preencher, o Tuquinha vai usar esse nome nas respostas.</div>
                 </div>
                 <div>
-                    <label style="font-size:13px; color:#ddd; display:block; margin-bottom:4px;">E-mail</label>
+                    <label style="font-size:13px; color:var(--text-secondary); display:block; margin-bottom:4px;">E-mail</label>
                     <input type="email" value="<?= htmlspecialchars($user['email'] ?? '') ?>" disabled style="width:100%; padding:8px 10px; border-radius:8px; border:1px solid #272727; background:#050509; color:#777; font-size:14px;">
                 </div>
                 <div style="font-size:11px; color:#8d8d8d; margin-top:6px;">
@@ -79,11 +79,11 @@ if ($freeChatLimit <= 0) { $freeChatLimit = 400; }
                     <?php endif; ?>
                 </div>
                 <div>
-                    <label style="font-size:13px; color:#ddd; display:block; margin:10px 0 4px;">Memórias globais sobre você</label>
+                    <label style="font-size:13px; color:var(--text-secondary); display:block; margin:10px 0 4px;">Memórias globais sobre você</label>
                     <textarea name="global_memory" rows="3" placeholder="Opcional. Ex: tipo de cliente que você atende, nível de experiência, nicho favorito, informações que o Tuquinha não precisa perguntar toda hora." style="width:100%; padding:8px 10px; border-radius:8px; border:1px solid #272727; background:#050509; color:#f5f5f5; font-size:13px; resize:vertical; min-height:70px;"><?= htmlspecialchars($user['global_memory'] ?? '') ?></textarea>
                 </div>
                 <div>
-                    <label style="font-size:13px; color:#ddd; display:block; margin:6px 0 4px;">Regras globais para o Tuquinha</label>
+                    <label style="font-size:13px; color:var(--text-secondary); display:block; margin:6px 0 4px;">Regras globais para o Tuquinha</label>
                     <textarea name="global_instructions" rows="3" placeholder="Opcional. Ex: sempre responder mais direto, evitar certos temas, foco em resultado prático, etc." style="width:100%; padding:8px 10px; border-radius:8px; border:1px solid #272727; background:#050509; color:#f5f5f5; font-size:13px; resize:vertical; min-height:70px;"><?= htmlspecialchars($user['global_instructions'] ?? '') ?></textarea>
                 </div>
                 <?php if ($isFreePlan): ?>
@@ -103,15 +103,15 @@ if ($freeChatLimit <= 0) { $freeChatLimit = 400; }
 
             <form action="/conta/senha" method="post" style="display:flex; flex-direction:column; gap:10px;">
                 <div>
-                    <label style="font-size:13px; color:#ddd; display:block; margin-bottom:4px;">Senha atual</label>
+                    <label style="font-size:13px; color:var(--text-secondary); display:block; margin-bottom:4px;">Senha atual</label>
                     <input type="password" name="current_password" required style="width:100%; padding:8px 10px; border-radius:8px; border:1px solid #272727; background:#050509; color:#f5f5f5; font-size:14px;">
                 </div>
                 <div>
-                    <label style="font-size:13px; color:#ddd; display:block; margin-bottom:4px;">Nova senha</label>
+                    <label style="font-size:13px; color:var(--text-secondary); display:block; margin-bottom:4px;">Nova senha</label>
                     <input type="password" name="new_password" required style="width:100%; padding:8px 10px; border-radius:8px; border:1px solid #272727; background:#050509; color:#f5f5f5; font-size:14px;">
                 </div>
                 <div>
-                    <label style="font-size:13px; color:#ddd; display:block; margin-bottom:4px;">Confirmar nova senha</label>
+                    <label style="font-size:13px; color:var(--text-secondary); display:block; margin-bottom:4px;">Confirmar nova senha</label>
                     <input type="password" name="new_password_confirmation" required style="width:100%; padding:8px 10px; border-radius:8px; border:1px solid #272727; background:#050509; color:#f5f5f5; font-size:14px;">
                 </div>
                 <button type="submit" style="margin-top:6px; align-self:flex-start; border:none; border-radius:999px; padding:8px 14px; background:#111118; color:#f5f5f5; font-weight:500; cursor:pointer; font-size:13px; border:1px solid #272727;">

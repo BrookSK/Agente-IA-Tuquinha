@@ -6,6 +6,38 @@
 $currentDefaultPersonaId = isset($user['default_persona_id']) ? (int)$user['default_persona_id'] : 0;
 $successMessage = $success ?? null;
 ?>
+<style>
+    .persona-default-card {
+        flex: 0 0 280px;
+        max-width: 300px;
+        background: var(--surface-card);
+        border-radius: 20px;
+        border: 1px solid var(--border-subtle);
+        overflow: hidden;
+        color: var(--text-primary);
+        font-size: 12px;
+        text-align: left;
+        cursor: pointer;
+        box-shadow: 0 12px 30px rgba(15,23,42,0.25);
+        transition: transform 0.16s ease, box-shadow 0.16s ease, border-color 0.16s ease;
+        scroll-snap-align: center;
+    }
+    .persona-default-card--active {
+        border-color: var(--accent-soft);
+        box-shadow: 0 0 0 1px rgba(244,114,182,0.4);
+    }
+    .persona-default-card-image {
+        width: 100%;
+        height: 260px;
+        overflow: hidden;
+        background: var(--surface-subtle);
+    }
+    .persona-default-card-desc {
+        font-size: 12px;
+        color: var(--text-secondary);
+        line-height: 1.4;
+    }
+</style>
 <div style="max-width: 900px; margin: 0 auto;">
     <h1 style="font-size: 22px; margin-bottom: 6px; font-weight: 650;">Escolha sua personalidade padrão</h1>
     <p style="color:#b0b0b0; font-size:13px; margin-bottom:10px; max-width:600px;">
@@ -24,7 +56,7 @@ $successMessage = $success ?? null;
     </div>
 
     <?php if (empty($personalities)): ?>
-        <div style="background:#111118; border-radius:12px; padding:12px 14px; border:1px solid #272727; font-size:14px; color:#b0b0b0;">
+        <div style="background:var(--surface-card); border-radius:12px; padding:12px 14px; border:1px solid var(--border-subtle); font-size:14px; color:var(--text-secondary);">
             Ainda não há personalidades ativas cadastradas pelo administrador.
         </div>
     <?php else: ?>
@@ -38,27 +70,13 @@ $successMessage = $success ?? null;
                 padding:8px 2px 12px 2px;
                 scroll-snap-type:x mandatory;
             ">
-                <button type="button" class="persona-card-btn" data-persona-id="0" style="
-                    flex:0 0 280px;
-                    max-width:300px;
-                    background:#050509;
-                    border-radius:20px;
-                    border:1px solid <?= $currentDefaultPersonaId === 0 ? '#ff6f60' : '#272727' ?>;
-                    overflow:hidden;
-                    color:#f5f5f5;
-                    font-size:12px;
-                    text-align:left;
-                    cursor:pointer;
-                    box-shadow:0 18px 35px rgba(0,0,0,0.55);
-                    transition:transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
-                    scroll-snap-align:center;
-                ">
-                    <div style="width:100%; height:260px; overflow:hidden; background:#111118;">
+                <button type="button" class="persona-card-btn persona-default-card<?= $currentDefaultPersonaId === 0 ? ' persona-default-card--active' : '' ?>" data-persona-id="0" style="flex:0 0 280px; max-width:300px; scroll-snap-align:center;">
+                    <div class="persona-default-card-image">
                         <img src="/public/favicon.png" alt="Padrão do Tuquinha" style="width:100%; height:100%; object-fit:cover; display:block;">
                     </div>
                     <div style="padding:10px 12px 12px 12px;">
                         <div style="font-size:16px; font-weight:650; margin-bottom:4px;">Padrão do Tuquinha</div>
-                        <div style="font-size:12px; color:#b0b0b0; line-height:1.4;">
+                        <div class="persona-default-card-desc">
                             Deixa o sistema escolher a melhor personalidade global para você.
                         </div>
                     </div>
@@ -73,22 +91,8 @@ $successMessage = $success ?? null;
                             $imagePath = '/public/favicon.png';
                         }
                     ?>
-                    <button type="button" class="persona-card-btn" data-persona-id="<?= $pid ?>" style="
-                        flex:0 0 280px;
-                        max-width:300px;
-                        background:#050509;
-                        border-radius:20px;
-                        border:1px solid <?= $currentDefaultPersonaId === $pid ? '#ff6f60' : '#272727' ?>;
-                        overflow:hidden;
-                        color:#f5f5f5;
-                        font-size:12px;
-                        text-align:left;
-                        cursor:pointer;
-                        box-shadow:0 18px 35px rgba(0,0,0,0.55);
-                        transition:transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
-                        scroll-snap-align:center;
-                    ">
-                        <div style="width:100%; height:260px; overflow:hidden; background:#111118;">
+                    <button type="button" class="persona-card-btn persona-default-card<?= $currentDefaultPersonaId === $pid ? ' persona-default-card--active' : '' ?>" data-persona-id="<?= $pid ?>" style="flex:0 0 280px; max-width:300px; scroll-snap-align:center;">
+                        <div class="persona-default-card-image">
                             <img src="<?= htmlspecialchars($imagePath) ?>" alt="<?= htmlspecialchars($pname) ?>" style="width:100%; height:100%; object-fit:cover; display:block;">
                         </div>
                         <div style="padding:10px 12px 12px 12px;">
@@ -102,7 +106,7 @@ $successMessage = $success ?? null;
                                     <?= htmlspecialchars($parea) ?>
                                 </div>
                             <?php endif; ?>
-                            <div style="font-size:12px; color:#b0b0b0; line-height:1.4;">
+                            <div class="persona-default-card-desc">
                                 Clique para usar essa personalidade como padrão em novos chats.
                             </div>
                         </div>
@@ -136,12 +140,10 @@ document.addEventListener('DOMContentLoaded', function () {
                 hiddenPersonaInput.value = id;
 
                 buttons.forEach(function (b) {
-                    b.style.borderColor = '#272727';
-                    b.style.boxShadow = '';
+                    b.classList.remove('persona-default-card--active');
                 });
 
-                btn.style.borderColor = '#ff6f60';
-                btn.style.boxShadow = '0 0 0 1px rgba(255,111,96,0.5)';
+                btn.classList.add('persona-default-card--active');
             });
         });
     }

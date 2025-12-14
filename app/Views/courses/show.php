@@ -95,7 +95,7 @@ if (!empty($user) && !empty($canAccessContent) && !empty($lessons)) {
 ?>
 <div style="max-width: 960px; margin: 0 auto;">
     <div style="display:flex; flex-wrap:wrap; gap:20px; margin-bottom:18px;">
-        <div style="flex:1 1 260px; min-width:260px; max-width:360px; border-radius:20px; overflow:hidden; border:1px solid var(--border-subtle); background:var(--surface-card); box-shadow:0 18px 35px rgba(0,0,0,0.25);">
+        <div style="flex:1 1 260px; min-width:260px; max-width:360px; border-radius:20px; overflow:hidden; border:1px solid var(--border-subtle); background:var(--surface-card); box-shadow:0 12px 26px rgba(0,0,0,0.18);">
             <div style="width:100%; height:220px; overflow:hidden; background:var(--surface-subtle);">
                 <?php if ($image !== ''): ?>
                     <img src="<?= htmlspecialchars($image) ?>" alt="<?= htmlspecialchars($title) ?>" style="width:100%; height:100%; object-fit:cover; display:block;">
@@ -279,7 +279,7 @@ if (!empty($user) && !empty($canAccessContent) && !empty($lessons)) {
                                 $examAttempts = (int)($mData['exam_attempts'] ?? 0);
                                 $maxAttempts = $exam && isset($exam['max_attempts']) ? (int)$exam['max_attempts'] : 0;
                             ?>
-                            <div style="padding:10px 12px; border-bottom:1px solid #272727;">
+                            <div style="padding:10px 12px; border-bottom:1px solid var(--border-subtle);">
                                 <div style="display:flex; justify-content:space-between; gap:8px; align-items:flex-start; flex-wrap:wrap;">
                                     <div style="min-width:0;">
                                         <div style="font-size:14px; font-weight:600; margin-bottom:4px;">
@@ -488,7 +488,7 @@ if (!empty($user) && !empty($canAccessContent) && !empty($lessons)) {
                 <?php if (empty($lives)): ?>
                     <div style="color:var(--text-secondary); font-size:13px;">Nenhuma próxima live agendada no momento.</div>
                 <?php else: ?>
-                    <div style="border-radius:12px; border:1px solid var(--border-subtle); background:var(--surface-card); overflow:hidden;">
+                    <div style="border-radius:12px; border:1px solid var(--border-subtle); background:var(--surface-card); overflow:hidden; box-shadow:0 8px 20px rgba(15,23,42,0.12);">
                         <?php foreach ($lives as $live): ?>
                             <?php
                                 $ltitle = trim((string)($live['title'] ?? ''));
@@ -499,7 +499,7 @@ if (!empty($user) && !empty($canAccessContent) && !empty($lessons)) {
                                 $liveId = (int)($live['id'] ?? 0);
                                 $hasRecordingAccess = $user && $recordingLink !== '' && !empty($myLiveParticipation[$liveId] ?? false);
                             ?>
-                            <div style="padding:8px 10px; border-bottom:1px solid #272727;">
+                            <div style="padding:8px 10px; border-bottom:1px solid var(--border-subtle);">
                                 <div style="font-size:13px; font-weight:600; margin-bottom:2px;">
                                     <?= htmlspecialchars($ltitle) ?>
                                 </div>

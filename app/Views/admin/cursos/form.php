@@ -12,7 +12,7 @@ $partnerEmail = $partnerEmail ?? '';
     <h1 style="font-size: 22px; margin-bottom: 10px; font-weight: 650;">
         <?= $isEdit ? 'Editar curso' : 'Novo curso' ?>
     </h1>
-    <p style="color:#b0b0b0; font-size:13px; margin-bottom:10px;">
+    <p style="color:var(--text-secondary); font-size:13px; margin-bottom:10px;">
         Defina título, descrição, acesso por plano ou compra avulsa e, se desejar, o parceiro responsável pelo curso.
     </p>
 
@@ -30,42 +30,42 @@ $partnerEmail = $partnerEmail ?? '';
 
         <div style="display:flex; gap:14px; align-items:flex-start; flex-wrap:wrap;">
             <div style="flex:1 1 260px;">
-                <label style="font-size:13px; color:#ddd; display:block; margin-bottom:4px;">Título do curso</label>
+                <label style="font-size:13px; color:var(--text-primary); display:block; margin-bottom:4px;">Título do curso</label>
                 <input type="text" name="title" required value="<?= htmlspecialchars($course['title'] ?? '') ?>" style="
-                    width:100%; padding:8px 10px; border-radius:8px; border:1px solid #272727;
-                    background:#050509; color:#f5f5f5; font-size:14px;">
+                    width:100%; padding:8px 10px; border-radius:8px; border:1px solid var(--border-subtle);
+                    background:var(--surface-subtle); color:var(--text-primary); font-size:14px;">
             </div>
             <div style="flex:1 1 220px;">
-                <label style="font-size:13px; color:#ddd; display:block; margin-bottom:4px;">Slug (técnico)</label>
+                <label style="font-size:13px; color:var(--text-primary); display:block; margin-bottom:4px;">Slug (técnico)</label>
                 <input type="text" name="slug" required value="<?= htmlspecialchars($course['slug'] ?? '') ?>" placeholder="ex: branding-para-designers" style="
-                    width:100%; padding:8px 10px; border-radius:8px; border:1px solid #272727;
-                    background:#050509; color:#f5f5f5; font-size:14px;">
+                    width:100%; padding:8px 10px; border-radius:8px; border:1px solid var(--border-subtle);
+                    background:var(--surface-subtle); color:var(--text-primary); font-size:14px;">
                 <div style="font-size:11px; color:#777; margin-top:3px;">Usado nas URLs do curso.</div>
             </div>
         </div>
 
         <div>
-            <label style="font-size:13px; color:#ddd; display:block; margin-bottom:4px;">Descrição curta</label>
+            <label style="font-size:13px; color:var(--text-primary); display:block; margin-bottom:4px;">Descrição curta</label>
             <input type="text" name="short_description" value="<?= htmlspecialchars($course['short_description'] ?? '') ?>" style="
-                width:100%; padding:8px 10px; border-radius:8px; border:1px solid #272727;
-                background:#050509; color:#f5f5f5; font-size:13px;">
+                width:100%; padding:8px 10px; border-radius:8px; border:1px solid var(--border-subtle);
+                background:var(--surface-subtle); color:var(--text-primary); font-size:13px;">
         </div>
 
         <div>
-            <label style="font-size:13px; color:#ddd; display:block; margin-bottom:4px;">Descrição completa</label>
+            <label style="font-size:13px; color:var(--text-primary); display:block; margin-bottom:4px;">Descrição completa</label>
             <textarea name="description" rows="6" style="
-                width:100%; padding:8px 10px; border-radius:8px; border:1px solid #272727;
-                background:#050509; color:#f5f5f5; font-size:13px; resize:vertical;">
+                width:100%; padding:8px 10px; border-radius:8px; border:1px solid var(--border-subtle);
+                background:var(--surface-subtle); color:var(--text-primary); font-size:13px; resize:vertical;">
 <?= htmlspecialchars($course['description'] ?? '') ?></textarea>
         </div>
 
         <div>
-            <label style="font-size:13px; color:#ddd; display:block; margin-bottom:4px;">Imagem do curso</label>
+            <label style="font-size:13px; color:var(--text-primary); display:block; margin-bottom:4px;">Imagem do curso</label>
             <input type="text" name="image_path" value="<?= htmlspecialchars($course['image_path'] ?? '') ?>" placeholder="Opcional. Você pode informar uma URL direta ou enviar um arquivo abaixo." style="
-                width:100%; padding:8px 10px; border-radius:8px; border:1px solid #272727;
-                background:#050509; color:#f5f5f5; font-size:14px;">
+                width:100%; padding:8px 10px; border-radius:8px; border:1px solid var(--border-subtle);
+                background:var(--surface-subtle); color:var(--text-primary); font-size:14px;">
             <div style="margin-top:6px; display:flex; flex-wrap:wrap; gap:8px; align-items:center;">
-                <label style="font-size:13px; color:#ddd; display:inline-flex; align-items:center; gap:6px; cursor:pointer;">
+                <label style="font-size:13px; color:var(--text-primary); display:inline-flex; align-items:center; gap:6px; cursor:pointer;">
                     <span>📷</span>
                     <span>Enviar arquivo</span>
                     <input type="file" name="image_upload" accept="image/*" style="display:none;">
@@ -79,7 +79,7 @@ $partnerEmail = $partnerEmail ?? '';
                 <div style="margin-top:8px; display:flex; flex-direction:column; gap:6px;">
                     <div style="display:flex; flex-wrap:wrap; gap:8px; align-items:flex-start;">
                         <div style="font-size:11px; color:#777; min-width:80px;">Imagem atual:</div>
-                        <div style="border-radius:8px; overflow:hidden; border:1px solid #272727; max-width:200px;">
+                        <div style="border-radius:8px; overflow:hidden; border:1px solid var(--border-subtle); max-width:200px;">
                             <img src="<?= htmlspecialchars($course['image_path'], ENT_QUOTES, 'UTF-8') ?>" alt="Imagem atual do curso" style="display:block; width:100%; max-height:150px; object-fit:cover;">
                         </div>
                     </div>
@@ -91,36 +91,36 @@ $partnerEmail = $partnerEmail ?? '';
             <?php endif; ?>
 
             <div id="course-image-preview-wrapper" style="margin-top:8px; display:none;">
-                <div style="font-size:11px; color:#b0b0b0; margin-bottom:4px;">Pré-visualização da nova imagem:</div>
+                <div style="font-size:11px; color:var(--text-secondary); margin-bottom:4px;">Pré-visualização da nova imagem:</div>
                 <div style="display:flex; flex-wrap:wrap; gap:8px; align-items:flex-start;">
-                    <div style="border-radius:8px; overflow:hidden; border:1px solid #272727; max-width:200px;">
+                    <div style="border-radius:8px; overflow:hidden; border:1px solid var(--border-subtle); max-width:200px;">
                         <img id="course-image-preview" src="" alt="Pré-visualização da nova imagem" style="display:block; width:100%; max-height:150px; object-fit:cover;">
                     </div>
-                    <div id="course-image-filename" style="font-size:11px; color:#777; max-width:260px; word-break:break-all;"></div>
+                    <div id="course-image-filename" style="font-size:11px; color:var(--text-secondary); max-width:260px; word-break:break-all;"></div>
                 </div>
             </div>
         </div>
 
         <div style="display:flex; gap:14px; flex-wrap:wrap;">
             <div style="flex:1 1 260px;">
-                <label style="font-size:13px; color:#ddd; display:block; margin-bottom:4px;">E-mail do professor/parceiro (opcional)</label>
+                <label style="font-size:13px; color:var(--text-primary); display:block; margin-bottom:4px;">E-mail do professor/parceiro (opcional)</label>
                 <input type="email" name="partner_email" value="<?= htmlspecialchars($partnerEmail, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?>" placeholder="ex: prof@exemplo.com" style="
-                    width:100%; max-width:260px; padding:8px 10px; border-radius:8px; border:1px solid #272727;
-                    background:#050509; color:#f5f5f5; font-size:13px;">
+                    width:100%; max-width:260px; padding:8px 10px; border-radius:8px; border:1px solid var(--border-subtle);
+                    background:var(--surface-subtle); color:var(--text-primary); font-size:13px;">
                 <div style="font-size:11px; color:#777; margin-top:3px;">Usado para vincular o curso ao painel de parceiro desse usuário.</div>
             </div>
             <div style="flex:1 1 200px;">
-                <label style="font-size:13px; color:#ddd; display:block; margin-bottom:4px;">Preço (R$)</label>
+                <label style="font-size:13px; color:var(--text-primary); display:block; margin-bottom:4px;">Preço (R$)</label>
                 <input type="text" name="price" value="<?= isset($course['price_cents']) ? number_format($course['price_cents']/100, 2, ',', '.') : '0,00' ?>" style="
-                    width:140px; padding:8px 10px; border-radius:8px; border:1px solid #272727;
-                    background:#050509; color:#f5f5f5; font-size:13px;">
+                    width:140px; padding:8px 10px; border-radius:8px; border:1px solid var(--border-subtle);
+                    background:var(--surface-subtle); color:var(--text-primary); font-size:13px;">
                 <div style="font-size:11px; color:#777; margin-top:3px;">Usado apenas se o curso estiver marcado como pago.</div>
             </div>
             <div style="flex:1 1 220px;">
-                <label style="font-size:13px; color:#ddd; display:block; margin-bottom:4px;">Comissão deste curso para o parceiro (%)</label>
+                <label style="font-size:13px; color:var(--text-primary); display:block; margin-bottom:4px;">Comissão deste curso para o parceiro (%)</label>
                 <input type="text" name="partner_commission_percent" value="<?= $partnerCommissionPercent !== null ? number_format($partnerCommissionPercent, 2, ',', '.') : '' ?>" style="
-                    width:140px; padding:8px 10px; border-radius:8px; border:1px solid #272727;
-                    background:#050509; color:#f5f5f5; font-size:13px;">
+                    width:140px; padding:8px 10px; border-radius:8px; border:1px solid var(--border-subtle);
+                    background:var(--surface-subtle); color:var(--text-primary); font-size:13px;">
                 <?php if ($partnerDefaultPercent !== null): ?>
                     <div style="font-size:11px; color:#777; margin-top:3px;">Comissão padrão do parceiro: <?= number_format($partnerDefaultPercent, 2, ',', '.') ?>%</div>
                 <?php else: ?>
@@ -129,7 +129,7 @@ $partnerEmail = $partnerEmail ?? '';
             </div>
         </div>
 
-        <div style="display:flex; flex-direction:column; gap:6px; font-size:13px; color:#ddd; margin-top:4px;">
+        <div style="display:flex; flex-direction:column; gap:6px; font-size:13px; color:var(--text-secondary); margin-top:4px;">
             <div style="display:flex; flex-wrap:wrap; gap:10px; align-items:center;">
                 <label style="display:flex; align-items:center; gap:5px;">
                     <input type="checkbox" name="is_paid" value="1" <?= !empty($course['is_paid']) ? 'checked' : '' ?>>
@@ -178,7 +178,7 @@ $partnerEmail = $partnerEmail ?? '';
             </button>
             <a href="/admin/cursos" style="
                 display:inline-flex; align-items:center; padding:8px 14px;
-                border-radius:999px; border:1px solid #272727; color:#f5f5f5;
+                border-radius:999px; border:1px solid var(--border-subtle); background:var(--surface-subtle); color:var(--text-primary);
                 font-size:13px; text-decoration:none;">
                 Cancelar
             </a>

@@ -6,7 +6,7 @@
 ?>
 <div style="max-width: 880px; margin: 0 auto;">
     <h1 style="font-size: 26px; margin-bottom: 10px; font-weight: 650;">Escolha um plano para turbinar seu acesso ao Tuquinha</h1>
-    <p style="color: #b0b0b0; margin-bottom: 8px; font-size: 14px;">
+    <p style="color: var(--text-secondary); margin-bottom: 8px; font-size: 14px;">
         Os planos podem ser mensais, semestrais ou anuais, cobrados no cartão de crédito via Asaas. Começa pelo gratuito se quiser sentir o fluxo, ou vai direto pro plano que combina com o seu momento.
     </p>
     <?php
@@ -57,8 +57,8 @@
         $selectedCycle = in_array('mensal', $availableCycles, true) ? 'mensal' : ($availableCycles[0] ?? 'mensal');
     ?>
     <?php if ($isPaidPlanWithLimit): ?>
-        <div style="margin-bottom: 14px; padding:10px 12px; border-radius:12px; background:#111118; border:1px solid #272727; display:flex; flex-wrap:wrap; gap:8px; align-items:center; justify-content:space-between;">
-            <div style="font-size:13px; color:#e0e0e0; max-width:70%;">
+        <div style="margin-bottom: 14px; padding:10px 12px; border-radius:12px; background:var(--surface-card); border:1px solid var(--border-subtle); display:flex; flex-wrap:wrap; gap:8px; align-items:center; justify-content:space-between;">
+            <div style="font-size:13px; color:var(--text-secondary); max-width:70%;">
                 Aproveite seu plano atual para ir além do limite mensal: compre <strong>tokens extras</strong> quando precisar, no modelo pré-pago.
             </div>
             <a href="/tokens/comprar" style="
@@ -96,10 +96,10 @@
                         data-cycle="<?= htmlspecialchars($ck) ?>"
                         style="
                             border-radius:999px;
-                            border:1px solid <?= $ck === $selectedCycle ? '#e53935' : '#272727' ?>;
+                            border:1px solid <?= $ck === $selectedCycle ? 'var(--accent)' : 'var(--border-subtle)' ?>;
                             padding:6px 12px;
-                            background: <?= $ck === $selectedCycle ? 'rgba(229,57,53,0.15)' : 'transparent' ?>;
-                            color:#f5f5f5;
+                            background: <?= $ck === $selectedCycle ? 'rgba(229,57,53,0.12)' : 'transparent' ?>;
+                            color:var(--text-primary);
                             font-size:13px;
                             cursor:pointer;
                         ">
@@ -126,9 +126,9 @@
                             $benefits = array_filter(array_map('trim', explode("\n", (string)($plan['benefits'] ?? ''))));
                             $isCurrent = $currentPlan && ($currentPlan['id'] ?? null) === ($plan['id'] ?? null);
                         ?>
-                        <div style="background: #111118; border-radius: 16px; padding: 14px; border: 1px solid <?= $isCurrent ? '#e53935' : '#272727' ?>; display: flex; flex-direction: column; justify-content: space-between; box-shadow: <?= $isCurrent ? '0 0 0 1px rgba(229,57,53,0.5)' : 'none' ?>;">
+                        <div style="background: var(--surface-card); border-radius: 16px; padding: 14px; border: 1px solid <?= $isCurrent ? 'var(--accent)' : 'var(--border-subtle)' ?>; display: flex; flex-direction: column; justify-content: space-between; box-shadow: <?= $isCurrent ? '0 0 0 1px rgba(229,57,53,0.4)' : 'none' ?>;">
                             <div>
-                                <div style="font-size: 13px; text-transform: uppercase; letter-spacing: 0.12em; color: #b0b0b0; margin-bottom: 6px;">
+                                <div style="font-size: 13px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--text-secondary); margin-bottom: 6px;">
                                     Plano inicial
                                     <?php if ($isCurrent): ?>
                                         <span style="margin-left:6px; font-size:10px; padding:2px 6px; border-radius:999px; background:#e53935; color:#050509;">Seu plano atual</span>
@@ -145,12 +145,12 @@
                                     Plano gratuito para experimentar o Tuquinha antes de contratar um plano pago.
                                 </div>
                                 <?php if (!empty($plan['description'])): ?>
-                                    <div style="font-size: 13px; color: #c0c0c0; margin-bottom: 10px;">
+                                    <div style="font-size: 13px; color: var(--text-secondary); margin-bottom: 10px;">
                                         <?= nl2br(htmlspecialchars($plan['description'])) ?>
                                     </div>
                                 <?php endif; ?>
                                 <?php if ($benefits): ?>
-                                    <ul style="list-style: none; padding-left: 0; margin: 0; font-size: 13px; color: #c0c0c0;">
+                                    <ul style="list-style: none; padding-left: 0; margin: 0; font-size: 13px; color: var(--text-secondary);">
                                         <?php foreach ($benefits as $b): ?>
                                             <li style="display: flex; gap: 6px; margin-bottom: 4px;">
                                                 <span style="color: #e53935;">✔</span>
@@ -189,9 +189,9 @@
                             $cycleLabel = $plan['_cycle_label'] ?? 'mês';
                             $cycleKey = $plan['_cycle_key'] ?? 'mensal';
                         ?>
-                        <div style="background: #111118; border-radius: 16px; padding: 14px; border: 1px solid <?= $isCurrent ? '#e53935' : '#272727' ?>; display: flex; flex-direction: column; justify-content: space-between; box-shadow: <?= $isCurrent ? '0 0 0 1px rgba(229,57,53,0.5)' : 'none' ?>;">
+                        <div style="background: var(--surface-card); border-radius: 16px; padding: 14px; border: 1px solid <?= $isCurrent ? 'var(--accent)' : 'var(--border-subtle)' ?>; display: flex; flex-direction: column; justify-content: space-between; box-shadow: <?= $isCurrent ? '0 0 0 1px rgba(229,57,53,0.4)' : 'none' ?>;">
                             <div>
-                                <div style="font-size: 13px; text-transform: uppercase; letter-spacing: 0.12em; color: #b0b0b0; margin-bottom: 6px;">
+                                <div style="font-size: 13px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--text-secondary); margin-bottom: 6px;">
                                     Plano premium
                                     <?php if ($isCurrent): ?>
                                         <span style="margin-left:6px; font-size:10px; padding:2px 6px; border-radius:999px; background:#e53935; color:#050509;">Seu plano atual</span>
@@ -216,12 +216,12 @@
                                     <?php endif; ?>
                                 </div>
                                 <?php if (!empty($plan['description'])): ?>
-                                    <div style="font-size: 13px; color: #c0c0c0; margin-bottom: 10px;">
+                                    <div style="font-size: 13px; color: var(--text-secondary); margin-bottom: 10px;">
                                         <?= nl2br(htmlspecialchars($plan['description'])) ?>
                                     </div>
                                 <?php endif; ?>
                                 <?php if ($benefits): ?>
-                                    <ul style="list-style: none; padding-left: 0; margin: 0; font-size: 13px; color: #c0c0c0;">
+                                    <ul style="list-style: none; padding-left: 0; margin: 0; font-size: 13px; color: var(--text-secondary);">
                                         <?php foreach ($benefits as $b): ?>
                                             <li style="display: flex; gap: 6px; margin-bottom: 4px;">
                                                 <span style="color: #e53935;">✔</span>
@@ -267,12 +267,12 @@
 
                     buttons.forEach(function(other) {
                         other.classList.remove('plans-cycle-filter--active');
-                        other.style.borderColor = '#272727';
+                        other.style.borderColor = 'var(--border-subtle)';
                         other.style.background = 'transparent';
                     });
                     btn.classList.add('plans-cycle-filter--active');
-                    btn.style.borderColor = '#e53935';
-                    btn.style.background = 'rgba(229,57,53,0.15)';
+                    btn.style.borderColor = 'var(--accent)';
+                    btn.style.background = 'rgba(229,57,53,0.12)';
 
                     sections.forEach(function(sec) {
                         if (sec.getAttribute('data-cycle-section') === cycle) {

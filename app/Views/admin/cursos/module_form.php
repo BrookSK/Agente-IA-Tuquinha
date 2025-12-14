@@ -7,7 +7,7 @@ $isEdit = !empty($module);
     <h1 style="font-size: 20px; margin-bottom: 8px; font-weight: 650;">
         <?= $isEdit ? 'Editar módulo' : 'Novo módulo' ?> - <?= htmlspecialchars($course['title'] ?? '') ?>
     </h1>
-    <p style="color:#b0b0b0; font-size:13px; margin-bottom:10px;">
+    <p style="color:var(--text-secondary); font-size:13px; margin-bottom:10px;">
         Organize as aulas em módulos para facilitar o progresso dos alunos.
     </p>
 
@@ -25,26 +25,26 @@ $isEdit = !empty($module);
         <?php endif; ?>
 
         <div>
-            <label style="font-size:13px; color:#ddd; display:block; margin-bottom:4px;">Título do módulo</label>
+            <label style="font-size:13px; color:var(--text-primary); display:block; margin-bottom:4px;">Título do módulo</label>
             <input type="text" name="title" required value="<?= htmlspecialchars($module['title'] ?? '') ?>" style="
-                width:100%; padding:8px 10px; border-radius:8px; border:1px solid #272727;
-                background:#050509; color:#f5f5f5; font-size:14px;">
+                width:100%; padding:8px 10px; border-radius:8px; border:1px solid var(--border-subtle);
+                background:var(--surface-subtle); color:var(--text-primary); font-size:14px;">
         </div>
 
         <div>
-            <label style="font-size:13px; color:#ddd; display:block; margin-bottom:4px;">Descrição (opcional)</label>
+            <label style="font-size:13px; color:var(--text-primary); display:block; margin-bottom:4px;">Descrição (opcional)</label>
             <textarea name="description" rows="4" style="
-                width:100%; padding:8px 10px; border-radius:8px; border:1px solid #272727;
-                background:#050509; color:#f5f5f5; font-size:13px; resize:vertical;">
+                width:100%; padding:8px 10px; border-radius:8px; border:1px solid var(--border-subtle);
+                background:var(--surface-subtle); color:var(--text-primary); font-size:13px; resize:vertical;">
 <?= htmlspecialchars($module['description'] ?? '') ?></textarea>
         </div>
 
         <div style="display:flex; gap:14px; flex-wrap:wrap;">
             <div style="flex:1 1 160px;">
-                <label style="font-size:13px; color:#ddd; display:block; margin-bottom:4px;">Ordem</label>
+                <label style="font-size:13px; color:var(--text-primary); display:block; margin-bottom:4px;">Ordem</label>
                 <input type="number" name="sort_order" value="<?= isset($module['sort_order']) ? (int)$module['sort_order'] : 0 ?>" style="
-                    width:120px; padding:8px 10px; border-radius:8px; border:1px solid #272727;
-                    background:#050509; color:#f5f5f5; font-size:13px;">
+                    width:120px; padding:8px 10px; border-radius:8px; border:1px solid var(--border-subtle);
+                    background:var(--surface-subtle); color:var(--text-primary); font-size:13px;">
             </div>
         </div>
 
@@ -57,7 +57,7 @@ $isEdit = !empty($module);
             </button>
             <a href="/admin/cursos/modulos?course_id=<?= (int)$course['id'] ?>" style="
                 display:inline-flex; align-items:center; padding:8px 14px;
-                border-radius:999px; border:1px solid #272727; color:#f5f5f5;
+                border-radius:999px; border:1px solid var(--border-subtle); background:var(--surface-subtle); color:var(--text-primary);
                 font-size:13px; text-decoration:none;">
                 Cancelar
             </a>

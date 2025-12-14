@@ -36,7 +36,7 @@ if ($slugForCycle !== '') {
     <h1 style="font-size: 22px; margin-bottom: 10px; font-weight: 650;">
         <?= $isEdit ? 'Editar plano' : 'Novo plano' ?>
     </h1>
-    <p style="color:#b0b0b0; font-size:13px; margin-bottom:14px;">
+    <p style="color:var(--text-secondary); font-size:13px; margin-bottom:14px;">
         Defina nome, ciclo de cobrança, preço e quais recursos esse plano libera no Tuquinha.
     </p>
 
@@ -46,17 +46,17 @@ if ($slugForCycle !== '') {
         <?php endif; ?>
 
         <div>
-            <label style="font-size:13px; color:#ddd; display:block; margin-bottom:4px;">Nome do plano</label>
+            <label style="font-size:13px; color:var(--text-primary); display:block; margin-bottom:4px;">Nome do plano</label>
             <input type="text" name="name" required value="<?= htmlspecialchars($plan['name'] ?? '') ?>" style="
-                width:100%; padding:8px 10px; border-radius:8px; border:1px solid #272727;
-                background:#050509; color:#f5f5f5; font-size:14px;">
+                width:100%; padding:8px 10px; border-radius:8px; border:1px solid var(--border-subtle);
+                background:var(--surface-subtle); color:var(--text-primary); font-size:14px;">
         </div>
 
         <div>
-            <label style="font-size:13px; color:#ddd; display:block; margin-bottom:4px;">Ciclo de cobrança</label>
+            <label style="font-size:13px; color:var(--text-primary); display:block; margin-bottom:4px;">Ciclo de cobrança</label>
             <select name="billing_cycle" style="
-                width:100%; padding:8px 10px; border-radius:8px; border:1px solid #272727;
-                background:#050509; color:#f5f5f5; font-size:13px;">
+                width:100%; padding:8px 10px; border-radius:8px; border:1px solid var(--border-subtle);
+                background:var(--surface-subtle); color:var(--text-primary); font-size:13px;">
                 <option value="monthly" <?= $billingCycle === 'monthly' ? 'selected' : '' ?>>Mensal</option>
                 <option value="semiannual" <?= $billingCycle === 'semiannual' ? 'selected' : '' ?>>Semestral</option>
                 <option value="annual" <?= $billingCycle === 'annual' ? 'selected' : '' ?>>Anual</option>
@@ -65,20 +65,20 @@ if ($slugForCycle !== '') {
         </div>
 
         <div>
-            <label style="font-size:13px; color:#ddd; display:block; margin-bottom:4px;">Slug (técnico)</label>
+            <label style="font-size:13px; color:var(--text-primary); display:block; margin-bottom:4px;">Slug (técnico)</label>
             <input type="text" name="slug" required value="<?= htmlspecialchars($plan['slug'] ?? '') ?>" style="
-                width:100%; padding:8px 10px; border-radius:8px; border:1px solid #272727;
-                background:#050509; color:#f5f5f5; font-size:14px;">
+                width:100%; padding:8px 10px; border-radius:8px; border:1px solid var(--border-subtle);
+                background:var(--surface-subtle); color:var(--text-primary); font-size:14px;">
             <div style="font-size:11px; color:#777; margin-top:3px;">
                 Usado nas URLs e integrações (ex: free, pro). O sistema pode adicionar um sufixo automático (<code>-mensal</code>, <code>-semestral</code>, <code>-anual</code>) conforme o ciclo escolhido.
             </div>
         </div>
 
         <div>
-            <label style="font-size:13px; color:#ddd; display:block; margin-bottom:4px;">Preço por período (R$)</label>
+            <label style="font-size:13px; color:var(--text-primary); display:block; margin-bottom:4px;">Preço por período (R$)</label>
             <input type="text" name="price" required value="<?= isset($plan['price_cents']) ? number_format($plan['price_cents']/100, 2, ',', '.') : '0,00' ?>" style="
-                width:120px; padding:8px 10px; border-radius:8px; border:1px solid #272727;
-                background:#050509; color:#f5f5f5; font-size:14px;">
+                width:120px; padding:8px 10px; border-radius:8px; border:1px solid var(--border-subtle);
+                background:var(--surface-subtle); color:var(--text-primary); font-size:14px;">
             <div style="font-size:11px; color:#777; margin-top:3px;">
                 Informe o valor cobrado em cada ciclo: mensal, semestral ou anual (de acordo com o sufixo do slug).
             </div>
@@ -86,33 +86,33 @@ if ($slugForCycle !== '') {
 
         <div style="display:flex; gap:16px; flex-wrap:wrap;">
             <div style="flex:1 1 160px;">
-                <label style="font-size:13px; color:#ddd; display:block; margin-bottom:4px;">Limite mensal de tokens</label>
+                <label style="font-size:13px; color:var(--text-primary); display:block; margin-bottom:4px;">Limite mensal de tokens</label>
                 <input type="number" name="monthly_token_limit" min="0" value="<?= isset($plan['monthly_token_limit']) ? (int)$plan['monthly_token_limit'] : '' ?>" style="
-                    width:160px; padding:8px 10px; border-radius:8px; border:1px solid #272727;
-                    background:#050509; color:#f5f5f5; font-size:13px;">
+                    width:160px; padding:8px 10px; border-radius:8px; border:1px solid var(--border-subtle);
+                    background:var(--surface-subtle); color:var(--text-primary); font-size:13px;">
                 <div style="font-size:11px; color:#777; margin-top:3px;">Se vazio ou 0, o plano não terá limite mensal rígido de tokens.</div>
             </div>
         </div>
 
         <div>
-            <label style="font-size:13px; color:#ddd; display:block; margin-bottom:4px;">Descrição curta</label>
+            <label style="font-size:13px; color:var(--text-primary); display:block; margin-bottom:4px;">Descrição curta</label>
             <textarea name="description" rows="2" style="
-                width:100%; padding:8px 10px; border-radius:8px; border:1px solid #272727;
-                background:#050509; color:#f5f5f5; font-size:13px; resize:vertical;">
+                width:100%; padding:8px 10px; border-radius:8px; border:1px solid var(--border-subtle);
+                background:var(--surface-subtle); color:var(--text-primary); font-size:13px; resize:vertical;">
 <?= htmlspecialchars($plan['description'] ?? '') ?></textarea>
         </div>
 
         <div>
-            <label style="font-size:13px; color:#ddd; display:block; margin-bottom:4px;">Benefícios (um por linha)</label>
+            <label style="font-size:13px; color:var(--text-primary); display:block; margin-bottom:4px;">Benefícios (um por linha)</label>
             <textarea name="benefits" rows="4" style="
-                width:100%; padding:8px 10px; border-radius:8px; border:1px solid #272727;
-                background:#050509; color:#f5f5f5; font-size:13px; resize:vertical;">
+                width:100%; padding:8px 10px; border-radius:8px; border:1px solid var(--border-subtle);
+                background:var(--surface-subtle); color:var(--text-primary); font-size:13px; resize:vertical;">
 <?= htmlspecialchars($plan['benefits'] ?? '') ?></textarea>
         </div>
 
         <div>
-            <label style="font-size:13px; color:#ddd; display:block; margin-bottom:4px;">Modelos de IA permitidos neste plano</label>
-            <div style="display:flex; flex-wrap:wrap; gap:8px; font-size:13px; color:#ddd;">
+            <label style="font-size:13px; color:var(--text-primary); display:block; margin-bottom:4px;">Modelos de IA permitidos neste plano</label>
+            <div style="display:flex; flex-wrap:wrap; gap:8px; font-size:13px; color:var(--text-secondary);">
                 <?php foreach ($knownModels as $m): ?>
                     <label style="display:flex; align-items:center; gap:5px;">
                         <input type="checkbox" name="allowed_models[]" value="<?= htmlspecialchars($m) ?>" <?= in_array($m, $selectedAllowed, true) ? 'checked' : '' ?>>
@@ -124,10 +124,10 @@ if ($slugForCycle !== '') {
         </div>
 
         <div>
-            <label style="font-size:13px; color:#ddd; display:block; margin-bottom:4px;">Modelo padrão deste plano</label>
+            <label style="font-size:13px; color:var(--text-primary); display:block; margin-bottom:4px;">Modelo padrão deste plano</label>
             <select name="default_model" style="
-                width:100%; padding:8px 10px; border-radius:8px; border:1px solid #272727;
-                background:#050509; color:#f5f5f5; font-size:13px;">
+                width:100%; padding:8px 10px; border-radius:8px; border:1px solid var(--border-subtle);
+                background:var(--surface-subtle); color:var(--text-primary); font-size:13px;">
                 <option value="">Usar modelo padrão global</option>
                 <?php foreach ($knownModels as $m): ?>
                     <option value="<?= htmlspecialchars($m) ?>" <?= $planDefaultModel === $m ? 'selected' : '' ?>><?= htmlspecialchars($m) ?></option>
@@ -136,14 +136,14 @@ if ($slugForCycle !== '') {
         </div>
 
         <div>
-            <label style="font-size:13px; color:#ddd; display:block; margin-bottom:4px;">Dias para manter o histórico deste plano (opcional)</label>
+            <label style="font-size:13px; color:var(--text-primary); display:block; margin-bottom:4px;">Dias para manter o histórico deste plano (opcional)</label>
             <input type="number" name="history_retention_days" min="1" value="<?= isset($plan['history_retention_days']) ? (int)$plan['history_retention_days'] : '' ?>" style="
-                width:140px; padding:8px 10px; border-radius:8px; border:1px solid #272727;
-                background:#050509; color:#f5f5f5; font-size:13px;">
+                width:140px; padding:8px 10px; border-radius:8px; border:1px solid var(--border-subtle);
+                background:var(--surface-subtle); color:var(--text-primary); font-size:13px;">
             <div style="font-size:11px; color:#777; margin-top:3px;">Se vazio, usa o valor padrão configurado em Configurações do sistema.</div>
         </div>
 
-        <div style="display:flex; flex-wrap:wrap; gap:10px; font-size:13px; color:#ddd; margin-top:8px;">
+        <div style="display:flex; flex-wrap:wrap; gap:10px; font-size:13px; color:var(--text-secondary); margin-top:8px;">
             <label style="display:flex; align-items:center; gap:5px;">
                 <input type="checkbox" name="allow_audio" value="1" <?= !empty($plan['allow_audio']) ? 'checked' : '' ?>>
                 <span>Permitir áudios</span>
@@ -186,7 +186,7 @@ if ($slugForCycle !== '') {
             </button>
             <a href="/admin/planos" style="
                 display:inline-flex; align-items:center; padding:8px 14px;
-                border-radius:999px; border:1px solid #272727; color:#f5f5f5;
+                border-radius:999px; border:1px solid var(--border-subtle); background:var(--surface-subtle); color:var(--text-primary);
                 font-size:13px; text-decoration:none;">
                 Cancelar
             </a>

@@ -1,9 +1,46 @@
 <?php
 /** @var array $personalities */
 ?>
+<style>
+    .persona-card {
+        flex: 0 0 280px;
+        max-width: 300px;
+        background: var(--surface-card);
+        border-radius: 20px;
+        border: 1px solid var(--border-subtle);
+        overflow: hidden;
+        color: var(--text-primary);
+        text-decoration: none;
+        scroll-snap-align: center;
+        box-shadow: 0 18px 35px rgba(0,0,0,0.25);
+        transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+    }
+    .persona-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 22px 40px rgba(15,23,42,0.3);
+        border-color: var(--accent-soft);
+    }
+    .persona-card-image {
+        width: 100%;
+        height: 220px;
+        overflow: hidden;
+        background: var(--surface-subtle);
+    }
+    .persona-card-desc {
+        font-size: 12px;
+        color: var(--text-secondary);
+        line-height: 1.4;
+        max-height: 5.4em;
+        overflow: hidden;
+    }
+    .persona-card-muted {
+        font-size: 12px;
+        color: var(--text-secondary);
+    }
+</style>
 <div style="max-width: 1000px; margin: 0 auto;">
     <h1 style="font-size: 26px; margin-bottom: 10px; font-weight: 650;">Escolha a personalidade do Tuquinha</h1>
-    <p style="color:#b0b0b0; font-size: 14px; margin-bottom: 8px; max-width: 640px;">
+    <p style="color:var(--text-secondary); font-size: 14px; margin-bottom: 8px; max-width: 640px;">
         Cada personalidade é um "modo" diferente do Tuquinha, com foco, jeito de falar e especialidade próprios.
         Escolha quem vai te ajudar neste próximo chat.
     </p>
@@ -109,19 +146,9 @@
                     <a href="/chat?new=1&amp;persona_id=<?= $id ?>" class="persona-card" style="
                         flex:0 0 280px;
                         max-width: 300px;
-                        background:#050509;
-                        border-radius:20px;
-                        border:1px solid #272727;
-                        overflow:hidden;
-                        color:#f5f5f5;
-                        text-decoration:none;
                         scroll-snap-align:center;
-                        box-shadow:0 18px 35px rgba(0,0,0,0.55);
-                        transition:transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
-                    "
-                       onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 22px 40px rgba(0,0,0,0.7)'; this.style.borderColor='#ff6f60';"
-                       onmouseout="this.style.transform=''; this.style.boxShadow='0 18px 35px rgba(0,0,0,0.55)'; this.style.borderColor='#272727';">
-                        <div style="width:100%; height:220px; overflow:hidden; background:#111118;">
+                    ">
+                        <div class="persona-card-image">
                             <img src="<?= htmlspecialchars($imagePath) ?>" alt="<?= htmlspecialchars($name) ?>" style="width:100%; height:100%; object-fit:cover; display:block;">
                         </div>
                         <div style="padding:10px 12px 12px 12px;">
@@ -139,11 +166,11 @@
                                 </div>
                             <?php endif; ?>
                             <?php if ($desc !== ''): ?>
-                                <div style="font-size:12px; color:#b0b0b0; line-height:1.4; max-height:5.4em; overflow:hidden;">
+                                <div class="persona-card-desc">
                                     <?= nl2br(htmlspecialchars($desc)) ?>
                                 </div>
                             <?php else: ?>
-                                <div style="font-size:12px; color:#b0b0b0;">
+                                <div class="persona-card-muted">
                                     Clique para começar um chat com essa personalidade.
                                 </div>
                             <?php endif; ?>

@@ -5,9 +5,49 @@
 /** @var string|null $success */
 /** @var string|null $error */
 ?>
+<style>
+    .course-card {
+        flex: 1 1 260px;
+        max-width: 300px;
+        background: var(--surface-card);
+        border-radius: 20px;
+        border: 1px solid var(--border-subtle);
+        overflow: hidden;
+        color: var(--text-primary);
+        font-size: 12px;
+        text-align: left;
+        text-decoration: none;
+        box-shadow: 0 12px 30px rgba(15, 23, 42, 0.25);
+        transition: transform 0.16s ease, box-shadow 0.16s ease, border-color 0.16s ease;
+    }
+    .course-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 18px 40px rgba(15, 23, 42, 0.3);
+        border-color: var(--accent-soft);
+    }
+    .course-card-image {
+        width: 100%;
+        height: 180px;
+        overflow: hidden;
+        background: var(--surface-subtle);
+    }
+    .course-card-short {
+        font-size: 12px;
+        color: var(--text-secondary);
+        margin-bottom: 6px;
+        line-height: 1.4;
+        max-height: 3.6em;
+        overflow: hidden;
+    }
+    .course-card-meta {
+        font-size: 11px;
+        color: var(--text-secondary);
+        text-align: right;
+    }
+</style>
 <div style="max-width: 960px; margin: 0 auto;">
     <h1 style="font-size: 22px; margin-bottom: 10px; font-weight: 650;">Cursos do Tuquinha</h1>
-    <p style="color:#b0b0b0; font-size:13px; margin-bottom:14px;">
+    <p style="color:var(--text-secondary); font-size:13px; margin-bottom:14px;">
         Aprofunde sua prática de branding com cursos focados em designers de marca. Alguns cursos são liberados pelo seu plano,
         outros podem ser adquiridos de forma avulsa.
     </p>
@@ -25,7 +65,7 @@
     <?php endif; ?>
 
     <?php if (empty($courses)): ?>
-        <div style="margin-top:10px; color:#b0b0b0; font-size:13px;">
+        <div style="margin-top:10px; color:var(--text-secondary); font-size:13px;">
             Ainda não há cursos disponíveis para o seu perfil no momento.
         </div>
     <?php else: ?>
@@ -43,21 +83,8 @@
                     $priceCents = isset($course['price_cents']) ? (int)$course['price_cents'] : 0;
                     $url = \App\Controllers\CourseController::buildCourseUrl($course);
                 ?>
-                <a href="<?= htmlspecialchars($url) ?>" style="
-                    flex:1 1 260px;
-                    max-width:300px;
-                    background:#050509;
-                    border-radius:20px;
-                    border:1px solid #272727;
-                    overflow:hidden;
-                    color:#f5f5f5;
-                    font-size:12px;
-                    text-align:left;
-                    text-decoration:none;
-                    box-shadow:0 18px 35px rgba(0,0,0,0.55);
-                    transition:transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
-                " onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 22px 45px rgba(0,0,0,0.7)'; this.style.borderColor='#ff6f60';" onmouseout="this.style.transform='none'; this.style.boxShadow='0 18px 35px rgba(0,0,0,0.55)'; this.style.borderColor='#272727';">
-                    <div style="width:100%; height:180px; overflow:hidden; background:#111118;">
+                <a href="<?= htmlspecialchars($url) ?>" class="course-card">
+                    <div class="course-card-image">
                         <?php if ($image !== ''): ?>
                             <img src="<?= htmlspecialchars($image) ?>" alt="<?= htmlspecialchars($title) ?>" style="width:100%; height:100%; object-fit:cover; display:block;">
                         <?php else: ?>
@@ -76,7 +103,7 @@
                             <?php endif; ?>
                         </div>
                         <?php if ($short !== ''): ?>
-                            <div style="font-size:12px; color:#b0b0b0; margin-bottom:6px; line-height:1.4; max-height:3.6em; overflow:hidden;">
+                            <div class="course-card-short">
                                 <?= htmlspecialchars($short) ?>
                             </div>
                         <?php endif; ?>
@@ -88,7 +115,7 @@
                                     Gratuito para planos com cursos
                                 <?php endif; ?>
                             </div>
-                            <div style="font-size:11px; color:#b0b0b0; text-align:right;">
+                            <div class="course-card-meta">
                                 <?php if ($canAccessByPlan): ?>
                                     <div>Disponível pelo seu plano</div>
                                 <?php elseif ($allowPublicPurchase): ?>

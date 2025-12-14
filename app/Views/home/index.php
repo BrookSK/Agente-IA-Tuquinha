@@ -1,34 +1,34 @@
 <div style="max-width: 720px; margin: 0 auto;">
     <h1 style="font-size: 28px; margin-bottom: 12px; font-weight: 650;">Bem-vindo ao Agente IA - Tuquinha</h1>
-    <p style="color: #b0b0b0; margin-bottom: 20px; font-size: 14px;">
+    <p style="color: var(--text-secondary); margin-bottom: 20px; font-size: 14px;">
         Seu mentor inteligente em branding e identidade visual, focado em designers que querem criar
         marcas com alma, estratégia e personalidade de verdade.
     </p>
 
     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; margin-bottom: 24px;">
-        <div style="background: #111118; border-radius: 14px; padding: 14px; border: 1px solid #272727;">
-            <div style="font-size: 12px; text-transform: uppercase; letter-spacing: 0.12em; color: #b0b0b0; margin-bottom: 6px;">Essência</div>
+        <div style="background: var(--surface-card); border-radius: 14px; padding: 14px; border: 1px solid var(--border-subtle);">
+            <div style="font-size: 12px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--text-secondary); margin-bottom: 6px;">Essência</div>
             <div style="font-size: 14px;">Mentor que une estratégia profunda com linguagem acessível, no estilo amigo que te puxa pra cima.</div>
         </div>
-        <div style="background: #111118; border-radius: 14px; padding: 14px; border: 1px solid #272727;">
-            <div style="font-size: 12px; text-transform: uppercase; letter-spacing: 0.12em; color: #b0b0b0; margin-bottom: 6px;">Foco</div>
+        <div style="background: var(--surface-card); border-radius: 14px; padding: 14px; border: 1px solid var(--border-subtle);">
+            <div style="font-size: 12px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--text-secondary); margin-bottom: 6px;">Foco</div>
             <div style="font-size: 14px;">Branding Vivo: Alma → Voz → Corpo → Vida. Nada de marca vazia, tudo começa na estratégia.</div>
         </div>
-        <div style="background: #111118; border-radius: 14px; padding: 14px; border: 1px solid #272727;">
-            <div style="font-size: 12px; text-transform: uppercase; letter-spacing: 0.12em; color: #b0b0b0; margin-bottom: 6px;">Para quem</div>
+        <div style="background: var(--surface-card); border-radius: 14px; padding: 14px; border: 1px solid var(--border-subtle);">
+            <div style="font-size: 12px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--text-secondary); margin-bottom: 6px;">Para quem</div>
             <div style="font-size: 14px;">Designers iniciantes ou experientes que querem elevar o nível estratégico dos projetos.</div>
         </div>
     </div>
 
     <!-- CTA para instalar o app (PWA) - exibido apenas em mobile via JS -->
     <div id="pwa-install-banner" style="display:none; margin-bottom: 18px;">
-        <div style="background:#111118; border-radius:14px; border:1px solid #272727; padding:12px 14px; display:flex; align-items:center; gap:10px;">
-            <div style="width:36px; height:36px; border-radius:12px; overflow:hidden; background:#050509; display:flex; align-items:center; justify-content:center;">
+        <div style="background:var(--surface-card); border-radius:14px; border:1px solid var(--border-subtle); padding:12px 14px; display:flex; align-items:center; gap:10px;">
+            <div style="width:36px; height:36px; border-radius:12px; overflow:hidden; background:var(--surface-subtle); display:flex; align-items:center; justify-content:center;">
                 <img src="/public/favicon.png" alt="Tuquinha" style="width:100%; height:100%; display:block; object-fit:cover;">
             </div>
             <div style="flex:1;">
                 <div style="font-size:13px; font-weight:600; margin-bottom:2px;">Leve o Tuquinha pro seu celular</div>
-                <div style="font-size:12px; color:#b0b0b0;">Instale o app na tela inicial e volte pro chat em 1 toque.</div>
+                <div style="font-size:12px; color:var(--text-secondary);">Instale o app na tela inicial e volte pro chat em 1 toque.</div>
             </div>
             <button id="pwa-install-button" type="button" style="border:none; border-radius:999px; padding:8px 12px; font-size:12px; font-weight:600; cursor:pointer; background:linear-gradient(135deg,#e53935,#ff6f60); color:#050509;">
                 Instalar app
