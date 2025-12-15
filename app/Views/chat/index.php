@@ -833,12 +833,14 @@ if (!empty($currentPlan) && is_array($currentPlan)) {
 
                 const bubble = document.createElement('div');
                 bubble.style.maxWidth = '80%';
-                bubble.style.background = '#1e1e24';
+                bubble.style.background = 'var(--surface-card)';
                 bubble.style.borderRadius = '16px 16px 4px 16px';
                 bubble.style.padding = '9px 12px';
                 bubble.style.fontSize = '14px';
                 bubble.style.whiteSpace = 'pre-wrap';
                 bubble.style.wordWrap = 'break-word';
+                bubble.style.border = '1px solid var(--border-subtle)';
+                bubble.style.color = 'var(--text-primary)';
                 bubble.innerHTML = renderMarkdownSafeJs(text);
 
                 wrapper.appendChild(bubble);
@@ -894,7 +896,7 @@ if (!empty($currentPlan) && is_array($currentPlan)) {
                 avatar.style.borderRadius = '50%';
                 avatar.style.overflow = 'hidden';
                 avatar.style.flexShrink = '0';
-                avatar.style.background = '#050509';
+                avatar.style.background = 'var(--surface-subtle)';
 
                 var logoImg = document.createElement('img');
                 logoImg.src = '/public/favicon.png';
@@ -908,13 +910,14 @@ if (!empty($currentPlan) && is_array($currentPlan)) {
 
                 const bubble = document.createElement('div');
                 bubble.style.maxWidth = '80%';
-                bubble.style.background = '#111118';
+                bubble.style.background = 'var(--surface-card)';
                 bubble.style.borderRadius = '16px 16px 16px 4px';
                 bubble.style.padding = '9px 12px';
                 bubble.style.fontSize = '14px';
                 bubble.style.whiteSpace = 'pre-wrap';
                 bubble.style.wordWrap = 'break-word';
-                bubble.style.border = '1px solid #272727';
+                bubble.style.border = '1px solid var(--border-subtle)';
+                bubble.style.color = 'var(--text-primary)';
                 bubble.innerHTML = renderMarkdownSafeJs(text);
 
                 row.appendChild(avatar);
