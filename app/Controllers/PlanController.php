@@ -30,7 +30,7 @@ class PlanController extends Controller
                         // Considera como assinatura paga ativa se o plano não for free e a assinatura não estiver cancelada
                         $status = strtolower((string)($subscription['status'] ?? ''));
                         $slug = (string)($planFromSub['slug'] ?? '');
-                        if ($slug !== 'free' && in_array($status, ['active', 'pending'], true)) {
+                        if ($slug !== 'free' && !in_array($status, ['canceled', 'expired'], true)) {
                             $hasPaidActiveSubscription = true;
                         }
 

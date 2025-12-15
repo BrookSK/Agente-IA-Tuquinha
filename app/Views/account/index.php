@@ -17,7 +17,7 @@ $hasPaidActivePlan = false;
 if (!empty($plan) && !empty($subscription)) {
     $slug = (string)($plan['slug'] ?? '');
     $status = strtolower((string)($subscription['status'] ?? ''));
-    if ($slug !== 'free' && in_array($status, ['active', 'pending'], true)) {
+    if ($slug !== 'free' && !in_array($status, ['canceled', 'expired'], true)) {
         $hasPaidActivePlan = true;
     }
 }
