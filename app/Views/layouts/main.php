@@ -99,6 +99,10 @@ if (!empty($_SESSION['user_id'])) {
         body[data-theme="light"] [style*="background: #1c1c24"] {
             background: var(--surface-subtle) !important;
         }
+        body[data-theme="light"] #social-chat-messages [style*="linear-gradient(135deg,#e53935,#ff6f60)"],
+        body[data-theme="light"] #social-chat-messages [style*="linear-gradient(135deg, #e53935,#ff6f60)"] {
+            color: #ffffff !important;
+        }
 
         .sidebar {
             width: 260px;

@@ -107,14 +107,28 @@ class SocialChatController extends Controller
 
         $conversationId = isset($_POST['conversation_id']) ? (int)$_POST['conversation_id'] : 0;
         $body = trim((string)($_POST['body'] ?? ''));
+        $isAjax = (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower((string)$_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest')
+            || (!empty($_POST['ajax']) && (string)$_POST['ajax'] === '1');
 
         if ($conversationId <= 0) {
+            if ($isAjax) {
+                header('Content-Type: application/json');
+                echo json_encode(['ok' => false, 'error' => 'Conversa inválida.']);
+                return;
+            }
+
             header('Location: /amigos');
             exit;
         }
 
         $conversation = SocialConversation::findById($conversationId);
         if (!$conversation) {
+            if ($isAjax) {
+                header('Content-Type: application/json');
+                echo json_encode(['ok' => false, 'error' => 'Conversa não encontrada.']);
+                return;
+            }
+
             header('Location: /amigos');
             exit;
         }
@@ -122,6 +136,12 @@ class SocialChatController extends Controller
         $u1 = (int)($conversation['user1_id'] ?? 0);
         $u2 = (int)($conversation['user2_id'] ?? 0);
         if ($currentId !== $u1 && $currentId !== $u2) {
+            if ($isAjax) {
+                header('Content-Type: application/json');
+                echo json_encode(['ok' => false, 'error' => 'Você não participa desta conversa.']);
+                return;
+            }
+
             header('Location: /amigos');
             exit;
         }
@@ -129,13 +149,38 @@ class SocialChatController extends Controller
         $otherUserId = $currentId === $u1 ? $u2 : $u1;
         $this->ensureFriends($currentId, $otherUserId);
 
-        if ($body !== '') {
-            SocialMessage::create([
-                'conversation_id' => $conversationId,
-                'sender_user_id' => $currentId,
-                'body' => $body,
+        if ($body === '') {
+            if ($isAjax) {
+                header('Content-Type: application/json');
+                echo json_encode(['ok' => false, 'error' => 'Mensagem vazia.']);
+                return;
+            }
+
+            header('Location: /social/chat?conversation_id=' . $conversationId);
+            exit;
+        }
+
+        $messageId = SocialMessage::create([
+            'conversation_id' => $conversationId,
+            'sender_user_id' => $currentId,
+            'body' => $body,
+        ]);
+        SocialConversation::touchWithMessage($conversationId, $body);
+
+        if ($isAjax) {
+            header('Content-Type: application/json');
+            echo json_encode([
+                'ok' => true,
+                'message' => [
+                    'id' => $messageId,
+                    'conversation_id' => $conversationId,
+                    'sender_user_id' => $currentId,
+                    'sender_name' => (string)($currentUser['name'] ?? ''),
+                    'body' => $body,
+                    'created_at' => date('Y-m-d H:i:s'),
+                ],
             ]);
-            SocialConversation::touchWithMessage($conversationId, $body);
+            return;
         }
 
         header('Location: /social/chat?conversation_id=' . $conversationId);

@@ -6,6 +6,7 @@
 /** @var array $messages */
 
 $currentId = (int)($user['id'] ?? 0);
+$currentName = (string)($user['name'] ?? 'Você');
 $otherName = (string)($otherUser['name'] ?? 'Amigo');
 $conversationId = (int)($conversation['id'] ?? 0);
 
@@ -16,12 +17,12 @@ $conversationId = (int)($conversation['id'] ?? 0);
             Chamada com <?= htmlspecialchars($otherName, ENT_QUOTES, 'UTF-8') ?>
         </div>
         <div style="display:flex; flex-direction:column; gap:8px;">
-            <div style="background:#000; border-radius:12px; height:160px; overflow:hidden; position:relative;">
+            <div style="background:#000; border-radius:12px; height:160px; overflow:hidden; position:relative; border:1px solid #272727;">
                 <div id="tuquinha-local-video" style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; color:#b0b0b0; font-size:12px;">
                     Sua câmera aparecerá aqui quando a chamada for iniciada.
                 </div>
             </div>
-            <div style="background:#000; border-radius:12px; height:160px; overflow:hidden; position:relative;">
+            <div style="background:#000; border-radius:12px; height:160px; overflow:hidden; position:relative; border:1px solid #272727;">
                 <div id="tuquinha-remote-video" style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; color:#b0b0b0; font-size:12px;">
                     <span id="tuquinha-call-status">Chamada não iniciada.</span>
                 </div>
@@ -64,7 +65,8 @@ $conversationId = (int)($conversation['id'] ?? 0);
                     <div style="display:flex; justify-content:<?= $isOwn ? 'flex-end' : 'flex-start' ?>;">
                         <div style="max-width:78%; padding:6px 8px; border-radius:10px; font-size:12px; line-height:1.4;
                             background:<?= $isOwn ? 'linear-gradient(135deg,#e53935,#ff6f60)' : '#1c1c24' ?>;
-                            color:<?= $isOwn ? '#050509' : '#f5f5f5' ?>;">
+                            color:<?= $isOwn ? '#050509' : '#f5f5f5' ?>;
+                            border:1px solid #272727;">
                             <?php if (!$isOwn): ?>
                                 <div style="font-size:11px; font-weight:600; margin-bottom:2px; color:#ffab91;">
                                     <?= htmlspecialchars($senderName, ENT_QUOTES, 'UTF-8') ?>
@@ -82,7 +84,7 @@ $conversationId = (int)($conversation['id'] ?? 0);
             <?php endif; ?>
         </div>
 
-        <form action="/social/chat/enviar" method="post" style="margin-top:8px; display:flex; gap:6px; align-items:flex-end;">
+        <form action="/social/chat/enviar" method="post" style="margin-top:8px; display:flex; gap:6px; align-items:flex-end;" id="social-chat-form">
             <input type="hidden" name="conversation_id" value="<?= $conversationId ?>">
             <textarea name="body" rows="2" style="flex:1; resize:vertical; min-height:40px; max-height:120px; padding:6px 8px; border-radius:10px; border:1px solid #272727; background:#050509; color:#f5f5f5; font-size:13px;"></textarea>
             <button type="submit" style="border:none; border-radius:999px; padding:8px 14px; background:linear-gradient(135deg,#e53935,#ff6f60); color:#050509; font-size:13px; font-weight:600; cursor:pointer; white-space:nowrap;">
@@ -105,6 +107,8 @@ $conversationId = (int)($conversation['id'] ?? 0);
     var statusSpan = document.getElementById('tuquinha-call-status');
     var jitsiApi = null;
     var roomName = 'tuquinha-social-' + <?= $conversationId ?>;
+    var chatForm = document.getElementById('social-chat-form');
+    var currentUserName = <?= json_encode($currentName, JSON_UNESCAPED_UNICODE) ?>;
 
     function setStatus(text) {
         if (statusSpan) {
@@ -168,7 +172,15 @@ $conversationId = (int)($conversation['id'] ?? 0);
                     height: '100%',
                     interfaceConfigOverwrite: {
                         TILE_VIEW_MAX_COLUMNS: 1,
+                        SHOW_JITSI_WATERMARK: false,
+                        SHOW_BRAND_WATERMARK: false,
+                        SHOW_POWERED_BY: false,
+                        SHOW_DEEP_LINKING_IMAGE: false,
+                        TOOLBAR_BUTTONS: ['microphone', 'camera']
                     },
+                    configOverwrite: {
+                        disableDeepLinking: true
+                    }
                 });
 
                 setStatus('Chamada em andamento. Peça para seu amigo abrir esta mesma conversa e clicar em "Iniciar chamada de vídeo".');
@@ -203,11 +215,111 @@ $conversationId = (int)($conversation['id'] ?? 0);
         setStatus('Chamada não iniciada.');
     }
 
+    function appendOwnMessage(body, createdAt) {
+        var list = document.getElementById('social-chat-messages');
+        if (!list) {
+            return;
+        }
+
+        var wrapper = document.createElement('div');
+        wrapper.style.display = 'flex';
+        wrapper.style.justifyContent = 'flex-end';
+
+        var bubble = document.createElement('div');
+        bubble.style.maxWidth = '78%';
+        bubble.style.padding = '6px 8px';
+        bubble.style.borderRadius = '10px';
+        bubble.style.fontSize = '12px';
+        bubble.style.lineHeight = '1.4';
+        bubble.style.background = 'linear-gradient(135deg,#e53935,#ff6f60)';
+        bubble.style.color = '#050509';
+
+        var bodyDiv = document.createElement('div');
+        bodyDiv.innerText = body;
+        bubble.appendChild(bodyDiv);
+
+        if (createdAt) {
+            var meta = document.createElement('div');
+            meta.style.fontSize = '10px';
+            meta.style.marginTop = '2px';
+            meta.style.opacity = '0.8';
+            meta.style.textAlign = 'right';
+            meta.innerText = createdAt;
+            bubble.appendChild(meta);
+        }
+
+        wrapper.appendChild(bubble);
+        list.appendChild(wrapper);
+
+        list.scrollTop = list.scrollHeight;
+    }
+
     if (startBtn) {
         startBtn.addEventListener('click', startCall);
     }
     if (endBtn) {
         endBtn.addEventListener('click', endCall);
+    }
+
+    if (chatForm) {
+        chatForm.addEventListener('submit', function (e) {
+            e.preventDefault();
+
+            var textarea = chatForm.querySelector('textarea[name="body"]');
+            if (!textarea) {
+                chatForm.submit();
+                return;
+            }
+
+            var text = textarea.value.trim();
+            if (!text) {
+                return;
+            }
+
+            var submitBtn = chatForm.querySelector('button[type="submit"]');
+            if (submitBtn) {
+                submitBtn.disabled = true;
+            }
+
+            var formData = new FormData(chatForm);
+            formData.append('ajax', '1');
+
+            fetch('/social/chat/enviar', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            }).then(function (res) {
+                return res.json();
+            }).then(function (data) {
+                if (data && data.ok && data.message) {
+                    appendOwnMessage(data.message.body || text, data.message.created_at || '');
+                    textarea.value = '';
+                }
+            }).catch(function () {
+                // Se der erro no AJAX, faz fallback para submit normal
+                chatForm.submit();
+            }).finally(function () {
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                }
+            });
+        });
+
+        var textarea = chatForm.querySelector('textarea[name="body"]');
+        if (textarea) {
+            textarea.addEventListener('keydown', function (e) {
+                if (e.key === 'Enter' || e.keyCode === 13) {
+                    if (e.shiftKey) {
+                        // Permite quebra de linha com Shift+Enter
+                        return;
+                    }
+                    e.preventDefault();
+                    chatForm.dispatchEvent(new Event('submit', {cancelable: true}));
+                }
+            });
+        }
     }
 })();
 </script>
