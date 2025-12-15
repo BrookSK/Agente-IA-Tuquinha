@@ -115,6 +115,9 @@ $conversationId = (int)($conversation['id'] ?? 0);
     var conversationId = <?= (int)$conversationId ?>;
     var lastMessageId = <?= isset($lastMessageId) ? (int)$lastMessageId : 0 ?>;
 
+    var hasFetch = typeof window.fetch === 'function';
+    var RTCPeerConnectionCtor = window.RTCPeerConnection || window.webkitRTCPeerConnection || window.mozRTCPeerConnection;
+
     var pc = null;
     var localStream = null;
     var localVideoEl = null;
@@ -150,7 +153,12 @@ $conversationId = (int)($conversation['id'] ?? 0);
             return pc;
         }
 
-        pc = new RTCPeerConnection({
+        if (!RTCPeerConnectionCtor) {
+            setStatus('Seu navegador não suporta chamadas de vídeo.');
+            return null;
+        }
+
+        pc = new RTCPeerConnectionCtor({
             iceServers: [
                 { urls: 'stun:stun.l.google.com:19302' }
             ]
@@ -312,6 +320,10 @@ $conversationId = (int)($conversation['id'] ?? 0);
     }
 
     function pollSignals() {
+        if (!hasFetch) {
+            return;
+        }
+
         if (polling) {
             return;
         }
@@ -375,6 +387,12 @@ $conversationId = (int)($conversation['id'] ?? 0);
         }
         weWantCall = true;
         setStatus('Conectando à chamada...');
+
+        if (!RTCPeerConnectionCtor) {
+            setStatus('Seu navegador não suporta chamadas de vídeo.');
+            weWantCall = false;
+            return;
+        }
 
         ensureLocalStream().then(function () {
             sendSignal('ready', { user: currentUserName });
@@ -538,6 +556,12 @@ $conversationId = (int)($conversation['id'] ?? 0);
                 submitBtn.disabled = true;
             }
 
+            if (!hasFetch) {
+                // navegador sem fetch: faz submit normal
+                chatForm.submit();
+                return;
+            }
+
             var formData = new FormData(chatForm);
             formData.append('ajax', '1');
 
@@ -576,7 +600,11 @@ $conversationId = (int)($conversation['id'] ?? 0);
                         return;
                     }
                     e.preventDefault();
-                    chatForm.dispatchEvent(new Event('submit', {cancelable: true}));
+                    if (typeof chatForm.requestSubmit === 'function') {
+                        chatForm.requestSubmit();
+                    } else {
+                        chatForm.submit();
+                    }
                 }
             });
         }
@@ -584,6 +612,10 @@ $conversationId = (int)($conversation['id'] ?? 0);
 
     function pollMessages() {
         if (!conversationId) {
+            return;
+        }
+
+        if (!hasFetch) {
             return;
         }
 
@@ -624,8 +656,10 @@ $conversationId = (int)($conversation['id'] ?? 0);
     }
 
     // inicia o polling de sinais para receber oferta/answer/candidates do amigo
-    pollSignals();
-    // inicia o polling de mensagens para ver novas mensagens do amigo
-    pollMessages();
+    if (hasFetch) {
+        pollSignals();
+        // inicia o polling de mensagens para ver novas mensagens do amigo
+        pollMessages();
+    }
 })();
 </script>
