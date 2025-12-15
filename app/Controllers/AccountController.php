@@ -88,7 +88,8 @@ class AccountController extends Controller
             }
 
             $hasMinDays = $currentDays >= $minDays;
-            $canRefer = $referralEnabled && ($status === 'active') && $hasMinDays;
+            $isCanceled = in_array($status, ['canceled', 'expired'], true);
+            $canRefer = $referralEnabled && !$isCanceled && $hasMinDays;
 
             $link = '';
             $referralCode = '';
@@ -265,7 +266,8 @@ class AccountController extends Controller
             }
 
             $hasMinDays = $currentDays >= $minDays;
-            $canRefer = $referralEnabled && ($status === 'active') && $hasMinDays;
+            $isCanceled = in_array($status, ['canceled', 'expired'], true);
+            $canRefer = $referralEnabled && !$isCanceled && $hasMinDays;
 
             $link = '';
             $referralCode = '';
