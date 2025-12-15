@@ -49,8 +49,21 @@ class Plan
     public static function create(array $data): int
     {
         $pdo = Database::getConnection();
-        $stmt = $pdo->prepare('INSERT INTO plans (name, slug, price_cents, description, benefits, monthly_token_limit, allowed_models, default_model, allow_audio, allow_images, allow_files, allow_personalities, allow_courses, is_active, history_retention_days)
-            VALUES (:name, :slug, :price_cents, :description, :benefits, :monthly_token_limit, :allowed_models, :default_model, :allow_audio, :allow_images, :allow_files, :allow_personalities, :allow_courses, :is_active, :history_retention_days)');
+        $stmt = $pdo->prepare('INSERT INTO plans (
+                name, slug, price_cents, description, benefits,
+                monthly_token_limit, allowed_models, default_model,
+                allow_audio, allow_images, allow_files, allow_personalities, allow_courses,
+                is_active, history_retention_days,
+                referral_enabled, referral_min_active_days, referral_referrer_tokens,
+                referral_friend_tokens, referral_free_days, referral_require_card
+            ) VALUES (
+                :name, :slug, :price_cents, :description, :benefits,
+                :monthly_token_limit, :allowed_models, :default_model,
+                :allow_audio, :allow_images, :allow_files, :allow_personalities, :allow_courses,
+                :is_active, :history_retention_days,
+                :referral_enabled, :referral_min_active_days, :referral_referrer_tokens,
+                :referral_friend_tokens, :referral_free_days, :referral_require_card
+            )');
         $stmt->execute([
             'name' => $data['name'] ?? '',
             'slug' => $data['slug'] ?? '',
@@ -67,6 +80,12 @@ class Plan
             'allow_courses' => (int)($data['allow_courses'] ?? 0),
             'is_active' => (int)($data['is_active'] ?? 1),
             'history_retention_days' => isset($data['history_retention_days']) ? (int)$data['history_retention_days'] : null,
+            'referral_enabled' => (int)($data['referral_enabled'] ?? 0),
+            'referral_min_active_days' => isset($data['referral_min_active_days']) && $data['referral_min_active_days'] !== '' ? (int)$data['referral_min_active_days'] : null,
+            'referral_referrer_tokens' => isset($data['referral_referrer_tokens']) && $data['referral_referrer_tokens'] !== '' ? (int)$data['referral_referrer_tokens'] : null,
+            'referral_friend_tokens' => isset($data['referral_friend_tokens']) && $data['referral_friend_tokens'] !== '' ? (int)$data['referral_friend_tokens'] : null,
+            'referral_free_days' => isset($data['referral_free_days']) && $data['referral_free_days'] !== '' ? (int)$data['referral_free_days'] : null,
+            'referral_require_card' => (int)($data['referral_require_card'] ?? 1),
         ]);
         return (int)$pdo->lastInsertId();
     }
@@ -90,6 +109,12 @@ class Plan
             allow_courses = :allow_courses,
             is_active = :is_active,
             history_retention_days = :history_retention_days,
+            referral_enabled = :referral_enabled,
+            referral_min_active_days = :referral_min_active_days,
+            referral_referrer_tokens = :referral_referrer_tokens,
+            referral_friend_tokens = :referral_friend_tokens,
+            referral_free_days = :referral_free_days,
+            referral_require_card = :referral_require_card,
             is_default_for_users = :is_default_for_users
             WHERE id = :id');
         $stmt->execute([
@@ -109,6 +134,12 @@ class Plan
             'allow_courses' => (int)($data['allow_courses'] ?? 0),
             'is_active' => (int)($data['is_active'] ?? 1),
             'history_retention_days' => isset($data['history_retention_days']) ? (int)$data['history_retention_days'] : null,
+            'referral_enabled' => (int)($data['referral_enabled'] ?? 0),
+            'referral_min_active_days' => isset($data['referral_min_active_days']) && $data['referral_min_active_days'] !== '' ? (int)$data['referral_min_active_days'] : null,
+            'referral_referrer_tokens' => isset($data['referral_referrer_tokens']) && $data['referral_referrer_tokens'] !== '' ? (int)$data['referral_referrer_tokens'] : null,
+            'referral_friend_tokens' => isset($data['referral_friend_tokens']) && $data['referral_friend_tokens'] !== '' ? (int)$data['referral_friend_tokens'] : null,
+            'referral_free_days' => isset($data['referral_free_days']) && $data['referral_free_days'] !== '' ? (int)$data['referral_free_days'] : null,
+            'referral_require_card' => (int)($data['referral_require_card'] ?? 1),
             'is_default_for_users' => (int)($data['is_default_for_users'] ?? 0),
         ]);
     }

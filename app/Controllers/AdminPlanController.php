@@ -67,6 +67,13 @@ class AdminPlanController extends Controller
             ? max(1, (int)$_POST['history_retention_days'])
             : null;
 
+        $referralEnabled = !empty($_POST['referral_enabled']) ? 1 : 0;
+        $referralMinActiveDaysRaw = trim($_POST['referral_min_active_days'] ?? '');
+        $referralReferrerTokensRaw = trim($_POST['referral_referrer_tokens'] ?? '');
+        $referralFriendTokensRaw = trim($_POST['referral_friend_tokens'] ?? '');
+        $referralFreeDaysRaw = trim($_POST['referral_free_days'] ?? '');
+        $referralRequireCard = !empty($_POST['referral_require_card']) ? 1 : 0;
+
         $billingCycle = $_POST['billing_cycle'] ?? 'monthly';
 
         $priceCents = (int)round(str_replace([',', ' '], ['.', ''], $price) * 100);
@@ -77,6 +84,26 @@ class AdminPlanController extends Controller
         $monthlyTokenLimit = null;
         if ($monthlyTokenLimitRaw !== '') {
             $monthlyTokenLimit = max(0, (int)$monthlyTokenLimitRaw);
+        }
+
+        $referralMinActiveDays = null;
+        if ($referralMinActiveDaysRaw !== '') {
+            $referralMinActiveDays = max(0, (int)$referralMinActiveDaysRaw);
+        }
+
+        $referralReferrerTokens = null;
+        if ($referralReferrerTokensRaw !== '') {
+            $referralReferrerTokens = max(0, (int)$referralReferrerTokensRaw);
+        }
+
+        $referralFriendTokens = null;
+        if ($referralFriendTokensRaw !== '') {
+            $referralFriendTokens = max(0, (int)$referralFriendTokensRaw);
+        }
+
+        $referralFreeDays = null;
+        if ($referralFreeDaysRaw !== '') {
+            $referralFreeDays = max(0, (int)$referralFreeDaysRaw);
         }
 
         // Normaliza slug base removendo possíveis sufixos anteriores de ciclo
@@ -117,6 +144,12 @@ class AdminPlanController extends Controller
             'allow_courses' => $allowCourses,
             'is_active' => $isActive,
             'is_default_for_users' => $isDefaultForUsers,
+            'referral_enabled' => $referralEnabled,
+            'referral_min_active_days' => $referralMinActiveDays,
+            'referral_referrer_tokens' => $referralReferrerTokens,
+            'referral_friend_tokens' => $referralFriendTokens,
+            'referral_free_days' => $referralFreeDays,
+            'referral_require_card' => $referralRequireCard,
         ];
 
         if ($id > 0) {

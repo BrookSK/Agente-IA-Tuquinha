@@ -278,4 +278,61 @@ class User
             'meta' => $meta ? json_encode($meta, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) : null,
         ]);
     }
+
+    public static function getOrCreateReferralCode(int $id): string
+    {
+        if ($id <= 0) {
+            return '';
+        }
+
+        $pdo = Database::getConnection();
+
+        $stmt = $pdo->prepare('SELECT referral_code FROM users WHERE id = :id LIMIT 1');
+        $stmt->execute(['id' => $id]);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        $existing = trim((string)($row['referral_code'] ?? ''));
+        if ($existing !== '') {
+            return $existing;
+        }
+
+        // Gera um código curto e tenta garantir unicidade
+        for ($i = 0; $i < 5; $i++) {
+            $candidate = substr(bin2hex(random_bytes(6)), 0, 10);
+
+            $check = $pdo->prepare('SELECT id FROM users WHERE referral_code = :code LIMIT 1');
+            $check->execute(['code' => $candidate]);
+            if (!$check->fetch(PDO::FETCH_ASSOC)) {
+                $update = $pdo->prepare('UPDATE users SET referral_code = :code WHERE id = :id LIMIT 1');
+                $update->execute([
+                    'code' => $candidate,
+                    'id' => $id,
+                ]);
+                return $candidate;
+            }
+        }
+
+        // Fallback simples baseado no ID, em caso de colisões improváveis
+        $fallback = 'U' . $id;
+        $update = $pdo->prepare('UPDATE users SET referral_code = :code WHERE id = :id LIMIT 1');
+        $update->execute([
+            'code' => $fallback,
+            'id' => $id,
+        ]);
+
+        return $fallback;
+    }
+
+    public static function findByReferralCode(string $code): ?array
+    {
+        $code = trim($code);
+        if ($code === '') {
+            return null;
+        }
+
+        $pdo = Database::getConnection();
+        $stmt = $pdo->prepare('SELECT * FROM users WHERE referral_code = :code LIMIT 1');
+        $stmt->execute(['code' => $code]);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $row ?: null;
+    }
 }

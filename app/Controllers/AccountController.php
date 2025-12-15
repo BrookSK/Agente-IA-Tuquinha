@@ -69,6 +69,53 @@ class AccountController extends Controller
 
         $personalities = Personality::allActive();
 
+        // Dados do programa de indicação (Indique e ganhe)
+        $referralData = null;
+        if ($plan && $subscription && !empty($plan['referral_enabled'])) {
+            $status = strtolower((string)($subscription['status'] ?? ''));
+            $minDays = isset($plan['referral_min_active_days']) ? (int)$plan['referral_min_active_days'] : 0;
+            $currentDays = 0;
+
+            if (!empty($subscription['created_at'])) {
+                try {
+                    $now = new \DateTimeImmutable('now');
+                    $createdAt = new \DateTimeImmutable($subscription['created_at']);
+                    $currentDays = (int)$now->diff($createdAt)->days;
+                } catch (\Throwable $e) {
+                    $currentDays = 0;
+                }
+            }
+
+            $hasMinDays = $currentDays >= $minDays;
+            $canRefer = ($status === 'active') && $hasMinDays;
+
+            $link = '';
+            $referralCode = '';
+            if ($canRefer) {
+                $referralCode = User::getOrCreateReferralCode((int)$user['id']);
+                if ($referralCode !== '') {
+                    $scheme = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') ? 'https://' : 'http://';
+                    $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+                    $baseUrl = $scheme . $host;
+                    $link = $baseUrl . '/registrar?ref=' . urlencode($referralCode) . '&plan=' . urlencode((string)$plan['slug']);
+                }
+            }
+
+            $referralData = [
+                'enabled' => true,
+                'canRefer' => $canRefer,
+                'minDays' => $minDays,
+                'currentDays' => $currentDays,
+                'planName' => $plan['name'] ?? '',
+                'planSlug' => $plan['slug'] ?? '',
+                'link' => $link,
+                'referralCode' => $referralCode,
+                'friendTokens' => (int)($plan['referral_friend_tokens'] ?? 0),
+                'referrerTokens' => (int)($plan['referral_referrer_tokens'] ?? 0),
+                'freeDays' => (int)($plan['referral_free_days'] ?? 0),
+            ];
+        }
+
         $this->view('account/index', [
             'pageTitle' => 'Minha conta',
             'user' => $user,
@@ -79,6 +126,7 @@ class AccountController extends Controller
             'subscriptionNext' => $subscriptionNext,
             'tokenBalance' => $tokenBalance,
             'personalities' => $personalities,
+            'referralData' => $referralData,
             'error' => null,
             'success' => null,
         ]);
@@ -197,6 +245,53 @@ class AccountController extends Controller
 
         $personalities = Personality::allActive();
 
+        // Dados do programa de indicação (Indique e ganhe) também neste fluxo
+        $referralData = null;
+        if ($plan && $subscription && !empty($plan['referral_enabled'])) {
+            $status = strtolower((string)($subscription['status'] ?? ''));
+            $minDays = isset($plan['referral_min_active_days']) ? (int)$plan['referral_min_active_days'] : 0;
+            $currentDays = 0;
+
+            if (!empty($subscription['created_at'])) {
+                try {
+                    $now = new \DateTimeImmutable('now');
+                    $createdAt = new \DateTimeImmutable($subscription['created_at']);
+                    $currentDays = (int)$now->diff($createdAt)->days;
+                } catch (\Throwable $e) {
+                    $currentDays = 0;
+                }
+            }
+
+            $hasMinDays = $currentDays >= $minDays;
+            $canRefer = ($status === 'active') && $hasMinDays;
+
+            $link = '';
+            $referralCode = '';
+            if ($canRefer) {
+                $referralCode = User::getOrCreateReferralCode((int)$user['id']);
+                if ($referralCode !== '') {
+                    $scheme = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') ? 'https://' : 'http://';
+                    $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+                    $baseUrl = $scheme . $host;
+                    $link = $baseUrl . '/registrar?ref=' . urlencode($referralCode) . '&plan=' . urlencode((string)$plan['slug']);
+                }
+            }
+
+            $referralData = [
+                'enabled' => true,
+                'canRefer' => $canRefer,
+                'minDays' => $minDays,
+                'currentDays' => $currentDays,
+                'planName' => $plan['name'] ?? '',
+                'planSlug' => $plan['slug'] ?? '',
+                'link' => $link,
+                'referralCode' => $referralCode,
+                'friendTokens' => (int)($plan['referral_friend_tokens'] ?? 0),
+                'referrerTokens' => (int)($plan['referral_referrer_tokens'] ?? 0),
+                'freeDays' => (int)($plan['referral_free_days'] ?? 0),
+            ];
+        }
+
         $this->view('account/index', [
             'pageTitle' => 'Minha conta',
             'user' => $user,
@@ -207,6 +302,7 @@ class AccountController extends Controller
             'subscriptionNext' => $subscriptionNext,
             'tokenBalance' => $tokenBalance,
             'personalities' => $personalities,
+            'referralData' => $referralData,
             'error' => $error,
             'success' => $success,
         ]);

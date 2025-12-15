@@ -1,4 +1,5 @@
 <?php /** @var string|null $error */ ?>
+<?php /** @var array|null $referralPlan */ ?>
 <div style="max-width: 420px; margin: 0 auto;">
     <h1 style="font-size: 24px; margin-bottom: 10px;">Criar conta</h1>
     <p style="color:#b0b0b0; font-size: 14px; margin-bottom: 16px;">
@@ -8,6 +9,15 @@
     <?php if (!empty($error)): ?>
         <div style="background:#311; border:1px solid #a33; color:#ffbaba; padding:8px 10px; border-radius:8px; font-size:13px; margin-bottom:12px;">
             <?= htmlspecialchars($error) ?>
+        </div>
+    <?php endif; ?>
+
+    <?php if (!empty($referralPlan)): ?>
+        <div style="background:#102312; border:1px solid #2e7d32; color:#c8ffd4; padding:8px 10px; border-radius:8px; font-size:12px; margin-bottom:12px;">
+            <strong>Indicação ativa:</strong>
+            você está criando sua conta a partir de uma indicação para o plano
+            <strong><?= htmlspecialchars($referralPlan['name'] ?? '') ?></strong>.
+            Depois de confirmar o e-mail, vamos te levar direto para assinar esse plano com as vantagens da indicação.
         </div>
     <?php endif; ?>
 

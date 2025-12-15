@@ -5,6 +5,8 @@ namespace App\Controllers;
 use App\Core\Controller;
 use App\Models\User;
 use App\Models\Plan;
+use App\Models\Subscription;
+use App\Models\UserReferral;
 use App\Services\MailService;
 use App\Core\Database;
 use App\Models\EmailVerification;
@@ -117,9 +119,72 @@ class AuthController extends Controller
 
     public function showRegister(): void
     {
+        $referralPlan = null;
+
+        $refCode = isset($_GET['ref']) ? trim((string)$_GET['ref']) : '';
+        $planSlug = isset($_GET['plan']) ? trim((string)$_GET['plan']) : '';
+
+        if ($refCode !== '' && $planSlug !== '') {
+            $plan = Plan::findBySlug($planSlug);
+            $referrer = User::findByReferralCode($refCode);
+
+            if ($plan && $referrer && !empty($plan['referral_enabled']) && !empty($referrer['email'])) {
+                // Verifica se o usuário que indicou é assinante ativo deste mesmo plano
+                $minDays = isset($plan['referral_min_active_days']) ? (int)$plan['referral_min_active_days'] : 0;
+                $eligible = false;
+
+                try {
+                    $subs = Subscription::allByEmailWithPlan($referrer['email']);
+                    $now = new \DateTimeImmutable('now');
+
+                    foreach ($subs as $s) {
+                        if ((int)($s['plan_id'] ?? 0) !== (int)$plan['id']) {
+                            continue;
+                        }
+                        if ((string)($s['status'] ?? '') !== 'active') {
+                            continue;
+                        }
+                        if (empty($s['created_at'])) {
+                            continue;
+                        }
+
+                        try {
+                            $createdAt = new \DateTimeImmutable($s['created_at']);
+                            $days = (int)$now->diff($createdAt)->days;
+                            if ($days >= $minDays) {
+                                $eligible = true;
+                                break;
+                            }
+                        } catch (\Throwable $e) {
+                            continue;
+                        }
+                    }
+                } catch (\Throwable $e) {
+                    // Se houver erro ao ler assinaturas, não considera a indicação
+                }
+
+                if ($eligible) {
+                    $_SESSION['pending_referral'] = [
+                        'referrer_user_id' => (int)$referrer['id'],
+                        'plan_id' => (int)$plan['id'],
+                        'plan_slug' => (string)$plan['slug'],
+                    ];
+
+                    // Garante que, depois de confirmar o e-mail, o usuário seja levado para o checkout deste plano
+                    $_SESSION['pending_plan_slug'] = (string)$plan['slug'];
+                    $referralPlan = $plan;
+                } else {
+                    unset($_SESSION['pending_referral']);
+                }
+            } else {
+                unset($_SESSION['pending_referral']);
+            }
+        }
+
         $this->view('auth/register', [
             'pageTitle' => 'Criar conta - Tuquinha',
             'error' => null,
+            'referralPlan' => $referralPlan,
         ]);
     }
 
@@ -164,6 +229,18 @@ class AuthController extends Controller
 
         $hash = password_hash($password, PASSWORD_BCRYPT);
         $userId = User::createUser($name, $email, $hash);
+
+        // Se o cadastro veio de um link de indicação válido, registra a indicação pendente
+        $pendingReferral = $_SESSION['pending_referral'] ?? null;
+        if ($pendingReferral && !empty($pendingReferral['referrer_user_id']) && !empty($pendingReferral['plan_id'])) {
+            $plan = Plan::findById((int)$pendingReferral['plan_id']);
+            if ($plan && !empty($plan['referral_enabled'])) {
+                $referrerId = (int)$pendingReferral['referrer_user_id'];
+                if ($referrerId !== $userId) {
+                    UserReferral::createPending($referrerId, (int)$plan['id'], $email, $userId);
+                }
+            }
+        }
 
         // cria código de verificação de e-mail
         $code = str_pad((string)random_int(0, 999999), 6, '0', STR_PAD_LEFT);

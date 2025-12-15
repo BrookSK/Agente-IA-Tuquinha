@@ -5,9 +5,10 @@ namespace App\Controllers;
 use App\Core\Controller;
 use App\Models\Plan;
 use App\Models\Subscription;
+use App\Models\User;
+use App\Models\UserReferral;
 use App\Services\AsaasClient;
 use App\Services\MailService;
-use App\Models\User;
 use App\Models\AsaasConfig;
 
 class CheckoutController extends Controller
@@ -61,6 +62,27 @@ class CheckoutController extends Controller
             http_response_code(404);
             echo 'Plano não encontrado';
             return;
+        }
+
+        $loggedUserId = (int)($_SESSION['user_id'] ?? 0);
+        $pendingReferral = null;
+        $referralFreeDays = 0;
+        $requiresCardNow = true;
+        if ($loggedUserId > 0 && !empty($plan['referral_enabled'])) {
+            try {
+                $pendingReferral = UserReferral::findPendingForUserAndPlan($loggedUserId, (int)$plan['id']);
+                if ($pendingReferral && isset($plan['referral_free_days'])) {
+                    $tmpFree = (int)$plan['referral_free_days'];
+                    if ($tmpFree > 0) {
+                        $referralFreeDays = $tmpFree;
+                    }
+                }
+                if ($pendingReferral && $referralFreeDays > 0 && empty($plan['referral_require_card'])) {
+                    $requiresCardNow = false;
+                }
+            } catch (\Throwable $e) {
+                error_log('CheckoutController::process erro ao verificar indicação pendente: ' . $e->getMessage());
+            }
         }
 
         $step = (int)($_POST['step'] ?? 1);
@@ -119,6 +141,7 @@ class CheckoutController extends Controller
                 'plan' => $plan,
                 'customer' => $customerForSession,
                 'birthdate' => $customerForSession['birthdate'],
+                'requiresCardNow' => $requiresCardNow,
                 'error' => null,
             ]);
             return;
@@ -136,18 +159,30 @@ class CheckoutController extends Controller
             return;
         }
 
-        $requiredCard = ['card_number', 'card_holder', 'card_exp_month', 'card_exp_year', 'card_cvv'];
-        foreach ($requiredCard as $field) {
-            if (empty($_POST[$field])) {
-                $this->view('checkout/show', [
-                    'pageTitle' => 'Checkout - ' . $plan['name'],
-                    'plan' => $plan,
-                    'customer' => $sessionCustomer,
-                    'birthdate' => $sessionCustomer['birthdate'] ?? '',
-                    'error' => 'Por favor, preencha todos os dados do cartão.',
-                ]);
-                return;
+        $creditCard = null;
+        if ($requiresCardNow) {
+            $requiredCard = ['card_number', 'card_holder', 'card_exp_month', 'card_exp_year', 'card_cvv'];
+            foreach ($requiredCard as $field) {
+                if (empty($_POST[$field])) {
+                    $this->view('checkout/show', [
+                        'pageTitle' => 'Checkout - ' . $plan['name'],
+                        'plan' => $plan,
+                        'customer' => $sessionCustomer,
+                        'birthdate' => $sessionCustomer['birthdate'] ?? '',
+                        'requiresCardNow' => $requiresCardNow,
+                        'error' => 'Por favor, preencha todos os dados do cartão.',
+                    ]);
+                    return;
+                }
             }
+
+            $creditCard = [
+                'holderName' => trim($_POST['card_holder']),
+                'number' => preg_replace('/\s+/', '', $_POST['card_number']),
+                'expiryMonth' => (int)$_POST['card_exp_month'],
+                'expiryYear' => (int)$_POST['card_exp_year'],
+                'ccv' => trim($_POST['card_cvv']),
+            ];
         }
 
         $customer = [
@@ -162,14 +197,6 @@ class CheckoutController extends Controller
             'province' => $sessionCustomer['province'],
             'city' => $sessionCustomer['city'],
             'state' => $sessionCustomer['state'],
-        ];
-
-        $creditCard = [
-            'holderName' => trim($_POST['card_holder']),
-            'number' => preg_replace('/\s+/', '', $_POST['card_number']),
-            'expiryMonth' => (int)$_POST['card_exp_month'],
-            'expiryYear' => (int)$_POST['card_exp_year'],
-            'ccv' => trim($_POST['card_cvv']),
         ];
 
         $birthdateInput = $sessionCustomer['birthdate'] ?? '';
@@ -198,12 +225,15 @@ class CheckoutController extends Controller
         }
 
         $subscriptionPayload = [
-            'billingType' => 'CREDIT_CARD',
+            'billingType' => $requiresCardNow ? 'CREDIT_CARD' : 'BOLETO',
             'value' => $plan['price_cents'] / 100,
             'cycle' => $asaasCycle,
             'description' => $plan['name'],
-            'creditCard' => $creditCard,
-            'creditCardHolderInfo' => [
+        ];
+
+        if ($requiresCardNow && $creditCard !== null) {
+            $subscriptionPayload['creditCard'] = $creditCard;
+            $subscriptionPayload['creditCardHolderInfo'] = [
                 'name' => $customer['name'],
                 'email' => $customer['email'],
                 'cpfCnpj' => $customer['cpfCnpj'],
@@ -216,8 +246,21 @@ class CheckoutController extends Controller
                 'city' => $customer['city'],
                 'state' => $customer['state'],
                 'birthDate' => $birthdateForAsaas,
-            ],
-        ];
+            ];
+        }
+
+        // Aplica dias grátis do plano para o indicado, empurrando o primeiro vencimento
+        if ($pendingReferral && $referralFreeDays > 0) {
+            try {
+                $nextDue = (new \DateTimeImmutable('now'))
+                    ->modify('+' . $referralFreeDays . ' days')
+                    ->format('Y-m-d');
+                $subscriptionPayload['nextDueDate'] = $nextDue;
+            } catch (\Throwable $e) {
+                // Se der erro ao calcular data, segue sem alterar o nextDueDate
+                error_log('CheckoutController::process erro ao calcular nextDueDate de indicação: ' . $e->getMessage());
+            }
+        }
 
         // Guarda payloads em sessão para debug posterior
         $_SESSION['asaas_debug_customer'] = $customer;
@@ -261,6 +304,168 @@ class CheckoutController extends Controller
             }
 
             $_SESSION['plan_slug'] = $plan['slug'];
+
+            // Bônus de indicação (Indique e ganhe)
+            try {
+                if ($pendingReferral && !empty($plan['referral_enabled'])) {
+                    $referrerId = (int)($pendingReferral['referrer_user_id'] ?? 0);
+                    $referrer = $referrerId > 0 ? User::findById($referrerId) : null;
+
+                    $minDays = isset($plan['referral_min_active_days']) ? (int)$plan['referral_min_active_days'] : 0;
+                    $eligibleReferrer = false;
+
+                    if ($referrer && !empty($referrer['email'])) {
+                        $referrerSubs = Subscription::allByEmailWithPlan($referrer['email']);
+                        $now = new \DateTimeImmutable('now');
+
+                        foreach ($referrerSubs as $rs) {
+                            if ((int)($rs['plan_id'] ?? 0) !== (int)$plan['id']) {
+                                continue;
+                            }
+                            if ((string)($rs['status'] ?? '') !== 'active') {
+                                continue;
+                            }
+                            if (empty($rs['created_at'])) {
+                                continue;
+                            }
+
+                            try {
+                                $createdAt = new \DateTimeImmutable($rs['created_at']);
+                                $days = (int)$now->diff($createdAt)->days;
+                                if ($days >= $minDays) {
+                                    $eligibleReferrer = true;
+                                    break;
+                                }
+                            } catch (\Throwable $e) {
+                                continue;
+                            }
+                        }
+                    }
+
+                    if ($eligibleReferrer) {
+                        $friendTokens = isset($plan['referral_friend_tokens']) ? (int)$plan['referral_friend_tokens'] : 0;
+                        $referrerTokens = isset($plan['referral_referrer_tokens']) ? (int)$plan['referral_referrer_tokens'] : 0;
+
+                        $metaBase = [
+                            'plan_id' => (int)$plan['id'],
+                            'referral_id' => (int)$pendingReferral['id'],
+                            'asaas_subscription_id' => (string)($subResp['id'] ?? ''),
+                        ];
+
+                        // Credita tokens para o indicado (usuário atual)
+                        if ($friendTokens > 0 && $loggedUserId > 0) {
+                            User::creditTokens($loggedUserId, $friendTokens, 'referral_friend_bonus', $metaBase);
+                        }
+
+                        // Credita tokens para quem indicou
+                        if ($referrer && $referrerTokens > 0) {
+                            User::creditTokens((int)$referrer['id'], $referrerTokens, 'referral_referrer_bonus', $metaBase);
+                        }
+
+                        // Marca indicação como concluída para não repetir bônus
+                        UserReferral::markCompleted((int)$pendingReferral['id']);
+
+                        // Envia e-mails específicos de bônus de indicação
+                        try {
+                            $scheme = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') ? 'https://' : 'http://';
+                            $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+                            $appUrl = $scheme . $host;
+
+                            // E-mail para o indicado
+                            if (!empty($customer['email'])) {
+                                $safeNameFriend = htmlspecialchars($customer['name'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+                                $safePlanName = htmlspecialchars($plan['name'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+                                $safeAppUrl = htmlspecialchars($appUrl, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+
+                                $bonusParts = [];
+                                if ($referralFreeDays > 0) {
+                                    $bonusParts[] = "<li>" . $referralFreeDays . " dias grátis antes da primeira cobrança;</li>";
+                                }
+                                if ($friendTokens > 0) {
+                                    $bonusParts[] = "<li>" . number_format($friendTokens, 0, ',', '.') . " tokens extras para usar com o Tuquinha;</li>";
+                                }
+                                $bonusListHtml = '';
+                                if ($bonusParts) {
+                                    $bonusListHtml = '<ul style="font-size:13px; color:#b0b0b0; padding-left:18px; margin:0 0 10px 0;">' . implode('', $bonusParts) . '</ul>';
+                                }
+
+                                $subjectFriend = 'Você ganhou bônus pela indicação no Tuquinha';
+                                $bodyFriend = <<<HTML
+<html>
+<body style="margin:0; padding:0; background:#050509; font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; color:#f5f5f5;">
+  <div style="width:100%; padding:24px 0;">
+    <div style="max-width:520px; margin:0 auto; background:#111118; border-radius:16px; border:1px solid #272727; padding:18px 20px;">
+      <div style="display:flex; align-items:center; gap:10px; margin-bottom:12px;">
+        <div style="width:32px; height:32px; line-height:32px; border-radius:50%; background:radial-gradient(circle at 30% 20%, #fff 0, #ff8a65 25%, #e53935 65%, #050509 100%); text-align:center; font-weight:700; font-size:16px; color:#050509;">T</div>
+        <div>
+          <div style="font-weight:700; font-size:15px;">Resenha 2.0 - Tuquinha</div>
+          <div style="font-size:11px; color:#b0b0b0;">Branding vivo na veia</div>
+        </div>
+      </div>
+
+      <p style="font-size:14px; margin:0 0 10px 0;">Oi, {$safeNameFriend} 👋</p>
+      <p style="font-size:14px; margin:0 0 10px 0;">Sua assinatura do plano <strong>{$safePlanName}</strong> foi feita por indicação e, por isso, você ganhou alguns bônus para começar com o pé direito:</p>
+      {$bonusListHtml}
+
+      <p style="font-size:13px; margin:8px 0 0 0;">É só entrar no Tuquinha e aproveitar. Se tiver qualquer dúvida, fale com a gente pelo suporte.</p>
+
+      <div style="text-align:center; margin:14px 0 0 0;">
+        <a href="{$safeAppUrl}" style="display:inline-block; padding:9px 18px; border-radius:999px; background:linear-gradient(135deg,#e53935,#ff6f60); color:#050509; font-weight:600; font-size:13px; text-decoration:none;">Abrir o Tuquinha</a>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
+HTML;
+
+                                MailService::send($customer['email'], $customer['name'], $subjectFriend, $bodyFriend);
+                            }
+
+                            // E-mail para quem indicou
+                            if ($referrer && !empty($referrer['email'])) {
+                                $safeNameRef = htmlspecialchars($referrer['name'] ?? '', ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+                                $safeFriendName = htmlspecialchars($customer['name'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+                                $safePlanName2 = htmlspecialchars($plan['name'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+
+                                $tokensText = $referrerTokens > 0
+                                    ? ' ' . number_format($referrerTokens, 0, ',', '.') . ' tokens foram adicionados ao seu saldo.'
+                                    : '';
+
+                                $subjectRef = 'Um amigo assinou pelo seu link no Tuquinha';
+                                $bodyRef = <<<HTML
+<html>
+<body style="margin:0; padding:0; background:#050509; font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; color:#f5f5f5;">
+  <div style="width:100%; padding:24px 0;">
+    <div style="max-width:520px; margin:0 auto; background:#111118; border-radius:16px; border:1px solid #272727; padding:18px 20px;">
+      <div style="display:flex; align-items:center; gap:10px; margin-bottom:12px;">
+        <div style="width:32px; height:32px; line-height:32px; border-radius:50%; background:radial-gradient(circle at 30% 20%, #fff 0, #ff8a65 25%, #e53935 65%, #050509 100%); text-align:center; font-weight:700; font-size:16px; color:#050509;">T</div>
+        <div>
+          <div style="font-weight:700; font-size:15px;">Resenha 2.0 - Tuquinha</div>
+          <div style="font-size:11px; color:#b0b0b0;">Branding vivo na veia</div>
+        </div>
+      </div>
+
+      <p style="font-size:14px; margin:0 0 10px 0;">Oi, {$safeNameRef} 👋</p>
+      <p style="font-size:14px; margin:0 0 10px 0;">Boas notícias: <strong>{$safeFriendName}</strong> acabou de assinar o plano <strong>{$safePlanName2}</strong> usando o seu link de indicação.</p>
+      <p style="font-size:14px; margin:0 0 10px 0;">Como agradecimento,{$tokensText}</p>
+
+      <p style="font-size:13px; margin:8px 0 0 0;">Obrigado por indicar o Tuquinha. Sempre que um amigo assinar pelo seu link, você acumula mais bônus para usar no dia a dia.</p>
+    </div>
+  </div>
+</body>
+</html>
+HTML;
+
+                                MailService::send($referrer['email'], $referrer['name'] ?? '', $subjectRef, $bodyRef);
+                            }
+                        } catch (\Throwable $mailRefEx) {
+                            error_log('CheckoutController::process erro ao enviar e-mails de indicação: ' . $mailRefEx->getMessage());
+                        }
+                    }
+                }
+            } catch (\Throwable $referralEx) {
+                error_log('CheckoutController::process erro no fluxo de indicação: ' . $referralEx->getMessage());
+            }
 
             // Envia e-mail de confirmação da assinatura
             try {
@@ -400,6 +605,7 @@ HTML;
                 'plan' => $plan,
                 'customer' => $sessionCustomer ?: [],
                 'birthdate' => $sessionCustomer['birthdate'] ?? '',
+                'requiresCardNow' => $requiresCardNow,
                 'error' => $friendlyError,
             ]);
         }

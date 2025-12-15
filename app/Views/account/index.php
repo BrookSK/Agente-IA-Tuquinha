@@ -8,6 +8,7 @@
 /** @var string|null $subscriptionStart */
 /** @var string|null $subscriptionNext */
 /** @var int|null $tokenBalance */
+/** @var array|null $referralData */
 
 $isFreePlan = empty($plan) || (($plan['slug'] ?? 'free') === 'free');
 
@@ -141,6 +142,81 @@ if ($freeChatLimit <= 0) { $freeChatLimit = 400; }
             <?php endif; ?>
         </div>
 
+        <?php if (!empty($referralData) && !empty($referralData['enabled'])): ?>
+            <?php
+                $canRefer = !empty($referralData['canRefer']);
+                $minDays = (int)($referralData['minDays'] ?? 0);
+                $currentDays = (int)($referralData['currentDays'] ?? 0);
+                $remaining = max(0, $minDays - $currentDays);
+                $friendTokens = (int)($referralData['friendTokens'] ?? 0);
+                $referrerTokens = (int)($referralData['referrerTokens'] ?? 0);
+                $freeDays = (int)($referralData['freeDays'] ?? 0);
+            ?>
+            <div style="background:#111118; border-radius:16px; padding:14px; border:1px solid #272727;">
+                <h2 style="font-size:18px; margin-bottom:8px;">Indique e ganhe</h2>
+                <?php if ($canRefer && !empty($referralData['link'])): ?>
+                    <p style="font-size:13px; color:#b0b0b0; margin-bottom:8px;">
+                        Compartilhe o link abaixo para indicar amigos para o plano
+                        <strong><?= htmlspecialchars($referralData['planName'] ?? '') ?></strong>.
+                        Quando eles assinarem, você e a pessoa indicada ganham bônus.
+                    </p>
+
+                    <div style="margin-bottom:6px;">
+                        <label style="font-size:12px; color:#b0b0b0; display:block; margin-bottom:4px;">Seu link de indicação</label>
+                        <div style="display:flex; gap:6px; align-items:center;">
+                            <input id="referral-link-input" type="text" readonly value="<?= htmlspecialchars($referralData['link'] ?? '') ?>" style="
+                                flex:1; padding:6px 8px; border-radius:8px; border:1px solid #272727; background:#050509; color:#f5f5f5; font-size:12px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
+                            <button type="button" id="copy-referral-link" style="
+                                border:none; border-radius:999px; padding:6px 10px; background:#222; color:#f5f5f5;
+                                font-size:11px; cursor:pointer;">Copiar</button>
+                        </div>
+                    </div>
+
+                    <div style="font-size:12px; color:#b0b0b0;">
+                        <?php if ($freeDays > 0 || $friendTokens > 0 || $referrerTokens > 0): ?>
+                            <div style="margin-bottom:4px;">Hoje este plano está configurado com os seguintes bônus:</div>
+                            <ul style="font-size:12px; color:#b0b0b0; padding-left:18px; margin:0 0 4px 0;">
+                                <?php if ($freeDays > 0): ?>
+                                    <li><?= (int)$freeDays ?> dias grátis para quem é indicado, antes da primeira cobrança;</li>
+                                <?php endif; ?>
+                                <?php if ($friendTokens > 0): ?>
+                                    <li><?= number_format($friendTokens, 0, ',', '.') ?> tokens para quem é indicado;</li>
+                                <?php endif; ?>
+                                <?php if ($referrerTokens > 0): ?>
+                                    <li><?= number_format($referrerTokens, 0, ',', '.') ?> tokens para você a cada amigo que assinar;</li>
+                                <?php endif; ?>
+                            </ul>
+                            <div style="font-size:11px; color:#777; margin-top:2px;">Esses valores podem ser ajustados pelo administrador a qualquer momento.</div>
+                        <?php else: ?>
+                            <div style="font-size:12px; color:#b0b0b0;">Atualmente este plano está com o programa de indicação ativo, mas sem bônus específicos configurados.</div>
+                        <?php endif; ?>
+                    </div>
+                <?php else: ?>
+                    <p style="font-size:13px; color:#b0b0b0; margin-bottom:6px;">
+                        Este plano possui o programa <strong>Indique e ganhe</strong>, mas ele só libera o link de indicação
+                        depois de um tempo mínimo com a assinatura ativa.
+                    </p>
+                    <?php if ($minDays > 0): ?>
+                        <p style="font-size:12px; color:#b0b0b0; margin-bottom:4px;">
+                            Tempo mínimo configurado: <strong><?= (int)$minDays ?> dias</strong> com a assinatura deste plano.
+                        </p>
+                        <p style="font-size:12px; color:#b0b0b0; margin-bottom:0;">
+                            Você já completou <strong><?= (int)$currentDays ?> dias</strong>.
+                            <?php if ($remaining > 0): ?>
+                                Faltam aproximadamente <strong><?= (int)$remaining ?> dia(s)</strong> para liberar o seu link de indicação.
+                            <?php else: ?>
+                                Assim que sua assinatura estiver ativa de forma definitiva, o link deve ser liberado.
+                            <?php endif; ?>
+                        </p>
+                    <?php else: ?>
+                        <p style="font-size:12px; color:#b0b0b0; margin:0;">
+                            Assim que sua assinatura deste plano estiver ativa, o link de indicação será liberado aqui nesta tela.
+                        </p>
+                    <?php endif; ?>
+                <?php endif; ?>
+            </div>
+        <?php endif; ?>
+
         <div style="background:#111118; border-radius:16px; padding:14px; border:1px solid #272727;">
             <h2 style="font-size:18px; margin-bottom:8px;">Plano atual</h2>
             <?php if ($plan && $subscription): ?>
@@ -236,5 +312,25 @@ document.addEventListener('DOMContentLoaded', function () {
             ev.preventDefault();
         }
     });
+
+    var copyBtn = document.getElementById('copy-referral-link');
+    var linkInput = document.getElementById('referral-link-input');
+    if (copyBtn && linkInput) {
+        copyBtn.addEventListener('click', function () {
+            try {
+                linkInput.focus();
+                linkInput.select();
+                var ok = document.execCommand('copy');
+                if (ok) {
+                    copyBtn.textContent = 'Copiado!';
+                    setTimeout(function () {
+                        copyBtn.textContent = 'Copiar';
+                    }, 2000);
+                }
+            } catch (e) {
+                // se não conseguir copiar, apenas mantém o link selecionado
+            }
+        });
+    }
 });
 </script>

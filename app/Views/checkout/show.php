@@ -3,6 +3,7 @@
 /** @var array $customer */
 /** @var string $birthdate */
 /** @var string|null $error */
+/** @var bool|null $requiresCardNow */
 $price = number_format($plan['price_cents'] / 100, 2, ',', '.');
 
 // Define rótulo do período (mês / semestre / ano) com base no sufixo do slug
@@ -16,12 +17,22 @@ if (substr($slug, -11) === '-semestral') {
 ?>
 <div style="max-width: 880px; margin: 0 auto;">
     <h1 style="font-size: 24px; margin-bottom: 6px; font-weight: 650;">Finalizar assinatura</h1>
-    <p style="color: #b0b0b0; margin-bottom: 6px; font-size: 14px;">
-        Passo 2 de 2 &mdash; Dados do cartão.
-    </p>
-    <p style="color: #b0b0b0; margin-bottom: 18px; font-size: 14px;">
-        Você está assinando o plano <strong><?= htmlspecialchars($plan['name']) ?></strong> por <strong>R$ <?= $price ?>/<?= htmlspecialchars($periodLabel) ?></strong>, com cobrança recorrente no cartão via Asaas.
-    </p>
+    <?php $requiresCardNow = $requiresCardNow ?? true; ?>
+    <?php if ($requiresCardNow): ?>
+        <p style="color: #b0b0b0; margin-bottom: 6px; font-size: 14px;">
+            Passo 2 de 2 &mdash; Dados do cartão.
+        </p>
+        <p style="color: #b0b0b0; margin-bottom: 18px; font-size: 14px;">
+            Você está assinando o plano <strong><?= htmlspecialchars($plan['name']) ?></strong> por <strong>R$ <?= $price ?>/<?= htmlspecialchars($periodLabel) ?></strong>, com cobrança recorrente no cartão via Asaas.
+        </p>
+    <?php else: ?>
+        <p style="color: #b0b0b0; margin-bottom: 6px; font-size: 14px;">
+            Passo 2 de 2 &mdash; Confirme seus dados para ativar o período grátis.
+        </p>
+        <p style="color: #b0b0b0; margin-bottom: 18px; font-size: 14px;">
+            Você está ativando o plano <strong><?= htmlspecialchars($plan['name']) ?></strong> com um período de teste gratuito. Durante esses dias grátis não haverá cobrança imediata. Quando o teste terminar, vamos gerar a cobrança normalmente, usando os dados cadastrados depois disso.
+        </p>
+    <?php endif; ?>
 
     <?php if (!empty($error)): ?>
         <div style="background: #3b1a1a; border-radius: 10px; padding: 10px 12px; color: #ffb3b3; font-size: 13px; margin-bottom: 14px; border: 1px solid #ff6f60;">
@@ -100,28 +111,30 @@ if (substr($slug, -11) === '-semestral') {
             </div>
         </div>
 
-        <div style="grid-column: 1 / -1; margin-top: 8px; font-size: 12px; text-transform: uppercase; letter-spacing: 0.12em; color: #b0b0b0;">Dados do cartão</div>
+        <?php if ($requiresCardNow): ?>
+            <div style="grid-column: 1 / -1; margin-top: 8px; font-size: 12px; text-transform: uppercase; letter-spacing: 0.12em; color: #b0b0b0;">Dados do cartão</div>
 
-        <div>
-            <label style="font-size: 12px; color: #b0b0b0;">Número do cartão*</label>
-            <input name="card_number" required style="width: 100%; padding: 7px 9px; border-radius: 8px; border: 1px solid #272727; background: #050509; color: #f5f5f5; font-size: 13px;">
-        </div>
-        <div>
-            <label style="font-size: 12px; color: #b0b0b0;">Nome impresso*</label>
-            <input name="card_holder" required style="width: 100%; padding: 7px 9px; border-radius: 8px; border: 1px solid #272727; background: #050509; color: #f5f5f5; font-size: 13px; text-transform: uppercase;">
-        </div>
-        <div>
-            <label style="font-size: 12px; color: #b0b0b0;">Mês validade (MM)*</label>
-            <input name="card_exp_month" required maxlength="2" style="width: 100%; padding: 7px 9px; border-radius: 8px; border: 1px solid #272727; background: #050509; color: #f5f5f5; font-size: 13px;">
-        </div>
-        <div>
-            <label style="font-size: 12px; color: #b0b0b0;">Ano validade (AAAA)*</label>
-            <input name="card_exp_year" required maxlength="4" style="width: 100%; padding: 7px 9px; border-radius: 8px; border: 1px solid #272727; background: #050509; color: #f5f5f5; font-size: 13px;">
-        </div>
-        <div>
-            <label style="font-size: 12px; color: #b0b0b0;">CVV*</label>
-            <input name="card_cvv" required maxlength="4" style="width: 100%; padding: 7px 9px; border-radius: 8px; border: 1px solid #272727; background: #050509; color: #f5f5f5; font-size: 13px;">
-        </div>
+            <div>
+                <label style="font-size: 12px; color: #b0b0b0;">Número do cartão*</label>
+                <input name="card_number" required style="width: 100%; padding: 7px 9px; border-radius: 8px; border: 1px solid #272727; background: #050509; color: #f5f5f5; font-size: 13px;">
+            </div>
+            <div>
+                <label style="font-size: 12px; color: #b0b0b0;">Nome impresso*</label>
+                <input name="card_holder" required style="width: 100%; padding: 7px 9px; border-radius: 8px; border: 1px solid #272727; background: #050509; color: #f5f5f5; font-size: 13px; text-transform: uppercase;">
+            </div>
+            <div>
+                <label style="font-size: 12px; color: #b0b0b0;">Mês validade (MM)*</label>
+                <input name="card_exp_month" required maxlength="2" style="width: 100%; padding: 7px 9px; border-radius: 8px; border: 1px solid #272727; background: #050509; color: #f5f5f5; font-size: 13px;">
+            </div>
+            <div>
+                <label style="font-size: 12px; color: #b0b0b0;">Ano validade (AAAA)*</label>
+                <input name="card_exp_year" required maxlength="4" style="width: 100%; padding: 7px 9px; border-radius: 8px; border: 1px solid #272727; background: #050509; color: #f5f5f5; font-size: 13px;">
+            </div>
+            <div>
+                <label style="font-size: 12px; color: #b0b0b0;">CVV*</label>
+                <input name="card_cvv" required maxlength="4" style="width: 100%; padding: 7px 9px; border-radius: 8px; border: 1px solid #272727; background: #050509; color: #f5f5f5; font-size: 13px;">
+            </div>
+        <?php endif; ?>
 
         <div style="grid-column: 1 / -1; margin-top: 10px; display: flex; justify-content: space-between; align-items: center; gap: 8px;">
             <a href="/checkout?plan=<?= urlencode($plan['slug']) ?>" style="
@@ -140,7 +153,7 @@ if (substr($slug, -11) === '-semestral') {
                 font-size: 14px;
                 cursor: pointer;
             ">
-                Confirmar assinatura
+                <?= $requiresCardNow ? 'Confirmar assinatura' : 'Ativar acesso com dias grátis' ?>
             </button>
         </div>
     </form>
