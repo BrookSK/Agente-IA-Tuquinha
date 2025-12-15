@@ -324,6 +324,11 @@ $conversationId = (int)($conversation['id'] ?? 0);
             return;
         }
 
+        // só faz polling enquanto queremos estar em chamada (após clicar em iniciar)
+        if (!weWantCall) {
+            return;
+        }
+
         if (polling) {
             return;
         }
@@ -397,6 +402,9 @@ $conversationId = (int)($conversation['id'] ?? 0);
         ensureLocalStream().then(function () {
             sendSignal('ready', { user: currentUserName });
             maybeStartNegotiation();
+            if (hasFetch) {
+                pollSignals();
+            }
         }).catch(function () {
             weWantCall = false;
         });
@@ -611,6 +619,7 @@ $conversationId = (int)($conversation['id'] ?? 0);
     }
 
     function pollMessages() {
+        return;
         if (!conversationId) {
             return;
         }
@@ -655,10 +664,9 @@ $conversationId = (int)($conversation['id'] ?? 0);
         });
     }
 
-    // inicia o polling de sinais para receber oferta/answer/candidates do amigo
+    // inicia apenas o polling de mensagens automaticamente.
+    // O polling de sinais só é iniciado quando o usuário clica em "Iniciar chamada de vídeo".
     if (hasFetch) {
-        pollSignals();
-        // inicia o polling de mensagens para ver novas mensagens do amigo
         pollMessages();
     }
 })();
