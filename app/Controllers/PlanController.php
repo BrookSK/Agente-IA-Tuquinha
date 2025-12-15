@@ -15,6 +15,7 @@ class PlanController extends Controller
         $plans = Plan::allActive();
         $currentPlan = null;
         $hasPaidActiveSubscription = false;
+        $isAdmin = !empty($_SESSION['is_admin']);
 
         // Se o usuário estiver logado, tenta descobrir o plano pela assinatura (igual à Minha Conta)
         $userId = !empty($_SESSION['user_id']) ? (int)$_SESSION['user_id'] : 0;
@@ -51,6 +52,14 @@ class PlanController extends Controller
                 if ($currentPlan && !empty($currentPlan['slug'])) {
                     $_SESSION['plan_slug'] = $currentPlan['slug'];
                 }
+            }
+        }
+
+        // Para admin, se houver plano atual não-free, considera assinatura paga ativa para exibir CTA de tokens extras
+        if ($isAdmin && $currentPlan) {
+            $slug = (string)($currentPlan['slug'] ?? '');
+            if ($slug !== 'free') {
+                $hasPaidActiveSubscription = true;
             }
         }
 

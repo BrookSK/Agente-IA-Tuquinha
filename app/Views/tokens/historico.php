@@ -4,6 +4,7 @@
 
 // Determina se o usuário possui um plano pago ativo para exibir CTAs de compra
 $hasPaidActivePlan = false;
+$isAdmin = !empty($_SESSION['is_admin']);
 if (!empty($user['email'])) {
     $subscription = \App\Models\Subscription::findLastByEmail($user['email']);
     if ($subscription && !empty($subscription['plan_id'])) {
@@ -11,7 +12,15 @@ if (!empty($user['email'])) {
         if ($plan) {
             $slug = (string)($plan['slug'] ?? '');
             $status = strtolower((string)($subscription['status'] ?? ''));
-            if ($slug !== 'free' && !in_array($status, ['canceled', 'expired'], true)) {
+            if ($slug !== 'free' && (!in_array($status, ['canceled', 'expired'], true) || $isAdmin)) {
+                $hasPaidActivePlan = true;
+            }
+        }
+    } elseif ($isAdmin) {
+        $plan = \App\Models\Plan::findTopActive();
+        if ($plan) {
+            $slug = (string)($plan['slug'] ?? '');
+            if ($slug !== 'free') {
                 $hasPaidActivePlan = true;
             }
         }

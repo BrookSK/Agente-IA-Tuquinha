@@ -33,6 +33,8 @@ class AccountController extends Controller
     {
         $user = $this->requireLogin();
 
+        $isAdmin = !empty($_SESSION['is_admin']);
+
         $subscription = null;
         $plan = null;
         $cardLast4 = null;
@@ -65,6 +67,11 @@ class AccountController extends Controller
             }
         }
 
+        // Para admins sem assinatura vinculada, usa o plano mais "top" ativo apenas para fins de contexto
+        if (!$plan && $isAdmin) {
+            $plan = Plan::findTopActive();
+        }
+
         $tokenBalance = \App\Models\User::getTokenBalance((int)$user['id']);
 
         $personalities = Personality::allActive();
@@ -89,7 +96,45 @@ class AccountController extends Controller
 
             $hasMinDays = $currentDays >= $minDays;
             $isCanceled = in_array($status, ['canceled', 'expired'], true);
-            $canRefer = $referralEnabled && !$isCanceled && $hasMinDays;
+
+            // Admin ignora carência de dias mínimos; usuário comum precisa cumprir minDays
+            if ($isAdmin) {
+                $canRefer = $referralEnabled && !$isCanceled;
+            } else {
+                $canRefer = $referralEnabled && !$isCanceled && $hasMinDays;
+            }
+
+            $link = '';
+            $referralCode = '';
+            if ($canRefer) {
+                $referralCode = User::getOrCreateReferralCode((int)$user['id']);
+                if ($referralCode !== '') {
+                    $scheme = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') ? 'https://' : 'http://';
+                    $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+                    $baseUrl = $scheme . $host;
+                    $link = $baseUrl . '/registrar?ref=' . urlencode($referralCode) . '&plan=' . urlencode((string)$plan['slug']);
+                }
+            }
+
+            $referralData = [
+                'enabled' => $referralEnabled,
+                'canRefer' => $canRefer,
+                'minDays' => $minDays,
+                'currentDays' => $currentDays,
+                'planName' => $plan['name'] ?? '',
+                'planSlug' => $plan['slug'] ?? '',
+                'link' => $link,
+                'referralCode' => $referralCode,
+                'friendTokens' => (int)($plan['referral_friend_tokens'] ?? 0),
+                'referrerTokens' => (int)($plan['referral_referrer_tokens'] ?? 0),
+                'freeDays' => (int)($plan['referral_free_days'] ?? 0),
+            ];
+        } elseif ($plan && $isAdmin) {
+            // Admin sem assinatura: se o plano tiver Indique e ganhe ativado, libera o link direto, sem carência de dias
+            $referralEnabled = !empty($plan['referral_enabled']);
+            $minDays = isset($plan['referral_min_active_days']) ? (int)$plan['referral_min_active_days'] : 0;
+            $currentDays = $minDays > 0 ? $minDays : 0;
+            $canRefer = $referralEnabled;
 
             $link = '';
             $referralCode = '';
@@ -214,6 +259,8 @@ class AccountController extends Controller
 
     private function reloadWithMessages(array $user, ?string $error, ?string $success): void
     {
+        $isAdmin = !empty($_SESSION['is_admin']);
+
         $subscription = null;
         $plan = null;
 
@@ -242,6 +289,10 @@ class AccountController extends Controller
                 }
             }
         }
+        // Para admins sem assinatura vinculada, usa o plano mais "top" ativo apenas para fins de contexto
+        if (!$plan && $isAdmin) {
+            $plan = Plan::findTopActive();
+        }
 
         $tokenBalance = \App\Models\User::getTokenBalance((int)$user['id']);
 
@@ -267,7 +318,44 @@ class AccountController extends Controller
 
             $hasMinDays = $currentDays >= $minDays;
             $isCanceled = in_array($status, ['canceled', 'expired'], true);
-            $canRefer = $referralEnabled && !$isCanceled && $hasMinDays;
+
+            if ($isAdmin) {
+                $canRefer = $referralEnabled && !$isCanceled;
+            } else {
+                $canRefer = $referralEnabled && !$isCanceled && $hasMinDays;
+            }
+
+            $link = '';
+            $referralCode = '';
+            if ($canRefer) {
+                $referralCode = User::getOrCreateReferralCode((int)$user['id']);
+                if ($referralCode !== '') {
+                    $scheme = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') ? 'https://' : 'http://';
+                    $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+                    $baseUrl = $scheme . $host;
+                    $link = $baseUrl . '/registrar?ref=' . urlencode($referralCode) . '&plan=' . urlencode((string)$plan['slug']);
+                }
+            }
+
+            $referralData = [
+                'enabled' => $referralEnabled,
+                'canRefer' => $canRefer,
+                'minDays' => $minDays,
+                'currentDays' => $currentDays,
+                'planName' => $plan['name'] ?? '',
+                'planSlug' => $plan['slug'] ?? '',
+                'link' => $link,
+                'referralCode' => $referralCode,
+                'friendTokens' => (int)($plan['referral_friend_tokens'] ?? 0),
+                'referrerTokens' => (int)($plan['referral_referrer_tokens'] ?? 0),
+                'freeDays' => (int)($plan['referral_free_days'] ?? 0),
+            ];
+        } elseif ($plan && $isAdmin) {
+            // Admin sem assinatura: se o plano tiver Indique e ganhe ativado, libera o link direto, sem carência de dias
+            $referralEnabled = !empty($plan['referral_enabled']);
+            $minDays = isset($plan['referral_min_active_days']) ? (int)$plan['referral_min_active_days'] : 0;
+            $currentDays = $minDays > 0 ? $minDays : 0;
+            $canRefer = $referralEnabled;
 
             $link = '';
             $referralCode = '';

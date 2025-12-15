@@ -12,13 +12,22 @@
 
 $isFreePlan = empty($plan) || (($plan['slug'] ?? 'free') === 'free');
 
-// Só considera plano pago ativo quando houver assinatura vinculada, com status diferente de cancelado e plano != free
+// Só considera plano pago ativo quando houver plano != free.
+// Para usuários comuns, ainda checa assinatura não cancelada/expirada.
+// Para admin, basta ter plano pago associado (mesmo sem registro de assinatura).
 $hasPaidActivePlan = false;
-if (!empty($plan) && !empty($subscription)) {
+$isAdmin = !empty($_SESSION['is_admin']);
+if (!empty($plan)) {
     $slug = (string)($plan['slug'] ?? '');
-    $status = strtolower((string)($subscription['status'] ?? ''));
-    if ($slug !== 'free' && !in_array($status, ['canceled', 'expired'], true)) {
-        $hasPaidActivePlan = true;
+    if ($slug !== 'free') {
+        if (!empty($subscription)) {
+            $status = strtolower((string)($subscription['status'] ?? ''));
+            if (!in_array($status, ['canceled', 'expired'], true)) {
+                $hasPaidActivePlan = true;
+            }
+        } elseif ($isAdmin) {
+            $hasPaidActivePlan = true;
+        }
     }
 }
 $freeGlobalLimit = (int)\App\Models\Setting::get('free_memory_global_chars', '500');
