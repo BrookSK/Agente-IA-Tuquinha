@@ -355,7 +355,7 @@ $conversationId = (int)($conversation['id'] ?? 0);
             })
             .finally(function () {
                 polling = false;
-                setTimeout(pollSignals, 1500);
+                setTimeout(pollSignals, 5000);
             });
     }
 
@@ -651,7 +651,7 @@ $conversationId = (int)($conversation['id'] ?? 0);
         }).catch(function () {
             // silencioso
         }).finally(function () {
-            setTimeout(pollMessages, 1500);
+            setTimeout(pollMessages, 5000);
         });
     }
 

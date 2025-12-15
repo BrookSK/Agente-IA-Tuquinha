@@ -247,6 +247,10 @@ class SocialChatController extends Controller
         $currentUser = $this->requireLogin();
         $currentId = (int)$currentUser['id'];
 
+        if (session_status() === PHP_SESSION_ACTIVE) {
+            session_write_close();
+        }
+
         $conversationId = isset($_GET['conversation_id']) ? (int)$_GET['conversation_id'] : 0;
         $afterId = isset($_GET['after_id']) ? (int)$_GET['after_id'] : 0;
 
@@ -293,6 +297,10 @@ class SocialChatController extends Controller
     {
         $currentUser = $this->requireLogin();
         $currentId = (int)$currentUser['id'];
+
+        if (session_status() === PHP_SESSION_ACTIVE) {
+            session_write_close();
+        }
 
         $conversationId = isset($_GET['conversation_id']) ? (int)$_GET['conversation_id'] : 0;
         $afterId = isset($_GET['after_id']) ? (int)$_GET['after_id'] : 0;
