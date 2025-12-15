@@ -77,6 +77,12 @@ if (!empty($_SESSION['user_id'])) {
         body[data-theme="light"] [style*="background: #0b0b10"] {
             background: var(--surface-subtle) !important;
         }
+        body[data-theme="light"] [style*="background:#000"],
+        body[data-theme="light"] [style*="background: #000"],
+        body[data-theme="light"] [style*="background:#000000"],
+        body[data-theme="light"] [style*="background: #000000"] {
+            background: var(--surface-card) !important;
+        }
         body[data-theme="light"] [style*="border:1px solid #272727"],
         body[data-theme="light"] [style*="border: 1px solid #272727"] {
             border-color: var(--border-subtle) !important;
@@ -88,6 +94,10 @@ if (!empty($_SESSION['user_id'])) {
         body[data-theme="light"] [style*="color:#b0b0b0"],
         body[data-theme="light"] [style*="color: #b0b0b0"] {
             color: var(--text-secondary) !important;
+        }
+        body[data-theme="light"] [style*="background:#1c1c24"],
+        body[data-theme="light"] [style*="background: #1c1c24"] {
+            background: var(--surface-subtle) !important;
         }
 
         .sidebar {

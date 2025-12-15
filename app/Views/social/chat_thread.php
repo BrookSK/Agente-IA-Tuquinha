@@ -18,12 +18,12 @@ $conversationId = (int)($conversation['id'] ?? 0);
         <div style="display:flex; flex-direction:column; gap:8px;">
             <div style="background:#000; border-radius:12px; height:160px; overflow:hidden; position:relative;">
                 <div id="tuquinha-local-video" style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; color:#b0b0b0; font-size:12px;">
-                    Sua câmera
+                    Sua câmera aparecerá aqui quando a chamada for iniciada.
                 </div>
             </div>
             <div style="background:#000; border-radius:12px; height:160px; overflow:hidden; position:relative;">
                 <div id="tuquinha-remote-video" style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; color:#b0b0b0; font-size:12px;">
-                    Câmera do amigo
+                    <span id="tuquinha-call-status">Chamada não iniciada.</span>
                 </div>
             </div>
             <div style="display:flex; gap:8px; margin-top:4px; justify-content:center; flex-wrap:wrap;">
@@ -97,6 +97,117 @@ $conversationId = (int)($conversation['id'] ?? 0);
     var box = document.getElementById('social-chat-messages');
     if (box) {
         box.scrollTop = box.scrollHeight;
+    }
+
+    var startBtn = document.getElementById('btn-start-call');
+    var endBtn = document.getElementById('btn-end-call');
+    var localContainer = document.getElementById('tuquinha-local-video');
+    var statusSpan = document.getElementById('tuquinha-call-status');
+    var jitsiApi = null;
+    var roomName = 'tuquinha-social-' + <?= $conversationId ?>;
+
+    function setStatus(text) {
+        if (statusSpan) {
+            statusSpan.textContent = text;
+        }
+    }
+
+    function ensureJitsiScript(callback) {
+        if (window.JitsiMeetExternalAPI) {
+            callback();
+            return;
+        }
+
+        var existing = document.getElementById('jitsi-external-api');
+        if (existing) {
+            existing.addEventListener('load', function () {
+                callback();
+            });
+            return;
+        }
+
+        var script = document.createElement('script');
+        script.id = 'jitsi-external-api';
+        script.src = 'https://meet.jit.si/external_api.js';
+        script.async = true;
+        script.onload = function () {
+            callback();
+        };
+        script.onerror = function () {
+            setStatus('Não foi possível carregar o serviço de chamada de vídeo. Tente novamente mais tarde.');
+        };
+        document.head.appendChild(script);
+    }
+
+    function startCall() {
+        if (!localContainer) {
+            return;
+        }
+
+        if (jitsiApi) {
+            // Já em chamada
+            return;
+        }
+
+        setStatus('Conectando à chamada...');
+
+        ensureJitsiScript(function () {
+            if (!window.JitsiMeetExternalAPI) {
+                setStatus('Serviço de chamada de vídeo indisponível.');
+                return;
+            }
+
+            // Limpa o container e cria o iframe da chamada
+            localContainer.innerHTML = '';
+
+            try {
+                jitsiApi = new window.JitsiMeetExternalAPI('meet.jit.si', {
+                    roomName: roomName,
+                    parentNode: localContainer,
+                    width: '100%',
+                    height: '100%',
+                    interfaceConfigOverwrite: {
+                        TILE_VIEW_MAX_COLUMNS: 1,
+                    },
+                });
+
+                setStatus('Chamada em andamento. Peça para seu amigo abrir esta mesma conversa e clicar em "Iniciar chamada de vídeo".');
+
+                jitsiApi.addEventListener('videoConferenceJoined', function () {
+                    setStatus('Você entrou na chamada. Aguarde seu amigo.');
+                });
+
+                jitsiApi.addEventListener('videoConferenceLeft', function () {
+                    setStatus('Chamada encerrada.');
+                    endCall();
+                });
+            } catch (e) {
+                setStatus('Não foi possível iniciar a chamada de vídeo.');
+                jitsiApi = null;
+            }
+        });
+    }
+
+    function endCall() {
+        if (jitsiApi) {
+            try {
+                jitsiApi.dispose();
+            } catch (e) {}
+            jitsiApi = null;
+        }
+
+        if (localContainer) {
+            localContainer.innerHTML = 'Sua câmera aparecerá aqui quando a chamada for iniciada.';
+        }
+
+        setStatus('Chamada não iniciada.');
+    }
+
+    if (startBtn) {
+        startBtn.addEventListener('click', startCall);
+    }
+    if (endBtn) {
+        endBtn.addEventListener('click', endCall);
     }
 })();
 </script>
