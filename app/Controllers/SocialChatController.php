@@ -92,21 +92,12 @@ class SocialChatController extends Controller
         $messages = SocialMessage::allForConversation($conversationId, 200);
         SocialMessage::markAsRead($conversationId, $currentId);
 
-        $lastMessageId = 0;
-        foreach ($messages as $m) {
-            $mid = (int)($m['id'] ?? 0);
-            if ($mid > $lastMessageId) {
-                $lastMessageId = $mid;
-            }
-        }
-
         $this->view('social/chat_thread', [
             'pageTitle' => 'Chat social',
             'user' => $currentUser,
             'otherUser' => $otherUser,
             'conversation' => $conversation,
             'messages' => $messages,
-            'lastMessageId' => $lastMessageId,
         ]);
     }
 
@@ -285,56 +276,6 @@ class SocialChatController extends Controller
         echo json_encode([
             'ok' => true,
             'signals' => $rows,
-            'last_id' => $lastId,
-        ]);
-    }
-
-    public function pollMessages(): void
-    {
-        $currentUser = $this->requireLogin();
-        $currentId = (int)$currentUser['id'];
-
-        $conversationId = isset($_GET['conversation_id']) ? (int)$_GET['conversation_id'] : 0;
-        $afterId = isset($_GET['after_id']) ? (int)$_GET['after_id'] : 0;
-
-        header('Content-Type: application/json');
-
-        if ($conversationId <= 0) {
-            echo json_encode(['ok' => false, 'error' => 'Conversa inválida.']);
-            return;
-        }
-
-        $conversation = SocialConversation::findById($conversationId);
-        if (!$conversation) {
-            echo json_encode(['ok' => false, 'error' => 'Conversa não encontrada.']);
-            return;
-        }
-
-        $u1 = (int)($conversation['user1_id'] ?? 0);
-        $u2 = (int)($conversation['user2_id'] ?? 0);
-        if ($currentId !== $u1 && $currentId !== $u2) {
-            echo json_encode(['ok' => false, 'error' => 'Você não participa desta conversa.']);
-            return;
-        }
-
-        $otherUserId = $currentId === $u1 ? $u2 : $u1;
-        $this->ensureFriends($currentId, $otherUserId);
-
-        $rows = SocialMessage::allSince($conversationId, $afterId, 200);
-        $lastId = $afterId;
-        foreach ($rows as $r) {
-            $id = (int)($r['id'] ?? 0);
-            if ($id > $lastId) {
-                $lastId = $id;
-            }
-        }
-
-        // marca como lidas as mensagens recebidas
-        SocialMessage::markAsRead($conversationId, $currentId);
-
-        echo json_encode([
-            'ok' => true,
-            'messages' => $rows,
             'last_id' => $lastId,
         ]);
     }
