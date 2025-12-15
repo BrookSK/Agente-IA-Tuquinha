@@ -91,6 +91,8 @@ $router->post('/amigos/decidir', 'FriendsController@decide');
 
 $router->get('/social/chat', 'SocialChatController@open');
 $router->post('/social/chat/enviar', 'SocialChatController@send');
+$router->post('/social/chat/sinal', 'SocialChatController@signal');
+$router->get('/social/chat/sinais', 'SocialChatController@pollSignals');
 
 $router->get('/comunidades', 'CommunitiesController@index');
 $router->get('/comunidades/ver', 'CommunitiesController@show');
