@@ -4,6 +4,7 @@
 /** @var array $otherUser */
 /** @var array $conversation */
 /** @var array $messages */
+/** @var int $lastMessageId */
 
 $currentId = (int)($user['id'] ?? 0);
 $currentName = (string)($user['name'] ?? 'Você');
@@ -112,6 +113,7 @@ $conversationId = (int)($conversation['id'] ?? 0);
     var currentUserId = <?= (int)$currentId ?>;
     var otherUserId = <?= (int)$otherId ?>;
     var conversationId = <?= (int)$conversationId ?>;
+    var lastMessageId = <?= isset($lastMessageId) ? (int)$lastMessageId : 0 ?>;
 
     var pc = null;
     var localStream = null;
@@ -454,6 +456,61 @@ $conversationId = (int)($conversation['id'] ?? 0);
         list.scrollTop = list.scrollHeight;
     }
 
+    function appendOtherMessage(message) {
+        var list = document.getElementById('social-chat-messages');
+        if (!list) {
+            return;
+        }
+
+        var senderId = parseInt(message.sender_user_id || 0, 10);
+        var senderName = message.sender_name || '';
+        var body = message.body || '';
+        var createdAt = message.created_at || '';
+
+        var wrapper = document.createElement('div');
+        wrapper.style.display = 'flex';
+        wrapper.style.justifyContent = 'flex-start';
+
+        var bubble = document.createElement('div');
+        bubble.style.maxWidth = '78%';
+        bubble.style.padding = '6px 8px';
+        bubble.style.borderRadius = '10px';
+        bubble.style.fontSize = '12px';
+        bubble.style.lineHeight = '1.4';
+        bubble.style.background = '#1c1c24';
+        bubble.style.color = '#f5f5f5';
+        bubble.style.border = '1px solid #272727';
+
+        if (senderId && senderId !== currentUserId && senderName) {
+            var nameDiv = document.createElement('div');
+            nameDiv.style.fontSize = '11px';
+            nameDiv.style.fontWeight = '600';
+            nameDiv.style.marginBottom = '2px';
+            nameDiv.style.color = '#ffab91';
+            nameDiv.innerText = senderName;
+            bubble.appendChild(nameDiv);
+        }
+
+        var bodyDiv = document.createElement('div');
+        bodyDiv.innerText = body;
+        bubble.appendChild(bodyDiv);
+
+        if (createdAt) {
+            var meta = document.createElement('div');
+            meta.style.fontSize = '10px';
+            meta.style.marginTop = '2px';
+            meta.style.opacity = '0.8';
+            meta.style.textAlign = 'right';
+            meta.innerText = createdAt;
+            bubble.appendChild(meta);
+        }
+
+        wrapper.appendChild(bubble);
+        list.appendChild(wrapper);
+
+        list.scrollTop = list.scrollHeight;
+    }
+
     if (startBtn) {
         startBtn.addEventListener('click', startCall);
     }
@@ -496,6 +553,9 @@ $conversationId = (int)($conversation['id'] ?? 0);
                 if (data && data.ok && data.message) {
                     appendOwnMessage(data.message.body || text, data.message.created_at || '');
                     textarea.value = '';
+                    if (data.message.id) {
+                        lastMessageId = Math.max(lastMessageId, data.message.id);
+                    }
                 }
             }).catch(function () {
                 // Se der erro no AJAX, faz fallback para submit normal
@@ -522,7 +582,50 @@ $conversationId = (int)($conversation['id'] ?? 0);
         }
     }
 
+    function pollMessages() {
+        if (!conversationId) {
+            return;
+        }
+
+        var url = '/social/chat/mensagens?conversation_id=' + encodeURIComponent(String(conversationId)) +
+            '&after_id=' + encodeURIComponent(String(lastMessageId));
+
+        fetch(url, {
+            method: 'GET',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        }).then(function (res) {
+            return res.json();
+        }).then(function (data) {
+            if (!data || !data.ok || !Array.isArray(data.messages)) {
+                return;
+            }
+
+            data.messages.forEach(function (msg) {
+                var id = parseInt(msg.id || 0, 10);
+                if (id && id > lastMessageId) {
+                    lastMessageId = id;
+                }
+
+                var senderId = parseInt(msg.sender_user_id || 0, 10);
+                if (senderId === currentUserId) {
+                    // já mostramos nossa própria mensagem pelo AJAX
+                    return;
+                }
+
+                appendOtherMessage(msg);
+            });
+        }).catch(function () {
+            // silencioso
+        }).finally(function () {
+            setTimeout(pollMessages, 1500);
+        });
+    }
+
     // inicia o polling de sinais para receber oferta/answer/candidates do amigo
     pollSignals();
+    // inicia o polling de mensagens para ver novas mensagens do amigo
+    pollMessages();
 })();
 </script>
