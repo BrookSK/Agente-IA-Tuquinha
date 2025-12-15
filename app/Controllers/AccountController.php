@@ -71,8 +71,9 @@ class AccountController extends Controller
 
         // Dados do programa de indicação (Indique e ganhe)
         $referralData = null;
-        if ($plan && $subscription && !empty($plan['referral_enabled'])) {
+        if ($plan && $subscription) {
             $status = strtolower((string)($subscription['status'] ?? ''));
+            $referralEnabled = !empty($plan['referral_enabled']);
             $minDays = isset($plan['referral_min_active_days']) ? (int)$plan['referral_min_active_days'] : 0;
             $currentDays = 0;
 
@@ -87,7 +88,7 @@ class AccountController extends Controller
             }
 
             $hasMinDays = $currentDays >= $minDays;
-            $canRefer = ($status === 'active') && $hasMinDays;
+            $canRefer = $referralEnabled && ($status === 'active') && $hasMinDays;
 
             $link = '';
             $referralCode = '';
@@ -102,7 +103,7 @@ class AccountController extends Controller
             }
 
             $referralData = [
-                'enabled' => true,
+                'enabled' => $referralEnabled,
                 'canRefer' => $canRefer,
                 'minDays' => $minDays,
                 'currentDays' => $currentDays,
@@ -247,8 +248,9 @@ class AccountController extends Controller
 
         // Dados do programa de indicação (Indique e ganhe) também neste fluxo
         $referralData = null;
-        if ($plan && $subscription && !empty($plan['referral_enabled'])) {
+        if ($plan && $subscription) {
             $status = strtolower((string)($subscription['status'] ?? ''));
+            $referralEnabled = !empty($plan['referral_enabled']);
             $minDays = isset($plan['referral_min_active_days']) ? (int)$plan['referral_min_active_days'] : 0;
             $currentDays = 0;
 
@@ -263,7 +265,7 @@ class AccountController extends Controller
             }
 
             $hasMinDays = $currentDays >= $minDays;
-            $canRefer = ($status === 'active') && $hasMinDays;
+            $canRefer = $referralEnabled && ($status === 'active') && $hasMinDays;
 
             $link = '';
             $referralCode = '';
@@ -278,7 +280,7 @@ class AccountController extends Controller
             }
 
             $referralData = [
-                'enabled' => true,
+                'enabled' => $referralEnabled,
                 'canRefer' => $canRefer,
                 'minDays' => $minDays,
                 'currentDays' => $currentDays,
