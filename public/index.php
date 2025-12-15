@@ -89,6 +89,9 @@ $router->get('/amigos', 'FriendsController@index');
 $router->post('/amigos/solicitar', 'FriendsController@request');
 $router->post('/amigos/decidir', 'FriendsController@decide');
 
+$router->get('/social/chat', 'SocialChatController@open');
+$router->post('/social/chat/enviar', 'SocialChatController@send');
+
 $router->get('/comunidades', 'CommunitiesController@index');
 $router->get('/comunidades/ver', 'CommunitiesController@show');
 $router->get('/comunidades/nova', 'CommunitiesController@createForm');

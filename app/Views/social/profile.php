@@ -74,6 +74,9 @@ $profileId = (int)($profileUser['id'] ?? 0);
                     <div style="font-size:12px; color:#8bc34a; background:var(--surface-subtle); border-radius:10px; border:1px solid var(--border-subtle); padding:6px 8px; text-align:center;">
                         Vocês são amigos na rede social do Tuquinha.
                     </div>
+                    <a href="/social/chat?user_id=<?= (int)$profileId ?>" style="display:block; text-align:center; font-size:12px; color:#050509; text-decoration:none; margin-top:4px;">
+                        <span style="display:inline-block; padding:6px 12px; border-radius:999px; background:linear-gradient(135deg,#e53935,#ff6f60); font-weight:600;">Abrir chat privado</span>
+                    </a>
                 <?php elseif ($friendStatus === 'pending' && $requestedById === $currentId): ?>
                     <div style="font-size:12px; color:#ffb74d; background:var(--surface-subtle); border-radius:10px; border:1px solid var(--border-subtle); padding:6px 8px; text-align:center;">
                         Pedido de amizade enviado. Aguardando resposta.

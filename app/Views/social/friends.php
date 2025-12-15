@@ -31,8 +31,8 @@ $pendingCount = is_array($pending) ? count($pending) : 0;
                     $friendName = (string)($f['friend_name'] ?? 'Amigo');
                     $initial = mb_strtoupper(mb_substr($friendName, 0, 1, 'UTF-8'), 'UTF-8');
                     ?>
-                    <a href="/perfil?user_id=<?= $friendId ?>" style="text-decoration:none;">
-                        <div style="background:#050509; border-radius:12px; border:1px solid #272727; padding:8px 10px; display:flex; align-items:center; gap:8px;">
+                    <div style="background:#050509; border-radius:12px; border:1px solid #272727; padding:8px 10px; display:flex; flex-direction:column; gap:6px;">
+                        <a href="/perfil?user_id=<?= $friendId ?>" style="text-decoration:none; display:flex; align-items:center; gap:8px;">
                             <div style="width:32px; height:32px; border-radius:50%; background:radial-gradient(circle at 30% 20%, #fff 0, #ff8a65 25%, #e53935 65%, #050509 100%); display:flex; align-items:center; justify-content:center; font-size:16px; font-weight:700; color:#050509;">
                                 <?= htmlspecialchars($initial, ENT_QUOTES, 'UTF-8') ?>
                             </div>
@@ -41,8 +41,13 @@ $pendingCount = is_array($pending) ? count($pending) : 0;
                                     <?= htmlspecialchars($friendName, ENT_QUOTES, 'UTF-8') ?>
                                 </div>
                             </div>
+                        </a>
+                        <div>
+                            <a href="/social/chat?user_id=<?= $friendId ?>" style="display:inline-block; font-size:11px; padding:4px 8px; border-radius:999px; background:linear-gradient(135deg,#e53935,#ff6f60); color:#050509; text-decoration:none; font-weight:600;">
+                                Conversar
+                            </a>
                         </div>
-                    </a>
+                    </div>
                 <?php endforeach; ?>
             </div>
         <?php endif; ?>
