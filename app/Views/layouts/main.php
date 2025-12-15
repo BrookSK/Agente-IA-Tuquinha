@@ -229,6 +229,11 @@ if (!empty($_SESSION['user_id'])) {
             min-height: 100vh;
         }
 
+        /* No tema claro, remove o "blur" vermelho de fundo e usa apenas a cor base */
+        body[data-theme="light"] .main {
+            background: var(--bg-main);
+        }
+
         .main-header {
             height: 56px;
             border-bottom: 1px solid var(--border-subtle);
