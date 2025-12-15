@@ -115,9 +115,6 @@ $conversationId = (int)($conversation['id'] ?? 0);
     var conversationId = <?= (int)$conversationId ?>;
     var lastMessageId = <?= isset($lastMessageId) ? (int)$lastMessageId : 0 ?>;
 
-    var hasFetch = typeof window.fetch === 'function';
-    var RTCPeerConnectionCtor = window.RTCPeerConnection || window.webkitRTCPeerConnection || window.mozRTCPeerConnection;
-
     var pc = null;
     var localStream = null;
     var localVideoEl = null;
@@ -153,12 +150,7 @@ $conversationId = (int)($conversation['id'] ?? 0);
             return pc;
         }
 
-        if (!RTCPeerConnectionCtor) {
-            setStatus('Seu navegador não suporta chamadas de vídeo.');
-            return null;
-        }
-
-        pc = new RTCPeerConnectionCtor({
+        pc = new RTCPeerConnection({
             iceServers: [
                 { urls: 'stun:stun.l.google.com:19302' }
             ]
@@ -320,15 +312,6 @@ $conversationId = (int)($conversation['id'] ?? 0);
     }
 
     function pollSignals() {
-        if (!hasFetch) {
-            return;
-        }
-
-        // só faz polling enquanto queremos estar em chamada (após clicar em iniciar)
-        if (!weWantCall) {
-            return;
-        }
-
         if (polling) {
             return;
         }
@@ -360,7 +343,7 @@ $conversationId = (int)($conversation['id'] ?? 0);
             })
             .finally(function () {
                 polling = false;
-                setTimeout(pollSignals, 5000);
+                setTimeout(pollSignals, 1500);
             });
     }
 
@@ -393,18 +376,9 @@ $conversationId = (int)($conversation['id'] ?? 0);
         weWantCall = true;
         setStatus('Conectando à chamada...');
 
-        if (!RTCPeerConnectionCtor) {
-            setStatus('Seu navegador não suporta chamadas de vídeo.');
-            weWantCall = false;
-            return;
-        }
-
         ensureLocalStream().then(function () {
             sendSignal('ready', { user: currentUserName });
             maybeStartNegotiation();
-            if (hasFetch) {
-                pollSignals();
-            }
         }).catch(function () {
             weWantCall = false;
         });
@@ -564,12 +538,6 @@ $conversationId = (int)($conversation['id'] ?? 0);
                 submitBtn.disabled = true;
             }
 
-            if (!hasFetch) {
-                // navegador sem fetch: faz submit normal
-                chatForm.submit();
-                return;
-            }
-
             var formData = new FormData(chatForm);
             formData.append('ajax', '1');
 
@@ -608,23 +576,14 @@ $conversationId = (int)($conversation['id'] ?? 0);
                         return;
                     }
                     e.preventDefault();
-                    if (typeof chatForm.requestSubmit === 'function') {
-                        chatForm.requestSubmit();
-                    } else {
-                        chatForm.submit();
-                    }
+                    chatForm.dispatchEvent(new Event('submit', {cancelable: true}));
                 }
             });
         }
     }
 
     function pollMessages() {
-        return;
         if (!conversationId) {
-            return;
-        }
-
-        if (!hasFetch) {
             return;
         }
 
@@ -660,14 +619,13 @@ $conversationId = (int)($conversation['id'] ?? 0);
         }).catch(function () {
             // silencioso
         }).finally(function () {
-            setTimeout(pollMessages, 5000);
+            setTimeout(pollMessages, 1500);
         });
     }
 
-    // inicia apenas o polling de mensagens automaticamente.
-    // O polling de sinais só é iniciado quando o usuário clica em "Iniciar chamada de vídeo".
-    if (hasFetch) {
-        pollMessages();
-    }
+    // inicia o polling de sinais para receber oferta/answer/candidates do amigo
+    pollSignals();
+    // inicia o polling de mensagens para ver novas mensagens do amigo
+    pollMessages();
 })();
 </script>
