@@ -7,7 +7,6 @@ use App\Models\User;
 use App\Models\UserFriend;
 use App\Models\SocialConversation;
 use App\Models\SocialMessage;
-use App\Models\SocialCallSignal;
 
 class SocialChatController extends Controller
 {
@@ -186,97 +185,5 @@ class SocialChatController extends Controller
 
         header('Location: /social/chat?conversation_id=' . $conversationId);
         exit;
-    }
-
-    public function signal(): void
-    {
-        $currentUser = $this->requireLogin();
-        $currentId = (int)$currentUser['id'];
-
-        $conversationId = isset($_POST['conversation_id']) ? (int)$_POST['conversation_id'] : 0;
-        $type = (string)($_POST['type'] ?? '');
-        $payload = (string)($_POST['payload'] ?? '');
-
-        header('Content-Type: application/json');
-
-        if ($conversationId <= 0 || $type === '') {
-            echo json_encode(['ok' => false, 'error' => 'Parâmetros inválidos.']);
-            return;
-        }
-
-        $conversation = SocialConversation::findById($conversationId);
-        if (!$conversation) {
-            echo json_encode(['ok' => false, 'error' => 'Conversa não encontrada.']);
-            return;
-        }
-
-        $u1 = (int)($conversation['user1_id'] ?? 0);
-        $u2 = (int)($conversation['user2_id'] ?? 0);
-        if ($currentId !== $u1 && $currentId !== $u2) {
-            echo json_encode(['ok' => false, 'error' => 'Você não participa desta conversa.']);
-            return;
-        }
-
-        $otherUserId = $currentId === $u1 ? $u2 : $u1;
-        $this->ensureFriends($currentId, $otherUserId);
-
-        $id = SocialCallSignal::create([
-            'conversation_id' => $conversationId,
-            'sender_user_id' => $currentId,
-            'type' => $type,
-            'payload' => $payload,
-        ]);
-
-        echo json_encode([
-            'ok' => true,
-            'id' => $id,
-        ]);
-    }
-
-    public function pollSignals(): void
-    {
-        $currentUser = $this->requireLogin();
-        $currentId = (int)$currentUser['id'];
-
-        $conversationId = isset($_GET['conversation_id']) ? (int)$_GET['conversation_id'] : 0;
-        $afterId = isset($_GET['after_id']) ? (int)$_GET['after_id'] : 0;
-
-        header('Content-Type: application/json');
-
-        if ($conversationId <= 0) {
-            echo json_encode(['ok' => false, 'error' => 'Conversa inválida.']);
-            return;
-        }
-
-        $conversation = SocialConversation::findById($conversationId);
-        if (!$conversation) {
-            echo json_encode(['ok' => false, 'error' => 'Conversa não encontrada.']);
-            return;
-        }
-
-        $u1 = (int)($conversation['user1_id'] ?? 0);
-        $u2 = (int)($conversation['user2_id'] ?? 0);
-        if ($currentId !== $u1 && $currentId !== $u2) {
-            echo json_encode(['ok' => false, 'error' => 'Você não participa desta conversa.']);
-            return;
-        }
-
-        $otherUserId = $currentId === $u1 ? $u2 : $u1;
-        $this->ensureFriends($currentId, $otherUserId);
-
-        $rows = SocialCallSignal::allSince($conversationId, $afterId);
-        $lastId = $afterId;
-        foreach ($rows as $r) {
-            $id = (int)($r['id'] ?? 0);
-            if ($id > $lastId) {
-                $lastId = $id;
-            }
-        }
-
-        echo json_encode([
-            'ok' => true,
-            'signals' => $rows,
-            'last_id' => $lastId,
-        ]);
     }
 }

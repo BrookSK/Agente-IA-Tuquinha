@@ -8,7 +8,6 @@
 $currentId = (int)($user['id'] ?? 0);
 $currentName = (string)($user['name'] ?? 'Você');
 $otherName = (string)($otherUser['name'] ?? 'Amigo');
-$otherId = (int)($otherUser['id'] ?? 0);
 $conversationId = (int)($conversation['id'] ?? 0);
 
 ?>
@@ -105,23 +104,11 @@ $conversationId = (int)($conversation['id'] ?? 0);
     var startBtn = document.getElementById('btn-start-call');
     var endBtn = document.getElementById('btn-end-call');
     var localContainer = document.getElementById('tuquinha-local-video');
-    var remoteContainer = document.getElementById('tuquinha-remote-video');
     var statusSpan = document.getElementById('tuquinha-call-status');
+    var jitsiApi = null;
+    var roomName = 'tuquinha-social-' + <?= $conversationId ?>;
     var chatForm = document.getElementById('social-chat-form');
     var currentUserName = <?= json_encode($currentName, JSON_UNESCAPED_UNICODE) ?>;
-    var currentUserId = <?= (int)$currentId ?>;
-    var otherUserId = <?= (int)$otherId ?>;
-    var conversationId = <?= (int)$conversationId ?>;
-
-    var pc = null;
-    var localStream = null;
-    var localVideoEl = null;
-    var remoteVideoEl = null;
-    var lastSignalId = 0;
-    var polling = false;
-    var weWantCall = false;
-    var remoteReady = false;
-    var isCaller = currentUserId < otherUserId;
 
     function setStatus(text) {
         if (statusSpan) {
@@ -129,290 +116,109 @@ $conversationId = (int)($conversation['id'] ?? 0);
         }
     }
 
-    function createVideoElement(container) {
-        if (!container) return null;
-        var video = document.createElement('video');
-        video.autoplay = true;
-        video.playsInline = true;
-        video.muted = (container === localContainer);
-        video.style.width = '100%';
-        video.style.height = '100%';
-        video.style.objectFit = 'cover';
-        container.innerHTML = '';
-        container.appendChild(video);
-        return video;
-    }
-
-    function createPeerConnection() {
-        if (pc) {
-            return pc;
+    function ensureJitsiScript(callback) {
+        if (window.JitsiMeetExternalAPI) {
+            callback();
+            return;
         }
 
-        pc = new RTCPeerConnection({
-            iceServers: [
-                { urls: 'stun:stun.l.google.com:19302' }
-            ]
-        });
+        var existing = document.getElementById('jitsi-external-api');
+        if (existing) {
+            existing.addEventListener('load', function () {
+                callback();
+            });
+            return;
+        }
 
-        pc.onicecandidate = function (event) {
-            if (event.candidate) {
-                sendSignal('candidate', event.candidate);
-            }
+        var script = document.createElement('script');
+        script.id = 'jitsi-external-api';
+        script.src = 'https://meet.jit.si/external_api.js';
+        script.async = true;
+        script.onload = function () {
+            callback();
         };
-
-        pc.ontrack = function (event) {
-            if (!remoteVideoEl) {
-                remoteVideoEl = createVideoElement(remoteContainer);
-            }
-            if (remoteVideoEl) {
-                remoteVideoEl.srcObject = event.streams[0];
-            }
+        script.onerror = function () {
+            setStatus('Não foi possível carregar o serviço de chamada de vídeo. Tente novamente mais tarde.');
         };
-
-        pc.onconnectionstatechange = function () {
-            if (!pc) return;
-            if (pc.connectionState === 'connected') {
-                setStatus('Chamada conectada.');
-            } else if (pc.connectionState === 'disconnected' || pc.connectionState === 'failed') {
-                setStatus('Conexão perdida.');
-            }
-        };
-
-        return pc;
-    }
-
-    function ensureLocalStream() {
-        if (localStream) {
-            return Promise.resolve(localStream);
-        }
-
-        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-            setStatus('Seu navegador não suporta chamadas de vídeo.');
-            return Promise.reject(new Error('getUserMedia não suportado'));
-        }
-
-        return navigator.mediaDevices.getUserMedia({ video: true, audio: true })
-            .then(function (stream) {
-                localStream = stream;
-                if (!localVideoEl) {
-                    localVideoEl = createVideoElement(localContainer);
-                }
-                if (localVideoEl) {
-                    localVideoEl.srcObject = stream;
-                }
-
-                var pcInstance = createPeerConnection();
-                stream.getTracks().forEach(function (track) {
-                    pcInstance.addTrack(track, stream);
-                });
-
-                return stream;
-            })
-            .catch(function (err) {
-                console.error('Erro ao acessar câmera/microfone:', err);
-                setStatus('Não foi possível acessar sua câmera/microfone. Verifique as permissões.');
-                throw err;
-            });
-    }
-
-    function sendSignal(type, data) {
-        var formData = new FormData();
-        formData.append('conversation_id', String(conversationId));
-        formData.append('type', type);
-        formData.append('payload', JSON.stringify(data || {}));
-
-        return fetch('/social/chat/sinal', {
-            method: 'POST',
-            body: formData,
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest'
-            }
-        })
-            .then(function (res) { return res.json(); })
-            .then(function (json) {
-                if (json && json.ok && json.id && json.id > lastSignalId) {
-                    lastSignalId = json.id;
-                }
-            })
-            .catch(function (err) {
-                console.error('Erro ao enviar sinal:', err);
-            });
-    }
-
-    function handleSignal(signal) {
-        var fromUserId = parseInt(signal.sender_user_id || signal.senderUserId || 0, 10);
-        if (!fromUserId || fromUserId === currentUserId) {
-            return; // ignora sinais que nós mesmos enviamos
-        }
-
-        var type = signal.type || '';
-        var payloadStr = signal.payload || '{}';
-        var payload;
-        try {
-            payload = JSON.parse(payloadStr);
-        } catch (e) {
-            payload = {};
-        }
-
-        if (type === 'ready') {
-            remoteReady = true;
-            maybeStartNegotiation();
-            return;
-        }
-
-        if (type === 'offer') {
-            ensureLocalStream().then(function () {
-                var pcInstance = createPeerConnection();
-                var desc = new RTCSessionDescription(payload);
-                return pcInstance.setRemoteDescription(desc).then(function () {
-                    return pcInstance.createAnswer();
-                }).then(function (answer) {
-                    return pcInstance.setLocalDescription(answer);
-                }).then(function () {
-                    sendSignal('answer', pcInstance.localDescription);
-                    setStatus('Chamada conectando...');
-                });
-            }).catch(function () {});
-            return;
-        }
-
-        if (type === 'answer') {
-            if (!pc) {
-                pc = createPeerConnection();
-            }
-            var answerDesc = new RTCSessionDescription(payload);
-            pc.setRemoteDescription(answerDesc).catch(function (e) {
-                console.error('Erro ao aplicar answer remota:', e);
-            });
-            return;
-        }
-
-        if (type === 'candidate') {
-            if (!pc) {
-                pc = createPeerConnection();
-            }
-            try {
-                var candidate = new RTCIceCandidate(payload);
-                pc.addIceCandidate(candidate).catch(function (e) {
-                    console.error('Erro ao adicionar ICE candidate:', e);
-                });
-            } catch (e) {
-                console.error('Erro ao criar ICE candidate:', e);
-            }
-            return;
-        }
-
-        if (type === 'bye') {
-            setStatus('Seu amigo encerrou a chamada.');
-            shutdownCall();
-            return;
-        }
-    }
-
-    function pollSignals() {
-        if (polling) {
-            return;
-        }
-        polling = true;
-
-        var url = '/social/chat/sinais?conversation_id=' + encodeURIComponent(String(conversationId)) +
-            '&after_id=' + encodeURIComponent(String(lastSignalId));
-
-        fetch(url, {
-            method: 'GET',
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest'
-            }
-        })
-            .then(function (res) { return res.json(); })
-            .then(function (json) {
-                if (json && json.ok && Array.isArray(json.signals)) {
-                    json.signals.forEach(function (sig) {
-                        var id = parseInt(sig.id || 0, 10);
-                        if (id && id > lastSignalId) {
-                            lastSignalId = id;
-                        }
-                        handleSignal(sig);
-                    });
-                }
-            })
-            .catch(function (err) {
-                console.error('Erro ao buscar sinais:', err);
-            })
-            .finally(function () {
-                polling = false;
-                setTimeout(pollSignals, 1500);
-            });
-    }
-
-    function maybeStartNegotiation() {
-        if (!weWantCall || !remoteReady) {
-            return;
-        }
-        if (!isCaller) {
-            return;
-        }
-
-        ensureLocalStream().then(function () {
-            var pcInstance = createPeerConnection();
-            if (pcInstance.signalingState !== 'stable') {
-                return;
-            }
-            return pcInstance.createOffer().then(function (offer) {
-                return pcInstance.setLocalDescription(offer);
-            }).then(function () {
-                sendSignal('offer', pcInstance.localDescription);
-                setStatus('Chamando seu amigo...');
-            });
-        }).catch(function () {});
+        document.head.appendChild(script);
     }
 
     function startCall() {
-        if (weWantCall) {
+        if (!localContainer) {
             return;
         }
-        weWantCall = true;
+
+        if (jitsiApi) {
+            // Já em chamada
+            return;
+        }
+
         setStatus('Conectando à chamada...');
 
-        ensureLocalStream().then(function () {
-            sendSignal('ready', { user: currentUserName });
-            maybeStartNegotiation();
-        }).catch(function () {
-            weWantCall = false;
+        ensureJitsiScript(function () {
+            if (!window.JitsiMeetExternalAPI) {
+                setStatus('Serviço de chamada de vídeo indisponível.');
+                return;
+            }
+
+            // Limpa o container e cria o iframe da chamada
+            localContainer.innerHTML = '';
+
+            try {
+                jitsiApi = new window.JitsiMeetExternalAPI('meet.jit.si', {
+                    roomName: roomName,
+                    parentNode: localContainer,
+                    width: '100%',
+                    height: '100%',
+                    interfaceConfigOverwrite: {
+                        TILE_VIEW_MAX_COLUMNS: 1,
+                        SHOW_JITSI_WATERMARK: false,
+                        SHOW_BRAND_WATERMARK: false,
+                        SHOW_POWERED_BY: false,
+                        SHOW_DEEP_LINKING_IMAGE: false,
+                        TOOLBAR_BUTTONS: ['microphone', 'camera']
+                    },
+                    configOverwrite: {
+                        disableDeepLinking: true,
+                        prejoinPageEnabled: false,
+                        startWithAudioMuted: false,
+                        startWithVideoMuted: false,
+                        prejoinConfig: {
+                            enabled: false
+                        }
+                    }
+                });
+
+                setStatus('Chamada em andamento. Peça para seu amigo abrir esta mesma conversa e clicar em "Iniciar chamada de vídeo".');
+
+                jitsiApi.addEventListener('videoConferenceJoined', function () {
+                    setStatus('Você entrou na chamada. Aguarde seu amigo.');
+                });
+
+                jitsiApi.addEventListener('videoConferenceLeft', function () {
+                    setStatus('Chamada encerrada.');
+                    endCall();
+                });
+            } catch (e) {
+                setStatus('Não foi possível iniciar a chamada de vídeo.');
+                jitsiApi = null;
+            }
         });
     }
 
-    function shutdownCall() {
-        if (pc) {
+    function endCall() {
+        if (jitsiApi) {
             try {
-                pc.close();
+                jitsiApi.dispose();
             } catch (e) {}
-            pc = null;
-        }
-
-        if (localStream) {
-            localStream.getTracks().forEach(function (t) {
-                try { t.stop(); } catch (e) {}
-            });
-            localStream = null;
+            jitsiApi = null;
         }
 
         if (localContainer) {
             localContainer.innerHTML = 'Sua câmera aparecerá aqui quando a chamada for iniciada.';
         }
-        if (remoteContainer) {
-            remoteContainer.innerHTML = '<span id="tuquinha-call-status">Chamada não iniciada.</span>';
-            statusSpan = document.getElementById('tuquinha-call-status');
-        }
 
-        weWantCall = false;
-        remoteReady = false;
         setStatus('Chamada não iniciada.');
-    }
-
-    function endCall() {
-        sendSignal('bye', { user: currentUserName });
-        shutdownCall();
     }
 
     function appendOwnMessage(body, createdAt) {
@@ -521,8 +327,5 @@ $conversationId = (int)($conversation['id'] ?? 0);
             });
         }
     }
-
-    // inicia o polling de sinais para receber oferta/answer/candidates do amigo
-    pollSignals();
 })();
 </script>
