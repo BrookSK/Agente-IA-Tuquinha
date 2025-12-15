@@ -179,7 +179,13 @@ $conversationId = (int)($conversation['id'] ?? 0);
                         TOOLBAR_BUTTONS: ['microphone', 'camera']
                     },
                     configOverwrite: {
-                        disableDeepLinking: true
+                        disableDeepLinking: true,
+                        prejoinPageEnabled: false,
+                        startWithAudioMuted: false,
+                        startWithVideoMuted: false,
+                        prejoinConfig: {
+                            enabled: false
+                        }
                     }
                 });
 
