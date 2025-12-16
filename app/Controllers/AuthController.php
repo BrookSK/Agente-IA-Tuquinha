@@ -103,6 +103,26 @@ class AuthController extends Controller
             }
         }
 
+        // Restaura indicação pendente do banco para manter o benefício mesmo após reload/logout/login
+        try {
+            $pendingReferralDb = UserReferral::findFirstPendingForUser((int)$user['id']);
+            if ($pendingReferralDb && !empty($pendingReferralDb['plan_id']) && !empty($pendingReferralDb['referrer_user_id'])) {
+                $pendingPlan = Plan::findById((int)$pendingReferralDb['plan_id']);
+                if ($pendingPlan && !empty($pendingPlan['slug'])) {
+                    $_SESSION['pending_referral'] = [
+                        'referrer_user_id' => (int)$pendingReferralDb['referrer_user_id'],
+                        'plan_id' => (int)$pendingReferralDb['plan_id'],
+                        'plan_slug' => (string)$pendingPlan['slug'],
+                    ];
+
+                    // Garante que o fluxo continue apontando para o checkout do plano indicado
+                    $_SESSION['pending_plan_slug'] = (string)$pendingPlan['slug'];
+                }
+            }
+        } catch (\Throwable $e) {
+            // Se falhar, não bloqueia login
+        }
+
         $redirectCourseId = $_SESSION['pending_course_id'] ?? null;
         $redirectPlan = $_SESSION['pending_plan_slug'] ?? null;
         unset($_SESSION['pending_course_id'], $_SESSION['pending_plan_slug']);
