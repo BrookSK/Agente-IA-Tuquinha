@@ -60,30 +60,10 @@ try {
         if ($pending && !empty($pending['plan_id'])) {
             $plan = \App\Models\Plan::findById((int)$pending['plan_id']);
             if ($plan && !empty($plan['referral_enabled']) && !empty($plan['referral_require_card'])) {
-                $user = \App\Models\User::findById($userId);
-                $email = $user['email'] ?? '';
-                $hasSub = false;
-
-                if (!empty($email)) {
-                    $subs = \App\Models\Subscription::allByEmailWithPlan((string)$email);
-                    foreach ($subs as $s) {
-                        if ((int)($s['plan_id'] ?? 0) !== (int)$plan['id']) {
-                            continue;
-                        }
-                        $status = strtolower((string)($s['status'] ?? ''));
-                        if (in_array($status, ['active', 'pending'], true)) {
-                            $hasSub = true;
-                            break;
-                        }
-                    }
-                }
-
-                if (!$hasSub) {
-                    $slug = (string)($plan['slug'] ?? '');
-                    if ($slug !== '') {
-                        header('Location: /checkout?plan=' . urlencode($slug));
-                        exit;
-                    }
+                $slug = (string)($plan['slug'] ?? '');
+                if ($slug !== '') {
+                    header('Location: /checkout?plan=' . urlencode($slug));
+                    exit;
                 }
             }
         }

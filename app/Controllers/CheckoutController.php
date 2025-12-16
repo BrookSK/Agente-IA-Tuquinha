@@ -411,9 +411,10 @@ class CheckoutController extends Controller
                     }
 
                     // Marca indicação como concluída para não repetir bônus
-                    if ($friendTokens > 0 || ($eligibleReferrer && $referrerTokens > 0)) {
-                        UserReferral::markCompleted((int)$pendingReferral['id']);
-                    }
+                    UserReferral::markCompleted((int)$pendingReferral['id']);
+
+                    unset($_SESSION['pending_referral']);
+                    unset($_SESSION['pending_plan_slug']);
 
                     // Envia e-mails específicos de bônus de indicação
                     try {
