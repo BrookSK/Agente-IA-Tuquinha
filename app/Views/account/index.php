@@ -337,11 +337,31 @@ document.addEventListener('DOMContentLoaded', function () {
         copyBtn.addEventListener('click', function () {
             var text = linkInput.value || '';
 
-            function feedback() {
-                copyBtn.textContent = 'Copiado';
+            function feedback(label) {
+                copyBtn.textContent = label || 'Copiado';
                 setTimeout(function () {
                     copyBtn.textContent = 'Copiar';
                 }, 2000);
+            }
+
+            function fallbackCopyWithTextarea() {
+                try {
+                    var ta = document.createElement('textarea');
+                    ta.value = text;
+                    ta.setAttribute('readonly', '');
+                    ta.style.position = 'fixed';
+                    ta.style.top = '-1000px';
+                    ta.style.left = '-1000px';
+                    ta.style.opacity = '0';
+                    document.body.appendChild(ta);
+                    ta.focus();
+                    ta.select();
+                    var ok = document.execCommand('copy');
+                    document.body.removeChild(ta);
+                    return !!ok;
+                } catch (e) {
+                    return false;
+                }
             }
 
             function legacyCopy() {
@@ -352,9 +372,19 @@ document.addEventListener('DOMContentLoaded', function () {
                     if (ok) {
                         feedback();
                     }
+                    return !!ok;
                 } catch (e) {
                     // se não conseguir copiar, apenas mantém o link selecionado
+                    return false;
                 }
+            }
+
+            function manualCopyFallback() {
+                try {
+                    linkInput.focus();
+                    linkInput.select();
+                } catch (e) {}
+                feedback('Ctrl+C');
             }
 
             try {
@@ -362,13 +392,37 @@ document.addEventListener('DOMContentLoaded', function () {
                     navigator.clipboard.writeText(text).then(function () {
                         feedback();
                     }).catch(function () {
-                        legacyCopy();
+                        var ok = fallbackCopyWithTextarea();
+                        if (ok) {
+                            feedback();
+                            return;
+                        }
+                        var ok2 = legacyCopy();
+                        if (!ok2) {
+                            manualCopyFallback();
+                        }
                     });
                 } else {
-                    legacyCopy();
+                    var ok = fallbackCopyWithTextarea();
+                    if (ok) {
+                        feedback();
+                        return;
+                    }
+                    var ok2 = legacyCopy();
+                    if (!ok2) {
+                        manualCopyFallback();
+                    }
                 }
             } catch (e) {
-                legacyCopy();
+                var ok = fallbackCopyWithTextarea();
+                if (ok) {
+                    feedback();
+                    return;
+                }
+                var ok2 = legacyCopy();
+                if (!ok2) {
+                    manualCopyFallback();
+                }
             }
         });
     }
