@@ -6,6 +6,10 @@
 /** @var bool|null $requiresCardNow */
 $price = number_format($plan['price_cents'] / 100, 2, ',', '.');
 
+$hasReferral = !empty($_SESSION['pending_referral'])
+    && !empty($_SESSION['pending_plan_slug'])
+    && (string)$_SESSION['pending_plan_slug'] === (string)($plan['slug'] ?? '');
+
 // Define rótulo do período (mês / semestre / ano) com base no sufixo do slug
 $slug = (string)($plan['slug'] ?? '');
 $periodLabel = 'mês';
@@ -23,7 +27,11 @@ if (substr($slug, -11) === '-semestral') {
             Passo 2 de 2 &mdash; Dados do cartão.
         </p>
         <p style="color: #b0b0b0; margin-bottom: 18px; font-size: 14px;">
-            Você está assinando o plano <strong><?= htmlspecialchars($plan['name']) ?></strong> por <strong>R$ <?= $price ?>/<?= htmlspecialchars($periodLabel) ?></strong>, com cobrança recorrente no cartão via Asaas.
+            <?php if ($hasReferral): ?>
+                Você está finalizando o checkout do plano <strong><?= htmlspecialchars($plan['name']) ?></strong> por <strong>R$ <?= $price ?>/<?= htmlspecialchars($periodLabel) ?></strong>, com cobrança recorrente no cartão via Asaas.
+            <?php else: ?>
+                Você está assinando o plano <strong><?= htmlspecialchars($plan['name']) ?></strong> por <strong>R$ <?= $price ?>/<?= htmlspecialchars($periodLabel) ?></strong>, com cobrança recorrente no cartão via Asaas.
+            <?php endif; ?>
         </p>
     <?php else: ?>
         <p style="color: #b0b0b0; margin-bottom: 6px; font-size: 14px;">

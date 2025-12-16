@@ -5,6 +5,10 @@
 /** @var array|null $savedCustomer */
 $price = number_format($plan['price_cents'] / 100, 2, ',', '.');
 
+$hasReferral = !empty($_SESSION['pending_referral'])
+    && !empty($_SESSION['pending_plan_slug'])
+    && (string)$_SESSION['pending_plan_slug'] === (string)($plan['slug'] ?? '');
+
 // Define rótulo do período (mês / semestre / ano) com base no sufixo do slug
 $slug = (string)($plan['slug'] ?? '');
 $periodLabel = 'mês';
@@ -32,7 +36,11 @@ $prefillState = $savedCustomer['state'] ?? ($currentUser['billing_state'] ?? '')
     <h1 style="font-size: 24px; margin-bottom: 6px; font-weight: 650;">Finalizar assinatura</h1>
     <p style="color: #b0b0b0; margin-bottom: 18px; font-size: 14px;">
         Passo 1 de 2 &mdash; Dados pessoais. Depois vamos pedir os dados do cartão.<br>
-        Você está assinando o plano <strong><?= htmlspecialchars($plan['name']) ?></strong> por <strong>R$ <?= $price ?>/<?= htmlspecialchars($periodLabel) ?></strong>.
+        <?php if ($hasReferral): ?>
+            Você está iniciando o checkout do plano <strong><?= htmlspecialchars($plan['name']) ?></strong> por <strong>R$ <?= $price ?>/<?= htmlspecialchars($periodLabel) ?></strong>.
+        <?php else: ?>
+            Você está assinando o plano <strong><?= htmlspecialchars($plan['name']) ?></strong> por <strong>R$ <?= $price ?>/<?= htmlspecialchars($periodLabel) ?></strong>.
+        <?php endif; ?>
     </p>
 
     <?php if (!empty($error)): ?>
