@@ -210,7 +210,7 @@ class User
     public static function resetTokenBalanceForPlan(int $id, int $monthlyLimit): void
     {
         $pdo = Database::getConnection();
-        $stmt = $pdo->prepare('UPDATE users SET token_balance = :balance, last_token_reset_at = NOW() WHERE id = :id LIMIT 1');
+        $stmt = $pdo->prepare('UPDATE users SET token_balance = token_balance + :balance, last_token_reset_at = NOW() WHERE id = :id LIMIT 1');
         $stmt->execute([
             'balance' => $monthlyLimit,
             'id' => $id,

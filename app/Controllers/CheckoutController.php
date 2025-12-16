@@ -391,34 +391,35 @@ class CheckoutController extends Controller
                         }
                     }
 
-                    if ($eligibleReferrer) {
-                        $friendTokens = isset($plan['referral_friend_tokens']) ? (int)$plan['referral_friend_tokens'] : 0;
-                        $referrerTokens = isset($plan['referral_referrer_tokens']) ? (int)$plan['referral_referrer_tokens'] : 0;
+                    $friendTokens = isset($plan['referral_friend_tokens']) ? (int)$plan['referral_friend_tokens'] : 0;
+                    $referrerTokens = isset($plan['referral_referrer_tokens']) ? (int)$plan['referral_referrer_tokens'] : 0;
 
-                        $metaBase = [
-                            'plan_id' => (int)$plan['id'],
-                            'referral_id' => (int)$pendingReferral['id'],
-                            'asaas_subscription_id' => (string)($subResp['id'] ?? ''),
-                        ];
+                    $metaBase = [
+                        'plan_id' => (int)$plan['id'],
+                        'referral_id' => (int)$pendingReferral['id'],
+                        'asaas_subscription_id' => (string)($subResp['id'] ?? ''),
+                    ];
 
-                        // Credita tokens para o indicado (usuário atual)
-                        if ($friendTokens > 0 && $loggedUserId > 0) {
-                            User::creditTokens($loggedUserId, $friendTokens, 'referral_friend_bonus', $metaBase);
-                        }
+                    // Credita tokens para o indicado (usuário atual) assim que o checkout é concluído
+                    if ($friendTokens > 0 && $loggedUserId > 0) {
+                        User::creditTokens($loggedUserId, $friendTokens, 'referral_friend_bonus', $metaBase);
+                    }
 
-                        // Credita tokens para quem indicou
-                        if ($referrer && $referrerTokens > 0) {
-                            User::creditTokens((int)$referrer['id'], $referrerTokens, 'referral_referrer_bonus', $metaBase);
-                        }
+                    // Credita tokens para quem indicou apenas se ele estiver elegível
+                    if ($eligibleReferrer && $referrer && $referrerTokens > 0) {
+                        User::creditTokens((int)$referrer['id'], $referrerTokens, 'referral_referrer_bonus', $metaBase);
+                    }
 
-                        // Marca indicação como concluída para não repetir bônus
+                    // Marca indicação como concluída para não repetir bônus
+                    if ($friendTokens > 0 || ($eligibleReferrer && $referrerTokens > 0)) {
                         UserReferral::markCompleted((int)$pendingReferral['id']);
+                    }
 
-                        // Envia e-mails específicos de bônus de indicação
-                        try {
-                            $scheme = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') ? 'https://' : 'http://';
-                            $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
-                            $appUrl = $scheme . $host;
+                    // Envia e-mails específicos de bônus de indicação
+                    try {
+                        $scheme = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') ? 'https://' : 'http://';
+                        $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+                        $appUrl = $scheme . $host;
 
                             // E-mail para o indicado
                             if (!empty($customer['email'])) {
@@ -507,9 +508,8 @@ HTML;
 
                                 MailService::send($referrer['email'], $referrer['name'] ?? '', $subjectRef, $bodyRef);
                             }
-                        } catch (\Throwable $mailRefEx) {
-                            error_log('CheckoutController::process erro ao enviar e-mails de indicação: ' . $mailRefEx->getMessage());
-                        }
+                    } catch (\Throwable $mailRefEx) {
+                        error_log('CheckoutController::process erro ao enviar e-mails de indicação: ' . $mailRefEx->getMessage());
                     }
                 }
             } catch (\Throwable $referralEx) {
