@@ -178,7 +178,8 @@ if ($freeChatLimit <= 0) { $freeChatLimit = 400; }
                                 <input id="referral-link-input" type="text" readonly value="<?= htmlspecialchars($referralData['link'] ?? '') ?>" style="
                                     flex:1; padding:6px 8px; border-radius:8px; border:1px solid #272727; background:#050509; color:#f5f5f5; font-size:12px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
                                 <button type="button" id="copy-referral-link" style="
-                                    border:none; border-radius:999px; padding:6px 10px; background:#222; color:#f5f5f5;
+                                    border:1px solid var(--border-subtle); border-radius:999px; padding:6px 10px;
+                                    background:var(--surface-subtle); color:var(--text-primary);
                                     font-size:11px; cursor:pointer;">Copiar</button>
                             </div>
                         </div>
@@ -337,16 +338,15 @@ document.addEventListener('DOMContentLoaded', function () {
             try {
                 linkInput.focus();
                 linkInput.select();
-                var ok = document.execCommand('copy');
-                if (ok) {
-                    copyBtn.textContent = 'Copiado!';
-                    setTimeout(function () {
-                        copyBtn.textContent = 'Copiar';
-                    }, 2000);
-                }
+                document.execCommand('copy');
             } catch (e) {
                 // se não conseguir copiar, apenas mantém o link selecionado
             }
+
+            copyBtn.textContent = 'Copiado';
+            setTimeout(function () {
+                copyBtn.textContent = 'Copiar';
+            }, 2000);
         });
     }
 });
