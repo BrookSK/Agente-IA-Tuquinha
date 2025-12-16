@@ -335,18 +335,41 @@ document.addEventListener('DOMContentLoaded', function () {
     var linkInput = document.getElementById('referral-link-input');
     if (copyBtn && linkInput) {
         copyBtn.addEventListener('click', function () {
-            try {
-                linkInput.focus();
-                linkInput.select();
-                document.execCommand('copy');
-            } catch (e) {
-                // se não conseguir copiar, apenas mantém o link selecionado
+            var text = linkInput.value || '';
+
+            function feedback() {
+                copyBtn.textContent = 'Copiado';
+                setTimeout(function () {
+                    copyBtn.textContent = 'Copiar';
+                }, 2000);
             }
 
-            copyBtn.textContent = 'Copiado';
-            setTimeout(function () {
-                copyBtn.textContent = 'Copiar';
-            }, 2000);
+            function legacyCopy() {
+                try {
+                    linkInput.focus();
+                    linkInput.select();
+                    var ok = document.execCommand('copy');
+                    if (ok) {
+                        feedback();
+                    }
+                } catch (e) {
+                    // se não conseguir copiar, apenas mantém o link selecionado
+                }
+            }
+
+            try {
+                if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
+                    navigator.clipboard.writeText(text).then(function () {
+                        feedback();
+                    }).catch(function () {
+                        legacyCopy();
+                    });
+                } else {
+                    legacyCopy();
+                }
+            } catch (e) {
+                legacyCopy();
+            }
         });
     }
 });
