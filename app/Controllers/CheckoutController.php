@@ -68,6 +68,13 @@ class CheckoutController extends Controller
         $pendingReferral = null;
         $referralFreeDays = 0;
         $requiresCardNow = true;
+        $nextDueDate = null;
+        $cardVerification = [
+            'attempted' => false,
+            'paymentId' => null,
+            'value' => null,
+            'refunded' => false,
+        ];
         if ($loggedUserId > 0 && !empty($plan['referral_enabled'])) {
             try {
                 $pendingReferral = UserReferral::findPendingForUserAndPlan($loggedUserId, (int)$plan['id']);
@@ -256,6 +263,7 @@ class CheckoutController extends Controller
                     ->modify('+' . $referralFreeDays . ' days')
                     ->format('Y-m-d');
                 $subscriptionPayload['nextDueDate'] = $nextDue;
+                $nextDueDate = $nextDue;
             } catch (\Throwable $e) {
                 // Se der erro ao calcular data, segue sem alterar o nextDueDate
                 error_log('CheckoutController::process erro ao calcular nextDueDate de indicação: ' . $e->getMessage());
@@ -304,6 +312,47 @@ class CheckoutController extends Controller
             }
 
             $_SESSION['plan_slug'] = $plan['slug'];
+
+            // Verificação de cartão (opção 3): pré-autorização com valor simbólico e estorno automático
+            // Apenas quando veio por indicação, há dias grátis e o plano exige cartão.
+            if ($pendingReferral && $referralFreeDays > 0 && !empty($plan['referral_require_card']) && $requiresCardNow && $creditCard !== null) {
+                $cardVerification['attempted'] = true;
+                $cardVerification['value'] = 1.00;
+
+                try {
+                    $verifyPayload = [
+                        'customer' => $customerResp['id'] ?? null,
+                        'billingType' => 'CREDIT_CARD',
+                        'value' => $cardVerification['value'],
+                        'dueDate' => (new \DateTimeImmutable('now'))->format('Y-m-d'),
+                        'description' => 'Validação de cartão (indicação) - estorno automático',
+                        'authorizedOnly' => true,
+                        'creditCard' => $creditCard,
+                        'creditCardHolderInfo' => $subscriptionPayload['creditCardHolderInfo'] ?? null,
+                    ];
+
+                    if (empty($verifyPayload['customer']) || empty($verifyPayload['creditCardHolderInfo'])) {
+                        throw new \RuntimeException('Dados insuficientes para validação do cartão.');
+                    }
+
+                    $verifyResp = $asaas->createPayment($verifyPayload);
+                    $verifyPaymentId = (string)($verifyResp['id'] ?? '');
+                    if ($verifyPaymentId !== '') {
+                        $cardVerification['paymentId'] = $verifyPaymentId;
+
+                        try {
+                            $asaas->refundPayment($verifyPaymentId, [
+                                'description' => 'Estorno automático - validação de cartão (indicação)',
+                            ]);
+                            $cardVerification['refunded'] = true;
+                        } catch (\Throwable $refundEx) {
+                            error_log('CheckoutController::process erro ao estornar validação de cartão: ' . $refundEx->getMessage());
+                        }
+                    }
+                } catch (\Throwable $verifyEx) {
+                    error_log('CheckoutController::process erro ao validar cartão (cobrança simbólica): ' . $verifyEx->getMessage());
+                }
+            }
 
             // Bônus de indicação (Indique e ganhe)
             try {
@@ -523,6 +572,10 @@ HTML;
             $this->view('checkout/success', [
                 'pageTitle' => 'Assinatura criada',
                 'plan' => $plan,
+                'referralFreeDays' => $referralFreeDays,
+                'nextDueDate' => $nextDueDate,
+                'requiresCardNow' => $requiresCardNow,
+                'cardVerification' => $cardVerification,
             ]);
         } catch (\Throwable $e) {
             // Loga erro detalhado para depuração (incluindo resposta do Asaas quando houver)

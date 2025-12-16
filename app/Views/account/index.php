@@ -264,6 +264,18 @@ if ($freeChatLimit <= 0) { $freeChatLimit = 400; }
                     </div>
                 <?php endif; ?>
 
+                <?php
+                $freeDays = 0;
+                if (!empty($plan) && isset($plan['referral_free_days'])) {
+                    $freeDays = (int)$plan['referral_free_days'];
+                }
+                ?>
+                <?php if ($freeDays > 0 && !empty($subscriptionNext)): ?>
+                    <div style="font-size:12px; color:#b0b0b0; margin-top:4px;">
+                        Período grátis até: <strong><?= htmlspecialchars(date('d/m/Y', strtotime($subscriptionNext))) ?></strong>
+                    </div>
+                <?php endif; ?>
+
                 <?php if (in_array($subscription['status'], ['active', 'pending'], true)): ?>
                     <?php
                     $nextDisplay = '';

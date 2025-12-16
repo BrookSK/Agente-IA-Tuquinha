@@ -106,4 +106,14 @@ class AsaasClient
     {
         return $this->request('POST', '/payments', $payload);
     }
+
+    public function refundPayment(string $id, array $payload = []): array
+    {
+        return $this->request('POST', '/payments/' . urlencode($id) . '/refund', $payload);
+    }
+
+    public function captureAuthorizedPayment(string $id, array $payload = []): array
+    {
+        return $this->request('POST', '/payments/' . urlencode($id) . '/capture', $payload);
+    }
 }
