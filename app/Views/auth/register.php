@@ -17,7 +17,7 @@
             <strong>Indicação ativa:</strong>
             você está criando sua conta a partir de uma indicação para o plano
             <strong><?= htmlspecialchars($referralPlan['name'] ?? '') ?></strong>.
-            Depois de confirmar o e-mail, vamos te levar direto para assinar esse plano com as vantagens da indicação.
+            Depois de confirmar o e-mail, vamos te levar direto para ativar esse plano (checkout) com as vantagens da indicação.
         </div>
     <?php endif; ?>
 
