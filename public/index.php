@@ -21,6 +21,77 @@ spl_autoload_register(function (string $class): void {
     }
 });
 
+// Gate de onboarding por indicação: se o usuário veio por indicação e o plano exige cartão,
+// ele não pode navegar por outras telas até concluir o checkout (ou seja, até não existir mais
+// um registro pending em user_referrals para este usuário).
+try {
+    $path = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?? '/';
+
+    $allowedPrefixes = [
+        '/',
+        '/checkout',
+        '/login',
+        '/registrar',
+        '/logout',
+        '/verificar-email',
+        '/senha',
+        '/suporte',
+    ];
+
+    $isAllowed = false;
+    foreach ($allowedPrefixes as $prefix) {
+        if ($prefix === '/') {
+            if ($path === '/') {
+                $isAllowed = true;
+                break;
+            }
+            continue;
+        }
+        if (strpos($path, $prefix) === 0) {
+            $isAllowed = true;
+            break;
+        }
+    }
+
+    if (!$isAllowed && !empty($_SESSION['user_id']) && empty($_SESSION['is_admin'])) {
+        $userId = (int)$_SESSION['user_id'];
+        $pending = \App\Models\UserReferral::findFirstPendingForUser($userId);
+
+        if ($pending && !empty($pending['plan_id'])) {
+            $plan = \App\Models\Plan::findById((int)$pending['plan_id']);
+            if ($plan && !empty($plan['referral_enabled']) && !empty($plan['referral_require_card'])) {
+                $user = \App\Models\User::findById($userId);
+                $email = $user['email'] ?? '';
+                $hasSub = false;
+
+                if (!empty($email)) {
+                    $subs = \App\Models\Subscription::allByEmailWithPlan((string)$email);
+                    foreach ($subs as $s) {
+                        if ((int)($s['plan_id'] ?? 0) !== (int)$plan['id']) {
+                            continue;
+                        }
+                        $status = strtolower((string)($s['status'] ?? ''));
+                        if (in_array($status, ['active', 'pending'], true)) {
+                            $hasSub = true;
+                            break;
+                        }
+                    }
+                }
+
+                if (!$hasSub) {
+                    $slug = (string)($plan['slug'] ?? '');
+                    if ($slug !== '') {
+                        header('Location: /checkout?plan=' . urlencode($slug));
+                        exit;
+                    }
+                }
+            }
+        }
+    }
+} catch (\Throwable $e) {
+    // Se algo der errado no gate, não derruba o site.
+}
+
 use App\Core\Router;
 
 $router = new Router();

@@ -37,6 +37,21 @@ class UserReferral
         return $row ?: null;
     }
 
+    public static function findFirstPendingForUser(int $referredUserId): ?array
+    {
+        if ($referredUserId <= 0) {
+            return null;
+        }
+
+        $pdo = Database::getConnection();
+        $stmt = $pdo->prepare('SELECT * FROM user_referrals WHERE referred_user_id = :uid AND status = "pending" ORDER BY created_at ASC LIMIT 1');
+        $stmt->execute([
+            'uid' => $referredUserId,
+        ]);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $row ?: null;
+    }
+
     public static function markCompleted(int $id): void
     {
         if ($id <= 0) {
