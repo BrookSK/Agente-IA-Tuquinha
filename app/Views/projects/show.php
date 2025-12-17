@@ -4,6 +4,8 @@
 <?php /** @var array $latestByFileId */ ?>
 <?php /** @var array $conversations */ ?>
 <?php /** @var bool $isFavorite */ ?>
+<?php /** @var array $members */ ?>
+<?php /** @var array $pendingInvites */ ?>
 <?php /** @var string|null $uploadError */ ?>
 <?php /** @var string|null $uploadOk */ ?>
 <?php
@@ -161,6 +163,74 @@
 
         <div style="min-width:0;">
             <div style="display:flex; flex-direction:column; gap:12px;">
+                <?php if (!empty($members) || !empty($pendingInvites)): ?>
+                <div style="background:#111118; border:1px solid #272727; border-radius:14px; padding:14px;">
+                    <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:10px;">
+                        <div style="font-weight:650;">Compartilhar</div>
+                        <div style="color:#8d8d8d; font-size:12px;">Somente admin</div>
+                    </div>
+
+                    <div style="display:flex; gap:8px; align-items:center;">
+                        <input id="inviteEmail" type="email" placeholder="Email do colaborador" style="flex:1; padding:10px 12px; border-radius:12px; border:1px solid #272727; background:#050509; color:#f5f5f5; font-size:13px; outline:none;" />
+                        <select id="inviteRole" style="padding:10px 10px; border-radius:12px; border:1px solid #272727; background:#050509; color:#f5f5f5; font-size:13px; outline:none;">
+                            <option value="read">Leitura</option>
+                            <option value="write">Escrita</option>
+                            <option value="admin">Admin</option>
+                        </select>
+                        <button type="button" id="sendInviteBtn" style="border:none; border-radius:12px; padding:10px 12px; background:linear-gradient(135deg,#e53935,#ff6f60); color:#050509; font-weight:700; cursor:pointer;">Convidar</button>
+                    </div>
+                    <div id="inviteFeedback" style="margin-top:8px; color:#8d8d8d; font-size:12px; display:none;"></div>
+
+                    <?php if (!empty($pendingInvites)): ?>
+                        <div style="margin-top:12px;">
+                            <div style="font-size:12px; color:#b0b0b0; margin-bottom:6px;">Convites pendentes</div>
+                            <div style="display:flex; flex-direction:column; gap:8px;">
+                                <?php foreach ($pendingInvites as $inv): ?>
+                                    <div style="display:flex; justify-content:space-between; align-items:center; gap:10px; border:1px solid #272727; border-radius:12px; padding:10px 12px; background:#0a0a10;">
+                                        <div style="min-width:0;">
+                                            <div style="font-size:12px; color:#f5f5f5; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"><?= htmlspecialchars((string)($inv['invited_email'] ?? '')) ?></div>
+                                            <div style="font-size:11px; color:#8d8d8d;">Permissão: <?= htmlspecialchars((string)($inv['role'] ?? 'read')) ?></div>
+                                        </div>
+                                        <button type="button" class="revokeInviteBtn" data-invite-id="<?= (int)($inv['id'] ?? 0) ?>" style="border:1px solid #272727; background:#050509; color:#ffbaba; border-radius:10px; padding:8px 10px; cursor:pointer;">Revogar</button>
+                                    </div>
+                                <?php endforeach; ?>
+                            </div>
+                        </div>
+                    <?php endif; ?>
+
+                    <?php if (!empty($members)): ?>
+                        <div style="margin-top:12px;">
+                            <div style="font-size:12px; color:#b0b0b0; margin-bottom:6px;">Membros</div>
+                            <div style="display:flex; flex-direction:column; gap:8px;">
+                                <?php foreach ($members as $m): ?>
+                                    <?php
+                                        $label = trim((string)($m['user_preferred_name'] ?? ''));
+                                        if ($label === '') { $label = trim((string)($m['user_name'] ?? '')); }
+                                        if ($label === '') { $label = (string)($m['user_email'] ?? ''); }
+                                        $role = (string)($m['role'] ?? 'read');
+                                        $uid = (int)($m['user_id'] ?? 0);
+                                    ?>
+                                    <div style="display:flex; justify-content:space-between; align-items:center; gap:10px; border:1px solid #272727; border-radius:12px; padding:10px 12px; background:#0a0a10;">
+                                        <div style="min-width:0;">
+                                            <div style="font-size:12px; color:#f5f5f5; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"><?= htmlspecialchars($label) ?></div>
+                                            <div style="font-size:11px; color:#8d8d8d; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"><?= htmlspecialchars((string)($m['user_email'] ?? '')) ?></div>
+                                        </div>
+                                        <div style="display:flex; gap:8px; align-items:center;">
+                                            <select class="memberRoleSelect" data-user-id="<?= $uid ?>" style="padding:8px 10px; border-radius:10px; border:1px solid #272727; background:#050509; color:#f5f5f5; font-size:12px; outline:none;">
+                                                <option value="read" <?= $role === 'read' ? 'selected' : '' ?>>read</option>
+                                                <option value="write" <?= $role === 'write' ? 'selected' : '' ?>>write</option>
+                                                <option value="admin" <?= $role === 'admin' ? 'selected' : '' ?>>admin</option>
+                                            </select>
+                                            <button type="button" class="removeMemberBtn" data-user-id="<?= $uid ?>" style="border:1px solid #272727; background:#050509; color:#ffbaba; border-radius:10px; padding:8px 10px; cursor:pointer;">Remover</button>
+                                        </div>
+                                    </div>
+                                <?php endforeach; ?>
+                            </div>
+                        </div>
+                    <?php endif; ?>
+                </div>
+                <?php endif; ?>
+
                 <div style="background:#111118; border:1px solid #272727; border-radius:14px; padding:14px;">
                     <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:6px;">
                         <div style="font-weight:650;">Memória</div>
@@ -508,6 +578,108 @@
                             }
                         });
                     }
+
+                    var sendInviteBtn = document.getElementById('sendInviteBtn');
+                    if (sendInviteBtn) {
+                        sendInviteBtn.addEventListener('click', async function () {
+                            var emailEl = document.getElementById('inviteEmail');
+                            var roleEl = document.getElementById('inviteRole');
+                            var fb = document.getElementById('inviteFeedback');
+                            if (!emailEl || !roleEl) return;
+
+                            var fd = new FormData();
+                            fd.append('project_id', '<?= (int)($project['id'] ?? 0) ?>');
+                            fd.append('email', emailEl.value || '');
+                            fd.append('role', roleEl.value || 'read');
+                            sendInviteBtn.disabled = true;
+                            try {
+                                var res = await fetch('/projetos/compartilhar/convidar', { method: 'POST', body: fd, credentials: 'same-origin' });
+                                var json = await res.json().catch(function(){ return null; });
+                                if (fb) {
+                                    fb.style.display = 'block';
+                                    fb.style.color = (json && json.ok) ? '#c8ffd4' : '#ffbaba';
+                                    fb.textContent = (json && json.ok) ? 'Convite enviado.' : ((json && json.error) ? json.error : 'Não foi possível convidar.');
+                                }
+                                if (json && json.ok) {
+                                    emailEl.value = '';
+                                    setTimeout(function(){ window.location.reload(); }, 600);
+                                }
+                            } catch (e) {
+                                if (fb) {
+                                    fb.style.display = 'block';
+                                    fb.style.color = '#ffbaba';
+                                    fb.textContent = 'Não foi possível convidar.';
+                                }
+                            } finally {
+                                sendInviteBtn.disabled = false;
+                            }
+                        });
+                    }
+
+                    document.querySelectorAll('.revokeInviteBtn').forEach(function (btn) {
+                        btn.addEventListener('click', async function () {
+                            var inviteId = btn.getAttribute('data-invite-id');
+                            if (!inviteId) return;
+                            var fd = new FormData();
+                            fd.append('project_id', '<?= (int)($project['id'] ?? 0) ?>');
+                            fd.append('invite_id', inviteId);
+                            btn.disabled = true;
+                            try {
+                                var res = await fetch('/projetos/compartilhar/revogar', { method: 'POST', body: fd, credentials: 'same-origin' });
+                                var json = await res.json().catch(function(){ return null; });
+                                if (json && json.ok) {
+                                    window.location.reload();
+                                }
+                            } catch (e) {
+                            } finally {
+                                btn.disabled = false;
+                            }
+                        });
+                    });
+
+                    document.querySelectorAll('.memberRoleSelect').forEach(function (sel) {
+                        sel.addEventListener('change', async function () {
+                            var uid = sel.getAttribute('data-user-id');
+                            var role = sel.value;
+                            if (!uid) return;
+                            var fd = new FormData();
+                            fd.append('project_id', '<?= (int)($project['id'] ?? 0) ?>');
+                            fd.append('user_id', uid);
+                            fd.append('role', role);
+                            sel.disabled = true;
+                            try {
+                                var res = await fetch('/projetos/compartilhar/alterar-role', { method: 'POST', body: fd, credentials: 'same-origin' });
+                                var json = await res.json().catch(function(){ return null; });
+                                if (!json || !json.ok) {
+                                    window.location.reload();
+                                }
+                            } catch (e) {
+                                window.location.reload();
+                            }
+                        });
+                    });
+
+                    document.querySelectorAll('.removeMemberBtn').forEach(function (btn) {
+                        btn.addEventListener('click', async function () {
+                            if (!confirm('Remover este membro do projeto?')) return;
+                            var uid = btn.getAttribute('data-user-id');
+                            if (!uid) return;
+                            var fd = new FormData();
+                            fd.append('project_id', '<?= (int)($project['id'] ?? 0) ?>');
+                            fd.append('user_id', uid);
+                            btn.disabled = true;
+                            try {
+                                var res = await fetch('/projetos/compartilhar/remover', { method: 'POST', body: fd, credentials: 'same-origin' });
+                                var json = await res.json().catch(function(){ return null; });
+                                if (json && json.ok) {
+                                    window.location.reload();
+                                }
+                            } catch (e) {
+                            } finally {
+                                btn.disabled = false;
+                            }
+                        });
+                    });
                 })();
             </script>
 

@@ -79,4 +79,47 @@ class ProjectMember
         $role = self::userRole($projectId, $userId);
         return $role === 'admin';
     }
+
+    public static function allWithUsers(int $projectId): array
+    {
+        if ($projectId <= 0) {
+            return [];
+        }
+        $pdo = Database::getConnection();
+        $stmt = $pdo->prepare('SELECT pm.*, u.name AS user_name, u.preferred_name AS user_preferred_name, u.email AS user_email
+            FROM project_members pm
+            INNER JOIN users u ON u.id = pm.user_id
+            WHERE pm.project_id = :pid
+            ORDER BY pm.role DESC, pm.created_at ASC');
+        $stmt->execute(['pid' => $projectId]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+    }
+
+    public static function remove(int $projectId, int $userId): void
+    {
+        if ($projectId <= 0 || $userId <= 0) {
+            return;
+        }
+        $pdo = Database::getConnection();
+        $stmt = $pdo->prepare('DELETE FROM project_members WHERE project_id = :pid AND user_id = :uid LIMIT 1');
+        $stmt->execute([
+            'pid' => $projectId,
+            'uid' => $userId,
+        ]);
+    }
+
+    public static function updateRole(int $projectId, int $userId, string $role): void
+    {
+        if ($projectId <= 0 || $userId <= 0) {
+            return;
+        }
+        $role = in_array($role, ['read', 'write', 'admin'], true) ? $role : 'read';
+        $pdo = Database::getConnection();
+        $stmt = $pdo->prepare('UPDATE project_members SET role = :role WHERE project_id = :pid AND user_id = :uid LIMIT 1');
+        $stmt->execute([
+            'role' => $role,
+            'pid' => $projectId,
+            'uid' => $userId,
+        ]);
+    }
 }

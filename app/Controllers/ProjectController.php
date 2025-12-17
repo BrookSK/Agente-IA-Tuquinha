@@ -14,6 +14,8 @@ use App\Models\Subscription;
 use App\Models\Plan;
 use App\Models\Setting;
 use App\Models\ProjectFavorite;
+use App\Models\ProjectInvitation;
+use App\Services\MailService;
 use App\Services\MediaStorageService;
 use App\Services\TextExtractionService;
 
@@ -65,6 +67,32 @@ class ProjectController extends Controller
             header('Location: /planos');
             exit;
         }
+    }
+
+    private function emailHasActivePaidPlan(string $email): bool
+    {
+        $email = trim($email);
+        if ($email === '') {
+            return false;
+        }
+
+        if (!empty($_SESSION['is_admin'])) {
+            return true;
+        }
+
+        $subscription = Subscription::findLastByEmail($email);
+        if (!$subscription || empty($subscription['plan_id'])) {
+            return false;
+        }
+
+        $plan = Plan::findById((int)$subscription['plan_id']);
+        $slug = $plan ? (string)($plan['slug'] ?? '') : '';
+        $status = strtolower((string)($subscription['status'] ?? ''));
+
+        $isPaid = ($slug !== '' && $slug !== 'free');
+        $isActive = !in_array($status, ['canceled', 'expired'], true);
+
+        return $isPaid && $isActive;
     }
 
     private function extractTextFromFile(string $tmpPath, string $mime, string $fileName): ?string
@@ -241,6 +269,13 @@ class ProjectController extends Controller
         $conversations = Conversation::allByProjectForUser($projectId, (int)$user['id']);
         $isFavorite = ProjectFavorite::isFavorite($projectId, (int)$user['id']);
 
+        $members = [];
+        $pendingInvites = [];
+        if (ProjectMember::canAdmin($projectId, (int)$user['id'])) {
+            $members = ProjectMember::allWithUsers($projectId);
+            $pendingInvites = ProjectInvitation::allPendingForProject($projectId);
+        }
+
         $this->view('projects/show', [
             'pageTitle' => ($project['name'] ?? 'Projeto') . ' - Tuquinha',
             'user' => $user,
@@ -250,11 +285,251 @@ class ProjectController extends Controller
             'latestByFileId' => $latestByFileId,
             'conversations' => $conversations,
             'isFavorite' => $isFavorite,
+            'members' => $members,
+            'pendingInvites' => $pendingInvites,
             'uploadError' => $_SESSION['project_upload_error'] ?? null,
             'uploadOk' => $_SESSION['project_upload_ok'] ?? null,
         ]);
 
         unset($_SESSION['project_upload_error'], $_SESSION['project_upload_ok']);
+    }
+
+    public function inviteCollaborator(): void
+    {
+        $user = $this->requireLogin();
+        $this->requirePaidPlan($user);
+        $userId = (int)($user['id'] ?? 0);
+
+        $projectId = isset($_POST['project_id']) ? (int)$_POST['project_id'] : 0;
+        $email = trim((string)($_POST['email'] ?? ''));
+        $role = trim((string)($_POST['role'] ?? 'read'));
+
+        if ($projectId <= 0 || !ProjectMember::canAdmin($projectId, $userId)) {
+            http_response_code(403);
+            header('Content-Type: application/json; charset=utf-8');
+            echo json_encode(['ok' => false]);
+            return;
+        }
+
+        if ($email === '' || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            http_response_code(422);
+            header('Content-Type: application/json; charset=utf-8');
+            echo json_encode(['ok' => false, 'error' => 'Informe um e-mail válido.']);
+            return;
+        }
+
+        if (strcasecmp($email, (string)($user['email'] ?? '')) === 0) {
+            http_response_code(422);
+            header('Content-Type: application/json; charset=utf-8');
+            echo json_encode(['ok' => false, 'error' => 'Você já é membro deste projeto.']);
+            return;
+        }
+
+        $invitedUser = User::findByEmail($email);
+        if (!$invitedUser) {
+            http_response_code(422);
+            header('Content-Type: application/json; charset=utf-8');
+            echo json_encode(['ok' => false, 'error' => 'Este e-mail não tem conta no Tuquinha.']);
+            return;
+        }
+
+        $invitedEmail = (string)($invitedUser['email'] ?? $email);
+        if (!$this->emailHasActivePaidPlan($invitedEmail)) {
+            http_response_code(422);
+            header('Content-Type: application/json; charset=utf-8');
+            echo json_encode(['ok' => false, 'error' => 'O usuário precisa ter um plano ativo para colaborar.']);
+            return;
+        }
+
+        $invitedUserId = (int)($invitedUser['id'] ?? 0);
+        if ($invitedUserId > 0 && ProjectMember::canRead($projectId, $invitedUserId)) {
+            http_response_code(422);
+            header('Content-Type: application/json; charset=utf-8');
+            echo json_encode(['ok' => false, 'error' => 'Este usuário já tem acesso ao projeto.']);
+            return;
+        }
+
+        if (ProjectInvitation::hasValidInviteForEmail($projectId, $invitedEmail)) {
+            http_response_code(422);
+            header('Content-Type: application/json; charset=utf-8');
+            echo json_encode(['ok' => false, 'error' => 'Já existe um convite pendente para este e-mail.']);
+            return;
+        }
+
+        $role = in_array($role, ['read', 'write', 'admin'], true) ? $role : 'read';
+        $token = bin2hex(random_bytes(16));
+        ProjectInvitation::create($projectId, $userId, $invitedEmail, null, $role, $token);
+
+        $project = Project::findById($projectId);
+        $projectName = $project ? (string)($project['name'] ?? 'Projeto') : 'Projeto';
+
+        $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https://' : 'http://';
+        $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+        $link = $scheme . $host . '/projetos/aceitar-convite?token=' . urlencode($token);
+
+        $subject = 'Convite para colaborar no projeto "' . $projectName . '"';
+        $toName = trim((string)($invitedUser['preferred_name'] ?? ''));
+        if ($toName === '') {
+            $toName = trim((string)($invitedUser['name'] ?? ''));
+        }
+        if ($toName === '') {
+            $toName = $invitedEmail;
+        }
+
+        $body = '<p>Você foi convidado para colaborar no projeto <strong>' . htmlspecialchars($projectName, ENT_QUOTES, 'UTF-8') . '</strong> no Tuquinha.</p>'
+            . '<p>Permissão: <strong>' . htmlspecialchars($role, ENT_QUOTES, 'UTF-8') . '</strong></p>'
+            . '<p>Para aceitar o convite, clique no link abaixo:</p>'
+            . '<p><a href="' . htmlspecialchars($link, ENT_QUOTES, 'UTF-8') . '">' . htmlspecialchars($link, ENT_QUOTES, 'UTF-8') . '</a></p>'
+            . '<p>Se você não reconhece este convite, pode ignorar este e-mail.</p>';
+
+        $sentToInvitee = MailService::send($invitedEmail, $toName, $subject, $body);
+
+        $ownerEmail = (string)($user['email'] ?? '');
+        if ($ownerEmail !== '') {
+            $ownerName = trim((string)($user['preferred_name'] ?? ''));
+            if ($ownerName === '') {
+                $ownerName = trim((string)($user['name'] ?? ''));
+            }
+            if ($ownerName === '') {
+                $ownerName = $ownerEmail;
+            }
+            $ownerSubject = 'Convite enviado: ' . $invitedEmail;
+            $ownerBody = '<p>Você convidou <strong>' . htmlspecialchars($invitedEmail, ENT_QUOTES, 'UTF-8') . '</strong> para o projeto <strong>'
+                . htmlspecialchars($projectName, ENT_QUOTES, 'UTF-8') . '</strong> com permissão <strong>' . htmlspecialchars($role, ENT_QUOTES, 'UTF-8') . '</strong>.</p>'
+                . '<p>Link de aceite:</p><p><a href="' . htmlspecialchars($link, ENT_QUOTES, 'UTF-8') . '">' . htmlspecialchars($link, ENT_QUOTES, 'UTF-8') . '</a></p>';
+            MailService::send($ownerEmail, $ownerName, $ownerSubject, $ownerBody);
+        }
+
+        header('Content-Type: application/json; charset=utf-8');
+        echo json_encode(['ok' => true, 'email_sent' => $sentToInvitee]);
+    }
+
+    public function acceptInvite(): void
+    {
+        $user = $this->requireLogin();
+        $this->requirePaidPlan($user);
+        $userId = (int)($user['id'] ?? 0);
+
+        $token = trim((string)($_GET['token'] ?? ''));
+        if ($token === '') {
+            header('Location: /projetos');
+            exit;
+        }
+
+        $invite = ProjectInvitation::findByToken($token);
+        if (!$invite || ($invite['status'] ?? '') !== 'pending') {
+            $_SESSION['project_upload_error'] = 'Convite não encontrado ou já utilizado.';
+            header('Location: /projetos');
+            exit;
+        }
+
+        $invitedEmail = trim((string)($invite['invited_email'] ?? ''));
+        $userEmail = trim((string)($user['email'] ?? ''));
+        if ($invitedEmail !== '' && $userEmail !== '' && strcasecmp($invitedEmail, $userEmail) !== 0) {
+            $_SESSION['project_upload_error'] = 'Este convite foi enviado para outro e-mail.';
+            header('Location: /projetos');
+            exit;
+        }
+
+        if (!$this->emailHasActivePaidPlan($userEmail)) {
+            header('Location: /planos');
+            exit;
+        }
+
+        $projectId = (int)($invite['project_id'] ?? 0);
+        $role = (string)($invite['role'] ?? 'read');
+
+        if ($projectId <= 0) {
+            $_SESSION['project_upload_error'] = 'Projeto do convite não encontrado.';
+            header('Location: /projetos');
+            exit;
+        }
+
+        ProjectMember::addOrUpdate($projectId, $userId, $role);
+        ProjectInvitation::markAccepted((int)$invite['id']);
+
+        $_SESSION['project_upload_ok'] = 'Convite aceito. Você agora tem acesso a este projeto.';
+        header('Location: /projetos/ver?id=' . $projectId);
+        exit;
+    }
+
+    public function revokeInvite(): void
+    {
+        $user = $this->requireLogin();
+        $this->requirePaidPlan($user);
+        $userId = (int)($user['id'] ?? 0);
+
+        $projectId = isset($_POST['project_id']) ? (int)$_POST['project_id'] : 0;
+        $inviteId = isset($_POST['invite_id']) ? (int)$_POST['invite_id'] : 0;
+        if ($projectId <= 0 || $inviteId <= 0 || !ProjectMember::canAdmin($projectId, $userId)) {
+            http_response_code(403);
+            header('Content-Type: application/json; charset=utf-8');
+            echo json_encode(['ok' => false]);
+            return;
+        }
+
+        ProjectInvitation::cancelById($inviteId);
+        header('Content-Type: application/json; charset=utf-8');
+        echo json_encode(['ok' => true]);
+    }
+
+    public function updateMemberRole(): void
+    {
+        $user = $this->requireLogin();
+        $this->requirePaidPlan($user);
+        $userId = (int)($user['id'] ?? 0);
+
+        $projectId = isset($_POST['project_id']) ? (int)$_POST['project_id'] : 0;
+        $memberUserId = isset($_POST['user_id']) ? (int)$_POST['user_id'] : 0;
+        $role = trim((string)($_POST['role'] ?? 'read'));
+
+        if ($projectId <= 0 || $memberUserId <= 0 || !ProjectMember::canAdmin($projectId, $userId)) {
+            http_response_code(403);
+            header('Content-Type: application/json; charset=utf-8');
+            echo json_encode(['ok' => false]);
+            return;
+        }
+
+        $project = Project::findById($projectId);
+        if ($project && (int)($project['owner_user_id'] ?? 0) === $memberUserId) {
+            http_response_code(422);
+            header('Content-Type: application/json; charset=utf-8');
+            echo json_encode(['ok' => false, 'error' => 'Não é possível alterar o dono do projeto.']);
+            return;
+        }
+
+        ProjectMember::updateRole($projectId, $memberUserId, $role);
+        header('Content-Type: application/json; charset=utf-8');
+        echo json_encode(['ok' => true]);
+    }
+
+    public function removeMember(): void
+    {
+        $user = $this->requireLogin();
+        $this->requirePaidPlan($user);
+        $userId = (int)($user['id'] ?? 0);
+
+        $projectId = isset($_POST['project_id']) ? (int)$_POST['project_id'] : 0;
+        $memberUserId = isset($_POST['user_id']) ? (int)$_POST['user_id'] : 0;
+
+        if ($projectId <= 0 || $memberUserId <= 0 || !ProjectMember::canAdmin($projectId, $userId)) {
+            http_response_code(403);
+            header('Content-Type: application/json; charset=utf-8');
+            echo json_encode(['ok' => false]);
+            return;
+        }
+
+        $project = Project::findById($projectId);
+        if ($project && (int)($project['owner_user_id'] ?? 0) === $memberUserId) {
+            http_response_code(422);
+            header('Content-Type: application/json; charset=utf-8');
+            echo json_encode(['ok' => false, 'error' => 'Não é possível remover o dono do projeto.']);
+            return;
+        }
+
+        ProjectMember::remove($projectId, $memberUserId);
+        header('Content-Type: application/json; charset=utf-8');
+        echo json_encode(['ok' => true]);
     }
 
     public function saveMemory(): void
