@@ -11,7 +11,9 @@ use App\Models\ProjectFile;
 use App\Models\ProjectFileVersion;
 use App\Models\Subscription;
 use App\Models\Plan;
+use App\Models\Setting;
 use App\Services\MediaStorageService;
+use App\Services\TextExtractionService;
 
 class ProjectController extends Controller
 {
@@ -61,6 +63,101 @@ class ProjectController extends Controller
             header('Location: /planos');
             exit;
         }
+    }
+
+    private function extractTextFromFile(string $tmpPath, string $mime, string $fileName): ?string
+    {
+        if ($tmpPath === '' || !is_file($tmpPath)) {
+            return null;
+        }
+
+        $mime = trim($mime);
+        $ext = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
+
+        $isTextLike = false;
+        if ($mime !== '' && (str_starts_with($mime, 'text/') || $mime === 'application/json')) {
+            $isTextLike = true;
+        }
+        if (in_array($ext, ['txt','md','json','php','js','ts','tsx','jsx','html','css','scss','py','java','go','rb','sh','yml','yaml','xml','sql'], true)) {
+            $isTextLike = true;
+        }
+
+        if ($isTextLike) {
+            $content = @file_get_contents($tmpPath);
+            if (is_string($content)) {
+                if (mb_strlen($content, 'UTF-8') > 200000) {
+                    $content = mb_substr($content, 0, 200000, 'UTF-8');
+                }
+                return $content;
+            }
+            return null;
+        }
+
+        if ($ext === 'docx') {
+            if (!class_exists('ZipArchive')) {
+                return null;
+            }
+            $zip = new \ZipArchive();
+            if ($zip->open($tmpPath) !== true) {
+                return null;
+            }
+            $xml = $zip->getFromName('word/document.xml');
+            $zip->close();
+            if (!is_string($xml) || $xml === '') {
+                return null;
+            }
+            $xml = preg_replace('/<w:tab\b[^>]*\/>/i', "\t", $xml);
+            $xml = preg_replace('/<w:br\b[^>]*\/>/i', "\n", $xml);
+            $xml = preg_replace('/<w:p\b[^>]*>/i', "\n", $xml);
+            $text = strip_tags($xml);
+            $text = html_entity_decode($text, ENT_QUOTES | ENT_XML1, 'UTF-8');
+            $text = preg_replace('/\n{3,}/', "\n\n", $text);
+            $text = trim($text);
+            if ($text === '') {
+                return null;
+            }
+            if (mb_strlen($text, 'UTF-8') > 200000) {
+                $text = mb_substr($text, 0, 200000, 'UTF-8');
+            }
+            return $text;
+        }
+
+        if ($ext === 'pdf' || $mime === 'application/pdf') {
+            // Tentativa best-effort: usa pdftotext se estiver disponível no ambiente
+            $outTxt = tempnam(sys_get_temp_dir(), 'pdf_txt_');
+            if (!is_string($outTxt) || $outTxt === '') {
+                return null;
+            }
+            $cmd = 'pdftotext -layout ' . escapeshellarg($tmpPath) . ' ' . escapeshellarg($outTxt);
+            $ok = false;
+            try {
+                @shell_exec($cmd . ' 2>&1');
+                $ok = is_file($outTxt) && filesize($outTxt) > 0;
+            } catch (\Throwable $e) {
+                $ok = false;
+            }
+
+            if (!$ok) {
+                @unlink($outTxt);
+                return null;
+            }
+
+            $text = @file_get_contents($outTxt);
+            @unlink($outTxt);
+            if (!is_string($text)) {
+                return null;
+            }
+            $text = trim($text);
+            if ($text === '') {
+                return null;
+            }
+            if (mb_strlen($text, 'UTF-8') > 200000) {
+                $text = mb_substr($text, 0, 200000, 'UTF-8');
+            }
+            return $text;
+        }
+
+        return null;
     }
 
     public function index(): void
@@ -211,6 +308,17 @@ class ProjectController extends Controller
             $originalName = basename($tmp);
         }
 
+        $ext = strtolower(pathinfo($originalName, PATHINFO_EXTENSION));
+        $needsExtractor = in_array($ext, ['pdf', 'doc', 'docx', 'ppt', 'pptx', 'xls', 'xlsx'], true);
+        if ($needsExtractor) {
+            $endpoint = trim((string)Setting::get('text_extraction_endpoint', ''));
+            if ($endpoint === '') {
+                $_SESSION['project_upload_error'] = 'Para usar PDF/Word/Office como conteúdo base, copie o texto do arquivo e cole no campo de texto ("Salvar texto como arquivo base").';
+                header('Location: /projetos/ver?id=' . $projectId);
+                exit;
+            }
+        }
+
         $remoteUrl = MediaStorageService::uploadFile($tmp, $originalName, $mime);
         if ($remoteUrl === null) {
             $_SESSION['project_upload_error'] = 'Não foi possível salvar o arquivo no storage.';
@@ -233,24 +341,9 @@ class ProjectController extends Controller
             $sha256 = null;
         }
 
-        $ext = strtolower(pathinfo($safeFileName, PATHINFO_EXTENSION));
-        $isTextLike = false;
-        if ($mime !== '' && (str_starts_with($mime, 'text/') || $mime === 'application/json')) {
-            $isTextLike = true;
-        }
-        if (in_array($ext, ['txt','md','json','php','js','ts','tsx','jsx','html','css','scss','py','java','go','rb','sh','yml','yaml','xml','sql'], true)) {
-            $isTextLike = true;
-        }
-
-        $extractedText = null;
-        if ($isTextLike) {
-            $content = @file_get_contents($tmp);
-            if (is_string($content)) {
-                if (mb_strlen($content, 'UTF-8') > 200000) {
-                    $content = mb_substr($content, 0, 200000, 'UTF-8');
-                }
-                $extractedText = $content;
-            }
+        $extractedText = $this->extractTextFromFile($tmp, $mime, $safeFileName);
+        if ($extractedText === null) {
+            $extractedText = TextExtractionService::extractFromFile($tmp, $safeFileName, $mime);
         }
 
         $existing = ProjectFile::findByPath($projectId, $fullPath);
@@ -278,6 +371,115 @@ class ProjectController extends Controller
         );
 
         $_SESSION['project_upload_ok'] = 'Arquivo base enviado com sucesso.';
+        header('Location: /projetos/ver?id=' . $projectId);
+        exit;
+    }
+
+    public function createBaseText(): void
+    {
+        $user = $this->requireLogin();
+        $this->requirePaidPlan($user);
+        $userId = (int)($user['id'] ?? 0);
+
+        $projectId = isset($_POST['project_id']) ? (int)$_POST['project_id'] : 0;
+        $folderPath = trim((string)($_POST['folder_path'] ?? '/base'));
+        $fileName = trim((string)($_POST['file_name'] ?? ''));
+        $content = (string)($_POST['content'] ?? '');
+        $content = str_replace(["\r\n", "\r"], "\n", $content);
+
+        if ($projectId <= 0 || !ProjectMember::canWrite($projectId, $userId)) {
+            header('Location: /projetos');
+            exit;
+        }
+
+        if ($folderPath === '' || $folderPath[0] !== '/') {
+            $folderPath = '/' . ltrim($folderPath, '/');
+        }
+        $folder = ProjectFolder::findByPath($projectId, $folderPath);
+        if (!$folder) {
+            $_SESSION['project_upload_error'] = 'Pasta inválida.';
+            header('Location: /projetos/ver?id=' . $projectId);
+            exit;
+        }
+
+        if ($fileName === '') {
+            $_SESSION['project_upload_error'] = 'Informe o nome do arquivo.';
+            header('Location: /projetos/ver?id=' . $projectId);
+            exit;
+        }
+
+        $fileName = str_replace('\\', '/', $fileName);
+        $fileName = basename($fileName);
+        if (!preg_match('/\.[A-Za-z0-9]{1,8}$/', $fileName)) {
+            $fileName .= '.txt';
+        }
+
+        if (trim($content) === '') {
+            $_SESSION['project_upload_error'] = 'O texto não pode ficar vazio.';
+            header('Location: /projetos/ver?id=' . $projectId);
+            exit;
+        }
+
+        if (mb_strlen($content, 'UTF-8') > 200000) {
+            $content = mb_substr($content, 0, 200000, 'UTF-8');
+        }
+
+        $tmp = tempnam(sys_get_temp_dir(), 'proj_txt_');
+        if (!is_string($tmp) || $tmp === '') {
+            $_SESSION['project_upload_error'] = 'Falha ao preparar arquivo temporário.';
+            header('Location: /projetos/ver?id=' . $projectId);
+            exit;
+        }
+        @file_put_contents($tmp, $content);
+
+        $mime = 'text/plain';
+        $size = is_file($tmp) ? (int)filesize($tmp) : null;
+        $sha256 = null;
+        try {
+            $sha256 = is_readable($tmp) ? hash_file('sha256', $tmp) : null;
+        } catch (\Throwable $e) {
+            $sha256 = null;
+        }
+
+        $remoteUrl = MediaStorageService::uploadFile($tmp, $fileName, $mime);
+        @unlink($tmp);
+
+        if ($remoteUrl === null) {
+            $_SESSION['project_upload_error'] = 'Não foi possível salvar o texto no storage.';
+            header('Location: /projetos/ver?id=' . $projectId);
+            exit;
+        }
+
+        $fullPath = rtrim($folderPath, '/') . '/' . $fileName;
+        if ($fullPath === '') {
+            $fullPath = '/' . $fileName;
+        }
+
+        $existing = ProjectFile::findByPath($projectId, $fullPath);
+        if ($existing) {
+            $projectFileId = (int)$existing['id'];
+        } else {
+            $projectFileId = ProjectFile::create(
+                $projectId,
+                isset($folder['id']) ? (int)$folder['id'] : null,
+                $fileName,
+                $fullPath,
+                $mime,
+                true,
+                $userId > 0 ? $userId : null
+            );
+        }
+
+        ProjectFileVersion::createNewVersion(
+            $projectFileId,
+            $remoteUrl,
+            $size,
+            $sha256,
+            $content,
+            $userId > 0 ? $userId : null
+        );
+
+        $_SESSION['project_upload_ok'] = 'Texto salvo como arquivo base com sucesso.';
         header('Location: /projetos/ver?id=' . $projectId);
         exit;
     }

@@ -478,15 +478,19 @@ class ChatController extends Controller
                     $fid = (int)($bf['id'] ?? 0);
                     $ver = $latestByFileId[$fid] ?? null;
                     $text = is_array($ver) ? (string)($ver['extracted_text'] ?? '') : '';
-                    if (trim($text) === '') {
-                        continue;
-                    }
                     $path = (string)($bf['path'] ?? '');
                     if ($path === '') {
                         continue;
                     }
                     $projectContextFilesUsed[] = $path;
-                    $parts[] = "ARQUIVO BASE DO PROJETO: {$path}\n" . $text;
+                    if (trim($text) !== '') {
+                        $parts[] = "ARQUIVO BASE DO PROJETO: {$path}\n" . $text;
+                    } else {
+                        $url = is_array($ver) ? (string)($ver['storage_url'] ?? '') : '';
+                        if ($url !== '') {
+                            $parts[] = "ARQUIVO BASE DO PROJETO: {$path}\nURL: {$url}";
+                        }
+                    }
                 }
 
                 // Menções explícitas a arquivos no texto do usuário
@@ -545,9 +549,16 @@ class ChatController extends Controller
                         $ver = $fid > 0 ? ProjectFileVersion::latestForFile($fid) : null;
                         $text = is_array($ver) ? (string)($ver['extracted_text'] ?? '') : '';
                         $path = (string)($file['path'] ?? '');
-                        if ($path !== '' && trim($text) !== '') {
+                        if ($path !== '') {
                             $projectContextFilesUsed[] = $path;
-                            $parts[] = "ARQUIVO CITADO PELO USUÁRIO: {$path}\n" . $text;
+                            if (trim($text) !== '') {
+                                $parts[] = "ARQUIVO CITADO PELO USUÁRIO: {$path}\n" . $text;
+                            } else {
+                                $url = is_array($ver) ? (string)($ver['storage_url'] ?? '') : '';
+                                if ($url !== '') {
+                                    $parts[] = "ARQUIVO CITADO PELO USUÁRIO: {$path}\nURL: {$url}";
+                                }
+                            }
                         }
                     }
                 }

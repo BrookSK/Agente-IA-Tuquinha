@@ -101,6 +101,7 @@ $router->get('/projetos/novo', 'ProjectController@createForm');
 $router->post('/projetos/criar', 'ProjectController@create');
 $router->get('/projetos/ver', 'ProjectController@show');
 $router->post('/projetos/arquivo-base/upload', 'ProjectController@uploadBaseFile');
+$router->post('/projetos/arquivo-base/texto', 'ProjectController@createBaseText');
 $router->get('/conta', 'AccountController@index');
 $router->post('/conta', 'AccountController@updateProfile');
 $router->post('/conta/senha', 'AccountController@updatePassword');

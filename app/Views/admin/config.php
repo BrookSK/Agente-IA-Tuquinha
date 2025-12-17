@@ -25,6 +25,7 @@
 /** @var string $googleRefreshToken */
 /** @var string $googleCalendarId */
 /** @var string $mediaEndpoint */
+/** @var string $textExtractionEndpoint */
 /** @var bool $saved */
 /** @var bool|null $testEmailStatus */
 /** @var string|null $testEmailError */
@@ -85,6 +86,15 @@ $knownModels = [
                 background: #050509; color: #f5f5f5; font-size: 13px;
             " placeholder="https://media.seusite.com/upload.php">
             <small style="color:#777; font-size:11px;">URL do script PHP que recebe uploads (imagens, arquivos e áudios) e retorna JSON com a URL pública.</small>
+        </div>
+
+        <div>
+            <label style="font-size: 12px; color: #b0b0b0;">Endpoint de extração de texto (PDF/Word)</label>
+            <input name="text_extraction_endpoint" value="<?= htmlspecialchars($textExtractionEndpoint ?? '') ?>" style="
+                width: 100%; padding: 8px 10px; border-radius: 8px; border: 1px solid #272727;
+                background: #050509; color: #f5f5f5; font-size: 13px;
+            " placeholder="https://extrator.seusite.com/extract">
+            <small style="color:#777; font-size:11px;">Opcional. Se preenchido, o Tuquinha envia o arquivo (multipart) para esse endpoint e espera JSON com <strong>extracted_text</strong>.</small>
         </div>
 
         <div>

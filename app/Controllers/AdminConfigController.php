@@ -56,6 +56,7 @@ class AdminConfigController extends Controller
 
         $mediaEndpoint = Setting::get('media_upload_endpoint', defined('MEDIA_UPLOAD_ENDPOINT') ? MEDIA_UPLOAD_ENDPOINT : '');
         $mediaVideoEndpoint = Setting::get('media_video_upload_endpoint', defined('MEDIA_VIDEO_UPLOAD_ENDPOINT') ? MEDIA_VIDEO_UPLOAD_ENDPOINT : '');
+        $textExtractionEndpoint = Setting::get('text_extraction_endpoint', '');
 
         $asaas = AsaasConfig::getActive();
 
@@ -85,6 +86,7 @@ class AdminConfigController extends Controller
             'googleCalendarId' => $googleCalendarId,
             'mediaEndpoint' => $mediaEndpoint,
             'mediaVideoEndpoint' => $mediaVideoEndpoint,
+            'textExtractionEndpoint' => $textExtractionEndpoint,
             'asaasEnvironment' => $asaas['environment'] ?? 'sandbox',
             'asaasSandboxKey' => $asaas['sandbox_api_key'] ?? '',
             'asaasProdKey' => $asaas['production_api_key'] ?? '',
@@ -137,6 +139,7 @@ class AdminConfigController extends Controller
         $googleCalendarId = trim($_POST['google_calendar_id'] ?? 'primary');
         $mediaEndpoint = trim($_POST['media_endpoint'] ?? '');
         $mediaVideoEndpoint = trim($_POST['media_video_endpoint'] ?? '');
+        $textExtractionEndpoint = trim($_POST['text_extraction_endpoint'] ?? '');
 
         $pdo = Database::getConnection();
         $stmt = $pdo->prepare('INSERT INTO settings (`key`, `value`) VALUES (:key, :value)
@@ -175,6 +178,7 @@ class AdminConfigController extends Controller
             'google_calendar_calendar_id' => $googleCalendarId !== '' ? $googleCalendarId : 'primary',
             'media_upload_endpoint' => $mediaEndpoint !== '' ? $mediaEndpoint : (defined('MEDIA_UPLOAD_ENDPOINT') ? MEDIA_UPLOAD_ENDPOINT : ''),
             'media_video_upload_endpoint' => $mediaVideoEndpoint !== '' ? $mediaVideoEndpoint : (defined('MEDIA_VIDEO_UPLOAD_ENDPOINT') ? MEDIA_VIDEO_UPLOAD_ENDPOINT : ''),
+            'text_extraction_endpoint' => $textExtractionEndpoint,
         ];
 
         foreach ($settingsToSave as $sKey => $sValue) {
@@ -220,6 +224,7 @@ class AdminConfigController extends Controller
             'googleCalendarId' => $googleCalendarId !== '' ? $googleCalendarId : 'primary',
             'mediaEndpoint' => $mediaEndpoint !== '' ? $mediaEndpoint : (defined('MEDIA_UPLOAD_ENDPOINT') ? MEDIA_UPLOAD_ENDPOINT : ''),
             'mediaVideoEndpoint' => $mediaVideoEndpoint !== '' ? $mediaVideoEndpoint : (defined('MEDIA_VIDEO_UPLOAD_ENDPOINT') ? MEDIA_VIDEO_UPLOAD_ENDPOINT : ''),
+            'textExtractionEndpoint' => $textExtractionEndpoint,
             'asaasEnvironment' => $asaasEnv === 'production' ? 'production' : 'sandbox',
             'asaasSandboxKey' => $asaasSandboxKey,
             'asaasProdKey' => $asaasProdKey,

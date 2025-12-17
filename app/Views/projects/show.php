@@ -70,6 +70,37 @@
                 <div style="color:#8d8d8d; font-size:12px; line-height:1.35;">
                     Arquivos de texto/código (txt, md, json, php, js, etc.) serão usados como contexto automaticamente.
                 </div>
+                <div style="color:#8d8d8d; font-size:12px; line-height:1.35;">
+                    Se você tem um PDF/Word e quer usar o conteúdo como base, copie o texto do arquivo e cole no campo de texto abaixo.
+                </div>
+            </form>
+
+            <form action="/projetos/arquivo-base/texto" method="post" style="display:flex; flex-direction:column; gap:8px; margin-bottom:14px;">
+                <input type="hidden" name="project_id" value="<?= (int)($project['id'] ?? 0) ?>">
+                <div style="background:#0a0a10; border:1px solid #272727; border-radius:10px; padding:10px 12px; color:#b0b0b0; font-size:12px; line-height:1.35;">
+                    Cole aqui o conteúdo que você quer que a IA use como base (por exemplo: texto copiado de um PDF/Word).
+                </div>
+                <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                    <div style="flex:1; min-width:180px;">
+                        <label style="display:block; font-size:12px; color:#b0b0b0; margin-bottom:4px;">Pasta</label>
+                        <select name="folder_path" style="width:100%; padding:7px 9px; border-radius:8px; border:1px solid #272727; background:#050509; color:#f5f5f5; font-size:13px;">
+                            <?php foreach (($folders ?? []) as $f): ?>
+                                <option value="<?= htmlspecialchars((string)($f['path'] ?? '')) ?>"><?= htmlspecialchars((string)($f['path'] ?? '')) ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                    <div style="flex:2; min-width:220px;">
+                        <label style="display:block; font-size:12px; color:#b0b0b0; margin-bottom:4px;">Nome do arquivo</label>
+                        <input type="text" name="file_name" placeholder="ex: briefing.md" required style="width:100%; padding:7px 9px; border-radius:8px; border:1px solid #272727; background:#050509; color:#f5f5f5; font-size:13px;">
+                    </div>
+                </div>
+                <div>
+                    <label style="display:block; font-size:12px; color:#b0b0b0; margin-bottom:4px;">Texto</label>
+                    <textarea name="content" rows="6" required style="width:100%; padding:8px 10px; border-radius:10px; border:1px solid #272727; background:#050509; color:#f5f5f5; font-size:13px; resize:vertical; min-height:120px;"></textarea>
+                </div>
+                <div style="display:flex; justify-content:flex-end;">
+                    <button type="submit" style="border:none; border-radius:999px; padding:9px 14px; background:#111118; color:#f5f5f5; font-weight:500; font-size:13px; cursor:pointer; border:1px solid #272727;">Salvar texto como arquivo base</button>
+                </div>
             </form>
 
             <?php if (empty($baseFiles)): ?>
