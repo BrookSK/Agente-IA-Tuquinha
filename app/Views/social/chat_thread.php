@@ -163,8 +163,14 @@ if (!empty($messages)) {
     var lastTypingSentAt = 0;
     var typingStopTimer = null;
     var callEndedNoticeTimer = null;
+    var statusLockUntil = 0;
 
     function setStatus(text) {
+        try {
+            if (statusLockUntil && Date.now && Date.now() < statusLockUntil) {
+                return;
+            }
+        } catch (e) {}
         if (statusSpan) {
             statusSpan.textContent = text;
         }
@@ -401,11 +407,15 @@ if (!empty($messages)) {
 
                     if (kind === 'end') {
                         endCall(false);
-                        setStatus(<?= json_encode($otherName, JSON_UNESCAPED_UNICODE) ?> + ' encerrou a chamada de vídeo.');
+                        statusLockUntil = (Date.now ? Date.now() : 0) + 4500;
+                        if (statusSpan) {
+                            statusSpan.textContent = <?= json_encode($otherName, JSON_UNESCAPED_UNICODE) ?> + ' encerrou a chamada de vídeo.';
+                        }
                         if (callEndedNoticeTimer) {
                             clearTimeout(callEndedNoticeTimer);
                         }
                         callEndedNoticeTimer = setTimeout(function () {
+                            statusLockUntil = 0;
                             if (callUiState === 'idle') {
                                 setStatus('Chamada não iniciada.');
                             }
@@ -605,6 +615,9 @@ if (!empty($messages)) {
 
         pc.oniceconnectionstatechange = function () {
             try {
+                if (statusLockUntil && Date.now && Date.now() < statusLockUntil) {
+                    return;
+                }
                 var st = String(pc.iceConnectionState || '');
                 if (st === 'checking') {
                     setStatus('Conectando...');
@@ -628,6 +641,9 @@ if (!empty($messages)) {
         if ('onconnectionstatechange' in pc) {
             pc.onconnectionstatechange = function () {
                 try {
+                    if (statusLockUntil && Date.now && Date.now() < statusLockUntil) {
+                        return;
+                    }
                     var st = String(pc.connectionState || '');
                     if (st === 'connecting') {
                         setStatus('Conectando...');

@@ -117,6 +117,20 @@ class SocialWebRtcController extends Controller
             'payload_json' => $payloadJson,
         ]);
 
+        if ($kind === 'end') {
+            $cleanup = $pdo->prepare('UPDATE social_webrtc_signals
+                SET delivered_at = NOW()
+                WHERE conversation_id = :cid
+                  AND delivered_at IS NULL
+                  AND kind IN (\'offer\', \'answer\', \'ice\', \'typing\')
+                  AND to_user_id IN (:u1, :u2)');
+            $cleanup->execute([
+                'cid' => $conversationId,
+                'u1' => $currentId,
+                'u2' => $otherUserId,
+            ]);
+        }
+
         header('Content-Type: application/json; charset=utf-8');
         echo json_encode(['ok' => true]);
     }
@@ -164,11 +178,12 @@ class SocialWebRtcController extends Controller
             $rows = $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
 
             if (!empty($rows)) {
-                $ids = [];
+                $idsToDeliver = [];
                 foreach ($rows as $row) {
                     $id = (int)($row['id'] ?? 0);
-                    if ($id > 0) {
-                        $ids[] = $id;
+                    $kind = (string)($row['kind'] ?? '');
+                    if ($id > 0 && $kind !== 'offer') {
+                        $idsToDeliver[] = $id;
                     }
                     $decoded = null;
                     $raw = (string)($row['payload_json'] ?? '');
@@ -177,7 +192,7 @@ class SocialWebRtcController extends Controller
                     }
                     $events[] = [
                         'id' => $id,
-                        'kind' => (string)($row['kind'] ?? ''),
+                        'kind' => $kind,
                         'from_user_id' => (int)($row['from_user_id'] ?? 0),
                         'payload' => $decoded,
                         'created_at' => (string)($row['created_at'] ?? ''),
@@ -185,10 +200,10 @@ class SocialWebRtcController extends Controller
                     $sinceId = max($sinceId, $id);
                 }
 
-                if (!empty($ids)) {
-                    $in = implode(',', array_fill(0, count($ids), '?'));
+                if (!empty($idsToDeliver)) {
+                    $in = implode(',', array_fill(0, count($idsToDeliver), '?'));
                     $upd = $pdo->prepare('UPDATE social_webrtc_signals SET delivered_at = NOW() WHERE id IN (' . $in . ')');
-                    $upd->execute($ids);
+                    $upd->execute($idsToDeliver);
                 }
 
                 break;
