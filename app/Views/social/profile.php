@@ -25,8 +25,21 @@ $currentId = (int)($user['id'] ?? 0);
 $profileId = (int)($profileUser['id'] ?? 0);
 
 ?>
-<div style="max-width: 980px; margin: 0 auto; display: flex; gap: 18px; align-items: flex-start; flex-wrap: wrap;">
-    <aside style="flex: 0 0 260px; background:var(--surface-card); border-radius:18px; border:1px solid var(--border-subtle); padding:14px;">
+<style>
+    @media (max-width: 900px) {
+        #socialProfileLayout {
+            flex-direction: column !important;
+            gap: 12px !important;
+            padding: 0 4px;
+        }
+        #socialProfileAside {
+            flex: 0 0 auto !important;
+            width: 100% !important;
+        }
+    }
+</style>
+<div id="socialProfileLayout" style="max-width: 980px; margin: 0 auto; display: flex; gap: 18px; align-items: flex-start; flex-wrap: wrap;">
+    <aside id="socialProfileAside" style="flex: 0 0 260px; background:var(--surface-card); border-radius:18px; border:1px solid var(--border-subtle); padding:14px; max-width:100%;">
         <div style="display:flex; flex-direction:column; align-items:center; gap:8px; margin-bottom:10px;">
             <div style="width:96px; height:96px; border-radius:50%; overflow:hidden; background:radial-gradient(circle at 30% 20%, #fff 0, #ff8a65 25%, #e53935 65%, #050509 100%); display:flex; align-items:center; justify-content:center; font-size:40px; font-weight:700; color:#050509;">
                 <?php if ($avatarPath !== ''): ?>
@@ -114,7 +127,7 @@ $profileId = (int)($profileUser['id'] ?? 0);
         <?php endif; ?>
     </aside>
 
-    <main style="flex: 1 1 0; min-width: 0; display:flex; flex-direction:column; gap:12px;">
+    <main style="flex: 1 1 0; min-width: 0; display:flex; flex-direction:column; gap:12px; width:100%;">
         <?php if (!empty($error)): ?>
             <div style="background:#311; border:1px solid #a33; color:#ffbaba; padding:8px 10px; border-radius:10px; font-size:13px;">
                 <?= htmlspecialchars($error, ENT_QUOTES, 'UTF-8') ?>

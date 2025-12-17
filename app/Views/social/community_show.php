@@ -64,6 +64,13 @@ $moderatorsText = !empty($moderatorNames) ? implode(', ', $moderatorNames) : '';
 $canModerate = !empty($canModerate);
 
 ?>
+<style>
+    @media (max-width: 900px) {
+        #communityTwoColGrid {
+            grid-template-columns: minmax(0, 1fr) !important;
+        }
+    }
+</style>
 <div style="max-width: 980px; margin: 0 auto; display:flex; flex-direction:column; gap:14px;">
     <?php if (!empty($error)): ?>
         <div style="background:#311; border:1px solid #a33; color:#ffbaba; padding:8px 10px; border-radius:10px; font-size:13px;">
@@ -163,7 +170,7 @@ $canModerate = !empty($canModerate);
         </div>
     </section>
 
-    <div style="display:grid; grid-template-columns:minmax(0,2fr) minmax(0,1.1fr); gap:12px; align-items:flex-start;">
+    <div id="communityTwoColGrid" style="display:grid; grid-template-columns:minmax(0,2fr) minmax(0,1.1fr); gap:12px; align-items:flex-start;">
         <section id="topics-section" style="background:var(--surface-card); border-radius:16px; border:1px solid var(--border-subtle); padding:12px 14px;">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
                 <h2 style="font-size:16px;">Tópicos</h2>
