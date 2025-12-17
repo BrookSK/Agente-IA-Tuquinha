@@ -154,6 +154,15 @@ $router->post('/perfil/depoimento/decidir', 'ProfileController@decideTestimonial
 
 $router->post('/perfil/salvar', 'ProfileController@saveProfile');
 
+$router->get('/perfil/portfolio', 'SocialPortfolioController@listForUser');
+$router->get('/perfil/portfolio/gerenciar', 'SocialPortfolioController@manage');
+$router->get('/perfil/portfolio/ver', 'SocialPortfolioController@viewItem');
+$router->post('/perfil/portfolio/salvar', 'SocialPortfolioController@upsert');
+$router->post('/perfil/portfolio/excluir', 'SocialPortfolioController@delete');
+$router->post('/perfil/portfolio/curtir', 'SocialPortfolioController@toggleLike');
+$router->post('/perfil/portfolio/upload', 'SocialPortfolioController@uploadMedia');
+$router->post('/perfil/portfolio/midia/excluir', 'SocialPortfolioController@deleteMedia');
+
 $router->get('/amigos', 'FriendsController@index');
 $router->post('/amigos/solicitar', 'FriendsController@request');
 $router->post('/amigos/decidir', 'FriendsController@decide');

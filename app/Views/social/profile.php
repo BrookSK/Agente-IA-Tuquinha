@@ -120,6 +120,17 @@ $profileId = (int)($profileUser['id'] ?? 0);
             </div>
         <?php endif; ?>
 
+        <div style="display:flex; flex-direction:column; gap:6px; margin-top:6px;">
+            <a href="/perfil/portfolio?user_id=<?= (int)$profileId ?>" style="display:block; text-align:center; font-size:12px; color:#050509; text-decoration:none;">
+                <span style="display:inline-block; width:100%; padding:7px 12px; border-radius:999px; background:linear-gradient(135deg,#e53935,#ff6f60); font-weight:650;">Ver portfólio</span>
+            </a>
+            <?php if ($isOwnProfile): ?>
+                <a href="/perfil/portfolio/gerenciar" style="display:block; text-align:center; font-size:12px; color:var(--text-primary); text-decoration:none;">
+                    <span style="display:inline-block; width:100%; padding:7px 12px; border-radius:999px; background:var(--surface-subtle); border:1px solid var(--border-subtle);">Gerenciar meu portfólio</span>
+                </a>
+            <?php endif; ?>
+        </div>
+
         <?php if (!empty($profile['visits_count'])): ?>
             <div style="font-size:11px; color:var(--text-secondary); margin-top:4px; text-align:center;">
                 <?= (int)$profile['visits_count'] ?> visita(s) neste perfil.
