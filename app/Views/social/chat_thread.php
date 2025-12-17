@@ -41,6 +41,10 @@ if (!empty($messages)) {
             </div>
             <div style="background:#000; border-radius:12px; height:160px; overflow:hidden; position:relative; border:1px solid #272727;">
                 <video id="tuquinhaRemoteVideo" autoplay playsinline style="width:100%; height:100%; object-fit:cover; display:none;"></video>
+                <div id="tuquinha-remote-badges" style="position:absolute; left:8px; top:8px; display:none; gap:6px; align-items:center; z-index:5;">
+                    <span id="badge-remote-mic" style="display:none; font-size:11px; padding:3px 8px; border-radius:999px; background:rgba(0,0,0,0.55); border:1px solid #272727; color:#ffbaba;">Áudio mutado</span>
+                    <span id="badge-remote-cam" style="display:none; font-size:11px; padding:3px 8px; border-radius:999px; background:rgba(0,0,0,0.55); border:1px solid #272727; color:#ffbaba;">Câmera desligada</span>
+                </div>
                 <div id="tuquinha-remote-video" style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; color:#b0b0b0; font-size:12px;">
                     <span id="tuquinha-call-status">Chamada não iniciada.</span>
                 </div>
@@ -132,6 +136,9 @@ if (!empty($messages)) {
     var localVideo = document.getElementById('tuquinhaLocalVideo');
     var remoteVideo = document.getElementById('tuquinhaRemoteVideo');
     var statusSpan = document.getElementById('tuquinha-call-status');
+    var remoteBadges = document.getElementById('tuquinha-remote-badges');
+    var remoteMicBadge = document.getElementById('badge-remote-mic');
+    var remoteCamBadge = document.getElementById('badge-remote-cam');
     var chatForm = document.getElementById('social-chat-form');
     var typingBox = document.getElementById('tuquinha-typing');
     var typingName = document.getElementById('tuquinha-typing-name');
@@ -159,6 +166,8 @@ if (!empty($messages)) {
     var incomingOffer = null;
     var micMuted = false;
     var camOff = false;
+    var remoteMicMuted = false;
+    var remoteCamOff = false;
     var typingHideTimer = null;
     var lastTypingSentAt = 0;
     var typingStopTimer = null;
@@ -261,12 +270,36 @@ if (!empty($messages)) {
         micMuted = !micMuted;
         applyLocalTrackStates();
         setCallUiState(callUiState);
+        sendMediaState();
     }
 
     function toggleCam() {
         camOff = !camOff;
         applyLocalTrackStates();
         setCallUiState(callUiState);
+        sendMediaState();
+    }
+
+    function updateRemoteBadges() {
+        var showAny = false;
+        if (remoteMicBadge) {
+            remoteMicBadge.style.display = remoteMicMuted ? '' : 'none';
+            showAny = showAny || !!remoteMicMuted;
+        }
+        if (remoteCamBadge) {
+            remoteCamBadge.style.display = remoteCamOff ? '' : 'none';
+            showAny = showAny || !!remoteCamOff;
+        }
+        if (remoteBadges) {
+            remoteBadges.style.display = showAny ? 'flex' : 'none';
+        }
+    }
+
+    function sendMediaState() {
+        if (callUiState !== 'in_call' && callUiState !== 'connecting' && callUiState !== 'incoming') {
+            return;
+        }
+        sendSignal('media', { micMuted: !!micMuted, camOff: !!camOff }).catch(function () {});
     }
 
     function acceptIncomingCall() {
@@ -697,6 +730,16 @@ if (!empty($messages)) {
                 remoteStream = new MediaStream();
             }
             remoteStream.addTrack(ev.track);
+            try {
+                if (ev.track && ev.track.kind === 'audio') {
+                    ev.track.onmute = function () { remoteMicMuted = true; updateRemoteBadges(); };
+                    ev.track.onunmute = function () { remoteMicMuted = false; updateRemoteBadges(); };
+                }
+                if (ev.track && ev.track.kind === 'video') {
+                    ev.track.onmute = function () { remoteCamOff = true; updateRemoteBadges(); };
+                    ev.track.onunmute = function () { remoteCamOff = false; updateRemoteBadges(); };
+                }
+            } catch (e) {}
             if (remoteVideo) {
                 remoteVideo.srcObject = remoteStream;
             }
@@ -714,6 +757,7 @@ if (!empty($messages)) {
         }
         showVideoElements();
         setCallUiState(callUiState);
+        sendMediaState();
     }
 
     async function startCall() {
