@@ -467,6 +467,7 @@ class ChatController extends Controller
 
             if (!empty($conversation->project_id)) {
                 $projectId = (int)$conversation->project_id;
+                $projectRow = Project::findById($projectId);
                 $baseFiles = ProjectFile::allBaseFiles($projectId);
                 $baseFileIds = array_map(static function ($f) {
                     return (int)($f['id'] ?? 0);
@@ -474,6 +475,32 @@ class ChatController extends Controller
                 $latestByFileId = ProjectFileVersion::latestForFiles($baseFileIds);
 
                 $parts = [];
+
+                if (is_array($projectRow)) {
+                    $pName = trim((string)($projectRow['name'] ?? ''));
+                    $pDesc = (string)($projectRow['description'] ?? '');
+
+                    if ($pName !== '') {
+                        $parts[] = 'DADOS DO PROJETO: nome=' . $pName;
+                    }
+
+                    $pDescNorm = trim(str_replace(["\r\n", "\r"], "\n", $pDesc));
+                    if ($pDescNorm !== '') {
+                        $parts[] = "MEMÓRIA / DESCRIÇÃO DO PROJETO (persistente):\n" . $pDescNorm;
+                    }
+                }
+
+                if (!empty($baseFiles)) {
+                    $paths = [];
+                    foreach ($baseFiles as $bfMeta) {
+                        $paths[] = (string)($bfMeta['path'] ?? '');
+                    }
+                    $paths = array_values(array_filter(array_map('trim', $paths)));
+                    if ($paths) {
+                        $parts[] = "ARQUIVOS BASE DISPONÍVEIS (você tem acesso ao conteúdo extraído quando houver):\n- " . implode("\n- ", $paths);
+                    }
+                }
+
                 foreach ($baseFiles as $bf) {
                     $fid = (int)($bf['id'] ?? 0);
                     $ver = $latestByFileId[$fid] ?? null;
