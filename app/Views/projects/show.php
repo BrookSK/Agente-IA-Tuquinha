@@ -86,8 +86,8 @@
                         Responder...
                         <div style="display:flex; justify-content:space-between; align-items:center; margin-top:10px;">
                             <div style="display:flex; gap:10px; align-items:center;">
-                                <div style="width:18px; height:18px; border-radius:6px; border:1px solid #272727; display:flex; align-items:center; justify-content:center; color:#8d8d8d;">+</div>
-                                <div style="width:18px; height:18px; border-radius:6px; border:1px solid #272727; display:flex; align-items:center; justify-content:center; color:#8d8d8d;">⏱</div>
+                                <button type="button" id="composerFilesBtn" style="width:18px; height:18px; border-radius:6px; border:1px solid #272727; display:flex; align-items:center; justify-content:center; color:#8d8d8d; background:transparent; cursor:pointer; padding:0;">+</button>
+                                <button type="button" id="composerClockBtn" style="width:18px; height:18px; border-radius:6px; border:1px solid #272727; display:flex; align-items:center; justify-content:center; color:#8d8d8d; background:transparent; cursor:pointer; padding:0;">⏱</button>
                             </div>
                             <a href="/chat?new=1&project_id=<?= (int)($project['id'] ?? 0) ?>" style="display:inline-flex; align-items:center; justify-content:center; width:34px; height:34px; border-radius:10px; border:1px solid #2e7d32; background:#102312; color:#c8ffd4; text-decoration:none; font-weight:700;">↑</a>
                         </div>
@@ -317,6 +317,26 @@
                             e.preventDefault();
                             var m = document.getElementById('projectInstructionsModal');
                             if (m) m.style.display = 'none';
+                        });
+                    }
+
+                    var composerFilesBtn = document.getElementById('composerFilesBtn');
+                    if (composerFilesBtn) {
+                        composerFilesBtn.addEventListener('click', function (e) {
+                            e.preventDefault();
+                            if (btn) {
+                                btn.click();
+                            } else if (menu) {
+                                menu.style.display = menu.style.display === 'none' || menu.style.display === '' ? 'block' : 'none';
+                            }
+                        });
+                    }
+
+                    var composerClockBtn = document.getElementById('composerClockBtn');
+                    if (composerClockBtn) {
+                        composerClockBtn.addEventListener('click', function (e) {
+                            e.preventDefault();
+                            alert('Em breve');
                         });
                     }
                 })();
