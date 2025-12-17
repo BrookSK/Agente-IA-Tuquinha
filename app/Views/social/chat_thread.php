@@ -74,7 +74,7 @@ if (!empty($messages)) {
 
         <div id="social-chat-messages" style="flex:1 1 auto; overflow-y:auto; padding:6px 4px; display:flex; flex-direction:column; gap:6px; border-radius:10px; background:#050509; border:1px solid #272727;">
             <?php if (empty($messages)): ?>
-                <div style="font-size:12px; color:#777; text-align:center; padding:12px 4px;">
+                <div id="social-chat-empty" style="font-size:12px; color:#777; text-align:center; padding:12px 4px;">
                     Nenhuma mensagem ainda. Comece a conversa!
                 </div>
             <?php else: ?>
@@ -330,6 +330,7 @@ if (!empty($messages)) {
                     if (Number(msg.sender_user_id) === currentUserId) {
                         return;
                     }
+                    clearEmptyPlaceholder();
                     appendOtherMessage(msg.sender_name || 'Amigo', msg.body || '', msg.created_at || '');
                 } catch (e) {
                 }
@@ -375,6 +376,20 @@ if (!empty($messages)) {
         }).catch(function () {
             return null;
         });
+    }
+
+    async function renegotiateWithIceRestart() {
+        if (!pc) return;
+        if (makingOffer) return;
+        try {
+            makingOffer = true;
+            var offer = await pc.createOffer({ iceRestart: true });
+            await pc.setLocalDescription(offer);
+            await sendSignal('offer', pc.localDescription);
+        } catch (e) {
+        } finally {
+            makingOffer = false;
+        }
     }
 
     function pollSignals() {
@@ -513,6 +528,14 @@ if (!empty($messages)) {
                     }
 
                     if (kind === 'answer' && payload && pc) {
+                        var st = '';
+                        try { st = String(pc.signalingState || ''); } catch (e) {}
+                        if (st && st !== 'have-local-offer') {
+                            setStatus('Reconectando...');
+                            setCallUiState('connecting');
+                            return renegotiateWithIceRestart();
+                        }
+
                         return pc.setRemoteDescription(new RTCSessionDescription(payload)).then(function () {
                             var list = pendingIce.slice();
                             pendingIce = [];
@@ -744,6 +767,8 @@ if (!empty($messages)) {
             return;
         }
 
+        clearEmptyPlaceholder();
+
         var wrapper = document.createElement('div');
         wrapper.style.display = 'flex';
         wrapper.style.justifyContent = 'flex-end';
@@ -777,11 +802,22 @@ if (!empty($messages)) {
         list.scrollTop = list.scrollHeight;
     }
 
+    function clearEmptyPlaceholder() {
+        try {
+            var empty = document.getElementById('social-chat-empty');
+            if (empty && empty.parentNode) {
+                empty.parentNode.removeChild(empty);
+            }
+        } catch (e) {}
+    }
+
     function appendOwnPendingMessage(body) {
         var list = document.getElementById('social-chat-messages');
         if (!list) {
             return null;
         }
+
+        clearEmptyPlaceholder();
 
         var wrapper = document.createElement('div');
         wrapper.style.display = 'flex';
@@ -825,6 +861,8 @@ if (!empty($messages)) {
         if (!list) {
             return;
         }
+
+        clearEmptyPlaceholder();
 
         var wrapper = document.createElement('div');
         wrapper.style.display = 'flex';
