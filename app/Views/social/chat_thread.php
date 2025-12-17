@@ -17,8 +17,36 @@ if (!empty($messages)) {
 }
 
 ?>
-<div style="max-width: 1040px; margin: 0 auto; display:flex; gap:16px; align-items:flex-start; flex-wrap:wrap;">
-    <aside style="flex:0 0 320px; max-width:100%; border-radius:18px; border:1px solid #272727; background:#111118; padding:10px 12px;">
+<style>
+    @media (max-width: 900px) {
+        #socialChatLayout {
+            max-width: none !important;
+            margin: 0 !important;
+            width: 100% !important;
+            flex-direction: column !important;
+            flex-wrap: nowrap !important;
+            gap: 12px !important;
+        }
+
+        #socialChatCallPane,
+        #socialChatMainPane {
+            flex: 0 0 auto !important;
+            width: 100% !important;
+            max-width: 100% !important;
+        }
+
+        #socialChatMainPane {
+            max-height: none !important;
+        }
+
+        #social-chat-messages {
+            min-height: 220px;
+        }
+    }
+</style>
+
+<div id="socialChatLayout" style="max-width: 1040px; margin: 0 auto; display:flex; gap:16px; align-items:flex-start; flex-wrap:wrap;">
+    <aside id="socialChatCallPane" style="flex:0 0 320px; max-width:100%; border-radius:18px; border:1px solid #272727; background:#111118; padding:10px 12px;">
         <div style="font-size:13px; font-weight:600; color:#f5f5f5; margin-bottom:6px;">
             Chamada com <?= htmlspecialchars($otherName, ENT_QUOTES, 'UTF-8') ?>
         </div>
@@ -69,7 +97,7 @@ if (!empty($messages)) {
         </div>
     </aside>
 
-    <main style="flex:1 1 0; min-width:260px; border-radius:18px; border:1px solid #272727; background:#111118; padding:10px 12px; display:flex; flex-direction:column; max-height:540px;">
+    <main id="socialChatMainPane" style="flex:1 1 0; min-width:260px; border-radius:18px; border:1px solid #272727; background:#111118; padding:10px 12px; display:flex; flex-direction:column; max-height:540px;">
         <header style="margin-bottom:6px; display:flex; justify-content:space-between; align-items:center; gap:8px;">
             <div>
                 <div style="font-size:11px; color:#b0b0b0;">Conversando com</div>
