@@ -485,7 +485,14 @@ if (!empty($_SESSION['user_id'])) {
                     <span>Cursos</span>
                 </a>
 
-                <?php if (!empty($_SESSION['user_id'])): ?>
+                <?php
+                    $hasUser = !empty($_SESSION['user_id']);
+                    $isAdmin = !empty($_SESSION['is_admin']);
+                    $currentSlug = $_SESSION['plan_slug'] ?? null;
+                    $canUseProjects = $hasUser && ($isAdmin || ($currentSlug && $currentSlug !== 'free'));
+                ?>
+
+                <?php if ($canUseProjects): ?>
                     <div class="sidebar-section-title" style="margin-top: 10px;">Projetos</div>
                     <a href="/projetos" class="sidebar-button">
                         <span class="icon">📁</span>

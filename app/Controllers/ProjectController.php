@@ -9,6 +9,8 @@ use App\Models\ProjectMember;
 use App\Models\ProjectFolder;
 use App\Models\ProjectFile;
 use App\Models\ProjectFileVersion;
+use App\Models\Subscription;
+use App\Models\Plan;
 use App\Services\MediaStorageService;
 
 class ProjectController extends Controller
@@ -30,9 +32,41 @@ class ProjectController extends Controller
         return $user;
     }
 
+    private function requirePaidPlan(array $user): void
+    {
+        if (!empty($_SESSION['is_admin'])) {
+            return;
+        }
+
+        $email = (string)($user['email'] ?? '');
+        if ($email === '') {
+            header('Location: /planos');
+            exit;
+        }
+
+        $subscription = Subscription::findLastByEmail($email);
+        if (!$subscription || empty($subscription['plan_id'])) {
+            header('Location: /planos');
+            exit;
+        }
+
+        $plan = Plan::findById((int)$subscription['plan_id']);
+        $slug = $plan ? (string)($plan['slug'] ?? '') : '';
+        $status = strtolower((string)($subscription['status'] ?? ''));
+
+        $isPaid = ($slug !== '' && $slug !== 'free');
+        $isActive = !in_array($status, ['canceled', 'expired'], true);
+
+        if (!$isPaid || !$isActive) {
+            header('Location: /planos');
+            exit;
+        }
+    }
+
     public function index(): void
     {
         $user = $this->requireLogin();
+        $this->requirePaidPlan($user);
         $projects = Project::allForUser((int)$user['id']);
 
         $this->view('projects/index', [
@@ -45,6 +79,7 @@ class ProjectController extends Controller
     public function createForm(): void
     {
         $user = $this->requireLogin();
+        $this->requirePaidPlan($user);
 
         $this->view('projects/new', [
             'pageTitle' => 'Novo projeto - Tuquinha',
@@ -56,6 +91,7 @@ class ProjectController extends Controller
     public function create(): void
     {
         $user = $this->requireLogin();
+        $this->requirePaidPlan($user);
 
         $name = trim((string)($_POST['name'] ?? ''));
         $description = trim((string)($_POST['description'] ?? ''));
@@ -81,6 +117,7 @@ class ProjectController extends Controller
     public function show(): void
     {
         $user = $this->requireLogin();
+        $this->requirePaidPlan($user);
         $projectId = isset($_GET['id']) ? (int)$_GET['id'] : 0;
 
         if ($projectId <= 0 || !ProjectMember::canRead($projectId, (int)$user['id'])) {
@@ -119,6 +156,7 @@ class ProjectController extends Controller
     public function uploadBaseFile(): void
     {
         $user = $this->requireLogin();
+        $this->requirePaidPlan($user);
         $userId = (int)($user['id'] ?? 0);
 
         $projectId = isset($_POST['project_id']) ? (int)$_POST['project_id'] : 0;
