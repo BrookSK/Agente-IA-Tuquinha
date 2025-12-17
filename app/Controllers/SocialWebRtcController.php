@@ -117,6 +117,19 @@ class SocialWebRtcController extends Controller
             'payload_json' => $payloadJson,
         ]);
 
+        if ($kind === 'answer') {
+            $ackOffer = $pdo->prepare('UPDATE social_webrtc_signals
+                SET delivered_at = NOW()
+                WHERE conversation_id = :cid
+                  AND to_user_id = :uid
+                  AND kind = \'offer\'
+                  AND delivered_at IS NULL');
+            $ackOffer->execute([
+                'cid' => $conversationId,
+                'uid' => $currentId,
+            ]);
+        }
+
         if ($kind === 'end') {
             $cleanup = $pdo->prepare('UPDATE social_webrtc_signals
                 SET delivered_at = NOW()
@@ -167,7 +180,7 @@ class SocialWebRtcController extends Controller
                 WHERE conversation_id = :cid
                   AND to_user_id = :uid
                   AND delivered_at IS NULL
-                  AND id > :since_id
+                  AND (id > :since_id OR kind = \'offer\')
                 ORDER BY id ASC
                 LIMIT 20');
             $stmt->execute([
