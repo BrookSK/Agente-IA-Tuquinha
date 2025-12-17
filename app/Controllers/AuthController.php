@@ -101,6 +101,21 @@ class AuthController extends Controller
             } else {
                 unset($_SESSION['plan_slug']);
             }
+
+            try {
+                $sub = Subscription::findLastByEmail((string)$user['email']);
+                if ($sub && !empty($sub['plan_id'])) {
+                    $planFromSub = Plan::findById((int)$sub['plan_id']);
+                    if ($planFromSub && !empty($planFromSub['slug'])) {
+                        $status = strtolower((string)($sub['status'] ?? ''));
+                        $slug = (string)$planFromSub['slug'];
+                        if ($slug !== 'free' && !in_array($status, ['canceled', 'expired'], true)) {
+                            $_SESSION['plan_slug'] = $slug;
+                        }
+                    }
+                }
+            } catch (\Throwable $e) {
+            }
         }
 
         // Restaura indicação pendente do banco para manter o benefício mesmo após reload/logout/login
@@ -586,6 +601,21 @@ HTML;
                 $_SESSION['plan_slug'] = $defaultPlan['slug'];
             } else {
                 unset($_SESSION['plan_slug']);
+            }
+
+            try {
+                $sub = Subscription::findLastByEmail((string)$user['email']);
+                if ($sub && !empty($sub['plan_id'])) {
+                    $planFromSub = Plan::findById((int)$sub['plan_id']);
+                    if ($planFromSub && !empty($planFromSub['slug'])) {
+                        $status = strtolower((string)($sub['status'] ?? ''));
+                        $slug = (string)$planFromSub['slug'];
+                        if ($slug !== 'free' && !in_array($status, ['canceled', 'expired'], true)) {
+                            $_SESSION['plan_slug'] = $slug;
+                        }
+                    }
+                }
+            } catch (\Throwable $e) {
             }
         }
 
