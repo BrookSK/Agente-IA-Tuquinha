@@ -112,6 +112,7 @@ $conversationId = (int)($conversation['id'] ?? 0);
     var statusSpan = document.getElementById('tuquinha-call-status');
     var chatForm = document.getElementById('social-chat-form');
     var currentUserName = <?= json_encode($currentName, JSON_UNESCAPED_UNICODE) ?>;
+    var currentUserId = <?= (int)$currentId ?>;
     var conversationId = <?= (int)$conversationId ?>;
     var socket = null;
     var pc = null;
@@ -164,6 +165,9 @@ $conversationId = (int)($conversation['id'] ?? 0);
                     socket.on('chat:message', function (payload) {
                         if (!payload || Number(payload.conversationId) !== conversationId) return;
                         if (!payload.message) return;
+                        if (Number(payload.message.sender_user_id) === currentUserId) {
+                            return;
+                        }
                         appendOtherMessage(payload.message.sender_name || 'Amigo', payload.message.body || '', payload.message.created_at || '');
                     });
 
@@ -425,34 +429,25 @@ $conversationId = (int)($conversation['id'] ?? 0);
                 submitBtn.disabled = true;
             }
 
-            var formData = new FormData(chatForm);
-            formData.append('ajax', '1');
-
-            fetch('/social/chat/enviar', {
-                method: 'POST',
-                body: formData,
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest'
-                }
-            }).then(function (res) {
-                return res.json();
-            }).then(function (data) {
-                if (data && data.ok && data.message) {
-                    appendOwnMessage(data.message.body || text, data.message.created_at || '');
-                    if (socket) {
-                        socket.emit('chat:message', {
-                            conversationId: conversationId,
-                            message: data.message
-                        });
-                    }
-                    textarea.value = '';
-                }
-            }).catch(function () {
-                // Se der erro no AJAX, faz fallback para submit normal
+            if (!socket) {
+                // Sem realtime, fallback pro fluxo antigo
                 chatForm.submit();
-            }).finally(function () {
-                if (submitBtn) {
-                    submitBtn.disabled = false;
+                return;
+            }
+
+            socket.emit('chat:send', {
+                conversationId: conversationId,
+                body: text
+            }, function (ack) {
+                try {
+                    if (ack && ack.ok && ack.message) {
+                        appendOwnMessage(ack.message.body || text, ack.message.created_at || '');
+                        textarea.value = '';
+                    }
+                } finally {
+                    if (submitBtn) {
+                        submitBtn.disabled = false;
+                    }
                 }
             });
         });
