@@ -42,9 +42,12 @@ $pendingCount = is_array($pending) ? count($pending) : 0;
                                 </div>
                             </div>
                         </a>
-                        <div>
+                        <div style="display:flex; gap:6px; flex-wrap:wrap;">
                             <a href="/social/chat?user_id=<?= $friendId ?>" style="display:inline-block; font-size:11px; padding:4px 8px; border-radius:999px; background:linear-gradient(135deg,#e53935,#ff6f60); color:#050509; text-decoration:none; font-weight:600;">
                                 Conversar
+                            </a>
+                            <a href="/perfil?user_id=<?= $friendId ?>" style="display:inline-block; font-size:11px; padding:4px 8px; border-radius:999px; border:1px solid #272727; background:#111118; color:#f5f5f5; text-decoration:none; font-weight:600;">
+                                Ver perfil
                             </a>
                         </div>
                     </div>
