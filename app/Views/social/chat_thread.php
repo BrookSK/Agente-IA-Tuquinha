@@ -9,6 +9,12 @@ $currentId = (int)($user['id'] ?? 0);
 $currentName = (string)($user['name'] ?? 'Você');
 $otherName = (string)($otherUser['name'] ?? 'Amigo');
 $conversationId = (int)($conversation['id'] ?? 0);
+$initialLastMessageId = 0;
+if (!empty($messages)) {
+    $last = end($messages);
+    $initialLastMessageId = (int)($last['id'] ?? 0);
+    reset($messages);
+}
 
 ?>
 <div style="max-width: 1040px; margin: 0 auto; display:flex; gap:16px; align-items:flex-start; flex-wrap:wrap;">
@@ -64,7 +70,7 @@ $conversationId = (int)($conversation['id'] ?? 0);
                         $body = (string)($msg['body'] ?? '');
                         $createdAt = $msg['created_at'] ?? '';
                     ?>
-                    <div style="display:flex; justify-content:<?= $isOwn ? 'flex-end' : 'flex-start' ?>;">
+                    <div data-message-id="<?= (int)($msg['id'] ?? 0) ?>" style="display:flex; justify-content:<?= $isOwn ? 'flex-end' : 'flex-start' ?>;">
                         <div style="max-width:78%; padding:6px 8px; border-radius:10px; font-size:12px; line-height:1.4;
                             background:<?= $isOwn ? 'linear-gradient(135deg,#e53935,#ff6f60)' : '#1c1c24' ?>;
                             color:<?= $isOwn ? '#050509' : '#f5f5f5' ?>;
@@ -114,17 +120,13 @@ $conversationId = (int)($conversation['id'] ?? 0);
     var currentUserName = <?= json_encode($currentName, JSON_UNESCAPED_UNICODE) ?>;
     var currentUserId = <?= (int)$currentId ?>;
     var conversationId = <?= (int)$conversationId ?>;
-    var socket = null;
     var pc = null;
     var localStream = null;
     var remoteStream = null;
-    var socketUrl = <?= json_encode(defined('SOCKET_IO_URL') ? (string)SOCKET_IO_URL : 'http://localhost:3001', JSON_UNESCAPED_SLASHES) ?>;
-    var socketPath = '/socket.io';
-
-    if (typeof socketUrl === 'string' && socketUrl.indexOf('localhost') !== -1) {
-        // Em produção, "localhost" no navegador é o PC do visitante. Usamos o mesmo domínio do site (via reverse proxy).
-        socketUrl = window.location.origin;
-    }
+    var sse = null;
+    var lastMessageId = <?= (int)$initialLastMessageId ?>;
+    var webrtcSinceId = 0;
+    var webrtcPollInFlight = false;
 
     function setStatus(text) {
         if (statusSpan) {
@@ -132,92 +134,137 @@ $conversationId = (int)($conversation['id'] ?? 0);
         }
     }
 
-    function ensureSocketIoClient(callback) {
-        if (window.io) {
-            callback();
-            return;
+    function startSse() {
+        try {
+            if (typeof window.EventSource === 'undefined') {
+                return;
+            }
+            if (sse) {
+                try { sse.close(); } catch (e) {}
+            }
+
+            sse = new EventSource('/social/chat/stream?conversation_id=' + encodeURIComponent(conversationId) + '&last_id=' + encodeURIComponent(lastMessageId));
+            sse.addEventListener('message', function (ev) {
+                try {
+                    var msg = JSON.parse(ev.data || '{}');
+                    if (!msg || !msg.id) {
+                        return;
+                    }
+                    lastMessageId = Math.max(lastMessageId, Number(msg.id) || 0);
+                    if (Number(msg.sender_user_id) === currentUserId) {
+                        return;
+                    }
+                    appendOtherMessage(msg.sender_name || 'Amigo', msg.body || '', msg.created_at || '');
+                } catch (e) {
+                }
+            });
+
+            sse.addEventListener('done', function (ev) {
+                try {
+                    var data = JSON.parse(ev.data || '{}');
+                    if (data && data.last_id) {
+                        lastMessageId = Math.max(lastMessageId, Number(data.last_id) || 0);
+                    }
+                } catch (e) {}
+
+                try { sse.close(); } catch (e) {}
+                sse = null;
+                setTimeout(startSse, 250);
+            });
+
+            sse.addEventListener('ping', function () {
+                // noop
+            });
+
+            sse.onerror = function () {
+                try { sse.close(); } catch (e) {}
+                sse = null;
+                setTimeout(startSse, 1000);
+            };
+        } catch (e) {
         }
-        var existing = document.getElementById('socket-io-client');
-        if (existing) {
-            existing.addEventListener('load', callback);
-            return;
-        }
-        var s = document.createElement('script');
-        s.id = 'socket-io-client';
-        s.src = 'https://cdn.socket.io/4.7.5/socket.io.min.js';
-        s.async = true;
-        s.onload = callback;
-        s.onerror = function () {
-            // Sem realtime; segue normal
-        };
-        document.head.appendChild(s);
     }
 
-    function connectRealtime() {
-        ensureSocketIoClient(function () {
-            fetch('/social/socket/token', { credentials: 'same-origin' })
-                .then(function (r) { return r.json(); })
-                .then(function (data) {
-                    if (!data || !data.ok || !data.token || !window.io) return;
-                    socket = window.io(socketUrl, {
-                        auth: { token: data.token },
-                        path: socketPath,
-                        transports: ['websocket', 'polling']
-                    });
+    function sendSignal(kind, payload) {
+        var fd = new FormData();
+        fd.append('conversation_id', String(conversationId));
+        fd.append('kind', String(kind));
+        fd.append('payload', JSON.stringify(payload));
+        return fetch('/social/webrtc/send', {
+            method: 'POST',
+            body: fd,
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        }).then(function (r) {
+            return r.json();
+        }).catch(function () {
+            return null;
+        });
+    }
 
-                    socket.on('connect', function () {
-                        socket.emit('join', { conversationId: conversationId });
-                    });
+    function pollSignals() {
+        if (webrtcPollInFlight) {
+            return;
+        }
+        webrtcPollInFlight = true;
 
-                    socket.on('chat:message', function (payload) {
-                        if (!payload || Number(payload.conversationId) !== conversationId) return;
-                        if (!payload.message) return;
-                        if (Number(payload.message.sender_user_id) === currentUserId) {
-                            return;
-                        }
-                        appendOtherMessage(payload.message.sender_name || 'Amigo', payload.message.body || '', payload.message.created_at || '');
-                    });
+        fetch('/social/webrtc/poll?conversation_id=' + encodeURIComponent(conversationId) + '&since_id=' + encodeURIComponent(webrtcSinceId), {
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        }).then(function (r) {
+            return r.json();
+        }).then(function (data) {
+            if (!data || !data.ok) {
+                return;
+            }
 
-                    socket.on('webrtc:offer', async function (payload) {
-                        if (!payload || Number(payload.conversationId) !== conversationId) return;
-                        if (!payload.offer) return;
-                        try {
-                            await ensurePeerConnection();
-                            await pc.setRemoteDescription(new RTCSessionDescription(payload.offer));
-                            var answer = await pc.createAnswer();
-                            await pc.setLocalDescription(answer);
-                            socket.emit('webrtc:answer', { conversationId: conversationId, answer: pc.localDescription });
-                            setStatus('Em chamada.');
-                        } catch (e) {
-                        }
-                    });
+            if (data.since_id) {
+                webrtcSinceId = Math.max(webrtcSinceId, Number(data.since_id) || 0);
+            }
 
-                    socket.on('webrtc:answer', async function (payload) {
-                        if (!payload || Number(payload.conversationId) !== conversationId) return;
-                        if (!payload.answer || !pc) return;
-                        try {
-                            await pc.setRemoteDescription(new RTCSessionDescription(payload.answer));
-                            setStatus('Em chamada.');
-                        } catch (e) {
-                        }
-                    });
+            var events = data.events || [];
+            var chain = Promise.resolve();
+            events.forEach(function (ev) {
+                chain = chain.then(function () {
+                    var id = Number(ev.id) || 0;
+                    webrtcSinceId = Math.max(webrtcSinceId, id);
+                    var kind = String(ev.kind || '');
+                    var payload = ev.payload;
 
-                    socket.on('webrtc:ice', async function (payload) {
-                        if (!payload || Number(payload.conversationId) !== conversationId) return;
-                        if (!payload.candidate || !pc) return;
-                        try {
-                            await pc.addIceCandidate(new RTCIceCandidate(payload.candidate));
-                        } catch (e) {
-                        }
-                    });
-
-                    socket.on('webrtc:end', function (payload) {
-                        if (!payload || Number(payload.conversationId) !== conversationId) return;
+                    if (kind === 'end') {
                         endCall(false);
-                    });
-                })
-                .catch(function () {
+                        return;
+                    }
+
+                    if (kind === 'offer' && payload) {
+                        return ensurePeerConnection().then(function () {
+                            return pc.setRemoteDescription(new RTCSessionDescription(payload));
+                        }).then(function () {
+                            return pc.createAnswer();
+                        }).then(function (answer) {
+                            return pc.setLocalDescription(answer);
+                        }).then(function () {
+                            return sendSignal('answer', pc.localDescription);
+                        }).then(function () {
+                            setStatus('Em chamada.');
+                        }).catch(function () {});
+                    }
+
+                    if (kind === 'answer' && payload && pc) {
+                        return pc.setRemoteDescription(new RTCSessionDescription(payload)).then(function () {
+                            setStatus('Em chamada.');
+                        }).catch(function () {});
+                    }
+
+                    if (kind === 'ice' && payload && pc) {
+                        return pc.addIceCandidate(new RTCIceCandidate(payload)).catch(function () {});
+                    }
                 });
+            });
+
+            return chain;
+        }).catch(function () {
+        }).finally(function () {
+            webrtcPollInFlight = false;
+            setTimeout(pollSignals, 250);
         });
     }
 
@@ -254,8 +301,8 @@ $conversationId = (int)($conversation['id'] ?? 0);
         });
 
         pc.onicecandidate = function (ev) {
-            if (ev.candidate && socket) {
-                socket.emit('webrtc:ice', { conversationId: conversationId, candidate: ev.candidate });
+            if (ev.candidate) {
+                sendSignal('ice', ev.candidate);
             }
         };
 
@@ -282,17 +329,12 @@ $conversationId = (int)($conversation['id'] ?? 0);
     }
 
     async function startCall() {
-        if (!socket) {
-            setStatus('Realtime indisponível.');
-            return;
-        }
-
         try {
             setStatus('Iniciando chamada...');
             await ensurePeerConnection();
             var offer = await pc.createOffer();
             await pc.setLocalDescription(offer);
-            socket.emit('webrtc:offer', { conversationId: conversationId, offer: pc.localDescription });
+            await sendSignal('offer', pc.localDescription);
             setStatus('Chamando...');
         } catch (e) {
             setStatus('Não foi possível iniciar a chamada.');
@@ -301,8 +343,8 @@ $conversationId = (int)($conversation['id'] ?? 0);
 
     function endCall(emit) {
         if (emit === undefined) emit = true;
-        if (emit && socket) {
-            socket.emit('webrtc:end', { conversationId: conversationId });
+        if (emit) {
+            sendSignal('end', {});
         }
         if (pc) {
             try { pc.close(); } catch (e) {}
@@ -414,7 +456,17 @@ $conversationId = (int)($conversation['id'] ?? 0);
         endBtn.addEventListener('click', endCall);
     }
 
-    connectRealtime();
+    var existingLast = 0;
+    try {
+        var existingEls = document.querySelectorAll('#social-chat-messages [data-message-id]');
+        for (var i = 0; i < existingEls.length; i++) {
+            var id = Number(existingEls[i].getAttribute('data-message-id') || '0') || 0;
+            existingLast = Math.max(existingLast, id);
+        }
+    } catch (e) {}
+    lastMessageId = Math.max(lastMessageId, existingLast);
+    startSse();
+    pollSignals();
 
     if (chatForm) {
         chatForm.addEventListener('submit', function (e) {
@@ -436,25 +488,30 @@ $conversationId = (int)($conversation['id'] ?? 0);
                 submitBtn.disabled = true;
             }
 
-            if (!socket) {
-                // Sem realtime, fallback pro fluxo antigo
-                chatForm.submit();
-                return;
-            }
+            var formData = new FormData(chatForm);
+            formData.append('ajax', '1');
 
-            socket.emit('chat:send', {
-                conversationId: conversationId,
-                body: text
-            }, function (ack) {
-                try {
-                    if (ack && ack.ok && ack.message) {
-                        appendOwnMessage(ack.message.body || text, ack.message.created_at || '');
-                        textarea.value = '';
+            fetch('/social/chat/enviar', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            }).then(function (res) {
+                return res.json();
+            }).then(function (data) {
+                if (data && data.ok && data.message) {
+                    appendOwnMessage(data.message.body || text, data.message.created_at || '');
+                    textarea.value = '';
+                    if (data.message.id) {
+                        lastMessageId = Math.max(lastMessageId, Number(data.message.id) || 0);
                     }
-                } finally {
-                    if (submitBtn) {
-                        submitBtn.disabled = false;
-                    }
+                }
+            }).catch(function () {
+                chatForm.submit();
+            }).finally(function () {
+                if (submitBtn) {
+                    submitBtn.disabled = false;
                 }
             });
         });

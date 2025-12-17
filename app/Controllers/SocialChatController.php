@@ -27,6 +27,71 @@ class SocialChatController extends Controller
         return $user;
     }
 
+    public function stream(): void
+    {
+        $currentUser = $this->requireLogin();
+        $currentId = (int)$currentUser['id'];
+
+        $conversationId = isset($_GET['conversation_id']) ? (int)$_GET['conversation_id'] : 0;
+        $lastId = isset($_GET['last_id']) ? (int)$_GET['last_id'] : 0;
+
+        if ($conversationId <= 0) {
+            http_response_code(400);
+            return;
+        }
+
+        $this->ensureConversationAccess($currentId, $conversationId);
+
+        header('Content-Type: text/event-stream; charset=utf-8');
+        header('Cache-Control: no-cache');
+        header('Connection: keep-alive');
+        header('X-Accel-Buffering: no');
+
+        if (function_exists('ini_set')) {
+            @ini_set('output_buffering', 'off');
+            @ini_set('zlib.output_compression', '0');
+        }
+
+        while (ob_get_level() > 0) {
+            @ob_end_flush();
+        }
+
+        $deadline = microtime(true) + 25.0;
+
+        while (microtime(true) < $deadline) {
+            if (connection_aborted()) {
+                break;
+            }
+
+            $rows = SocialMessage::sinceId($conversationId, $lastId, 50);
+            if (!empty($rows)) {
+                foreach ($rows as $row) {
+                    $id = (int)($row['id'] ?? 0);
+                    $lastId = max($lastId, $id);
+                    echo "event: message\n";
+                    echo 'data: ' . json_encode([
+                        'id' => $id,
+                        'conversation_id' => (int)($row['conversation_id'] ?? 0),
+                        'sender_user_id' => (int)($row['sender_user_id'] ?? 0),
+                        'sender_name' => (string)($row['sender_name'] ?? ''),
+                        'body' => (string)($row['body'] ?? ''),
+                        'created_at' => (string)($row['created_at'] ?? ''),
+                    ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) . "\n\n";
+                }
+                @flush();
+            } else {
+                echo "event: ping\n";
+                echo "data: {}\n\n";
+                @flush();
+                usleep(400000);
+            }
+        }
+
+        echo "event: done\n";
+        echo 'data: ' . json_encode(['last_id' => $lastId], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) . "\n\n";
+        @flush();
+    }
+
     private function ensureFriends(int $currentUserId, int $otherUserId): void
     {
         if ($currentUserId <= 0 || $otherUserId <= 0 || $currentUserId === $otherUserId) {
@@ -42,6 +107,27 @@ class SocialChatController extends Controller
         }
     }
 
+    private function ensureConversationAccess(int $currentId, int $conversationId): array
+    {
+        $conversation = SocialConversation::findById($conversationId);
+        if (!$conversation) {
+            header('Location: /amigos');
+            exit;
+        }
+
+        $u1 = (int)($conversation['user1_id'] ?? 0);
+        $u2 = (int)($conversation['user2_id'] ?? 0);
+        if ($currentId !== $u1 && $currentId !== $u2) {
+            header('Location: /amigos');
+            exit;
+        }
+
+        $otherUserId = $currentId === $u1 ? $u2 : $u1;
+        $this->ensureFriends($currentId, $otherUserId);
+
+        return [$conversation, $otherUserId];
+    }
+
     public function open(): void
     {
         $currentUser = $this->requireLogin();
@@ -54,20 +140,7 @@ class SocialChatController extends Controller
         $otherUser = null;
 
         if ($conversationId > 0) {
-            $conversation = SocialConversation::findById($conversationId);
-            if (!$conversation) {
-                header('Location: /amigos');
-                exit;
-            }
-
-            $u1 = (int)($conversation['user1_id'] ?? 0);
-            $u2 = (int)($conversation['user2_id'] ?? 0);
-            if ($currentId !== $u1 && $currentId !== $u2) {
-                header('Location: /amigos');
-                exit;
-            }
-
-            $otherUserId = $currentId === $u1 ? $u2 : $u1;
+            [$conversation, $otherUserId] = $this->ensureConversationAccess($currentId, $conversationId);
             $otherUser = User::findById($otherUserId);
             if (!$otherUser) {
                 header('Location: /amigos');
