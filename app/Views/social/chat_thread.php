@@ -45,6 +45,9 @@ if (!empty($messages)) {
                     <span id="badge-remote-mic" style="display:none; font-size:11px; padding:3px 8px; border-radius:999px; background:rgba(0,0,0,0.55); border:1px solid #272727; color:#ffbaba;">Áudio mutado</span>
                     <span id="badge-remote-cam" style="display:none; font-size:11px; padding:3px 8px; border-radius:999px; background:rgba(0,0,0,0.55); border:1px solid #272727; color:#ffbaba;">Câmera desligada</span>
                 </div>
+                <div id="tuquinha-remote-center" style="position:absolute; inset:0; display:none; align-items:center; justify-content:center; text-align:center; padding:0 12px; z-index:4;">
+                    <div id="tuquinha-remote-center-text" style="font-size:12px; color:#b0b0b0; line-height:1.35;"></div>
+                </div>
                 <div id="tuquinha-remote-video" style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; color:#b0b0b0; font-size:12px;">
                     <span id="tuquinha-call-status">Chamada não iniciada.</span>
                 </div>
@@ -122,11 +125,77 @@ if (!empty($messages)) {
     </main>
 </div>
 
+<div id="incomingCallModal" style="position:fixed; inset:0; display:none; align-items:center; justify-content:center; z-index:9999;">
+    <div id="incomingCallBackdrop" style="position:absolute; inset:0; background:rgba(0,0,0,0.65);"></div>
+    <div style="position:relative; width:min(420px, calc(100vw - 28px)); border-radius:18px; border:1px solid #272727; background:#111118; padding:14px 14px 12px 14px; box-shadow:0 18px 50px rgba(0,0,0,0.6);">
+        <div style="font-size:12px; color:#b0b0b0;">Chamada de vídeo recebida</div>
+        <div style="font-size:16px; font-weight:650; color:#f5f5f5; margin-top:4px;">
+            <?= htmlspecialchars($otherName, ENT_QUOTES, 'UTF-8') ?> está chamando você
+        </div>
+        <div style="font-size:12px; color:#b0b0b0; margin-top:6px; line-height:1.35;">
+            Clique para entrar na chamada.
+        </div>
+        <div style="display:flex; gap:8px; margin-top:12px;">
+            <button type="button" id="incomingCallAccept" style="flex:1; border:none; border-radius:999px; padding:9px 12px; font-size:13px; font-weight:650; cursor:pointer; background:linear-gradient(135deg,#4caf50,#8bc34a); color:#050509;">
+                Entrar na chamada
+            </button>
+            <button type="button" id="incomingCallDismiss" style="flex:1; border:none; border-radius:999px; padding:9px 12px; font-size:13px; cursor:pointer; background:#1c1c24; color:#f5f5f5; border:1px solid #272727;">
+                Agora não
+            </button>
+        </div>
+    </div>
+</div>
+
 <script>
 (function () {
     var box = document.getElementById('social-chat-messages');
     if (box) {
         box.scrollTop = box.scrollHeight;
+    }
+
+    function playIncomingBeep() {
+        try {
+            var now = Date.now ? Date.now() : 0;
+            if (now && lastIncomingBeepAt && (now - lastIncomingBeepAt) < 1800) {
+                return;
+            }
+            lastIncomingBeepAt = now;
+
+            var AudioCtx = window.AudioContext || window.webkitAudioContext;
+            if (!AudioCtx) {
+                return;
+            }
+            var ctx = new AudioCtx();
+            var o = ctx.createOscillator();
+            var g = ctx.createGain();
+            o.type = 'sine';
+            o.frequency.value = 880;
+            g.gain.value = 0.001;
+            o.connect(g);
+            g.connect(ctx.destination);
+            o.start();
+            g.gain.exponentialRampToValueAtTime(0.12, ctx.currentTime + 0.02);
+            g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.18);
+            o.stop(ctx.currentTime + 0.2);
+            o.onended = function () {
+                try { ctx.close(); } catch (e) {}
+            };
+        } catch (e) {}
+    }
+
+    function showIncomingModal() {
+        if (!incomingModal) {
+            return;
+        }
+        incomingModal.style.display = 'flex';
+        playIncomingBeep();
+    }
+
+    function hideIncomingModal() {
+        if (!incomingModal) {
+            return;
+        }
+        incomingModal.style.display = 'none';
     }
 
     var startBtn = document.getElementById('btn-start-call');
@@ -139,6 +208,8 @@ if (!empty($messages)) {
     var remoteBadges = document.getElementById('tuquinha-remote-badges');
     var remoteMicBadge = document.getElementById('badge-remote-mic');
     var remoteCamBadge = document.getElementById('badge-remote-cam');
+    var remoteCenter = document.getElementById('tuquinha-remote-center');
+    var remoteCenterText = document.getElementById('tuquinha-remote-center-text');
     var chatForm = document.getElementById('social-chat-form');
     var typingBox = document.getElementById('tuquinha-typing');
     var typingName = document.getElementById('tuquinha-typing-name');
@@ -168,6 +239,12 @@ if (!empty($messages)) {
     var camOff = false;
     var remoteMicMuted = false;
     var remoteCamOff = false;
+    var remoteEndedNotice = '';
+    var incomingModal = document.getElementById('incomingCallModal');
+    var incomingBackdrop = document.getElementById('incomingCallBackdrop');
+    var incomingAccept = document.getElementById('incomingCallAccept');
+    var incomingDismiss = document.getElementById('incomingCallDismiss');
+    var lastIncomingBeepAt = 0;
     var typingHideTimer = null;
     var lastTypingSentAt = 0;
     var typingStopTimer = null;
@@ -219,6 +296,8 @@ if (!empty($messages)) {
                 endBtn.textContent = endBtnOriginalText || 'Encerrar';
             }
         }
+
+        updateRemoteVideoOverlay();
 
         var showMediaControls = (state === 'in_call');
         var hasLocal = !!(localStream && localStream.getTracks && localStream.getTracks().length);
@@ -456,14 +535,20 @@ if (!empty($messages)) {
                     if (kind === 'end') {
                         endCall(false);
                         statusLockUntil = (Date.now ? Date.now() : 0) + 4500;
+                        remoteEndedNotice = <?= json_encode($otherName, JSON_UNESCAPED_UNICODE) ?> + ' encerrou a chamada de vídeo.';
                         if (statusSpan) {
                             statusSpan.textContent = <?= json_encode($otherName, JSON_UNESCAPED_UNICODE) ?> + ' encerrou a chamada de vídeo.';
                         }
+                        updateRemoteVideoOverlay();
                         if (callEndedNoticeTimer) {
                             clearTimeout(callEndedNoticeTimer);
                         }
                         callEndedNoticeTimer = setTimeout(function () {
                             statusLockUntil = 0;
+                            remoteEndedNotice = '';
+                            remoteMicMuted = false;
+                            remoteCamOff = false;
+                            updateRemoteVideoOverlay();
                             if (callUiState === 'idle') {
                                 setStatus('Chamada não iniciada.');
                             }
@@ -496,11 +581,25 @@ if (!empty($messages)) {
                         return;
                     }
 
+                    if (kind === 'media' && payload) {
+                        try {
+                            if (typeof payload.micMuted !== 'undefined') {
+                                remoteMicMuted = !!payload.micMuted;
+                            }
+                            if (typeof payload.camOff !== 'undefined') {
+                                remoteCamOff = !!payload.camOff;
+                            }
+                        } catch (e) {}
+                        updateRemoteVideoOverlay();
+                        return;
+                    }
+
                     if (kind === 'offer' && payload) {
                         if (!pc && callUiState !== 'connecting' && callUiState !== 'in_call') {
                             incomingOffer = payload;
                             setStatus('Seu amigo iniciou uma chamada. Clique em “Entrar na chamada”.');
                             setCallUiState('incoming');
+                            showIncomingModal();
                             return;
                         }
 
@@ -639,6 +738,38 @@ if (!empty($messages)) {
         }
     }
 
+    function updateRemoteVideoOverlay() {
+        if (!remoteVideo || !remoteContainer) {
+            return;
+        }
+
+        if (remoteEndedNotice) {
+            if (remoteCenterText) remoteCenterText.textContent = remoteEndedNotice;
+            if (remoteCenter) remoteCenter.style.display = 'flex';
+            remoteVideo.style.display = 'none';
+            remoteContainer.style.display = 'flex';
+            updateRemoteBadges();
+            return;
+        }
+
+        var overlayLines = [];
+        if (remoteCamOff) overlayLines.push('Câmera desligada');
+        if (remoteMicMuted) overlayLines.push('Microfone mutado');
+
+        if (overlayLines.length) {
+            if (remoteCenterText) remoteCenterText.textContent = overlayLines.join(' · ');
+            if (remoteCenter) remoteCenter.style.display = 'flex';
+        } else {
+            if (remoteCenter) remoteCenter.style.display = 'none';
+        }
+
+        if (callUiState === 'in_call' || callUiState === 'connecting') {
+            remoteVideo.style.display = remoteCamOff ? 'none' : 'block';
+            remoteContainer.style.display = remoteCamOff ? 'flex' : 'none';
+        }
+        updateRemoteBadges();
+    }
+
     async function ensurePeerConnection() {
         if (pc) return;
 
@@ -744,6 +875,7 @@ if (!empty($messages)) {
                 remoteVideo.srcObject = remoteStream;
             }
             showVideoElements();
+            updateRemoteVideoOverlay();
         };
 
         localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
@@ -758,6 +890,21 @@ if (!empty($messages)) {
         showVideoElements();
         setCallUiState(callUiState);
         sendMediaState();
+        remoteEndedNotice = '';
+        updateRemoteVideoOverlay();
+    }
+
+    if (incomingBackdrop) {
+        incomingBackdrop.addEventListener('click', hideIncomingModal);
+    }
+    if (incomingDismiss) {
+        incomingDismiss.addEventListener('click', hideIncomingModal);
+    }
+    if (incomingAccept) {
+        incomingAccept.addEventListener('click', function () {
+            hideIncomingModal();
+            acceptIncomingCall();
+        });
     }
 
     async function startCall() {
