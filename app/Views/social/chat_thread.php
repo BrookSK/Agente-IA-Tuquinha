@@ -39,6 +39,12 @@ if (!empty($messages)) {
                 <button type="button" id="btn-start-call" style="border:none; border-radius:999px; padding:6px 12px; font-size:12px; font-weight:600; cursor:pointer; background:linear-gradient(135deg,#4caf50,#8bc34a); color:#050509;">
                     Iniciar chamada de vídeo
                 </button>
+                <button type="button" id="btn-toggle-mic" style="border:none; border-radius:999px; padding:6px 12px; font-size:12px; cursor:pointer; background:#1c1c24; color:#f5f5f5; border:1px solid #272727;">
+                    Mutar áudio
+                </button>
+                <button type="button" id="btn-toggle-cam" style="border:none; border-radius:999px; padding:6px 12px; font-size:12px; cursor:pointer; background:#1c1c24; color:#f5f5f5; border:1px solid #272727;">
+                    Desligar câmera
+                </button>
                 <button type="button" id="btn-end-call" style="border:none; border-radius:999px; padding:6px 12px; font-size:12px; cursor:pointer; background:#311; color:#ffbaba; border:1px solid #a33;">
                     Encerrar
                 </button>
@@ -117,6 +123,8 @@ if (!empty($messages)) {
     var remoteVideo = document.getElementById('tuquinhaRemoteVideo');
     var statusSpan = document.getElementById('tuquinha-call-status');
     var chatForm = document.getElementById('social-chat-form');
+    var toggleMicBtn = document.getElementById('btn-toggle-mic');
+    var toggleCamBtn = document.getElementById('btn-toggle-cam');
     var currentUserName = <?= json_encode($currentName, JSON_UNESCAPED_UNICODE) ?>;
     var currentUserId = <?= (int)$currentId ?>;
     var otherUserId = <?= (int)($otherUser['id'] ?? 0) ?>;
@@ -137,6 +145,8 @@ if (!empty($messages)) {
     var startBtnOriginalText = startBtn ? startBtn.textContent : '';
     var endBtnOriginalText = endBtn ? endBtn.textContent : '';
     var incomingOffer = null;
+    var micMuted = false;
+    var camOff = false;
 
     function setStatus(text) {
         if (statusSpan) {
@@ -178,6 +188,46 @@ if (!empty($messages)) {
                 endBtn.textContent = endBtnOriginalText || 'Encerrar';
             }
         }
+
+        var hasLocal = !!(localStream && localStream.getTracks && localStream.getTracks().length);
+        if (toggleMicBtn) {
+            toggleMicBtn.disabled = !hasLocal;
+            toggleMicBtn.textContent = micMuted ? 'Ativar áudio' : 'Mutar áudio';
+        }
+        if (toggleCamBtn) {
+            toggleCamBtn.disabled = !hasLocal;
+            toggleCamBtn.textContent = camOff ? 'Ligar câmera' : 'Desligar câmera';
+        }
+    }
+
+    function applyLocalTrackStates() {
+        if (!localStream) {
+            return;
+        }
+        try {
+            var a = localStream.getAudioTracks ? localStream.getAudioTracks() : [];
+            for (var i = 0; i < a.length; i++) {
+                a[i].enabled = !micMuted;
+            }
+        } catch (e) {}
+        try {
+            var v = localStream.getVideoTracks ? localStream.getVideoTracks() : [];
+            for (var j = 0; j < v.length; j++) {
+                v[j].enabled = !camOff;
+            }
+        } catch (e) {}
+    }
+
+    function toggleMic() {
+        micMuted = !micMuted;
+        applyLocalTrackStates();
+        setCallUiState(callUiState);
+    }
+
+    function toggleCam() {
+        camOff = !camOff;
+        applyLocalTrackStates();
+        setCallUiState(callUiState);
     }
 
     function acceptIncomingCall() {
@@ -548,6 +598,7 @@ if (!empty($messages)) {
         };
 
         localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+        applyLocalTrackStates();
         localStream.getTracks().forEach(function (t) {
             pc.addTrack(t, localStream);
         });
@@ -556,6 +607,7 @@ if (!empty($messages)) {
             localVideo.srcObject = localStream;
         }
         showVideoElements();
+        setCallUiState(callUiState);
     }
 
     async function startCall() {
@@ -593,6 +645,8 @@ if (!empty($messages)) {
             } catch (e) {}
             localStream = null;
         }
+        micMuted = false;
+        camOff = false;
         remoteStream = null;
         if (localVideo) localVideo.srcObject = null;
         if (remoteVideo) remoteVideo.srcObject = null;
@@ -738,6 +792,12 @@ if (!empty($messages)) {
             }
             startCall();
         });
+    }
+    if (toggleMicBtn) {
+        toggleMicBtn.addEventListener('click', toggleMic);
+    }
+    if (toggleCamBtn) {
+        toggleCamBtn.addEventListener('click', toggleCam);
     }
     if (endBtn) {
         endBtn.addEventListener('click', endCall);
