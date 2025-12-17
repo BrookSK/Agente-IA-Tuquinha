@@ -129,6 +129,18 @@ $profileId = (int)($profileUser['id'] ?? 0);
             <div style="font-size:12px; color:var(--text-secondary); margin-bottom:8px; text-align:center;">
                 Este é o seu perfil social dentro da comunidade do Tuquinha.
             </div>
+
+            <div style="display:flex; flex-direction:column; gap:8px; margin-bottom:8px;">
+                <button
+                    type="button"
+                    id="copyProfileLinkBtn"
+                    data-profile-id="<?= (int)$profileId ?>"
+                    style="width:100%; border:none; border-radius:999px; padding:7px 10px; font-size:13px; font-weight:600; cursor:pointer; background:var(--surface-subtle); border:1px solid var(--border-subtle); color:var(--text-primary);"
+                >
+                    Copiar link do meu perfil
+                </button>
+                <div id="copyProfileLinkStatus" style="display:none; font-size:12px; color:var(--text-secondary); text-align:center;"></div>
+            </div>
         <?php endif; ?>
 
         <div style="display:flex; flex-direction:column; gap:6px; margin-top:6px;">
@@ -149,7 +161,43 @@ $profileId = (int)($profileUser['id'] ?? 0);
         <?php endif; ?>
     </aside>
 
-    <main id="socialProfileMain" style="flex: 1 1 0; min-width: 0; display:flex; flex-direction:column; gap:12px; width:100%;">
+    <script>
+    (function () {
+        var btn = document.getElementById('copyProfileLinkBtn');
+        var statusEl = document.getElementById('copyProfileLinkStatus');
+        if (!btn) return;
+
+        function setStatus(text, ok) {
+            if (!statusEl) return;
+            statusEl.style.display = 'block';
+            statusEl.style.color = ok ? '#8bc34a' : 'var(--text-secondary)';
+            statusEl.textContent = text;
+            window.clearTimeout(setStatus._t);
+            setStatus._t = window.setTimeout(function () {
+                statusEl.style.display = 'none';
+            }, 2200);
+        }
+
+        btn.addEventListener('click', function () {
+            var profileId = btn.getAttribute('data-profile-id') || '';
+            var base = (window.location && window.location.origin) ? window.location.origin : '';
+            var url = base + '/perfil?user_id=' + encodeURIComponent(profileId);
+
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(url).then(function () {
+                    setStatus('Link copiado!', true);
+                }).catch(function () {
+                    window.prompt('Copie o link do seu perfil:', url);
+                });
+                return;
+            }
+
+            window.prompt('Copie o link do seu perfil:', url);
+        });
+    })();
+    </script>
+
+    <main id="socialProfileMain" style="flex: 1 1 480px; min-width: 300px; display:flex; flex-direction:column; gap:14px;">
         <?php if (!empty($error)): ?>
             <div style="background:#311; border:1px solid #a33; color:#ffbaba; padding:8px 10px; border-radius:10px; font-size:13px;">
                 <?= htmlspecialchars($error, ENT_QUOTES, 'UTF-8') ?>
