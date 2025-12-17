@@ -94,6 +94,10 @@ class SocialWebRtcController extends Controller
 
         [$conversation, $otherUserId] = $this->ensureParticipantAndFriends($currentId, $conversationId);
 
+        if (function_exists('session_write_close')) {
+            @session_write_close();
+        }
+
         $payloadJson = json_encode($payload, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
         if ($payloadJson === false) {
             http_response_code(400);
@@ -133,6 +137,10 @@ class SocialWebRtcController extends Controller
         }
 
         $this->ensureParticipantAndFriends($currentId, $conversationId);
+
+        if (function_exists('session_write_close')) {
+            @session_write_close();
+        }
 
         $pdo = Database::getConnection();
 

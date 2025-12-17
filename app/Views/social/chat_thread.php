@@ -132,10 +132,47 @@ if (!empty($messages)) {
     var makingOffer = false;
     var ignoreOffer = false;
     var isPolite = false;
+    var sendingChat = false;
+    var callUiState = 'idle';
+    var startBtnOriginalText = startBtn ? startBtn.textContent : '';
+    var endBtnOriginalText = endBtn ? endBtn.textContent : '';
 
     function setStatus(text) {
         if (statusSpan) {
             statusSpan.textContent = text;
+        }
+    }
+
+    function setCallUiState(state) {
+        callUiState = state;
+
+        if (startBtn) {
+            if (state === 'in_call') {
+                startBtn.style.display = 'none';
+            } else {
+                startBtn.style.display = '';
+            }
+
+            if (state === 'connecting') {
+                startBtn.disabled = true;
+                startBtn.textContent = 'Conectando...';
+            } else if (state === 'in_call') {
+                startBtn.disabled = true;
+                startBtn.textContent = startBtnOriginalText || 'Iniciar chamada de vídeo';
+            } else {
+                startBtn.disabled = false;
+                startBtn.textContent = startBtnOriginalText || 'Iniciar chamada de vídeo';
+            }
+        }
+
+        if (endBtn) {
+            if (state === 'connecting' || state === 'in_call') {
+                endBtn.disabled = false;
+                endBtn.textContent = endBtnOriginalText || 'Encerrar';
+            } else {
+                endBtn.disabled = true;
+                endBtn.textContent = endBtnOriginalText || 'Encerrar';
+            }
         }
     }
 
@@ -397,6 +434,56 @@ if (!empty($messages)) {
             }
         };
 
+        pc.oniceconnectionstatechange = function () {
+            try {
+                var st = String(pc.iceConnectionState || '');
+                if (st === 'checking') {
+                    setStatus('Conectando...');
+                    setCallUiState('connecting');
+                }
+                if (st === 'connected' || st === 'completed') {
+                    setStatus('Em chamada.');
+                    setCallUiState('in_call');
+                }
+                if (st === 'failed') {
+                    setStatus('Falha na conexão.');
+                    setCallUiState('idle');
+                }
+                if (st === 'disconnected') {
+                    setStatus('Reconectando...');
+                    setCallUiState('connecting');
+                }
+            } catch (e) {}
+        };
+
+        if ('onconnectionstatechange' in pc) {
+            pc.onconnectionstatechange = function () {
+                try {
+                    var st = String(pc.connectionState || '');
+                    if (st === 'connecting') {
+                        setStatus('Conectando...');
+                        setCallUiState('connecting');
+                    }
+                    if (st === 'connected') {
+                        setStatus('Em chamada.');
+                        setCallUiState('in_call');
+                    }
+                    if (st === 'failed') {
+                        setStatus('Falha na conexão.');
+                        setCallUiState('idle');
+                    }
+                    if (st === 'disconnected') {
+                        setStatus('Reconectando...');
+                        setCallUiState('connecting');
+                    }
+                    if (st === 'closed') {
+                        setStatus('Chamada encerrada.');
+                        setCallUiState('idle');
+                    }
+                } catch (e) {}
+            };
+        }
+
         pc.ontrack = function (ev) {
             if (!remoteStream) {
                 remoteStream = new MediaStream();
@@ -422,7 +509,9 @@ if (!empty($messages)) {
     async function startCall() {
         try {
             setStatus('Iniciando chamada...');
+            setCallUiState('connecting');
             await ensurePeerConnection();
+            setStatus('Conectando...');
             if (pc && pc.signalingState === 'stable') {
                 makingOffer = true;
                 var offer = await pc.createOffer();
@@ -433,6 +522,7 @@ if (!empty($messages)) {
             setStatus('Chamando...');
         } catch (e) {
             setStatus('Não foi possível iniciar a chamada.');
+            setCallUiState('idle');
         }
     }
 
@@ -456,6 +546,7 @@ if (!empty($messages)) {
         if (remoteVideo) remoteVideo.srcObject = null;
         hideVideoElements();
         setStatus('Chamada não iniciada.');
+        setCallUiState('idle');
     }
 
     function appendOwnMessage(body, createdAt) {
@@ -594,6 +685,8 @@ if (!empty($messages)) {
         endBtn.addEventListener('click', endCall);
     }
 
+    setCallUiState('idle');
+
     var existingLast = 0;
     try {
         var existingEls = document.querySelectorAll('#social-chat-messages [data-message-id]');
@@ -610,6 +703,10 @@ if (!empty($messages)) {
         chatForm.addEventListener('submit', function (e) {
             e.preventDefault();
 
+            if (sendingChat) {
+                return;
+            }
+
             var textarea = chatForm.querySelector('textarea[name="body"]');
             if (!textarea) {
                 chatForm.submit();
@@ -624,8 +721,14 @@ if (!empty($messages)) {
             var submitBtn = chatForm.querySelector('button[type="submit"]');
             var pendingUi = appendOwnPendingMessage(text);
 
+            textarea.value = '';
+
+            sendingChat = true;
+
             textarea.disabled = true;
             if (submitBtn) submitBtn.disabled = true;
+            var originalBtnText = submitBtn ? submitBtn.textContent : '';
+            if (submitBtn) submitBtn.textContent = 'Enviando...';
 
             var formData = new FormData(chatForm);
             formData.append('ajax', '1');
@@ -644,7 +747,6 @@ if (!empty($messages)) {
                         pendingUi.wrapper.parentNode.removeChild(pendingUi.wrapper);
                     }
                     appendOwnMessage(data.message.body || text, data.message.created_at || '');
-                    textarea.value = '';
                     if (data.message.id) {
                         lastMessageId = Math.max(lastMessageId, Number(data.message.id) || 0);
                     }
@@ -652,14 +754,24 @@ if (!empty($messages)) {
                     if (pendingUi && pendingUi.meta) {
                         pendingUi.meta.innerText = 'Falha ao enviar.';
                     }
+                    textarea.value = text;
+                    if (submitBtn) submitBtn.textContent = 'Tentar novamente';
                 }
             }).catch(function () {
                 if (pendingUi && pendingUi.meta) {
                     pendingUi.meta.innerText = 'Falha ao enviar.';
                 }
+                textarea.value = text;
+                if (submitBtn) submitBtn.textContent = 'Tentar novamente';
             }).finally(function () {
                 textarea.disabled = false;
-                if (submitBtn) submitBtn.disabled = false;
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    if (submitBtn.textContent === 'Enviando...') {
+                        submitBtn.textContent = originalBtnText || 'Enviar';
+                    }
+                }
+                sendingChat = false;
                 try { textarea.focus(); } catch (e) {}
             });
         });
