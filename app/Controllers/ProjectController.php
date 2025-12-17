@@ -81,7 +81,27 @@ class ProjectController extends Controller
             return true;
         }
 
-        $subscription = Subscription::findLastByEmail($email);
+        $emailsToTry = [$email];
+        $atPos = strpos($email, '@');
+        if ($atPos !== false) {
+            $local = substr($email, 0, $atPos);
+            $domain = substr($email, $atPos + 1);
+            $plusPos = strpos($local, '+');
+            if ($plusPos !== false) {
+                $normalized = substr($local, 0, $plusPos) . '@' . $domain;
+                if ($normalized !== '' && !in_array($normalized, $emailsToTry, true)) {
+                    $emailsToTry[] = $normalized;
+                }
+            }
+        }
+
+        $subscription = null;
+        foreach ($emailsToTry as $e) {
+            $subscription = Subscription::findLastByEmail($e);
+            if ($subscription && !empty($subscription['plan_id'])) {
+                break;
+            }
+        }
         if (!$subscription || empty($subscription['plan_id'])) {
             return false;
         }
