@@ -162,6 +162,7 @@ if (!empty($messages)) {
     var typingHideTimer = null;
     var lastTypingSentAt = 0;
     var typingStopTimer = null;
+    var callEndedNoticeTimer = null;
 
     function setStatus(text) {
         if (statusSpan) {
@@ -400,6 +401,15 @@ if (!empty($messages)) {
 
                     if (kind === 'end') {
                         endCall(false);
+                        setStatus(<?= json_encode($otherName, JSON_UNESCAPED_UNICODE) ?> + ' encerrou a chamada de vídeo.');
+                        if (callEndedNoticeTimer) {
+                            clearTimeout(callEndedNoticeTimer);
+                        }
+                        callEndedNoticeTimer = setTimeout(function () {
+                            if (callUiState === 'idle') {
+                                setStatus('Chamada não iniciada.');
+                            }
+                        }, 4500);
                         return;
                     }
 
