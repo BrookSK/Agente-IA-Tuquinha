@@ -7,6 +7,7 @@
 /** @var string|null $audioError */
 /** @var array $attachments */
 /** @var string|null $chatError */
+/** @var array|null $projectContext */
 
 $hasMediaOrFiles = !empty($currentPlan['allow_audio']) || !empty($currentPlan['allow_images']) || !empty($currentPlan['allow_files']);
 $isFreePlan = $currentPlan && (($currentPlan['slug'] ?? '') === 'free');
@@ -57,14 +58,37 @@ $planAllowsPersonalitiesFlag = !empty($planAllowsPersonalities);
 
 // Determina se o usuário está em um plano pago (não free) para exibir CTA de compra de tokens
 $canShowBuyTokensCta = false;
+$isAdmin = !empty($_SESSION['is_admin']);
 if (!empty($currentPlan) && is_array($currentPlan)) {
     $slug = (string)($currentPlan['slug'] ?? '');
-    if ($slug !== 'free') {
+    if ($slug !== 'free' || $isAdmin) {
         $canShowBuyTokensCta = true;
     }
 }
 ?>
 <div style="max-width: 900px; width: 100%; margin: 0 auto; padding: 0 8px; display: flex; flex-direction: column; min-height: calc(100vh - 56px - 80px); box-sizing: border-box;">
+    <?php if (!empty($projectContext) && !empty($projectContext['project']) && !empty($conversationId)): ?>
+        <?php
+            $p = $projectContext['project'];
+            $pName = (string)($p['name'] ?? 'Projeto');
+            $pId = (int)($p['id'] ?? 0);
+            $total = (int)($projectContext['base_files_total'] ?? 0);
+            $withText = (int)($projectContext['base_files_with_text'] ?? 0);
+        ?>
+        <div style="margin-top:10px; margin-bottom:6px; background:#111118; border:1px solid #272727; border-radius:12px; padding:10px 12px; font-size:12px; display:flex; gap:10px; flex-wrap:wrap; align-items:center; justify-content:space-between;">
+            <div style="color:#b0b0b0;">
+                <span style="color:#f5f5f5; font-weight:600;">Projeto:</span>
+                <a href="/projetos/ver?id=<?= (int)$pId ?>" style="color:#ff6f60; text-decoration:none; font-weight:600;">
+                    <?= htmlspecialchars($pName) ?>
+                </a>
+                <span style="margin-left:8px; color:#8d8d8d;">Arquivos base: <?= (int)$withText ?>/<?= (int)$total ?> com texto</span>
+            </div>
+            <div style="color:#8d8d8d;">
+                Dica: cite arquivos assim: <strong>base/arquivo.md</strong>
+            </div>
+        </div>
+    <?php endif; ?>
+
     <?php if (!empty($conversationId) && $planAllowsPersonalitiesFlag && !empty($personaOptions)): ?>
         <?php $currentPersonaId = isset($currentPersonaData['id']) ? (int)$currentPersonaData['id'] : 0; ?>
         <div style="margin-top:10px; margin-bottom:6px; display:flex; justify-content:flex-start; gap:8px; align-items:center; flex-wrap:wrap;">

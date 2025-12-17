@@ -13,6 +13,10 @@ use App\Models\User;
 use App\Models\ConversationSetting;
 use App\Models\Personality;
 use App\Services\MediaStorageService;
+use App\Models\ProjectMember;
+use App\Models\ProjectFile;
+use App\Models\ProjectFileVersion;
+use App\Models\Project;
 
 class ChatController extends Controller
 {
@@ -22,6 +26,14 @@ class ChatController extends Controller
         $userId = !empty($_SESSION['user_id']) ? (int)$_SESSION['user_id'] : 0;
         $conversationParam = isset($_GET['c']) ? (int)$_GET['c'] : 0;
         $isNew = isset($_GET['new']);
+        $projectId = isset($_GET['project_id']) ? (int)$_GET['project_id'] : 0;
+
+        if ($projectId > 0) {
+            if ($userId <= 0 || !ProjectMember::canRead($projectId, $userId)) {
+                header('Location: /projetos');
+                exit;
+            }
+        }
 
         // Se acessar /chat sem ?new=1 e sem ?c=, e não houver conversa atual, redireciona para seleção de personalidade
         if (!$isNew && $conversationParam === 0 && empty($_SESSION['current_conversation_id'])) {
@@ -60,9 +72,9 @@ class ChatController extends Controller
             }
 
             if ($userId > 0) {
-                $conversation = Conversation::createForUser($userId, $sessionId, $personaIdForNew);
+                $conversation = Conversation::createForUser($userId, $sessionId, $personaIdForNew, $projectId > 0 ? $projectId : null);
             } else {
-                $conversation = Conversation::createForSession($sessionId, $personaIdForNew);
+                $conversation = Conversation::createForSession($sessionId, $personaIdForNew, $projectId > 0 ? $projectId : null);
             }
         } elseif ($conversationParam > 0) {
             if ($userId > 0) {
@@ -78,15 +90,23 @@ class ChatController extends Controller
                 $conversation->user_id = isset($row['user_id']) ? (int)$row['user_id'] : null;
                 $conversation->persona_id = isset($row['persona_id']) ? (int)$row['persona_id'] : null;
                 $conversation->title = $row['title'] ?? null;
+                $conversation->project_id = isset($row['project_id']) ? (int)$row['project_id'] : null;
+
+                if (!empty($conversation->project_id) && $userId > 0) {
+                    if (!ProjectMember::canRead((int)$conversation->project_id, $userId)) {
+                        header('Location: /projetos');
+                        exit;
+                    }
+                }
             } else {
                 if ($userId > 0) {
-                    $conversation = Conversation::createForUser($userId, $sessionId);
+                    $conversation = Conversation::createForUser($userId, $sessionId, null, $projectId > 0 ? $projectId : null);
                 } else {
-                    $conversation = Conversation::findOrCreateBySession($sessionId);
+                    $conversation = Conversation::findOrCreateBySession($sessionId, null, $projectId > 0 ? $projectId : null);
                 }
             }
         } else {
-            $conversation = Conversation::findOrCreateBySession($sessionId);
+            $conversation = Conversation::findOrCreateBySession($sessionId, null, $projectId > 0 ? $projectId : null);
         }
 
         $_SESSION['current_conversation_id'] = $conversation->id;
@@ -158,6 +178,35 @@ class ChatController extends Controller
             $personalities = Personality::allActive();
         }
 
+        $projectContext = null;
+        if (!empty($conversation->project_id)) {
+            $pid = (int)$conversation->project_id;
+            $project = Project::findById($pid);
+            if ($project) {
+                $baseFiles = ProjectFile::allBaseFiles($pid);
+                $baseFileIds = array_map(static function ($f) {
+                    return (int)($f['id'] ?? 0);
+                }, $baseFiles);
+                $latestByFileId = ProjectFileVersion::latestForFiles($baseFileIds);
+
+                $withText = 0;
+                foreach ($baseFiles as $bf) {
+                    $fid = (int)($bf['id'] ?? 0);
+                    $ver = $latestByFileId[$fid] ?? null;
+                    $txt = is_array($ver) ? (string)($ver['extracted_text'] ?? '') : '';
+                    if (trim($txt) !== '') {
+                        $withText++;
+                    }
+                }
+
+                $projectContext = [
+                    'project' => $project,
+                    'base_files_total' => count($baseFiles),
+                    'base_files_with_text' => $withText,
+                ];
+            }
+        }
+
         $this->view('chat/index', [
             'pageTitle' => 'Chat - Tuquinha',
             'chatHistory' => $history,
@@ -174,6 +223,7 @@ class ChatController extends Controller
             'currentPersona' => $currentPersona,
             'personalities' => $personalities,
             'planAllowsPersonalities' => $planAllowsPersonalities,
+            'projectContext' => $projectContext,
         ]);
     }
 
@@ -206,6 +256,7 @@ class ChatController extends Controller
                     $conversation->user_id = isset($row['user_id']) ? (int)$row['user_id'] : null;
                     $conversation->persona_id = isset($row['persona_id']) ? (int)$row['persona_id'] : null;
                     $conversation->title = $row['title'] ?? null;
+                    $conversation->project_id = isset($row['project_id']) ? (int)$row['project_id'] : null;
                 }
             }
 
@@ -216,6 +267,18 @@ class ChatController extends Controller
                     $conversation = Conversation::findOrCreateBySession($sessionId);
                 }
                 $_SESSION['current_conversation_id'] = $conversation->id;
+            }
+
+            if (!empty($conversation->project_id)) {
+                if ($userId <= 0 || !ProjectMember::canRead((int)$conversation->project_id, $userId)) {
+                    if ($isAjax) {
+                        header('Content-Type: application/json; charset=utf-8');
+                        echo json_encode(['success' => false, 'error' => 'Sem acesso a este projeto.']);
+                        exit;
+                    }
+                    header('Location: /projetos');
+                    exit;
+                }
             }
 
             // Verifica se é a primeira mensagem dessa conversa
@@ -399,6 +462,103 @@ class ChatController extends Controller
 
             $history = Message::allByConversation($conversation->id);
 
+            $projectContextFilesUsed = [];
+            $projectContextMessage = null;
+
+            if (!empty($conversation->project_id)) {
+                $projectId = (int)$conversation->project_id;
+                $baseFiles = ProjectFile::allBaseFiles($projectId);
+                $baseFileIds = array_map(static function ($f) {
+                    return (int)($f['id'] ?? 0);
+                }, $baseFiles);
+                $latestByFileId = ProjectFileVersion::latestForFiles($baseFileIds);
+
+                $parts = [];
+                foreach ($baseFiles as $bf) {
+                    $fid = (int)($bf['id'] ?? 0);
+                    $ver = $latestByFileId[$fid] ?? null;
+                    $text = is_array($ver) ? (string)($ver['extracted_text'] ?? '') : '';
+                    if (trim($text) === '') {
+                        continue;
+                    }
+                    $path = (string)($bf['path'] ?? '');
+                    if ($path === '') {
+                        continue;
+                    }
+                    $projectContextFilesUsed[] = $path;
+                    $parts[] = "ARQUIVO BASE DO PROJETO: {$path}\n" . $text;
+                }
+
+                // Menções explícitas a arquivos no texto do usuário
+                $mentions = [];
+                if (preg_match_all('/(?:(?:^|\s)(\/)?)(base|documentacao|codigo|regras|outros)\/([A-Za-z0-9_\.\-\/]+\.[A-Za-z0-9]{1,8})/u', $message, $mm)) {
+                    foreach ($mm[0] as $i => $full) {
+                        $prefix = (string)($mm[2][$i] ?? '');
+                        $rest = (string)($mm[3][$i] ?? '');
+                        $mentions[] = '/' . $prefix . '/' . $rest;
+                    }
+                }
+                $mentions = array_values(array_unique(array_map('trim', $mentions)));
+
+                foreach ($mentions as $mentionPath) {
+                    $normalized = $mentionPath;
+                    $normalized = preg_replace('/\s+/', '', $normalized);
+                    if (!is_string($normalized) || $normalized === '') {
+                        continue;
+                    }
+                    $normalized = '/' . ltrim($normalized, '/');
+
+                    $file = ProjectFile::findByPath($projectId, $normalized);
+                    if (!$file) {
+                        $candidates = ProjectFile::searchByPathSuffix($projectId, $normalized, 10);
+                        if (count($candidates) > 1) {
+                            $lines = [];
+                            $lines[] = 'Encontrei mais de um arquivo que pode ser o que você citou. Qual deles você quer usar?';
+                            foreach ($candidates as $c) {
+                                $lines[] = '- ' . (string)($c['path'] ?? '');
+                            }
+                            $assistantReply = implode("\n", $lines);
+                            Message::create($conversation->id, 'assistant', $assistantReply, null);
+                            if ($isAjax) {
+                                header('Content-Type: application/json; charset=utf-8');
+                                $nowLabel = date('d/m/Y H:i');
+                                echo json_encode([
+                                    'success' => true,
+                                    'messages' => [
+                                        ['role' => 'user', 'content' => $message, 'created_label' => $nowLabel],
+                                        ['role' => 'assistant', 'content' => $assistantReply, 'tokens_used' => 0, 'created_label' => $nowLabel],
+                                    ],
+                                    'total_tokens_used' => 0,
+                                ]);
+                                exit;
+                            }
+                            header('Location: /chat');
+                            exit;
+                        }
+                        if (count($candidates) === 1) {
+                            $file = $candidates[0];
+                        }
+                    }
+
+                    if ($file) {
+                        $fid = (int)($file['id'] ?? 0);
+                        $ver = $fid > 0 ? ProjectFileVersion::latestForFile($fid) : null;
+                        $text = is_array($ver) ? (string)($ver['extracted_text'] ?? '') : '';
+                        $path = (string)($file['path'] ?? '');
+                        if ($path !== '' && trim($text) !== '') {
+                            $projectContextFilesUsed[] = $path;
+                            $parts[] = "ARQUIVO CITADO PELO USUÁRIO: {$path}\n" . $text;
+                        }
+                    }
+                }
+
+                $projectContextFilesUsed = array_values(array_unique(array_filter($projectContextFilesUsed)));
+
+                if (!empty($parts)) {
+                    $projectContextMessage = "Contexto do projeto (use como fonte de verdade; não invente se estiver aqui):\n\n" . implode("\n\n---\n\n", $parts);
+                }
+            }
+
             // Carrega contexto do usuário, personalidade e da conversa para personalizar o Tuquinha
             $userData = null;
             $conversationSettings = null;
@@ -538,8 +698,16 @@ class ChatController extends Controller
             }
 
             $engine = new TuquinhaEngine();
+            $historyForEngine = $history;
+            if (is_string($projectContextMessage) && $projectContextMessage !== '') {
+                array_unshift($historyForEngine, [
+                    'role' => 'user',
+                    'content' => $projectContextMessage,
+                ]);
+            }
+
             $result = $engine->generateResponseWithContext(
-                $history,
+                $historyForEngine,
                 $_SESSION['chat_model'] ?? null,
                 $userData,
                 $conversationSettings,

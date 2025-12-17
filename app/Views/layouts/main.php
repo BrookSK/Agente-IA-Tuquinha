@@ -486,6 +486,18 @@ if (!empty($_SESSION['user_id'])) {
                 </a>
 
                 <?php if (!empty($_SESSION['user_id'])): ?>
+                    <div class="sidebar-section-title" style="margin-top: 10px;">Projetos</div>
+                    <a href="/projetos" class="sidebar-button">
+                        <span class="icon">📁</span>
+                        <span>Meus projetos</span>
+                    </a>
+                    <a href="/projetos/novo" class="sidebar-button">
+                        <span class="icon">➕</span>
+                        <span>Novo projeto</span>
+                    </a>
+                <?php endif; ?>
+
+                <?php if (!empty($_SESSION['user_id'])): ?>
                     <div class="sidebar-section-title" style="margin-top: 10px;">Rede social do Tuquinha</div>
                     <a href="/perfil" class="sidebar-button">
                         <span class="icon">
