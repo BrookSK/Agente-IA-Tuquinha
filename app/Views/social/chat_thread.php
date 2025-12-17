@@ -22,6 +22,16 @@ if (!empty($messages)) {
         <div style="font-size:13px; font-weight:600; color:#f5f5f5; margin-bottom:6px;">
             Chamada com <?= htmlspecialchars($otherName, ENT_QUOTES, 'UTF-8') ?>
         </div>
+
+        <div id="tuquinha-typing" style="display:none; align-items:center; gap:8px; padding:6px 8px; margin-top:6px; border-radius:10px; background:#0b0b10; border:1px solid #272727; color:#b0b0b0; font-size:12px;">
+            <span id="tuquinha-typing-name" style="color:#ffab91; font-weight:600;"></span>
+            <span style="opacity:0.9;">está digitando</span>
+            <span class="tuquinha-dots" style="display:inline-flex; gap:3px; margin-left:2px;">
+                <span class="tuquinha-dot"></span>
+                <span class="tuquinha-dot"></span>
+                <span class="tuquinha-dot"></span>
+            </span>
+        </div>
         <div style="display:flex; flex-direction:column; gap:8px;">
             <div style="background:#000; border-radius:12px; height:160px; overflow:hidden; position:relative; border:1px solid #272727;">
                 <video id="tuquinhaLocalVideo" autoplay playsinline muted style="width:100%; height:100%; object-fit:cover; display:none;"></video>
@@ -123,6 +133,8 @@ if (!empty($messages)) {
     var remoteVideo = document.getElementById('tuquinhaRemoteVideo');
     var statusSpan = document.getElementById('tuquinha-call-status');
     var chatForm = document.getElementById('social-chat-form');
+    var typingBox = document.getElementById('tuquinha-typing');
+    var typingName = document.getElementById('tuquinha-typing-name');
     var toggleMicBtn = document.getElementById('btn-toggle-mic');
     var toggleCamBtn = document.getElementById('btn-toggle-cam');
     var currentUserName = <?= json_encode($currentName, JSON_UNESCAPED_UNICODE) ?>;
@@ -147,6 +159,9 @@ if (!empty($messages)) {
     var incomingOffer = null;
     var micMuted = false;
     var camOff = false;
+    var typingHideTimer = null;
+    var lastTypingSentAt = 0;
+    var typingStopTimer = null;
 
     function setStatus(text) {
         if (statusSpan) {
@@ -189,14 +204,31 @@ if (!empty($messages)) {
             }
         }
 
+        var showMediaControls = (state === 'in_call');
         var hasLocal = !!(localStream && localStream.getTracks && localStream.getTracks().length);
+
         if (toggleMicBtn) {
+            toggleMicBtn.style.display = showMediaControls ? '' : 'none';
             toggleMicBtn.disabled = !hasLocal;
-            toggleMicBtn.textContent = micMuted ? 'Ativar áudio' : 'Mutar áudio';
+            toggleMicBtn.style.background = micMuted ? '#311' : '#1c1c24';
+            toggleMicBtn.style.color = micMuted ? '#ffbaba' : '#f5f5f5';
+            toggleMicBtn.style.border = micMuted ? '1px solid #a33' : '1px solid #272727';
+            toggleMicBtn.innerHTML = (micMuted ?
+                '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="vertical-align:-2px; margin-right:6px;"><path d="M19 11a7 7 0 0 1-7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M12 18v3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M8 21h8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M9 5a3 3 0 0 1 6 0v6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M5 11a7 7 0 0 0 2 4.9" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M4 4l16 16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>Áudio mutado'
+                :
+                '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="vertical-align:-2px; margin-right:6px;"><path d="M12 14a3 3 0 0 0 3-3V5a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M19 11a7 7 0 0 1-14 0" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M12 18v3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M8 21h8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>Mutar áudio');
         }
+
         if (toggleCamBtn) {
+            toggleCamBtn.style.display = showMediaControls ? '' : 'none';
             toggleCamBtn.disabled = !hasLocal;
-            toggleCamBtn.textContent = camOff ? 'Ligar câmera' : 'Desligar câmera';
+            toggleCamBtn.style.background = camOff ? '#311' : '#1c1c24';
+            toggleCamBtn.style.color = camOff ? '#ffbaba' : '#f5f5f5';
+            toggleCamBtn.style.border = camOff ? '1px solid #a33' : '1px solid #272727';
+            toggleCamBtn.innerHTML = (camOff ?
+                '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="vertical-align:-2px; margin-right:6px;"><path d="M15 10l4.553-2.276A1 1 0 0 1 21 8.618v6.764a1 1 0 0 1-1.447.894L15 14" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M2 6a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 4l16 16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>Câmera desligada'
+                :
+                '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="vertical-align:-2px; margin-right:6px;"><path d="M15 10l4.553-2.276A1 1 0 0 1 21 8.618v6.764a1 1 0 0 1-1.447.894L15 14" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M3 6a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Desligar câmera');
         }
     }
 
@@ -368,6 +400,31 @@ if (!empty($messages)) {
 
                     if (kind === 'end') {
                         endCall(false);
+                        return;
+                    }
+
+                    if (kind === 'typing') {
+                        var isTyping = true;
+                        try {
+                            if (payload && typeof payload.typing !== 'undefined') {
+                                isTyping = !!payload.typing;
+                            }
+                        } catch (e) {}
+
+                        if (typingBox) {
+                            if (isTyping) {
+                                if (typingName) typingName.textContent = <?= json_encode($otherName, JSON_UNESCAPED_UNICODE) ?>;
+                                typingBox.style.display = 'flex';
+                                if (typingHideTimer) {
+                                    clearTimeout(typingHideTimer);
+                                }
+                                typingHideTimer = setTimeout(function () {
+                                    try { typingBox.style.display = 'none'; } catch (e) {}
+                                }, 2500);
+                            } else {
+                                typingBox.style.display = 'none';
+                            }
+                        }
                         return;
                     }
 
@@ -836,6 +893,12 @@ if (!empty($messages)) {
                 return;
             }
 
+            if (typingStopTimer) {
+                clearTimeout(typingStopTimer);
+                typingStopTimer = null;
+            }
+            sendSignal('typing', { typing: false });
+
             var submitBtn = chatForm.querySelector('button[type="submit"]');
             var pendingUi = appendOwnPendingMessage(text);
 
@@ -906,6 +969,30 @@ if (!empty($messages)) {
 
         var textarea = chatForm.querySelector('textarea[name="body"]');
         if (textarea) {
+            var styleTag = document.createElement('style');
+            styleTag.textContent = '@keyframes tuquinhaDotPulse{0%,80%,100%{transform:translateY(0);opacity:.35}40%{transform:translateY(-3px);opacity:1}}.tuquinha-dot{width:5px;height:5px;border-radius:999px;background:#b0b0b0;display:inline-block;animation:tuquinhaDotPulse 1s infinite}.tuquinha-dot:nth-child(2){animation-delay:.15s}.tuquinha-dot:nth-child(3){animation-delay:.3s}';
+            document.head.appendChild(styleTag);
+
+            textarea.addEventListener('input', function () {
+                var now = Date.now();
+                if ((now - lastTypingSentAt) < 1200) {
+                    return;
+                }
+                lastTypingSentAt = now;
+                sendSignal('typing', { typing: true, at: now });
+
+                if (typingStopTimer) {
+                    clearTimeout(typingStopTimer);
+                }
+                typingStopTimer = setTimeout(function () {
+                    sendSignal('typing', { typing: false });
+                }, 1800);
+            });
+
+            textarea.addEventListener('blur', function () {
+                sendSignal('typing', { typing: false });
+            });
+
             textarea.addEventListener('keydown', function (e) {
                 if (e.key === 'Enter' || e.keyCode === 13) {
                     if (e.shiftKey) {

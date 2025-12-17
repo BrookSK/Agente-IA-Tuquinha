@@ -85,7 +85,7 @@ class SocialWebRtcController extends Controller
             return;
         }
 
-        if (!in_array($kind, ['offer', 'answer', 'ice', 'end'], true)) {
+        if (!in_array($kind, ['offer', 'answer', 'ice', 'end', 'typing'], true)) {
             http_response_code(400);
             header('Content-Type: application/json; charset=utf-8');
             echo json_encode(['ok' => false, 'error' => 'Tipo inválido.']);
