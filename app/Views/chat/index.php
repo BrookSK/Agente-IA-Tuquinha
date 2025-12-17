@@ -45,6 +45,12 @@ function render_markdown_safe(string $text): string {
         min-height: 72px;
     }
 }
+
+@keyframes tuqDot {
+    0% { transform: translateY(0); opacity: 0.5; }
+    50% { transform: translateY(-5px); opacity: 1; }
+    100% { transform: translateY(0); opacity: 0.5; }
+}
 </style>
 <?php
 $convSettings = $conversationSettings ?? null;
@@ -992,6 +998,77 @@ if (!empty($currentPlan) && is_array($currentPlan)) {
             chatWindow.scrollTop = chatWindow.scrollHeight;
         };
 
+        const appendTypingIndicator = () => {
+            if (!chatWindow) return null;
+
+            const wrapper = document.createElement('div');
+            wrapper.dataset.typingIndicator = '1';
+            wrapper.style.display = 'flex';
+            wrapper.style.flexDirection = 'column';
+            wrapper.style.alignItems = 'flex-start';
+            wrapper.style.marginBottom = '10px';
+
+            const row = document.createElement('div');
+            row.style.display = 'flex';
+            row.style.alignItems = 'flex-start';
+            row.style.gap = '8px';
+
+            const avatar = document.createElement('div');
+            avatar.style.width = '28px';
+            avatar.style.height = '28px';
+            avatar.style.borderRadius = '50%';
+            avatar.style.overflow = 'hidden';
+            avatar.style.flexShrink = '0';
+            avatar.style.background = 'var(--surface-subtle)';
+
+            const logoImg = document.createElement('img');
+            logoImg.src = '/public/favicon.png';
+            logoImg.alt = 'Tuquinha';
+            logoImg.style.width = '100%';
+            logoImg.style.height = '100%';
+            logoImg.style.display = 'block';
+            logoImg.style.objectFit = 'cover';
+            avatar.appendChild(logoImg);
+
+            const bubble = document.createElement('div');
+            bubble.style.maxWidth = '80%';
+            bubble.style.background = 'var(--surface-card)';
+            bubble.style.borderRadius = '16px 16px 16px 4px';
+            bubble.style.padding = '10px 12px';
+            bubble.style.border = '1px solid var(--border-subtle)';
+            bubble.style.color = 'var(--text-primary)';
+
+            const dots = document.createElement('div');
+            dots.style.display = 'flex';
+            dots.style.alignItems = 'center';
+            dots.style.gap = '6px';
+            dots.style.height = '16px';
+
+            const makeDot = (delay) => {
+                const d = document.createElement('span');
+                d.style.width = '6px';
+                d.style.height = '6px';
+                d.style.borderRadius = '50%';
+                d.style.background = 'rgba(255,255,255,0.8)';
+                d.style.display = 'inline-block';
+                d.style.animation = 'tuqDot 0.9s infinite ease-in-out';
+                d.style.animationDelay = delay;
+                return d;
+            };
+
+            dots.appendChild(makeDot('0s'));
+            dots.appendChild(makeDot('0.12s'));
+            dots.appendChild(makeDot('0.24s'));
+
+            bubble.appendChild(dots);
+            row.appendChild(avatar);
+            row.appendChild(bubble);
+            wrapper.appendChild(row);
+            chatWindow.appendChild(wrapper);
+            chatWindow.scrollTop = chatWindow.scrollHeight;
+            return wrapper;
+        };
+
         let lastErrorMessage = '';
         let lastTokensUsed = 0;
 
@@ -1027,6 +1104,9 @@ if (!empty($currentPlan) && is_array($currentPlan)) {
             const formData = new FormData(chatForm);
 
             isSending = true;
+
+            appendMessageToDom('user', text, { created_label: '' });
+            const typingEl = appendTypingIndicator();
 
             // bloqueia edição enquanto envia
             messageInput.disabled = true;
@@ -1083,7 +1163,12 @@ if (!empty($currentPlan) && is_array($currentPlan)) {
                     }
 
                     if (Array.isArray(data.messages)) {
+                        let skippedUserOnce = false;
                         data.messages.forEach((m) => {
+                            if (!skippedUserOnce && m.role === 'user' && (m.content || '').toString().trim() === text) {
+                                skippedUserOnce = true;
+                                return;
+                            }
                             const thirdArg = m.role === 'attachment_summary'
                                 ? (m.attachments || [])
                                 : m;
@@ -1096,6 +1181,14 @@ if (!empty($currentPlan) && is_array($currentPlan)) {
                     showErrorReportBox('Erro ao enviar mensagem. Verifique sua conexão e tente novamente.', debug);
                 })
                 .finally(() => {
+                    if (typingEl && typingEl.parentNode) {
+                        typingEl.parentNode.removeChild(typingEl);
+                    } else {
+                        const el = chatWindow ? chatWindow.querySelector('[data-typing-indicator="1"]') : null;
+                        if (el && el.parentNode) {
+                            el.parentNode.removeChild(el);
+                        }
+                    }
                     isSending = false;
                     messageInput.disabled = false;
                     if (submitButton) {
