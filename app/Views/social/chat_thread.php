@@ -136,6 +136,7 @@ if (!empty($messages)) {
     var callUiState = 'idle';
     var startBtnOriginalText = startBtn ? startBtn.textContent : '';
     var endBtnOriginalText = endBtn ? endBtn.textContent : '';
+    var incomingOffer = null;
 
     function setStatus(text) {
         if (statusSpan) {
@@ -153,7 +154,10 @@ if (!empty($messages)) {
                 startBtn.style.display = '';
             }
 
-            if (state === 'connecting') {
+            if (state === 'incoming') {
+                startBtn.disabled = false;
+                startBtn.textContent = 'Entrar na chamada';
+            } else if (state === 'connecting') {
                 startBtn.disabled = true;
                 startBtn.textContent = 'Conectando...';
             } else if (state === 'in_call') {
@@ -166,7 +170,7 @@ if (!empty($messages)) {
         }
 
         if (endBtn) {
-            if (state === 'connecting' || state === 'in_call') {
+            if (state === 'incoming' || state === 'connecting' || state === 'in_call') {
                 endBtn.disabled = false;
                 endBtn.textContent = endBtnOriginalText || 'Encerrar';
             } else {
@@ -174,6 +178,47 @@ if (!empty($messages)) {
                 endBtn.textContent = endBtnOriginalText || 'Encerrar';
             }
         }
+    }
+
+    function acceptIncomingCall() {
+        if (!incomingOffer) {
+            return Promise.resolve();
+        }
+        var offerPayload = incomingOffer;
+        incomingOffer = null;
+
+        setStatus('Abrindo câmera...');
+        setCallUiState('connecting');
+
+        return ensurePeerConnection().then(function () {
+            if (!pc) return;
+            return pc.setRemoteDescription(new RTCSessionDescription(offerPayload));
+        }).then(function () {
+            var list = pendingIce.slice();
+            pendingIce = [];
+            var p = Promise.resolve();
+            list.forEach(function (c) {
+                p = p.then(function () {
+                    if (!pc) return;
+                    return pc.addIceCandidate(new RTCIceCandidate(c)).catch(function () {});
+                });
+            });
+            return p;
+        }).then(function () {
+            if (!pc) return;
+            return pc.createAnswer();
+        }).then(function (answer) {
+            if (!pc) return;
+            return pc.setLocalDescription(answer);
+        }).then(function () {
+            if (!pc) return;
+            return sendSignal('answer', pc.localDescription);
+        }).then(function () {
+            setStatus('Conectando...');
+        }).catch(function () {
+            setStatus('Não foi possível entrar na chamada.');
+            setCallUiState('idle');
+        });
     }
 
     function startSse() {
@@ -277,6 +322,13 @@ if (!empty($messages)) {
                     }
 
                     if (kind === 'offer' && payload) {
+                        if (!pc && callUiState !== 'connecting' && callUiState !== 'in_call') {
+                            incomingOffer = payload;
+                            setStatus('Seu amigo iniciou uma chamada. Clique em “Entrar na chamada”.');
+                            setCallUiState('incoming');
+                            return;
+                        }
+
                         return ensurePeerConnection().then(function () {
                             var offerDesc = new RTCSessionDescription(payload);
                             var offerCollision = false;
@@ -679,7 +731,13 @@ if (!empty($messages)) {
     }
 
     if (startBtn) {
-        startBtn.addEventListener('click', startCall);
+        startBtn.addEventListener('click', function () {
+            if (callUiState === 'incoming') {
+                acceptIncomingCall();
+                return;
+            }
+            startCall();
+        });
     }
     if (endBtn) {
         endBtn.addEventListener('click', endCall);
@@ -740,8 +798,17 @@ if (!empty($messages)) {
                     'X-Requested-With': 'XMLHttpRequest'
                 }
             }).then(function (res) {
-                return res.json();
-            }).then(function (data) {
+                return res.text().then(function (txt) {
+                    var parsed = null;
+                    try {
+                        parsed = JSON.parse(txt || '{}');
+                    } catch (e) {
+                        parsed = null;
+                    }
+                    return { ok: res.ok, status: res.status, data: parsed };
+                });
+            }).then(function (result) {
+                var data = result ? result.data : null;
                 if (data && data.ok && data.message) {
                     if (pendingUi && pendingUi.wrapper && pendingUi.wrapper.parentNode) {
                         pendingUi.wrapper.parentNode.removeChild(pendingUi.wrapper);
