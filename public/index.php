@@ -170,6 +170,8 @@ $router->post('/amigos/decidir', 'FriendsController@decide');
 $router->get('/social/chat', 'SocialChatController@open');
 $router->post('/social/chat/enviar', 'SocialChatController@send');
 
+$router->get('/social/socket/token', 'SocialSocketController@token');
+
 $router->get('/comunidades', 'CommunitiesController@index');
 $router->get('/comunidades/ver', 'CommunitiesController@show');
 $router->get('/comunidades/nova', 'CommunitiesController@createForm');

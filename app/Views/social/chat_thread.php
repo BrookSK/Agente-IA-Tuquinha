@@ -18,11 +18,13 @@ $conversationId = (int)($conversation['id'] ?? 0);
         </div>
         <div style="display:flex; flex-direction:column; gap:8px;">
             <div style="background:#000; border-radius:12px; height:160px; overflow:hidden; position:relative; border:1px solid #272727;">
+                <video id="tuquinhaLocalVideo" autoplay playsinline muted style="width:100%; height:100%; object-fit:cover; display:none;"></video>
                 <div id="tuquinha-local-video" style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; color:#b0b0b0; font-size:12px;">
                     Sua câmera aparecerá aqui quando a chamada for iniciada.
                 </div>
             </div>
             <div style="background:#000; border-radius:12px; height:160px; overflow:hidden; position:relative; border:1px solid #272727;">
+                <video id="tuquinhaRemoteVideo" autoplay playsinline style="width:100%; height:100%; object-fit:cover; display:none;"></video>
                 <div id="tuquinha-remote-video" style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; color:#b0b0b0; font-size:12px;">
                     <span id="tuquinha-call-status">Chamada não iniciada.</span>
                 </div>
@@ -104,11 +106,18 @@ $conversationId = (int)($conversation['id'] ?? 0);
     var startBtn = document.getElementById('btn-start-call');
     var endBtn = document.getElementById('btn-end-call');
     var localContainer = document.getElementById('tuquinha-local-video');
+    var remoteContainer = document.getElementById('tuquinha-remote-video');
+    var localVideo = document.getElementById('tuquinhaLocalVideo');
+    var remoteVideo = document.getElementById('tuquinhaRemoteVideo');
     var statusSpan = document.getElementById('tuquinha-call-status');
-    var jitsiApi = null;
-    var roomName = 'tuquinha-social-' + <?= $conversationId ?>;
     var chatForm = document.getElementById('social-chat-form');
     var currentUserName = <?= json_encode($currentName, JSON_UNESCAPED_UNICODE) ?>;
+    var conversationId = <?= (int)$conversationId ?>;
+    var socket = null;
+    var pc = null;
+    var localStream = null;
+    var remoteStream = null;
+    var socketUrl = <?= json_encode(defined('SOCKET_IO_URL') ? (string)SOCKET_IO_URL : 'http://localhost:3001', JSON_UNESCAPED_SLASHES) ?>;
 
     function setStatus(text) {
         if (statusSpan) {
@@ -116,108 +125,188 @@ $conversationId = (int)($conversation['id'] ?? 0);
         }
     }
 
-    function ensureJitsiScript(callback) {
-        if (window.JitsiMeetExternalAPI) {
+    function ensureSocketIoClient(callback) {
+        if (window.io) {
             callback();
             return;
         }
-
-        var existing = document.getElementById('jitsi-external-api');
+        var existing = document.getElementById('socket-io-client');
         if (existing) {
-            existing.addEventListener('load', function () {
-                callback();
-            });
+            existing.addEventListener('load', callback);
             return;
         }
-
-        var script = document.createElement('script');
-        script.id = 'jitsi-external-api';
-        script.src = 'https://meet.jit.si/external_api.js';
-        script.async = true;
-        script.onload = function () {
-            callback();
+        var s = document.createElement('script');
+        s.id = 'socket-io-client';
+        s.src = 'https://cdn.socket.io/4.7.5/socket.io.min.js';
+        s.async = true;
+        s.onload = callback;
+        s.onerror = function () {
+            // Sem realtime; segue normal
         };
-        script.onerror = function () {
-            setStatus('Não foi possível carregar o serviço de chamada de vídeo. Tente novamente mais tarde.');
-        };
-        document.head.appendChild(script);
+        document.head.appendChild(s);
     }
 
-    function startCall() {
-        if (!localContainer) {
-            return;
-        }
+    function connectRealtime() {
+        ensureSocketIoClient(function () {
+            fetch('/social/socket/token', { credentials: 'same-origin' })
+                .then(function (r) { return r.json(); })
+                .then(function (data) {
+                    if (!data || !data.ok || !data.token || !window.io) return;
+                    socket = window.io(socketUrl, {
+                        auth: { token: data.token },
+                        transports: ['websocket', 'polling']
+                    });
 
-        if (jitsiApi) {
-            // Já em chamada
-            return;
-        }
+                    socket.on('connect', function () {
+                        socket.emit('join', { conversationId: conversationId });
+                    });
 
-        setStatus('Conectando à chamada...');
+                    socket.on('chat:message', function (payload) {
+                        if (!payload || Number(payload.conversationId) !== conversationId) return;
+                        if (!payload.message) return;
+                        appendOtherMessage(payload.message.sender_name || 'Amigo', payload.message.body || '', payload.message.created_at || '');
+                    });
 
-        ensureJitsiScript(function () {
-            if (!window.JitsiMeetExternalAPI) {
-                setStatus('Serviço de chamada de vídeo indisponível.');
-                return;
-            }
-
-            // Limpa o container e cria o iframe da chamada
-            localContainer.innerHTML = '';
-
-            try {
-                jitsiApi = new window.JitsiMeetExternalAPI('meet.jit.si', {
-                    roomName: roomName,
-                    parentNode: localContainer,
-                    width: '100%',
-                    height: '100%',
-                    interfaceConfigOverwrite: {
-                        TILE_VIEW_MAX_COLUMNS: 1,
-                        SHOW_JITSI_WATERMARK: false,
-                        SHOW_BRAND_WATERMARK: false,
-                        SHOW_POWERED_BY: false,
-                        SHOW_DEEP_LINKING_IMAGE: false,
-                        TOOLBAR_BUTTONS: ['microphone', 'camera']
-                    },
-                    configOverwrite: {
-                        disableDeepLinking: true,
-                        prejoinPageEnabled: false,
-                        startWithAudioMuted: false,
-                        startWithVideoMuted: false,
-                        prejoinConfig: {
-                            enabled: false
+                    socket.on('webrtc:offer', async function (payload) {
+                        if (!payload || Number(payload.conversationId) !== conversationId) return;
+                        if (!payload.offer) return;
+                        try {
+                            await ensurePeerConnection();
+                            await pc.setRemoteDescription(new RTCSessionDescription(payload.offer));
+                            var answer = await pc.createAnswer();
+                            await pc.setLocalDescription(answer);
+                            socket.emit('webrtc:answer', { conversationId: conversationId, answer: pc.localDescription });
+                            setStatus('Em chamada.');
+                        } catch (e) {
                         }
-                    }
-                });
+                    });
 
-                setStatus('Chamada em andamento. Peça para seu amigo abrir esta mesma conversa e clicar em "Iniciar chamada de vídeo".');
+                    socket.on('webrtc:answer', async function (payload) {
+                        if (!payload || Number(payload.conversationId) !== conversationId) return;
+                        if (!payload.answer || !pc) return;
+                        try {
+                            await pc.setRemoteDescription(new RTCSessionDescription(payload.answer));
+                            setStatus('Em chamada.');
+                        } catch (e) {
+                        }
+                    });
 
-                jitsiApi.addEventListener('videoConferenceJoined', function () {
-                    setStatus('Você entrou na chamada. Aguarde seu amigo.');
-                });
+                    socket.on('webrtc:ice', async function (payload) {
+                        if (!payload || Number(payload.conversationId) !== conversationId) return;
+                        if (!payload.candidate || !pc) return;
+                        try {
+                            await pc.addIceCandidate(new RTCIceCandidate(payload.candidate));
+                        } catch (e) {
+                        }
+                    });
 
-                jitsiApi.addEventListener('videoConferenceLeft', function () {
-                    setStatus('Chamada encerrada.');
-                    endCall();
+                    socket.on('webrtc:end', function (payload) {
+                        if (!payload || Number(payload.conversationId) !== conversationId) return;
+                        endCall(false);
+                    });
+                })
+                .catch(function () {
                 });
-            } catch (e) {
-                setStatus('Não foi possível iniciar a chamada de vídeo.');
-                jitsiApi = null;
-            }
         });
     }
 
-    function endCall() {
-        if (jitsiApi) {
+    function showVideoElements() {
+        if (localVideo && localContainer) {
+            localContainer.style.display = 'none';
+            localVideo.style.display = 'block';
+        }
+        if (remoteVideo && remoteContainer) {
+            remoteContainer.style.display = 'none';
+            remoteVideo.style.display = 'block';
+        }
+    }
+
+    function hideVideoElements() {
+        if (localVideo && localContainer) {
+            localVideo.style.display = 'none';
+            localContainer.style.display = 'flex';
+        }
+        if (remoteVideo && remoteContainer) {
+            remoteVideo.style.display = 'none';
+            remoteContainer.style.display = 'flex';
+        }
+    }
+
+    async function ensurePeerConnection() {
+        if (pc) return;
+
+        pc = new RTCPeerConnection({
+            iceServers: [
+                { urls: 'stun:stun.l.google.com:19302' },
+                { urls: 'stun:stun1.l.google.com:19302' }
+            ]
+        });
+
+        pc.onicecandidate = function (ev) {
+            if (ev.candidate && socket) {
+                socket.emit('webrtc:ice', { conversationId: conversationId, candidate: ev.candidate });
+            }
+        };
+
+        pc.ontrack = function (ev) {
+            if (!remoteStream) {
+                remoteStream = new MediaStream();
+            }
+            remoteStream.addTrack(ev.track);
+            if (remoteVideo) {
+                remoteVideo.srcObject = remoteStream;
+            }
+            showVideoElements();
+        };
+
+        localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+        localStream.getTracks().forEach(function (t) {
+            pc.addTrack(t, localStream);
+        });
+
+        if (localVideo) {
+            localVideo.srcObject = localStream;
+        }
+        showVideoElements();
+    }
+
+    async function startCall() {
+        if (!socket) {
+            setStatus('Realtime indisponível.');
+            return;
+        }
+
+        try {
+            setStatus('Iniciando chamada...');
+            await ensurePeerConnection();
+            var offer = await pc.createOffer();
+            await pc.setLocalDescription(offer);
+            socket.emit('webrtc:offer', { conversationId: conversationId, offer: pc.localDescription });
+            setStatus('Chamando...');
+        } catch (e) {
+            setStatus('Não foi possível iniciar a chamada.');
+        }
+    }
+
+    function endCall(emit) {
+        if (emit === undefined) emit = true;
+        if (emit && socket) {
+            socket.emit('webrtc:end', { conversationId: conversationId });
+        }
+        if (pc) {
+            try { pc.close(); } catch (e) {}
+            pc = null;
+        }
+        if (localStream) {
             try {
-                jitsiApi.dispose();
+                localStream.getTracks().forEach(function (t) { t.stop(); });
             } catch (e) {}
-            jitsiApi = null;
+            localStream = null;
         }
-
-        if (localContainer) {
-            localContainer.innerHTML = 'Sua câmera aparecerá aqui quando a chamada for iniciada.';
-        }
-
+        remoteStream = null;
+        if (localVideo) localVideo.srcObject = null;
+        if (remoteVideo) remoteVideo.srcObject = null;
+        hideVideoElements();
         setStatus('Chamada não iniciada.');
     }
 
@@ -260,12 +349,61 @@ $conversationId = (int)($conversation['id'] ?? 0);
         list.scrollTop = list.scrollHeight;
     }
 
+    function appendOtherMessage(senderName, body, createdAt) {
+        var list = document.getElementById('social-chat-messages');
+        if (!list) {
+            return;
+        }
+
+        var wrapper = document.createElement('div');
+        wrapper.style.display = 'flex';
+        wrapper.style.justifyContent = 'flex-start';
+
+        var bubble = document.createElement('div');
+        bubble.style.maxWidth = '78%';
+        bubble.style.padding = '6px 8px';
+        bubble.style.borderRadius = '10px';
+        bubble.style.fontSize = '12px';
+        bubble.style.lineHeight = '1.4';
+        bubble.style.background = '#1c1c24';
+        bubble.style.color = '#f5f5f5';
+        bubble.style.border = '1px solid #272727';
+
+        var nameDiv = document.createElement('div');
+        nameDiv.style.fontSize = '11px';
+        nameDiv.style.fontWeight = '600';
+        nameDiv.style.marginBottom = '2px';
+        nameDiv.style.color = '#ffab91';
+        nameDiv.innerText = senderName || 'Amigo';
+        bubble.appendChild(nameDiv);
+
+        var bodyDiv = document.createElement('div');
+        bodyDiv.innerText = body;
+        bubble.appendChild(bodyDiv);
+
+        if (createdAt) {
+            var meta = document.createElement('div');
+            meta.style.fontSize = '10px';
+            meta.style.marginTop = '2px';
+            meta.style.opacity = '0.8';
+            meta.style.textAlign = 'right';
+            meta.innerText = createdAt;
+            bubble.appendChild(meta);
+        }
+
+        wrapper.appendChild(bubble);
+        list.appendChild(wrapper);
+        list.scrollTop = list.scrollHeight;
+    }
+
     if (startBtn) {
         startBtn.addEventListener('click', startCall);
     }
     if (endBtn) {
         endBtn.addEventListener('click', endCall);
     }
+
+    connectRealtime();
 
     if (chatForm) {
         chatForm.addEventListener('submit', function (e) {
@@ -301,6 +439,12 @@ $conversationId = (int)($conversation['id'] ?? 0);
             }).then(function (data) {
                 if (data && data.ok && data.message) {
                     appendOwnMessage(data.message.body || text, data.message.created_at || '');
+                    if (socket) {
+                        socket.emit('chat:message', {
+                            conversationId: conversationId,
+                            message: data.message
+                        });
+                    }
                     textarea.value = '';
                 }
             }).catch(function () {

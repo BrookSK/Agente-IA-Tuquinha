@@ -33,6 +33,11 @@ const ANTHROPIC_API_KEY = ''; // chave da API Anthropic (Claude), opcional; pode
 const MEDIA_UPLOAD_ENDPOINT = 'https://media.onsolutionsbrasil.com.br/upload.php';
 const MEDIA_VIDEO_UPLOAD_ENDPOINT = 'https://media.onsolutionsbrasil.com.br/video.php';
 
+// Realtime (Socket.IO) - servidor Node no mesmo host (ou separado) para chat em tempo real e sinalização WebRTC
+// Em produção, defina um segredo forte e mantenha igual no servidor Node (env SOCKET_IO_SECRET)
+const SOCKET_IO_URL = 'http://localhost:3001';
+const SOCKET_IO_SECRET = 'change-me';
+
 // Credenciais simples de admin para acesso à área /admin
 const ADMIN_USERNAME = 'admin';
 const ADMIN_PASSWORD = 'admin123'; // troque em produção
