@@ -119,6 +119,12 @@ $conversationId = (int)($conversation['id'] ?? 0);
     var localStream = null;
     var remoteStream = null;
     var socketUrl = <?= json_encode(defined('SOCKET_IO_URL') ? (string)SOCKET_IO_URL : 'http://localhost:3001', JSON_UNESCAPED_SLASHES) ?>;
+    var socketPath = '/socket.io';
+
+    if (typeof socketUrl === 'string' && socketUrl.indexOf('localhost') !== -1) {
+        // Em produção, "localhost" no navegador é o PC do visitante. Usamos o mesmo domínio do site (via reverse proxy).
+        socketUrl = window.location.origin;
+    }
 
     function setStatus(text) {
         if (statusSpan) {
@@ -155,6 +161,7 @@ $conversationId = (int)($conversation['id'] ?? 0);
                     if (!data || !data.ok || !data.token || !window.io) return;
                     socket = window.io(socketUrl, {
                         auth: { token: data.token },
+                        path: socketPath,
                         transports: ['websocket', 'polling']
                     });
 
