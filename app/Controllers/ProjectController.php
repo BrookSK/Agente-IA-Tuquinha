@@ -9,6 +9,7 @@ use App\Models\ProjectMember;
 use App\Models\ProjectFolder;
 use App\Models\ProjectFile;
 use App\Models\ProjectFileVersion;
+use App\Models\Conversation;
 use App\Models\Subscription;
 use App\Models\Plan;
 use App\Models\Setting;
@@ -236,6 +237,8 @@ class ProjectController extends Controller
         }, $baseFiles);
         $latestByFileId = ProjectFileVersion::latestForFiles($baseFileIds);
 
+        $conversations = Conversation::allByProjectForUser($projectId, (int)$user['id']);
+
         $this->view('projects/show', [
             'pageTitle' => ($project['name'] ?? 'Projeto') . ' - Tuquinha',
             'user' => $user,
@@ -243,6 +246,7 @@ class ProjectController extends Controller
             'folders' => $folders,
             'baseFiles' => $baseFiles,
             'latestByFileId' => $latestByFileId,
+            'conversations' => $conversations,
             'uploadError' => $_SESSION['project_upload_error'] ?? null,
             'uploadOk' => $_SESSION['project_upload_ok'] ?? null,
         ]);

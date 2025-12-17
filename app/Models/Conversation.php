@@ -131,6 +131,29 @@ class Conversation
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
+    public static function allByProjectForUser(int $projectId, int $userId): array
+    {
+        if ($projectId <= 0 || $userId <= 0) {
+            return [];
+        }
+
+        $pdo = Database::getConnection();
+        $stmt = $pdo->prepare(
+            'SELECT c.*, MAX(m.created_at) AS last_message_at
+             FROM conversations c
+             INNER JOIN messages m ON m.conversation_id = c.id
+             WHERE c.user_id = :user_id
+               AND c.project_id = :project_id
+             GROUP BY c.id
+             ORDER BY last_message_at DESC'
+        );
+        $stmt->execute([
+            'user_id' => $userId,
+            'project_id' => $projectId,
+        ]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
     public static function searchBySession(string $sessionId, string $term): array
     {
         $pdo = Database::getConnection();

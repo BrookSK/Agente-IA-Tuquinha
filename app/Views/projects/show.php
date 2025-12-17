@@ -2,8 +2,49 @@
 <?php /** @var array $folders */ ?>
 <?php /** @var array $baseFiles */ ?>
 <?php /** @var array $latestByFileId */ ?>
+<?php /** @var array $conversations */ ?>
 <?php /** @var string|null $uploadError */ ?>
 <?php /** @var string|null $uploadOk */ ?>
+<?php
+    $timeAgo = static function (?string $dt): string {
+        if (!$dt) {
+            return '';
+        }
+        try {
+            $d = new \DateTimeImmutable($dt);
+            $now = new \DateTimeImmutable('now');
+            $diff = $now->getTimestamp() - $d->getTimestamp();
+            if ($diff < 0) {
+                $diff = 0;
+            }
+
+            $minute = 60;
+            $hour = 60 * $minute;
+            $day = 24 * $hour;
+            $month = 30 * $day;
+
+            if ($diff < $minute) {
+                return 'agora mesmo';
+            }
+            if ($diff < $hour) {
+                $m = (int)floor($diff / $minute);
+                return $m === 1 ? 'há 1 minuto' : 'há ' . $m . ' minutos';
+            }
+            if ($diff < $day) {
+                $h = (int)floor($diff / $hour);
+                return $h === 1 ? 'há 1 hora' : 'há ' . $h . ' horas';
+            }
+            if ($diff < $month) {
+                $d2 = (int)floor($diff / $day);
+                return $d2 === 1 ? 'há 1 dia' : 'há ' . $d2 . ' dias';
+            }
+            $mo = (int)floor($diff / $month);
+            return $mo === 1 ? 'há 1 mês' : 'há ' . $mo . ' meses';
+        } catch (\Throwable $e) {
+            return '';
+        }
+    };
+?>
 <div style="max-width: 1100px; margin: 0 auto;">
     <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:14px;">
         <a href="/projetos" style="color:#b0b0b0; font-size:12px; text-decoration:none; display:inline-flex; align-items:center; gap:8px;">
@@ -40,32 +81,43 @@
     <div style="display:grid; grid-template-columns:minmax(0, 1fr) 360px; gap:14px; align-items:start;">
         <div style="min-width:0;">
             <div style="background:#111118; border:1px solid #272727; border-radius:14px; padding:14px;">
-                <div style="font-weight:650; margin-bottom:10px;">Arquivos base</div>
-                <?php if (empty($baseFiles)): ?>
-                    <div style="color:#b0b0b0; font-size:13px;">Nenhum arquivo base ainda.</div>
-                <?php else: ?>
-                    <div style="display:flex; flex-direction:column; gap:10px;">
-                        <?php foreach ($baseFiles as $bf): ?>
-                            <?php $fid = (int)($bf['id'] ?? 0); ?>
-                            <?php $ver = $latestByFileId[$fid] ?? null; ?>
-                            <div style="border:1px solid #272727; background:#050509; border-radius:12px; padding:12px;">
-                                <div style="display:flex; justify-content:space-between; align-items:center; gap:10px;">
-                                    <div style="font-size:13px; font-weight:600;">
-                                        <?= htmlspecialchars((string)($bf['path'] ?? '')) ?>
-                                    </div>
-                                    <div style="font-size:11px; color:#b0b0b0; white-space:nowrap;">
-                                        v<?= (int)($ver['version'] ?? 0) ?>
-                                    </div>
-                                </div>
-                                <div style="font-size:12px; color:#8d8d8d; margin-top:6px;">
-                                    <?= htmlspecialchars((string)($bf['mime_type'] ?? '')) ?>
-                                    <?php if (!empty($ver['extracted_text'])): ?>
-                                        · contexto ok
-                                    <?php else: ?>
-                                        · sem texto extraído
-                                    <?php endif; ?>
-                                </div>
+                <div style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
+                    <div style="flex:1; background:#0a0a10; border:1px solid #272727; border-radius:14px; padding:14px; color:#8d8d8d; font-size:13px;">
+                        Responder...
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:10px;">
+                            <div style="display:flex; gap:10px; align-items:center;">
+                                <div style="width:18px; height:18px; border-radius:6px; border:1px solid #272727; display:flex; align-items:center; justify-content:center; color:#8d8d8d;">+</div>
+                                <div style="width:18px; height:18px; border-radius:6px; border:1px solid #272727; display:flex; align-items:center; justify-content:center; color:#8d8d8d;">⏱</div>
                             </div>
+                            <a href="/chat?new=1&project_id=<?= (int)($project['id'] ?? 0) ?>" style="display:inline-flex; align-items:center; justify-content:center; width:34px; height:34px; border-radius:10px; border:1px solid #2e7d32; background:#102312; color:#c8ffd4; text-decoration:none; font-weight:700;">↑</a>
+                        </div>
+                    </div>
+                    <div style="color:#8d8d8d; font-size:12px; white-space:nowrap; margin-left:10px;">Sonnet 4.5 ✓</div>
+                </div>
+            </div>
+
+            <div style="margin-top:12px; background:#111118; border:1px solid #272727; border-radius:14px; padding:0; overflow:hidden;">
+                <?php if (empty($conversations)): ?>
+                    <div style="padding:14px; color:#b0b0b0; font-size:13px;">Nenhuma conversa neste projeto ainda.</div>
+                <?php else: ?>
+                    <div style="display:flex; flex-direction:column;">
+                        <?php foreach ($conversations as $c): ?>
+                            <?php
+                                $title = trim((string)($c['title'] ?? ''));
+                                if ($title === '') {
+                                    $title = 'Chat sem título';
+                                }
+                                $lastAt = $c['last_message_at'] ?? ($c['created_at'] ?? null);
+                                $ago = $timeAgo(is_string($lastAt) ? $lastAt : null);
+                            ?>
+                            <a href="/chat?c=<?= (int)($c['id'] ?? 0) ?>" style="display:block; padding:12px 14px; border-top:1px solid #1f1f1f; text-decoration:none; color:#f5f5f5;">
+                                <div style="font-size:13px; font-weight:650; margin-bottom:3px;">
+                                    <?= htmlspecialchars($title) ?>
+                                </div>
+                                <div style="font-size:11px; color:#8d8d8d;">
+                                    <?= $ago !== '' ? 'Última mensagem ' . htmlspecialchars($ago) : '' ?>
+                                </div>
+                            </a>
                         <?php endforeach; ?>
                     </div>
                 <?php endif; ?>
