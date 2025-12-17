@@ -273,6 +273,17 @@ if (!empty($_SESSION['user_id'])) {
             overflow-y: auto;
         }
 
+        .main-content > div[style*="max-width"] {
+            max-width: none !important;
+            width: 100% !important;
+        }
+
+        .main-content > div[style*="margin: 0 auto"],
+        .main-content > div[style*="margin:0 auto"] {
+            margin-left: 0 !important;
+            margin-right: 0 !important;
+        }
+
         .menu-toggle {
             display: none;
             width: 32px;

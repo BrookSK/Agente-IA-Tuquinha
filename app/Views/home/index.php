@@ -1,4 +1,4 @@
-<div style="max-width: 720px; margin: 0 auto;">
+<div>
     <h1 style="font-size: 28px; margin-bottom: 12px; font-weight: 650;">Bem-vindo ao Resenha 2.0 - Tuquinha</h1>
     <p style="color: var(--text-secondary); margin-bottom: 20px; font-size: 14px;">
         Seu mentor inteligente em branding e identidade visual, focado em designers que querem criar
