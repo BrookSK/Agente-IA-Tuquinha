@@ -839,6 +839,10 @@ if (!empty($messages)) {
             var submitBtn = chatForm.querySelector('button[type="submit"]');
             var pendingUi = appendOwnPendingMessage(text);
 
+            var formData = new FormData(chatForm);
+            formData.set('body', text);
+            formData.append('ajax', '1');
+
             textarea.value = '';
 
             sendingChat = true;
@@ -847,9 +851,6 @@ if (!empty($messages)) {
             if (submitBtn) submitBtn.disabled = true;
             var originalBtnText = submitBtn ? submitBtn.textContent : '';
             if (submitBtn) submitBtn.textContent = 'Enviando...';
-
-            var formData = new FormData(chatForm);
-            formData.append('ajax', '1');
 
             fetch('/social/chat/enviar', {
                 method: 'POST',
