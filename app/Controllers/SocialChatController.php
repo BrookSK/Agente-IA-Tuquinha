@@ -42,19 +42,32 @@ class SocialChatController extends Controller
 
         $this->ensureConversationAccess($currentId, $conversationId);
 
+        if (function_exists('session_write_close')) {
+            @session_write_close();
+        }
+
         header('Content-Type: text/event-stream; charset=utf-8');
-        header('Cache-Control: no-cache');
+        header('Cache-Control: no-cache, no-transform');
         header('Connection: keep-alive');
         header('X-Accel-Buffering: no');
+        header('Content-Encoding: none');
 
         if (function_exists('ini_set')) {
             @ini_set('output_buffering', 'off');
             @ini_set('zlib.output_compression', '0');
+            @ini_set('implicit_flush', '1');
         }
+
+        @ignore_user_abort(true);
+        @set_time_limit(0);
 
         while (ob_get_level() > 0) {
             @ob_end_flush();
         }
+
+        echo "event: ping\n";
+        echo "data: {}\n\n";
+        @flush();
 
         $deadline = microtime(true) + 25.0;
 

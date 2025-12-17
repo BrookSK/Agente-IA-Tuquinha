@@ -127,6 +127,7 @@ if (!empty($messages)) {
     var lastMessageId = <?= (int)$initialLastMessageId ?>;
     var webrtcSinceId = 0;
     var webrtcPollInFlight = false;
+    var pendingIce = [];
 
     function setStatus(text) {
         if (statusSpan) {
@@ -238,6 +239,17 @@ if (!empty($messages)) {
                         return ensurePeerConnection().then(function () {
                             return pc.setRemoteDescription(new RTCSessionDescription(payload));
                         }).then(function () {
+                            var list = pendingIce.slice();
+                            pendingIce = [];
+                            var p = Promise.resolve();
+                            list.forEach(function (c) {
+                                p = p.then(function () {
+                                    if (!pc) return;
+                                    return pc.addIceCandidate(new RTCIceCandidate(c)).catch(function () {});
+                                });
+                            });
+                            return p;
+                        }).then(function () {
                             return pc.createAnswer();
                         }).then(function (answer) {
                             return pc.setLocalDescription(answer);
@@ -250,11 +262,37 @@ if (!empty($messages)) {
 
                     if (kind === 'answer' && payload && pc) {
                         return pc.setRemoteDescription(new RTCSessionDescription(payload)).then(function () {
+                            var list = pendingIce.slice();
+                            pendingIce = [];
+                            var p = Promise.resolve();
+                            list.forEach(function (c) {
+                                p = p.then(function () {
+                                    if (!pc) return;
+                                    return pc.addIceCandidate(new RTCIceCandidate(c)).catch(function () {});
+                                });
+                            });
+                            return p;
+                        }).then(function () {
                             setStatus('Em chamada.');
                         }).catch(function () {});
                     }
 
-                    if (kind === 'ice' && payload && pc) {
+                    if (kind === 'ice' && payload) {
+                        if (!pc) {
+                            pendingIce.push(payload);
+                            return;
+                        }
+
+                        var hasRemoteDesc = false;
+                        try {
+                            hasRemoteDesc = !!(pc.remoteDescription && pc.remoteDescription.type);
+                        } catch (e) {}
+
+                        if (!hasRemoteDesc) {
+                            pendingIce.push(payload);
+                            return;
+                        }
+
                         return pc.addIceCandidate(new RTCIceCandidate(payload)).catch(function () {});
                     }
                 });
