@@ -51,15 +51,6 @@ if (!empty($messages)) {
             Chamada com <?= htmlspecialchars($otherName, ENT_QUOTES, 'UTF-8') ?>
         </div>
 
-        <div id="tuquinha-typing" style="display:none; align-items:center; gap:8px; padding:6px 8px; margin-top:6px; border-radius:10px; background:#0b0b10; border:1px solid #272727; color:#b0b0b0; font-size:12px;">
-            <span id="tuquinha-typing-name" style="color:#ffab91; font-weight:600;"></span>
-            <span style="opacity:0.9;">está digitando</span>
-            <span class="tuquinha-dots" style="display:inline-flex; gap:3px; margin-left:2px;">
-                <span class="tuquinha-dot"></span>
-                <span class="tuquinha-dot"></span>
-                <span class="tuquinha-dot"></span>
-            </span>
-        </div>
         <div style="display:flex; flex-direction:column; gap:8px;">
             <div style="background:#000; border-radius:12px; height:160px; overflow:hidden; position:relative; border:1px solid #272727;">
                 <video id="tuquinhaLocalVideo" autoplay playsinline muted style="width:100%; height:100%; object-fit:cover; display:none;"></video>
@@ -106,6 +97,16 @@ if (!empty($messages)) {
                 </div>
             </div>
         </header>
+
+        <div id="tuquinha-typing" style="display:none; align-items:center; gap:8px; padding:6px 8px; margin-bottom:6px; border-radius:10px; background:#0b0b10; border:1px solid #272727; color:#b0b0b0; font-size:12px;">
+            <span id="tuquinha-typing-name" style="color:#ffab91; font-weight:600;"></span>
+            <span style="opacity:0.9;">está digitando</span>
+            <span class="tuquinha-dots" style="display:inline-flex; gap:3px; margin-left:2px;">
+                <span class="tuquinha-dot"></span>
+                <span class="tuquinha-dot"></span>
+                <span class="tuquinha-dot"></span>
+            </span>
+        </div>
 
         <div id="social-chat-messages" style="flex:1 1 auto; overflow-y:auto; padding:6px 4px; display:flex; flex-direction:column; gap:6px; border-radius:10px; background:#050509; border:1px solid #272727;">
             <?php if (empty($messages)): ?>
@@ -709,6 +710,7 @@ if (!empty($messages)) {
                             return p;
                         }).then(function () {
                             setStatus('Em chamada.');
+                            setCallUiState('in_call');
                         }).catch(function () {});
                     }
 
@@ -771,11 +773,22 @@ if (!empty($messages)) {
             return;
         }
 
+        try {
+            if (statusSpan) {
+                statusSpan.style.display = '';
+            }
+        } catch (e) {}
+
         if (remoteEndedNotice) {
             if (remoteCenterText) remoteCenterText.textContent = remoteEndedNotice;
             if (remoteCenter) remoteCenter.style.display = 'flex';
             remoteVideo.style.display = 'none';
             remoteContainer.style.display = 'flex';
+            try {
+                if (statusSpan) {
+                    statusSpan.style.display = 'none';
+                }
+            } catch (e) {}
             updateRemoteBadges();
             return;
         }
@@ -787,6 +800,11 @@ if (!empty($messages)) {
         if (overlayLines.length) {
             if (remoteCenterText) remoteCenterText.textContent = overlayLines.join(' · ');
             if (remoteCenter) remoteCenter.style.display = 'flex';
+            try {
+                if (statusSpan) {
+                    statusSpan.style.display = 'none';
+                }
+            } catch (e) {}
         } else {
             if (remoteCenter) remoteCenter.style.display = 'none';
         }
@@ -904,6 +922,10 @@ if (!empty($messages)) {
             }
             showVideoElements();
             updateRemoteVideoOverlay();
+            if (callUiState !== 'in_call') {
+                setStatus('Em chamada.');
+                setCallUiState('in_call');
+            }
         };
 
         localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
