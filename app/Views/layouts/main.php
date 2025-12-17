@@ -61,6 +61,10 @@ if (!empty($_SESSION['user_id'])) {
             background-color: var(--bg-main);
             color: var(--text-primary);
             min-height: 100vh;
+            overflow-x: hidden;
+        }
+        html {
+            overflow-x: hidden;
         }
         a { color: inherit; text-decoration: none; }
 
@@ -227,6 +231,7 @@ if (!empty($_SESSION['user_id'])) {
             flex-direction: column;
             background: radial-gradient(circle at top, rgba(229, 57, 53, 0.1) 0, var(--bg-main) 50%);
             min-height: 100vh;
+            overflow-x: hidden;
         }
 
         /* No tema claro, remove o "blur" vermelho de fundo e usa apenas a cor base */

@@ -15,6 +15,7 @@ use App\Models\Plan;
 use App\Models\Setting;
 use App\Models\ProjectFavorite;
 use App\Models\ProjectInvitation;
+use App\Models\ProjectMemoryItem;
 use App\Services\MailService;
 use App\Services\MediaStorageService;
 use App\Services\TextExtractionService;
@@ -271,9 +272,11 @@ class ProjectController extends Controller
 
         $members = [];
         $pendingInvites = [];
+        $projectMemoryItems = [];
         if (ProjectMember::canAdmin($projectId, (int)$user['id'])) {
             $members = ProjectMember::allWithUsers($projectId);
             $pendingInvites = ProjectInvitation::allPendingForProject($projectId);
+            $projectMemoryItems = ProjectMemoryItem::allActiveForProject($projectId, 200);
         }
 
         $this->view('projects/show', [
@@ -287,11 +290,63 @@ class ProjectController extends Controller
             'isFavorite' => $isFavorite,
             'members' => $members,
             'pendingInvites' => $pendingInvites,
+            'projectMemoryItems' => $projectMemoryItems,
             'uploadError' => $_SESSION['project_upload_error'] ?? null,
             'uploadOk' => $_SESSION['project_upload_ok'] ?? null,
         ]);
 
         unset($_SESSION['project_upload_error'], $_SESSION['project_upload_ok']);
+    }
+
+    public function updateMemoryItem(): void
+    {
+        $user = $this->requireLogin();
+        $this->requirePaidPlan($user);
+        $userId = (int)($user['id'] ?? 0);
+
+        $projectId = isset($_POST['project_id']) ? (int)$_POST['project_id'] : 0;
+        $itemId = isset($_POST['item_id']) ? (int)$_POST['item_id'] : 0;
+        $content = (string)($_POST['content'] ?? '');
+
+        if ($projectId <= 0 || $itemId <= 0 || !ProjectMember::canAdmin($projectId, $userId)) {
+            http_response_code(403);
+            header('Content-Type: application/json; charset=utf-8');
+            echo json_encode(['ok' => false]);
+            return;
+        }
+
+        $content = trim(str_replace(["\r\n", "\r"], "\n", $content));
+        if ($content === '') {
+            http_response_code(422);
+            header('Content-Type: application/json; charset=utf-8');
+            echo json_encode(['ok' => false, 'error' => 'Conteúdo vazio.']);
+            return;
+        }
+
+        ProjectMemoryItem::updateContent($itemId, $projectId, $content);
+        header('Content-Type: application/json; charset=utf-8');
+        echo json_encode(['ok' => true]);
+    }
+
+    public function deleteMemoryItem(): void
+    {
+        $user = $this->requireLogin();
+        $this->requirePaidPlan($user);
+        $userId = (int)($user['id'] ?? 0);
+
+        $projectId = isset($_POST['project_id']) ? (int)$_POST['project_id'] : 0;
+        $itemId = isset($_POST['item_id']) ? (int)$_POST['item_id'] : 0;
+
+        if ($projectId <= 0 || $itemId <= 0 || !ProjectMember::canAdmin($projectId, $userId)) {
+            http_response_code(403);
+            header('Content-Type: application/json; charset=utf-8');
+            echo json_encode(['ok' => false]);
+            return;
+        }
+
+        ProjectMemoryItem::softDelete($itemId, $projectId);
+        header('Content-Type: application/json; charset=utf-8');
+        echo json_encode(['ok' => true]);
     }
 
     public function inviteCollaborator(): void

@@ -6,6 +6,7 @@
 <?php /** @var bool $isFavorite */ ?>
 <?php /** @var array $members */ ?>
 <?php /** @var array $pendingInvites */ ?>
+<?php /** @var array $projectMemoryItems */ ?>
 <?php /** @var string|null $uploadError */ ?>
 <?php /** @var string|null $uploadOk */ ?>
 <?php
@@ -48,8 +49,22 @@
         }
     };
 ?>
+<style>
+    @media (max-width: 900px) {
+        #projectPageGrid {
+            grid-template-columns: minmax(0, 1fr) !important;
+        }
+        #projectHeaderRow {
+            flex-wrap: wrap !important;
+        }
+        #projectHeaderActions {
+            width: 100% !important;
+            justify-content: flex-end !important;
+        }
+    }
+</style>
 <div style="max-width: 1100px; margin: 0 auto;">
-    <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:14px;">
+    <div id="projectHeaderRow" style="display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:14px;">
         <a href="/projetos" style="color:#b0b0b0; font-size:12px; text-decoration:none; display:inline-flex; align-items:center; gap:8px;">
             <span style="font-size:14px;">←</span>
             <span>Todos os projetos</span>
@@ -99,7 +114,7 @@
                 <?php endif; ?>
             </div>
 
-            <div style="display:flex; gap:10px; align-items:center; color:#8d8d8d;">
+            <div id="projectHeaderActions" style="display:flex; gap:10px; align-items:center; color:#8d8d8d;">
                 <div style="position:relative;">
                     <button type="button" id="projectEllipsisBtn" style="border:none; background:transparent; color:#8d8d8d; font-size:18px; line-height:1; cursor:pointer; padding:2px 6px;">⋯</button>
                     <div id="projectEllipsisMenu" style="display:none; position:absolute; right:0; top:28px; background:#111118; border:1px solid #272727; border-radius:12px; min-width:220px; padding:6px; z-index:20;">
@@ -114,7 +129,7 @@
         </div>
     </div>
 
-    <div style="display:grid; grid-template-columns:minmax(0, 1fr) 360px; gap:14px; align-items:start;">
+    <div id="projectPageGrid" style="display:grid; grid-template-columns:minmax(0, 1fr) 360px; gap:14px; align-items:start;">
         <div style="min-width:0;">
             <div style="background:#111118; border:1px solid #272727; border-radius:14px; padding:14px;">
                 <form id="projectComposerForm" action="/projetos/chat/criar" method="post" style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
@@ -170,14 +185,14 @@
                         <div style="color:#8d8d8d; font-size:12px;">Somente admin</div>
                     </div>
 
-                    <div style="display:flex; gap:8px; align-items:center;">
-                        <input id="inviteEmail" type="email" placeholder="Email do colaborador" style="flex:1; padding:10px 12px; border-radius:12px; border:1px solid #272727; background:#050509; color:#f5f5f5; font-size:13px; outline:none;" />
-                        <select id="inviteRole" style="padding:10px 10px; border-radius:12px; border:1px solid #272727; background:#050509; color:#f5f5f5; font-size:13px; outline:none;">
+                    <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+                        <input id="inviteEmail" type="email" placeholder="Email do colaborador" style="flex:1 1 220px; min-width:180px; max-width:100%; padding:10px 12px; border-radius:12px; border:1px solid #272727; background:#050509; color:#f5f5f5; font-size:13px; outline:none;" />
+                        <select id="inviteRole" style="flex:0 0 auto; min-width:120px; max-width:100%; padding:10px 10px; border-radius:12px; border:1px solid #272727; background:#050509; color:#f5f5f5; font-size:13px; outline:none;">
                             <option value="read">Leitura</option>
                             <option value="write">Escrita</option>
                             <option value="admin">Admin</option>
                         </select>
-                        <button type="button" id="sendInviteBtn" style="border:none; border-radius:12px; padding:10px 12px; background:linear-gradient(135deg,#e53935,#ff6f60); color:#050509; font-weight:700; cursor:pointer;">Convidar</button>
+                        <button type="button" id="sendInviteBtn" style="flex:0 0 auto; max-width:100%; border:none; border-radius:12px; padding:10px 12px; background:linear-gradient(135deg,#e53935,#ff6f60); color:#050509; font-weight:700; cursor:pointer;">Convidar</button>
                     </div>
                     <div id="inviteFeedback" style="margin-top:8px; color:#8d8d8d; font-size:12px; display:none;"></div>
 
@@ -186,7 +201,7 @@
                             <div style="font-size:12px; color:#b0b0b0; margin-bottom:6px;">Convites pendentes</div>
                             <div style="display:flex; flex-direction:column; gap:8px;">
                                 <?php foreach ($pendingInvites as $inv): ?>
-                                    <div style="display:flex; justify-content:space-between; align-items:center; gap:10px; border:1px solid #272727; border-radius:12px; padding:10px 12px; background:#0a0a10;">
+                                    <div style="display:flex; justify-content:space-between; align-items:center; gap:10px; border:1px solid #272727; border-radius:12px; padding:10px 12px; background:#0a0a10; flex-wrap:wrap;">
                                         <div style="min-width:0;">
                                             <div style="font-size:12px; color:#f5f5f5; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"><?= htmlspecialchars((string)($inv['invited_email'] ?? '')) ?></div>
                                             <div style="font-size:11px; color:#8d8d8d;">Permissão: <?= htmlspecialchars((string)($inv['role'] ?? 'read')) ?></div>
@@ -215,7 +230,7 @@
                                             <div style="font-size:12px; color:#f5f5f5; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"><?= htmlspecialchars($label) ?></div>
                                             <div style="font-size:11px; color:#8d8d8d; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"><?= htmlspecialchars((string)($m['user_email'] ?? '')) ?></div>
                                         </div>
-                                        <div style="display:flex; gap:8px; align-items:center;">
+                                        <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
                                             <select class="memberRoleSelect" data-user-id="<?= $uid ?>" style="padding:8px 10px; border-radius:10px; border:1px solid #272727; background:#050509; color:#f5f5f5; font-size:12px; outline:none;">
                                                 <option value="read" <?= $role === 'read' ? 'selected' : '' ?>>read</option>
                                                 <option value="write" <?= $role === 'write' ? 'selected' : '' ?>>write</option>
@@ -243,6 +258,27 @@
                         <?= !empty($project['description']) ? nl2br(htmlspecialchars((string)$project['description'])) : 'Nenhuma memória definida.' ?>
                     </div>
                 </div>
+
+                <?php if (!empty($projectMemoryItems)): ?>
+                <div style="background:#111118; border:1px solid #272727; border-radius:14px; padding:14px;">
+                    <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:10px;">
+                        <div style="font-weight:650;">Memórias automáticas</div>
+                        <div style="color:#8d8d8d; font-size:12px;">Somente admin</div>
+                    </div>
+                    <div style="display:flex; flex-direction:column; gap:10px;">
+                        <?php foreach ($projectMemoryItems as $it): ?>
+                            <?php $iid = (int)($it['id'] ?? 0); ?>
+                            <div style="border:1px solid #272727; border-radius:12px; padding:10px 12px; background:#0a0a10;">
+                                <textarea class="pmiText" data-item-id="<?= $iid ?>" style="width:100%; resize:vertical; min-height:44px; padding:10px 12px; border-radius:10px; border:1px solid #272727; background:#050509; color:#f5f5f5; font-size:12px; outline:none;" spellcheck="false"><?= htmlspecialchars((string)($it['content'] ?? '')) ?></textarea>
+                                <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:8px;">
+                                    <button type="button" class="pmiSave" data-item-id="<?= $iid ?>" style="border:1px solid #272727; background:#050509; color:#c8ffd4; border-radius:10px; padding:8px 10px; cursor:pointer;">Salvar</button>
+                                    <button type="button" class="pmiDelete" data-item-id="<?= $iid ?>" style="border:1px solid #272727; background:#050509; color:#ffbaba; border-radius:10px; padding:8px 10px; cursor:pointer;">Excluir</button>
+                                </div>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+                <?php endif; ?>
 
                 <div style="background:#111118; border:1px solid #272727; border-radius:14px; padding:14px;">
                     <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:6px;">
@@ -670,6 +706,53 @@
                             btn.disabled = true;
                             try {
                                 var res = await fetch('/projetos/compartilhar/remover', { method: 'POST', body: fd, credentials: 'same-origin' });
+                                var json = await res.json().catch(function(){ return null; });
+                                if (json && json.ok) {
+                                    window.location.reload();
+                                }
+                            } catch (e) {
+                            } finally {
+                                btn.disabled = false;
+                            }
+                        });
+                    });
+
+                    document.querySelectorAll('.pmiSave').forEach(function (btn) {
+                        btn.addEventListener('click', async function () {
+                            var id = btn.getAttribute('data-item-id');
+                            if (!id) return;
+                            var ta = document.querySelector('.pmiText[data-item-id="' + id + '"]');
+                            if (!ta) return;
+                            var fd = new FormData();
+                            fd.append('project_id', '<?= (int)($project['id'] ?? 0) ?>');
+                            fd.append('item_id', id);
+                            fd.append('content', ta.value || '');
+                            btn.disabled = true;
+                            try {
+                                var res = await fetch('/projetos/memoria-itens/atualizar', { method: 'POST', body: fd, credentials: 'same-origin' });
+                                var json = await res.json().catch(function(){ return null; });
+                                if (!json || !json.ok) {
+                                    window.location.reload();
+                                }
+                            } catch (e) {
+                                window.location.reload();
+                            } finally {
+                                btn.disabled = false;
+                            }
+                        });
+                    });
+
+                    document.querySelectorAll('.pmiDelete').forEach(function (btn) {
+                        btn.addEventListener('click', async function () {
+                            if (!confirm('Excluir esta memória automática?')) return;
+                            var id = btn.getAttribute('data-item-id');
+                            if (!id) return;
+                            var fd = new FormData();
+                            fd.append('project_id', '<?= (int)($project['id'] ?? 0) ?>');
+                            fd.append('item_id', id);
+                            btn.disabled = true;
+                            try {
+                                var res = await fetch('/projetos/memoria-itens/excluir', { method: 'POST', body: fd, credentials: 'same-origin' });
                                 var json = await res.json().catch(function(){ return null; });
                                 if (json && json.ok) {
                                     window.location.reload();

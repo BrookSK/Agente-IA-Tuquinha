@@ -17,6 +17,7 @@ use App\Models\ProjectMember;
 use App\Models\ProjectFile;
 use App\Models\ProjectFileVersion;
 use App\Models\Project;
+use App\Models\ProjectMemoryItem;
 
 class ChatController extends Controller
 {
@@ -465,6 +466,64 @@ class ChatController extends Controller
             $projectContextFilesUsed = [];
             $projectContextMessage = null;
 
+            if (!empty($conversation->project_id) && $userId > 0) {
+                $projectId = (int)$conversation->project_id;
+                if (ProjectMember::canRead($projectId, $userId)) {
+                    $enabled = (string)Setting::get('project_auto_memory_enabled', '1');
+                    if ($enabled !== '0') {
+                        $normalizedMsg = trim((string)$message);
+                        if (mb_strlen($normalizedMsg, 'UTF-8') >= 25) {
+                            $engineForMemory = new TuquinhaEngine();
+                            $instruction = "Extraia APENAS fatos estáveis e úteis sobre o PROJETO (não sobre emoções momentâneas). "
+                                . "Retorne APENAS JSON válido, sem texto extra, no formato: {\"items\":[{\"content\":\"...\"}]} . "
+                                . "Regras: (1) cada item deve ser curto (até 180 chars), (2) sem perguntas, (3) sem dados sensíveis (senha, cartão, cpf), "
+                                . "(4) só inclua se for algo que ajudaria o assistente em conversas futuras (ex: tipo do projeto, público, stack, regras). "
+                                . "Se não houver nada relevante, retorne {\"items\":[]}.";
+
+                            $memoryResult = $engineForMemory->generateResponseWithContext(
+                                [
+                                    ['role' => 'user', 'content' => $instruction . "\n\nMENSAGEM DO USUÁRIO:\n" . $normalizedMsg],
+                                ],
+                                $_SESSION['chat_model'] ?? null,
+                                null,
+                                null,
+                                null
+                            );
+
+                            $memoryText = is_array($memoryResult) ? (string)($memoryResult['content'] ?? '') : (string)$memoryResult;
+                            $memoryText = trim((string)$memoryText);
+
+                            if ($memoryText !== '' && $memoryText[0] === '{') {
+                                $json = json_decode($memoryText, true);
+                                if (is_array($json) && isset($json['items']) && is_array($json['items'])) {
+                                    foreach ($json['items'] as $it) {
+                                        $content = is_array($it) ? (string)($it['content'] ?? '') : '';
+                                        $content = trim(str_replace(["\r\n", "\r"], "\n", $content));
+                                        if ($content === '') {
+                                            continue;
+                                        }
+                                        if (mb_strlen($content, 'UTF-8') > 180) {
+                                            $content = mb_substr($content, 0, 180, 'UTF-8');
+                                            $content = rtrim($content);
+                                        }
+                                        if (strpos($content, '?') !== false) {
+                                            continue;
+                                        }
+                                        $lc = mb_strtolower($content, 'UTF-8');
+                                        if (strpos($lc, 'senha') !== false || strpos($lc, 'cartão') !== false || strpos($lc, 'cpf') !== false) {
+                                            continue;
+                                        }
+                                        if (!ProjectMemoryItem::existsSimilar($projectId, $content)) {
+                                            ProjectMemoryItem::create($projectId, $userId, (int)$conversation->id, $normalizedMsg, $content);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
             if (!empty($conversation->project_id)) {
                 $projectId = (int)$conversation->project_id;
                 $projectRow = Project::findById($projectId);
@@ -487,6 +546,20 @@ class ChatController extends Controller
                     $pDescNorm = trim(str_replace(["\r\n", "\r"], "\n", $pDesc));
                     if ($pDescNorm !== '') {
                         $parts[] = "MEMÓRIA / DESCRIÇÃO DO PROJETO (persistente):\n" . $pDescNorm;
+                    }
+                }
+
+                $autoMem = ProjectMemoryItem::allActiveForProject($projectId, 60);
+                if (!empty($autoMem)) {
+                    $lines = [];
+                    foreach ($autoMem as $mi) {
+                        $c = trim((string)($mi['content'] ?? ''));
+                        if ($c !== '') {
+                            $lines[] = '- ' . $c;
+                        }
+                    }
+                    if (!empty($lines)) {
+                        $parts[] = "MEMÓRIAS AUTOMÁTICAS DO PROJETO (extraídas do chat; podem estar incompletas, trate como pistas e confirme se necessário):\n" . implode("\n", $lines);
                     }
                 }
 

@@ -110,6 +110,8 @@ $router->get('/projetos/aceitar-convite', 'ProjectController@acceptInvite');
 $router->post('/projetos/compartilhar/revogar', 'ProjectController@revokeInvite');
 $router->post('/projetos/compartilhar/alterar-role', 'ProjectController@updateMemberRole');
 $router->post('/projetos/compartilhar/remover', 'ProjectController@removeMember');
+$router->post('/projetos/memoria-itens/atualizar', 'ProjectController@updateMemoryItem');
+$router->post('/projetos/memoria-itens/excluir', 'ProjectController@deleteMemoryItem');
 $router->post('/projetos/arquivo-base/upload', 'ProjectController@uploadBaseFile');
 $router->post('/projetos/arquivo-base/texto', 'ProjectController@createBaseText');
 $router->get('/conta', 'AccountController@index');
