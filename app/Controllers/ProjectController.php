@@ -10,7 +10,6 @@ use App\Models\ProjectFolder;
 use App\Models\ProjectFile;
 use App\Models\ProjectFileVersion;
 use App\Models\Conversation;
-use App\Models\Message;
 use App\Models\Subscription;
 use App\Models\Plan;
 use App\Models\Setting;
@@ -317,10 +316,10 @@ class ProjectController extends Controller
 
         $sessionId = session_id();
         $conversation = Conversation::createForUser($userId, $sessionId, null, $projectId);
-        Message::create($conversation->id, 'user', $message, null);
         $_SESSION['current_conversation_id'] = $conversation->id;
+        $_SESSION['draft_message'] = $message;
 
-        header('Location: /chat?c=' . $conversation->id);
+        header('Location: /chat?c=' . $conversation->id . '&autosend=1');
         exit;
     }
 

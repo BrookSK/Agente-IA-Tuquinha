@@ -1109,7 +1109,8 @@ if (!empty($currentPlan) && is_array($currentPlan)) {
         };
 
         messageInput.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter' && !e.shiftKey) {
+            const dropdownOpen = !!(document.getElementById('file-mention-dropdown') && document.getElementById('file-mention-dropdown').style.display === 'block');
+            if (e.key === 'Enter' && !e.shiftKey && !dropdownOpen) {
                 e.preventDefault();
                 sendViaAjax();
             }

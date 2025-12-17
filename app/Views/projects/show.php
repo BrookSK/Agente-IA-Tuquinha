@@ -270,14 +270,14 @@
                     <?php $fid = (int)($bf['id'] ?? 0); ?>
                     <?php $ver = $latestByFileId[$fid] ?? null; ?>
                     <div style="border:1px solid #272727; background:#050509; border-radius:12px; padding:10px; min-height:90px; display:flex; flex-direction:column; justify-content:space-between;">
-                        <div style="font-size:12px; font-weight:650; color:#f5f5f5; overflow:hidden; text-overflow:ellipsis;">
+                        <div style="font-size:12px; font-weight:650; color:#f5f5f5; overflow:hidden; text-overflow:ellipsis; overflow-wrap:anywhere; word-break:break-word; line-height:1.2;">
                             <?= htmlspecialchars((string)($bf['name'] ?? '')) ?>
                         </div>
                         <div style="font-size:11px; color:#8d8d8d; margin-top:6px;">
                             v<?= (int)($ver['version'] ?? 0) ?>
                         </div>
                         <div style="display:flex; justify-content:space-between; align-items:center; margin-top:8px;">
-                            <div style="font-size:10px; color:#8d8d8d; border:1px solid #272727; background:#0a0a10; border-radius:8px; padding:3px 6px;"><?= !empty($bf['mime_type']) ? htmlspecialchars((string)$bf['mime_type']) : 'ARQ' ?></div>
+                            <div style="font-size:10px; color:#8d8d8d; border:1px solid #272727; background:#0a0a10; border-radius:8px; padding:3px 6px; max-width:190px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"><?= !empty($bf['mime_type']) ? htmlspecialchars((string)$bf['mime_type']) : 'ARQ' ?></div>
                             <div style="font-size:10px; color:<?= !empty($ver['extracted_text']) ? '#c8ffd4' : '#8d8d8d' ?>;"><?= !empty($ver['extracted_text']) ? 'ok' : '—' ?></div>
                         </div>
                     </div>

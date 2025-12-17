@@ -495,7 +495,7 @@ class ChatController extends Controller
 
                 // Menções explícitas a arquivos no texto do usuário
                 $mentions = [];
-                if (preg_match_all('/(?:(?:^|\s)(\/)?)(base|documentacao|codigo|regras|outros)\/([A-Za-z0-9_\.\-\/]+\.[A-Za-z0-9]{1,8})/u', $message, $mm)) {
+                if (preg_match_all('/(?:(?:^|\s)@?(\/)?)(base|documentacao|codigo|regras|outros)\/([A-Za-z0-9_\.\-\/]+\.[A-Za-z0-9]{1,8})/u', $message, $mm)) {
                     foreach ($mm[0] as $i => $full) {
                         $prefix = (string)($mm[2][$i] ?? '');
                         $rest = (string)($mm[3][$i] ?? '');
@@ -1057,5 +1057,62 @@ class ChatController extends Controller
 
         header('Location: /chat?c=' . $conversationId);
         exit;
+    }
+
+    public function projectFiles(): void
+    {
+        $sessionId = session_id();
+        $userId = !empty($_SESSION['user_id']) ? (int)$_SESSION['user_id'] : 0;
+        $conversationId = isset($_GET['conversation_id']) ? (int)$_GET['conversation_id'] : 0;
+
+        if ($conversationId <= 0) {
+            http_response_code(400);
+            header('Content-Type: application/json; charset=utf-8');
+            echo json_encode(['success' => false]);
+            return;
+        }
+
+        if ($userId > 0) {
+            $row = Conversation::findByIdForUser($conversationId, $userId);
+        } else {
+            $row = Conversation::findByIdAndSession($conversationId, $sessionId);
+        }
+
+        if (!$row) {
+            http_response_code(404);
+            header('Content-Type: application/json; charset=utf-8');
+            echo json_encode(['success' => false]);
+            return;
+        }
+
+        $projectId = isset($row['project_id']) ? (int)$row['project_id'] : 0;
+        if ($projectId <= 0) {
+            header('Content-Type: application/json; charset=utf-8');
+            echo json_encode(['success' => true, 'files' => []]);
+            return;
+        }
+
+        if ($userId <= 0 || !ProjectMember::canRead($projectId, $userId)) {
+            http_response_code(403);
+            header('Content-Type: application/json; charset=utf-8');
+            echo json_encode(['success' => false]);
+            return;
+        }
+
+        $files = ProjectFile::allBaseFiles($projectId);
+        $out = [];
+        foreach ($files as $f) {
+            $path = trim((string)($f['path'] ?? ''));
+            if ($path === '') {
+                continue;
+            }
+            $out[] = [
+                'path' => $path,
+                'name' => (string)($f['name'] ?? ''),
+            ];
+        }
+
+        header('Content-Type: application/json; charset=utf-8');
+        echo json_encode(['success' => true, 'files' => $out]);
     }
 }

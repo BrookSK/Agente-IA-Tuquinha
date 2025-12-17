@@ -237,6 +237,7 @@ $router->post('/admin/comunidade/categorias/criar', 'AdminCommunityController@cr
 $router->get('/admin/comunidade/categorias/toggle', 'AdminCommunityController@toggleCategory');
 $router->get('/chat', 'ChatController@index');
 $router->post('/chat/send', 'ChatController@send');
+$router->get('/chat/project-files', 'ChatController@projectFiles');
 $router->post('/chat/audio', 'ChatController@sendAudio');
 
 $router->post('/chat/persona', 'ChatController@changePersona');
