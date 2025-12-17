@@ -720,6 +720,8 @@ if (!empty($currentPlan) && is_array($currentPlan)) {
     if (messageInput && chatForm) {
         const STORAGE_KEY = 'tuquinha_chat_draft';
         let isSending = false;
+        let activeAbortController = null;
+        let activeTypingEl = null;
 
         // Se não veio draft do servidor (ex: áudio), tenta restaurar do localStorage
         <?php if (empty($draftMessage)): ?>
@@ -1104,19 +1106,26 @@ if (!empty($currentPlan) && is_array($currentPlan)) {
             const formData = new FormData(chatForm);
 
             isSending = true;
+            activeAbortController = new AbortController();
 
             appendMessageToDom('user', text, { created_label: '' });
-            const typingEl = appendTypingIndicator();
+            activeTypingEl = appendTypingIndicator();
+
+            // limpa o input imediatamente (a mensagem já foi adicionada no chat)
+            messageInput.value = '';
+            autoResize();
+            try {
+                window.localStorage.removeItem(STORAGE_KEY);
+            } catch (e) {}
 
             // bloqueia edição enquanto envia
             messageInput.disabled = true;
 
             if (submitButton) {
-                submitButton.disabled = true;
                 const sendLabel = document.getElementById('send-label');
                 if (sendLabel) {
                     sendLabel.dataset.original = sendLabel.dataset.original || sendLabel.textContent;
-                    sendLabel.textContent = 'Enviando...';
+                    sendLabel.textContent = 'Parar';
                 }
             }
 
@@ -1128,6 +1137,7 @@ if (!empty($currentPlan) && is_array($currentPlan)) {
                     'X-Requested-With': 'XMLHttpRequest',
                 },
                 body: formData,
+                signal: activeAbortController.signal,
             })
                 .then((res) => {
                     lastStatus = res.status || 0;
@@ -1177,12 +1187,15 @@ if (!empty($currentPlan) && is_array($currentPlan)) {
                     }
                 })
                 .catch((e) => {
+                    if (e && (e.name === 'AbortError' || e.code === 20)) {
+                        return;
+                    }
                     const debug = 'fetch_error=' + (e && e.message ? e.message : 'unknown');
                     showErrorReportBox('Erro ao enviar mensagem. Verifique sua conexão e tente novamente.', debug);
                 })
                 .finally(() => {
-                    if (typingEl && typingEl.parentNode) {
-                        typingEl.parentNode.removeChild(typingEl);
+                    if (activeTypingEl && activeTypingEl.parentNode) {
+                        activeTypingEl.parentNode.removeChild(activeTypingEl);
                     } else {
                         const el = chatWindow ? chatWindow.querySelector('[data-typing-indicator="1"]') : null;
                         if (el && el.parentNode) {
@@ -1190,9 +1203,10 @@ if (!empty($currentPlan) && is_array($currentPlan)) {
                         }
                     }
                     isSending = false;
+                    activeAbortController = null;
+                    activeTypingEl = null;
                     messageInput.disabled = false;
                     if (submitButton) {
-                        submitButton.disabled = false;
                         const sendLabel = document.getElementById('send-label');
                         if (sendLabel && sendLabel.dataset.original) {
                             sendLabel.textContent = sendLabel.dataset.original;
@@ -1200,6 +1214,20 @@ if (!empty($currentPlan) && is_array($currentPlan)) {
                     }
                 });
         };
+
+        if (submitButton) {
+            submitButton.addEventListener('click', (e) => {
+                if (!isSending) {
+                    return;
+                }
+                e.preventDefault();
+                if (activeAbortController) {
+                    try {
+                        activeAbortController.abort();
+                    } catch (err) {}
+                }
+            });
+        }
 
         messageInput.addEventListener('keydown', (e) => {
             const dropdownOpen = !!(document.getElementById('file-mention-dropdown') && document.getElementById('file-mention-dropdown').style.display === 'block');
