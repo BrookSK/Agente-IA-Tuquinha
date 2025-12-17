@@ -3,6 +3,7 @@
 <?php /** @var array $baseFiles */ ?>
 <?php /** @var array $latestByFileId */ ?>
 <?php /** @var array $conversations */ ?>
+<?php /** @var bool $isFavorite */ ?>
 <?php /** @var string|null $uploadError */ ?>
 <?php /** @var string|null $uploadOk */ ?>
 <?php
@@ -58,10 +59,35 @@
         </a>
     </div>
 
+<div id="projectMemoryModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.65); align-items:center; justify-content:center; padding:20px; z-index:60;">
+    <div style="width:min(760px, 100%); background:#111118; border:1px solid #272727; border-radius:16px; padding:16px;">
+        <div style="font-weight:700; font-size:15px; margin-bottom:6px;">Editar memória do projeto</div>
+        <div style="color:#b0b0b0; font-size:12px; line-height:1.35; margin-bottom:10px;">
+            A memória ajuda o Tuquinha a entender o contexto permanente do projeto.
+        </div>
+        <textarea id="projectMemoryInput" rows="8" style="width:100%; padding:10px 12px; border-radius:12px; border:1px solid #272727; background:#050509; color:#f5f5f5; font-size:13px; resize:vertical; outline:none;"><?= htmlspecialchars((string)($project['description'] ?? '')) ?></textarea>
+        <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:12px;">
+            <button type="button" id="cancelProjectMemory" style="border:1px solid #272727; border-radius:10px; padding:8px 12px; background:#0a0a10; color:#f5f5f5; font-weight:600; cursor:pointer;">Cancelar</button>
+            <button type="button" id="saveProjectMemory" style="border:none; border-radius:10px; padding:8px 12px; background:linear-gradient(135deg,#e53935,#ff6f60); color:#050509; font-weight:700; cursor:pointer;">Salvar</button>
+        </div>
+    </div>
+</div>
+
+<div id="projectRenameModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.65); align-items:center; justify-content:center; padding:20px; z-index:60;">
+    <div style="width:min(520px, 100%); background:#111118; border:1px solid #272727; border-radius:16px; padding:16px;">
+        <div style="font-weight:700; font-size:15px; margin-bottom:10px;">Renomear projeto</div>
+        <input id="projectRenameInput" type="text" value="<?= htmlspecialchars((string)($project['name'] ?? '')) ?>" style="width:100%; padding:10px 12px; border-radius:12px; border:1px solid #272727; background:#050509; color:#f5f5f5; font-size:13px; outline:none;" />
+        <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:12px;">
+            <button type="button" id="cancelProjectRename" style="border:1px solid #272727; border-radius:10px; padding:8px 12px; background:#0a0a10; color:#f5f5f5; font-weight:600; cursor:pointer;">Cancelar</button>
+            <button type="button" id="saveProjectRename" style="border:none; border-radius:10px; padding:8px 12px; background:linear-gradient(135deg,#e53935,#ff6f60); color:#050509; font-weight:700; cursor:pointer;">Salvar</button>
+        </div>
+    </div>
+</div>
+
     <div style="margin-bottom:14px;">
         <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:12px;">
             <div>
-                <h1 style="font-size: 28px; margin: 0 0 6px 0;"><?= htmlspecialchars((string)($project['name'] ?? '')) ?></h1>
+                <h1 id="projectTitle" style="font-size: 28px; margin: 0 0 6px 0;"><?= htmlspecialchars((string)($project['name'] ?? '')) ?></h1>
                 <?php if (!empty($project['description'])): ?>
                     <div style="color:#b0b0b0; font-size:13px; line-height:1.35;">
                         <?= nl2br(htmlspecialchars((string)$project['description'])) ?>
@@ -72,8 +98,16 @@
             </div>
 
             <div style="display:flex; gap:10px; align-items:center; color:#8d8d8d;">
-                <a href="#" style="color:#8d8d8d; text-decoration:none; font-size:18px; line-height:1;" title="Em breve" onclick="return false;">⋯</a>
-                <a href="#" style="color:#8d8d8d; text-decoration:none; font-size:18px; line-height:1;" title="Em breve" onclick="return false;">☆</a>
+                <div style="position:relative;">
+                    <button type="button" id="projectEllipsisBtn" style="border:none; background:transparent; color:#8d8d8d; font-size:18px; line-height:1; cursor:pointer; padding:2px 6px;">⋯</button>
+                    <div id="projectEllipsisMenu" style="display:none; position:absolute; right:0; top:28px; background:#111118; border:1px solid #272727; border-radius:12px; min-width:220px; padding:6px; z-index:20;">
+                        <button type="button" id="projectRenameBtn" style="width:100%; text-align:left; padding:10px 10px; border:none; background:transparent; color:#f5f5f5; cursor:pointer; border-radius:10px;">Renomear</button>
+                        <button type="button" id="projectDeleteBtn" style="width:100%; text-align:left; padding:10px 10px; border:none; background:transparent; color:#ffbaba; cursor:pointer; border-radius:10px;">Excluir</button>
+                    </div>
+                </div>
+                <button type="button" id="projectFavoriteBtn" aria-pressed="<?= !empty($isFavorite) ? 'true' : 'false' ?>" style="border:none; background:transparent; color:#8d8d8d; font-size:18px; line-height:1; cursor:pointer; padding:2px 6px;">
+                    <?= !empty($isFavorite) ? '★' : '☆' ?>
+                </button>
             </div>
         </div>
     </div>
@@ -81,19 +115,20 @@
     <div style="display:grid; grid-template-columns:minmax(0, 1fr) 360px; gap:14px; align-items:start;">
         <div style="min-width:0;">
             <div style="background:#111118; border:1px solid #272727; border-radius:14px; padding:14px;">
-                <div style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
+                <form id="projectComposerForm" action="/projetos/chat/criar" method="post" style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
+                    <input type="hidden" name="project_id" value="<?= (int)($project['id'] ?? 0) ?>">
                     <div style="flex:1; background:#0a0a10; border:1px solid #272727; border-radius:14px; padding:14px; color:#8d8d8d; font-size:13px;">
-                        Responder...
+                        <textarea name="message" id="projectComposerMessage" placeholder="Responder..." rows="3" style="width:100%; border:none; outline:none; background:transparent; color:#f5f5f5; font-size:13px; resize:none; min-height:46px;"></textarea>
                         <div style="display:flex; justify-content:space-between; align-items:center; margin-top:10px;">
                             <div style="display:flex; gap:10px; align-items:center;">
                                 <button type="button" id="composerFilesBtn" style="width:18px; height:18px; border-radius:6px; border:1px solid #272727; display:flex; align-items:center; justify-content:center; color:#8d8d8d; background:transparent; cursor:pointer; padding:0;">+</button>
                                 <button type="button" id="composerClockBtn" style="width:18px; height:18px; border-radius:6px; border:1px solid #272727; display:flex; align-items:center; justify-content:center; color:#8d8d8d; background:transparent; cursor:pointer; padding:0;">⏱</button>
                             </div>
-                            <a href="/chat?new=1&project_id=<?= (int)($project['id'] ?? 0) ?>" style="display:inline-flex; align-items:center; justify-content:center; width:34px; height:34px; border-radius:10px; border:1px solid #2e7d32; background:#102312; color:#c8ffd4; text-decoration:none; font-weight:700;">↑</a>
+                            <button type="submit" style="display:inline-flex; align-items:center; justify-content:center; width:34px; height:34px; border-radius:10px; border:1px solid #2e7d32; background:#102312; color:#c8ffd4; text-decoration:none; font-weight:700; cursor:pointer;">↑</button>
                         </div>
                     </div>
                     <div style="color:#8d8d8d; font-size:12px; white-space:nowrap; margin-left:10px;">Sonnet 4.5 ✓</div>
-                </div>
+                </form>
             </div>
 
             <div style="margin-top:12px; background:#111118; border:1px solid #272727; border-radius:14px; padding:0; overflow:hidden;">
@@ -131,10 +166,10 @@
                         <div style="font-weight:650;">Memória</div>
                         <div style="display:flex; align-items:center; gap:8px;">
                             <div style="font-size:11px; color:#8d8d8d; border:1px solid #272727; border-radius:999px; padding:5px 8px; background:#0a0a10;">Apenas você</div>
-                            <a href="#" style="color:#8d8d8d; text-decoration:none;" title="Em breve" onclick="return false;">✎</a>
+                            <button type="button" id="openProjectMemory" style="border:none; background:transparent; color:#8d8d8d; cursor:pointer;">✎</button>
                         </div>
                     </div>
-                    <div style="color:#b0b0b0; font-size:12px; line-height:1.35;">
+                    <div id="projectMemoryText" style="color:#b0b0b0; font-size:12px; line-height:1.35;">
                         <?= !empty($project['description']) ? nl2br(htmlspecialchars((string)$project['description'])) : 'Nenhuma memória definida.' ?>
                     </div>
                 </div>
@@ -337,6 +372,140 @@
                         composerClockBtn.addEventListener('click', function (e) {
                             e.preventDefault();
                             alert('Em breve');
+                        });
+                    }
+
+                    var ellipsisBtn = document.getElementById('projectEllipsisBtn');
+                    var ellipsisMenu = document.getElementById('projectEllipsisMenu');
+                    function closeEllipsis() {
+                        if (ellipsisMenu) ellipsisMenu.style.display = 'none';
+                    }
+                    if (ellipsisBtn && ellipsisMenu) {
+                        ellipsisBtn.addEventListener('click', function (e) {
+                            e.preventDefault();
+                            ellipsisMenu.style.display = ellipsisMenu.style.display === 'none' || ellipsisMenu.style.display === '' ? 'block' : 'none';
+                        });
+                        document.addEventListener('click', function (e) {
+                            if (!ellipsisMenu.contains(e.target) && e.target !== ellipsisBtn) {
+                                closeEllipsis();
+                            }
+                        });
+                    }
+
+                    var favBtn = document.getElementById('projectFavoriteBtn');
+                    if (favBtn) {
+                        favBtn.addEventListener('click', async function (e) {
+                            e.preventDefault();
+                            var fd = new FormData();
+                            fd.append('project_id', '<?= (int)($project['id'] ?? 0) ?>');
+                            try {
+                                var res = await fetch('/projetos/favoritar', { method: 'POST', body: fd, credentials: 'same-origin' });
+                                var json = await res.json();
+                                if (!json || !json.ok) return;
+                                var isFav = !!json.favorite;
+                                favBtn.textContent = isFav ? '★' : '☆';
+                                favBtn.setAttribute('aria-pressed', isFav ? 'true' : 'false');
+                            } catch (err) {
+                            }
+                        });
+                    }
+
+                    var openMemory = document.getElementById('openProjectMemory');
+                    if (openMemory) {
+                        openMemory.addEventListener('click', function (e) {
+                            e.preventDefault();
+                            var m = document.getElementById('projectMemoryModal');
+                            if (m) m.style.display = 'flex';
+                        });
+                    }
+                    var cancelMemory = document.getElementById('cancelProjectMemory');
+                    if (cancelMemory) {
+                        cancelMemory.addEventListener('click', function (e) {
+                            e.preventDefault();
+                            var m = document.getElementById('projectMemoryModal');
+                            if (m) m.style.display = 'none';
+                        });
+                    }
+                    var saveMemory = document.getElementById('saveProjectMemory');
+                    if (saveMemory) {
+                        saveMemory.addEventListener('click', async function (e) {
+                            e.preventDefault();
+                            var textarea = document.getElementById('projectMemoryInput');
+                            var m = document.getElementById('projectMemoryModal');
+                            if (!textarea) return;
+                            var fd = new FormData();
+                            fd.append('project_id', '<?= (int)($project['id'] ?? 0) ?>');
+                            fd.append('memory', textarea.value || '');
+                            try {
+                                var res = await fetch('/projetos/memoria/salvar', { method: 'POST', body: fd, credentials: 'same-origin' });
+                                var json = await res.json();
+                                if (!json || !json.ok) return;
+                                var txt = (json.memory || '').trim();
+                                var box = document.getElementById('projectMemoryText');
+                                if (box) {
+                                    box.innerHTML = txt !== '' ? (txt.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>')) : 'Nenhuma memória definida.';
+                                }
+                                if (m) m.style.display = 'none';
+                            } catch (err) {
+                            }
+                        });
+                    }
+
+                    var renameBtn = document.getElementById('projectRenameBtn');
+                    if (renameBtn) {
+                        renameBtn.addEventListener('click', function (e) {
+                            e.preventDefault();
+                            closeEllipsis();
+                            var m = document.getElementById('projectRenameModal');
+                            if (m) m.style.display = 'flex';
+                        });
+                    }
+                    var cancelRename = document.getElementById('cancelProjectRename');
+                    if (cancelRename) {
+                        cancelRename.addEventListener('click', function (e) {
+                            e.preventDefault();
+                            var m = document.getElementById('projectRenameModal');
+                            if (m) m.style.display = 'none';
+                        });
+                    }
+                    var saveRename = document.getElementById('saveProjectRename');
+                    if (saveRename) {
+                        saveRename.addEventListener('click', async function (e) {
+                            e.preventDefault();
+                            var input = document.getElementById('projectRenameInput');
+                            var m = document.getElementById('projectRenameModal');
+                            if (!input) return;
+                            var fd = new FormData();
+                            fd.append('project_id', '<?= (int)($project['id'] ?? 0) ?>');
+                            fd.append('name', input.value || '');
+                            try {
+                                var res = await fetch('/projetos/renomear', { method: 'POST', body: fd, credentials: 'same-origin' });
+                                var json = await res.json();
+                                if (!json || !json.ok) return;
+                                var h1 = document.getElementById('projectTitle');
+                                if (h1) h1.textContent = json.name || '';
+                                if (m) m.style.display = 'none';
+                            } catch (err) {
+                            }
+                        });
+                    }
+
+                    var deleteBtn = document.getElementById('projectDeleteBtn');
+                    if (deleteBtn) {
+                        deleteBtn.addEventListener('click', async function (e) {
+                            e.preventDefault();
+                            closeEllipsis();
+                            if (!confirm('Tem certeza que deseja excluir este projeto?')) return;
+                            var fd = new FormData();
+                            fd.append('project_id', '<?= (int)($project['id'] ?? 0) ?>');
+                            try {
+                                var res = await fetch('/projetos/excluir', { method: 'POST', body: fd, credentials: 'same-origin' });
+                                var json = await res.json();
+                                if (json && json.ok) {
+                                    window.location.href = '/projetos';
+                                }
+                            } catch (err) {
+                            }
                         });
                     }
                 })();

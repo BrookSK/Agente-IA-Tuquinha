@@ -10,9 +10,11 @@ use App\Models\ProjectFolder;
 use App\Models\ProjectFile;
 use App\Models\ProjectFileVersion;
 use App\Models\Conversation;
+use App\Models\Message;
 use App\Models\Subscription;
 use App\Models\Plan;
 use App\Models\Setting;
+use App\Models\ProjectFavorite;
 use App\Services\MediaStorageService;
 use App\Services\TextExtractionService;
 
@@ -238,6 +240,7 @@ class ProjectController extends Controller
         $latestByFileId = ProjectFileVersion::latestForFiles($baseFileIds);
 
         $conversations = Conversation::allByProjectForUser($projectId, (int)$user['id']);
+        $isFavorite = ProjectFavorite::isFavorite($projectId, (int)$user['id']);
 
         $this->view('projects/show', [
             'pageTitle' => ($project['name'] ?? 'Projeto') . ' - Tuquinha',
@@ -247,11 +250,137 @@ class ProjectController extends Controller
             'baseFiles' => $baseFiles,
             'latestByFileId' => $latestByFileId,
             'conversations' => $conversations,
+            'isFavorite' => $isFavorite,
             'uploadError' => $_SESSION['project_upload_error'] ?? null,
             'uploadOk' => $_SESSION['project_upload_ok'] ?? null,
         ]);
 
         unset($_SESSION['project_upload_error'], $_SESSION['project_upload_ok']);
+    }
+
+    public function saveMemory(): void
+    {
+        $user = $this->requireLogin();
+        $this->requirePaidPlan($user);
+        $userId = (int)($user['id'] ?? 0);
+
+        $projectId = isset($_POST['project_id']) ? (int)$_POST['project_id'] : 0;
+        $memory = (string)($_POST['memory'] ?? '');
+        $memory = str_replace(["\r\n", "\r"], "\n", $memory);
+        $memory = trim($memory);
+
+        if ($projectId <= 0 || !ProjectMember::canWrite($projectId, $userId)) {
+            http_response_code(403);
+            header('Content-Type: application/json; charset=utf-8');
+            echo json_encode(['ok' => false]);
+            return;
+        }
+
+        if ($memory === '') {
+            $memory = '';
+        }
+        if (mb_strlen($memory, 'UTF-8') > 200000) {
+            $memory = mb_substr($memory, 0, 200000, 'UTF-8');
+        }
+
+        Project::updateDescription($projectId, $memory !== '' ? $memory : null);
+
+        header('Content-Type: application/json; charset=utf-8');
+        echo json_encode([
+            'ok' => true,
+            'memory' => $memory,
+        ]);
+    }
+
+    public function createChat(): void
+    {
+        $user = $this->requireLogin();
+        $this->requirePaidPlan($user);
+        $userId = (int)($user['id'] ?? 0);
+
+        $projectId = isset($_POST['project_id']) ? (int)$_POST['project_id'] : 0;
+        $message = (string)($_POST['message'] ?? '');
+        $message = str_replace(["\r\n", "\r"], "\n", $message);
+        $message = preg_replace('/^\s+/mu', '', $message);
+        $message = trim($message);
+
+        if ($projectId <= 0 || !ProjectMember::canRead($projectId, $userId)) {
+            header('Location: /projetos');
+            exit;
+        }
+
+        if ($message === '') {
+            $_SESSION['project_upload_error'] = 'Digite uma mensagem para iniciar o chat.';
+            header('Location: /projetos/ver?id=' . $projectId);
+            exit;
+        }
+
+        $sessionId = session_id();
+        $conversation = Conversation::createForUser($userId, $sessionId, null, $projectId);
+        Message::create($conversation->id, 'user', $message, null);
+        $_SESSION['current_conversation_id'] = $conversation->id;
+
+        header('Location: /chat?c=' . $conversation->id);
+        exit;
+    }
+
+    public function toggleFavorite(): void
+    {
+        $user = $this->requireLogin();
+        $this->requirePaidPlan($user);
+        $userId = (int)($user['id'] ?? 0);
+
+        $projectId = isset($_POST['project_id']) ? (int)$_POST['project_id'] : 0;
+        if ($projectId <= 0 || !ProjectMember::canRead($projectId, $userId)) {
+            http_response_code(403);
+            header('Content-Type: application/json; charset=utf-8');
+            echo json_encode(['ok' => false]);
+            return;
+        }
+
+        $fav = ProjectFavorite::toggle($projectId, $userId);
+        header('Content-Type: application/json; charset=utf-8');
+        echo json_encode(['ok' => true, 'favorite' => $fav]);
+    }
+
+    public function rename(): void
+    {
+        $user = $this->requireLogin();
+        $this->requirePaidPlan($user);
+        $userId = (int)($user['id'] ?? 0);
+
+        $projectId = isset($_POST['project_id']) ? (int)$_POST['project_id'] : 0;
+        $name = trim((string)($_POST['name'] ?? ''));
+
+        if ($projectId <= 0 || !ProjectMember::canAdmin($projectId, $userId) || $name === '') {
+            http_response_code(403);
+            header('Content-Type: application/json; charset=utf-8');
+            echo json_encode(['ok' => false]);
+            return;
+        }
+
+        Project::updateName($projectId, $name);
+        header('Content-Type: application/json; charset=utf-8');
+        echo json_encode(['ok' => true, 'name' => $name]);
+    }
+
+    public function delete(): void
+    {
+        $user = $this->requireLogin();
+        $this->requirePaidPlan($user);
+        $userId = (int)($user['id'] ?? 0);
+
+        $projectId = isset($_POST['project_id']) ? (int)$_POST['project_id'] : 0;
+        if ($projectId <= 0 || !ProjectMember::canAdmin($projectId, $userId)) {
+            http_response_code(403);
+            header('Content-Type: application/json; charset=utf-8');
+            echo json_encode(['ok' => false]);
+            return;
+        }
+
+        Project::deleteProject($projectId);
+        header('Content-Type: application/json; charset=utf-8');
+        echo json_encode(['ok' => true]);
     }
 
     public function uploadBaseFile(): void
