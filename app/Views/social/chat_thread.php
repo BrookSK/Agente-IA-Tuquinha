@@ -119,6 +119,7 @@ if (!empty($messages)) {
     var chatForm = document.getElementById('social-chat-form');
     var currentUserName = <?= json_encode($currentName, JSON_UNESCAPED_UNICODE) ?>;
     var currentUserId = <?= (int)$currentId ?>;
+    var otherUserId = <?= (int)($otherUser['id'] ?? 0) ?>;
     var conversationId = <?= (int)$conversationId ?>;
     var pc = null;
     var localStream = null;
@@ -128,6 +129,9 @@ if (!empty($messages)) {
     var webrtcSinceId = 0;
     var webrtcPollInFlight = false;
     var pendingIce = [];
+    var makingOffer = false;
+    var ignoreOffer = false;
+    var isPolite = false;
 
     function setStatus(text) {
         if (statusSpan) {
@@ -237,8 +241,31 @@ if (!empty($messages)) {
 
                     if (kind === 'offer' && payload) {
                         return ensurePeerConnection().then(function () {
-                            return pc.setRemoteDescription(new RTCSessionDescription(payload));
+                            var offerDesc = new RTCSessionDescription(payload);
+                            var offerCollision = false;
+                            try {
+                                offerCollision = makingOffer || (pc && pc.signalingState !== 'stable');
+                            } catch (e) {}
+
+                            ignoreOffer = !isPolite && offerCollision;
+                            if (ignoreOffer) {
+                                return;
+                            }
+
+                            var p = Promise.resolve();
+                            if (pc && pc.signalingState !== 'stable') {
+                                p = p.then(function () {
+                                    return pc.setLocalDescription({ type: 'rollback' }).catch(function () {});
+                                });
+                            }
+
+                            return p.then(function () {
+                                return pc.setRemoteDescription(offerDesc);
+                            });
                         }).then(function () {
+                            if (ignoreOffer) {
+                                return;
+                            }
                             var list = pendingIce.slice();
                             pendingIce = [];
                             var p = Promise.resolve();
@@ -250,10 +277,19 @@ if (!empty($messages)) {
                             });
                             return p;
                         }).then(function () {
+                            if (ignoreOffer) {
+                                return;
+                            }
                             return pc.createAnswer();
                         }).then(function (answer) {
+                            if (ignoreOffer) {
+                                return;
+                            }
                             return pc.setLocalDescription(answer);
                         }).then(function () {
+                            if (ignoreOffer) {
+                                return;
+                            }
                             return sendSignal('answer', pc.localDescription);
                         }).then(function () {
                             setStatus('Em chamada.');
@@ -278,6 +314,9 @@ if (!empty($messages)) {
                     }
 
                     if (kind === 'ice' && payload) {
+                        if (ignoreOffer) {
+                            return;
+                        }
                         if (!pc) {
                             pendingIce.push(payload);
                             return;
@@ -331,12 +370,26 @@ if (!empty($messages)) {
     async function ensurePeerConnection() {
         if (pc) return;
 
+        isPolite = (Number(currentUserId) || 0) < (Number(otherUserId) || 0);
+
         pc = new RTCPeerConnection({
             iceServers: [
                 { urls: 'stun:stun.l.google.com:19302' },
                 { urls: 'stun:stun1.l.google.com:19302' }
             ]
         });
+
+        pc.onnegotiationneeded = async function () {
+            try {
+                makingOffer = true;
+                var offer = await pc.createOffer();
+                await pc.setLocalDescription(offer);
+                await sendSignal('offer', pc.localDescription);
+            } catch (e) {
+            } finally {
+                makingOffer = false;
+            }
+        };
 
         pc.onicecandidate = function (ev) {
             if (ev.candidate) {
@@ -370,9 +423,13 @@ if (!empty($messages)) {
         try {
             setStatus('Iniciando chamada...');
             await ensurePeerConnection();
-            var offer = await pc.createOffer();
-            await pc.setLocalDescription(offer);
-            await sendSignal('offer', pc.localDescription);
+            if (pc && pc.signalingState === 'stable') {
+                makingOffer = true;
+                var offer = await pc.createOffer();
+                await pc.setLocalDescription(offer);
+                await sendSignal('offer', pc.localDescription);
+                makingOffer = false;
+            }
             setStatus('Chamando...');
         } catch (e) {
             setStatus('Não foi possível iniciar a chamada.');
@@ -438,6 +495,49 @@ if (!empty($messages)) {
         list.appendChild(wrapper);
 
         list.scrollTop = list.scrollHeight;
+    }
+
+    function appendOwnPendingMessage(body) {
+        var list = document.getElementById('social-chat-messages');
+        if (!list) {
+            return null;
+        }
+
+        var wrapper = document.createElement('div');
+        wrapper.style.display = 'flex';
+        wrapper.style.justifyContent = 'flex-end';
+
+        var bubble = document.createElement('div');
+        bubble.style.maxWidth = '78%';
+        bubble.style.padding = '6px 8px';
+        bubble.style.borderRadius = '10px';
+        bubble.style.fontSize = '12px';
+        bubble.style.lineHeight = '1.4';
+        bubble.style.background = 'linear-gradient(135deg,#e53935,#ff6f60)';
+        bubble.style.color = '#050509';
+        bubble.style.opacity = '0.75';
+
+        var bodyDiv = document.createElement('div');
+        bodyDiv.innerText = body;
+        bubble.appendChild(bodyDiv);
+
+        var meta = document.createElement('div');
+        meta.style.fontSize = '10px';
+        meta.style.marginTop = '2px';
+        meta.style.opacity = '0.8';
+        meta.style.textAlign = 'right';
+        meta.innerText = 'Enviando...';
+        bubble.appendChild(meta);
+
+        wrapper.appendChild(bubble);
+        list.appendChild(wrapper);
+        list.scrollTop = list.scrollHeight;
+
+        return {
+            wrapper: wrapper,
+            meta: meta,
+            bubble: bubble
+        };
     }
 
     function appendOtherMessage(senderName, body, createdAt) {
@@ -522,9 +622,10 @@ if (!empty($messages)) {
             }
 
             var submitBtn = chatForm.querySelector('button[type="submit"]');
-            if (submitBtn) {
-                submitBtn.disabled = true;
-            }
+            var pendingUi = appendOwnPendingMessage(text);
+
+            textarea.disabled = true;
+            if (submitBtn) submitBtn.disabled = true;
 
             var formData = new FormData(chatForm);
             formData.append('ajax', '1');
@@ -539,18 +640,27 @@ if (!empty($messages)) {
                 return res.json();
             }).then(function (data) {
                 if (data && data.ok && data.message) {
+                    if (pendingUi && pendingUi.wrapper && pendingUi.wrapper.parentNode) {
+                        pendingUi.wrapper.parentNode.removeChild(pendingUi.wrapper);
+                    }
                     appendOwnMessage(data.message.body || text, data.message.created_at || '');
                     textarea.value = '';
                     if (data.message.id) {
                         lastMessageId = Math.max(lastMessageId, Number(data.message.id) || 0);
                     }
+                } else {
+                    if (pendingUi && pendingUi.meta) {
+                        pendingUi.meta.innerText = 'Falha ao enviar.';
+                    }
                 }
             }).catch(function () {
-                chatForm.submit();
-            }).finally(function () {
-                if (submitBtn) {
-                    submitBtn.disabled = false;
+                if (pendingUi && pendingUi.meta) {
+                    pendingUi.meta.innerText = 'Falha ao enviar.';
                 }
+            }).finally(function () {
+                textarea.disabled = false;
+                if (submitBtn) submitBtn.disabled = false;
+                try { textarea.focus(); } catch (e) {}
             });
         });
 
