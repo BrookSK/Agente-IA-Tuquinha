@@ -31,10 +31,21 @@ $profileId = (int)($profileUser['id'] ?? 0);
             flex-direction: column !important;
             gap: 12px !important;
             padding: 0 4px;
+            flex-wrap: nowrap !important;
         }
         #socialProfileAside {
             flex: 0 0 auto !important;
             width: 100% !important;
+            order: 1;
+        }
+        #socialProfileMain {
+            width: 100% !important;
+            order: 2;
+        }
+        #socialProfileWidgets {
+            flex: 0 0 auto !important;
+            width: 100% !important;
+            order: 3;
         }
     }
 </style>
@@ -138,7 +149,7 @@ $profileId = (int)($profileUser['id'] ?? 0);
         <?php endif; ?>
     </aside>
 
-    <main style="flex: 1 1 0; min-width: 0; display:flex; flex-direction:column; gap:12px; width:100%;">
+    <main id="socialProfileMain" style="flex: 1 1 0; min-width: 0; display:flex; flex-direction:column; gap:12px; width:100%;">
         <?php if (!empty($error)): ?>
             <div style="background:#311; border:1px solid #a33; color:#ffbaba; padding:8px 10px; border-radius:10px; font-size:13px;">
                 <?= htmlspecialchars($error, ENT_QUOTES, 'UTF-8') ?>
@@ -471,7 +482,7 @@ $profileId = (int)($profileUser['id'] ?? 0);
         </section>
     </main>
 
-    <aside style="flex: 0 0 260px; background:var(--surface-card); border-radius:18px; border:1px solid var(--border-subtle); padding:12px; display:flex; flex-direction:column; gap:10px; min-height:0;">
+    <aside id="socialProfileWidgets" style="flex: 0 0 260px; background:var(--surface-card); border-radius:18px; border:1px solid var(--border-subtle); padding:12px; display:flex; flex-direction:column; gap:10px; min-height:0; max-width:100%;">
         <section style="background:var(--surface-card); border-radius:12px; border:1px solid var(--border-subtle); padding:8px 10px;">
             <h3 style="font-size:14px; margin-bottom:6px; color:var(--text-primary);">Depoimentos</h3>
             <?php if (empty($publicTestimonials)): ?>

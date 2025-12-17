@@ -436,30 +436,38 @@
                         });
                     }
 
-                    var openInstr = document.getElementById('openProjectInstructions');
-                    if (openInstr) {
-                        openInstr.addEventListener('click', function (e) {
-                            e.preventDefault();
-                            var m = document.getElementById('projectInstructionsModal');
-                            if (m) m.style.display = 'flex';
-                        });
+                    function bindProjectInstructionsModal() {
+                        var openInstr = document.getElementById('openProjectInstructions');
+                        if (openInstr && !openInstr.dataset.bound) {
+                            openInstr.dataset.bound = '1';
+                            openInstr.addEventListener('click', function (e) {
+                                e.preventDefault();
+                                var m = document.getElementById('projectInstructionsModal');
+                                if (m) m.style.display = 'flex';
+                            });
+                        }
+                        var closeInstr = document.getElementById('closeProjectInstructions');
+                        if (closeInstr && !closeInstr.dataset.bound) {
+                            closeInstr.dataset.bound = '1';
+                            closeInstr.addEventListener('click', function (e) {
+                                e.preventDefault();
+                                var m = document.getElementById('projectInstructionsModal');
+                                if (m) m.style.display = 'none';
+                            });
+                        }
+                        var cancelInstr = document.getElementById('cancelProjectInstructions');
+                        if (cancelInstr && !cancelInstr.dataset.bound) {
+                            cancelInstr.dataset.bound = '1';
+                            cancelInstr.addEventListener('click', function (e) {
+                                e.preventDefault();
+                                var m = document.getElementById('projectInstructionsModal');
+                                if (m) m.style.display = 'none';
+                            });
+                        }
                     }
-                    var closeInstr = document.getElementById('closeProjectInstructions');
-                    if (closeInstr) {
-                        closeInstr.addEventListener('click', function (e) {
-                            e.preventDefault();
-                            var m = document.getElementById('projectInstructionsModal');
-                            if (m) m.style.display = 'none';
-                        });
-                    }
-                    var cancelInstr = document.getElementById('cancelProjectInstructions');
-                    if (cancelInstr) {
-                        cancelInstr.addEventListener('click', function (e) {
-                            e.preventDefault();
-                            var m = document.getElementById('projectInstructionsModal');
-                            if (m) m.style.display = 'none';
-                        });
-                    }
+
+                    bindProjectInstructionsModal();
+                    document.addEventListener('DOMContentLoaded', bindProjectInstructionsModal);
 
                     var composerFilesBtn = document.getElementById('composerFilesBtn');
                     if (composerFilesBtn) {
