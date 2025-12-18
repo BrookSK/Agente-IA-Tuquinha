@@ -12,6 +12,8 @@ $avatarPath = isset($profile['avatar_path']) ? trim((string)$profile['avatar_pat
 
 $nickname = trim((string)($profileUser['nickname'] ?? ''));
 
+$courseBadges = $courseBadges ?? [];
+
 $friendsCount = is_array($friends) ? count($friends) : 0;
 $scrapsCount = is_array($scraps) ? count($scraps) : 0;
 $communitiesCount = is_array($communities) ? count($communities) : 0;
@@ -75,6 +77,32 @@ $profileId = (int)($profileUser['id'] ?? 0);
                     <div style="font-size:12px; color:var(--text-secondary);">
                         @<?= htmlspecialchars($nickname, ENT_QUOTES, 'UTF-8') ?>
                     </div>
+                <?php endif; ?>
+                <?php if (!empty($courseBadges)): ?>
+                    <div style="margin-top:8px; display:flex; gap:8px; align-items:center; justify-content:center; flex-wrap:wrap;">
+                        <?php foreach ($courseBadges as $b): ?>
+                            <?php
+                                $badgeUrl = trim((string)($b['badge_image_path'] ?? ''));
+                                $courseTitle = trim((string)($b['course_title'] ?? ''));
+                                $courseSlug = trim((string)($b['course_slug'] ?? ''));
+                                $badgeLabel = $courseTitle !== '' ? $courseTitle : 'Curso concluído';
+                                $courseLink = $courseSlug !== '' ? '/cursos/ver?slug=' . urlencode($courseSlug) : '/cursos';
+                            ?>
+                            <a href="<?= htmlspecialchars($courseLink, ENT_QUOTES, 'UTF-8') ?>" title="<?= htmlspecialchars($badgeLabel, ENT_QUOTES, 'UTF-8') ?>" style="
+                                width:34px; height:34px; border-radius:10px; overflow:hidden;
+                                border:1px solid var(--border-subtle);
+                                background:var(--surface-subtle);
+                                display:inline-flex; align-items:center; justify-content:center;
+                                text-decoration:none;">
+                                <?php if ($badgeUrl !== ''): ?>
+                                    <img src="<?= htmlspecialchars($badgeUrl, ENT_QUOTES, 'UTF-8') ?>" alt="<?= htmlspecialchars($badgeLabel, ENT_QUOTES, 'UTF-8') ?>" style="width:100%; height:100%; object-fit:cover; display:block;">
+                                <?php else: ?>
+                                    <span style="font-size:16px;">🏅</span>
+                                <?php endif; ?>
+                            </a>
+                        <?php endforeach; ?>
+                    </div>
+                    <div style="margin-top:4px; font-size:11px; color:var(--text-secondary);">Insígnias de cursos concluídos</div>
                 <?php endif; ?>
                 <?php if (!empty($profileUser['name']) && $displayName !== $profileUser['name']): ?>
                     <div style="font-size:12px; color:var(--text-secondary);">

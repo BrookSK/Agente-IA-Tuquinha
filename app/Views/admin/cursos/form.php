@@ -101,6 +101,48 @@ $partnerEmail = $partnerEmail ?? '';
             </div>
         </div>
 
+        <div>
+            <label style="font-size:13px; color:var(--text-primary); display:block; margin-bottom:4px;">Imagem da insígnia do curso (badge)</label>
+            <input type="text" name="badge_image_path" value="<?= htmlspecialchars($course['badge_image_path'] ?? '') ?>" placeholder="Opcional. URL direta ou envie um arquivo abaixo." style="
+                width:100%; padding:8px 10px; border-radius:8px; border:1px solid var(--border-subtle);
+                background:var(--surface-subtle); color:var(--text-primary); font-size:14px;">
+            <div style="margin-top:6px; display:flex; flex-wrap:wrap; gap:8px; align-items:center;">
+                <label style="font-size:13px; color:var(--text-primary); display:inline-flex; align-items:center; gap:6px; cursor:pointer;">
+                    <span>🏅</span>
+                    <span>Enviar arquivo</span>
+                    <input type="file" name="badge_image_upload" accept="image/*" style="display:none;">
+                </label>
+                <div style="font-size:11px; color:#777;">
+                    A imagem será hospedada no servidor de mídia e este campo será preenchido com a URL gerada.
+                </div>
+            </div>
+
+            <?php if (!empty($course['badge_image_path'])): ?>
+                <div style="margin-top:8px; display:flex; flex-direction:column; gap:6px;">
+                    <div style="display:flex; flex-wrap:wrap; gap:8px; align-items:flex-start;">
+                        <div style="font-size:11px; color:#777; min-width:80px;">Insígnia atual:</div>
+                        <div style="border-radius:8px; overflow:hidden; border:1px solid var(--border-subtle); max-width:120px;">
+                            <img src="<?= htmlspecialchars($course['badge_image_path'], ENT_QUOTES, 'UTF-8') ?>" alt="Imagem atual da insígnia" style="display:block; width:100%; max-height:120px; object-fit:cover;">
+                        </div>
+                    </div>
+                    <label style="display:flex; align-items:center; gap:6px; font-size:12px; color:#b0b0b0; cursor:pointer; margin-left:2px;">
+                        <input type="checkbox" name="remove_badge_image" value="1">
+                        <span>Remover imagem atual da insígnia</span>
+                    </label>
+                </div>
+            <?php endif; ?>
+
+            <div id="course-badge-preview-wrapper" style="margin-top:8px; display:none;">
+                <div style="font-size:11px; color:var(--text-secondary); margin-bottom:4px;">Pré-visualização da nova insígnia:</div>
+                <div style="display:flex; flex-wrap:wrap; gap:8px; align-items:flex-start;">
+                    <div style="border-radius:8px; overflow:hidden; border:1px solid var(--border-subtle); max-width:120px;">
+                        <img id="course-badge-preview" src="" alt="Pré-visualização da nova insígnia" style="display:block; width:100%; max-height:120px; object-fit:cover;">
+                    </div>
+                    <div id="course-badge-filename" style="font-size:11px; color:var(--text-secondary); max-width:260px; word-break:break-all;"></div>
+                </div>
+            </div>
+        </div>
+
         <div style="display:flex; gap:14px; flex-wrap:wrap;">
             <div style="flex:1 1 260px;">
                 <label style="font-size:13px; color:var(--text-primary); display:block; margin-bottom:4px;">E-mail do professor/parceiro (opcional)</label>
@@ -193,11 +235,16 @@ document.addEventListener('DOMContentLoaded', function () {
     var imgEl = document.getElementById('course-image-preview');
     var nameEl = document.getElementById('course-image-filename');
 
+    var badgeFileInput = document.querySelector('input[name="badge_image_upload"]');
+    var badgeWrapper = document.getElementById('course-badge-preview-wrapper');
+    var badgeImgEl = document.getElementById('course-badge-preview');
+    var badgeNameEl = document.getElementById('course-badge-filename');
+
     if (!fileInput || !wrapper || !imgEl || !nameEl) {
-        return;
+        fileInput = null;
     }
 
-    fileInput.addEventListener('change', function () {
+    if (fileInput) fileInput.addEventListener('change', function () {
         var file = this.files && this.files[0] ? this.files[0] : null;
         if (!file) {
             wrapper.style.display = 'none';
@@ -210,6 +257,25 @@ document.addEventListener('DOMContentLoaded', function () {
         imgEl.src = url;
         nameEl.textContent = file.name;
         wrapper.style.display = 'block';
+    });
+
+    if (!badgeFileInput || !badgeWrapper || !badgeImgEl || !badgeNameEl) {
+        return;
+    }
+
+    badgeFileInput.addEventListener('change', function () {
+        var file = this.files && this.files[0] ? this.files[0] : null;
+        if (!file) {
+            badgeWrapper.style.display = 'none';
+            badgeImgEl.removeAttribute('src');
+            badgeNameEl.textContent = '';
+            return;
+        }
+
+        var url = URL.createObjectURL(file);
+        badgeImgEl.src = url;
+        badgeNameEl.textContent = file.name;
+        badgeWrapper.style.display = 'block';
     });
 });
 </script>

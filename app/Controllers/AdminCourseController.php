@@ -95,7 +95,9 @@ class AdminCourseController extends Controller
         $shortDescription = trim($_POST['short_description'] ?? '');
         $description = trim($_POST['description'] ?? '');
         $imagePath = trim($_POST['image_path'] ?? '');
+        $badgeImagePath = trim($_POST['badge_image_path'] ?? '');
         $removeImage = !empty($_POST['remove_image']);
+        $removeBadgeImage = !empty($_POST['remove_badge_image']);
         $partnerEmail = trim($_POST['partner_email'] ?? '');
         $isPaid = !empty($_POST['is_paid']) ? 1 : 0;
         $priceRaw = trim($_POST['price'] ?? '0');
@@ -116,6 +118,23 @@ class AdminCourseController extends Controller
                     $remoteImageUrl = MediaStorageService::uploadFile($imgTmp, $imgName, $imgMime);
                     if ($remoteImageUrl !== null) {
                         $imagePath = $remoteImageUrl;
+                    }
+                }
+            }
+        }
+
+        // Upload de imagem da insígnia do curso para o servidor de mídia externo, se um arquivo tiver sido enviado
+        if (!$removeBadgeImage && !empty($_FILES['badge_image_upload']['tmp_name'])) {
+            $imgError = $_FILES['badge_image_upload']['error'] ?? UPLOAD_ERR_NO_FILE;
+            if ($imgError === UPLOAD_ERR_OK) {
+                $imgTmp = (string)($_FILES['badge_image_upload']['tmp_name'] ?? '');
+                $imgName = (string)($_FILES['badge_image_upload']['name'] ?? '');
+                $imgMime = (string)($_FILES['badge_image_upload']['type'] ?? '');
+
+                if ($imgTmp !== '' && is_file($imgTmp)) {
+                    $remoteImageUrl = MediaStorageService::uploadFile($imgTmp, $imgName, $imgMime);
+                    if ($remoteImageUrl !== null) {
+                        $badgeImagePath = $remoteImageUrl;
                     }
                 }
             }
@@ -161,6 +180,10 @@ class AdminCourseController extends Controller
             $imagePath = '';
         }
 
+        if ($removeBadgeImage) {
+            $badgeImagePath = '';
+        }
+
         $data = [
             'owner_user_id' => $ownerUserId ?: null,
             'title' => $title,
@@ -168,6 +191,7 @@ class AdminCourseController extends Controller
             'short_description' => $shortDescription !== '' ? $shortDescription : null,
             'description' => $description !== '' ? $description : null,
             'image_path' => $imagePath !== '' ? $imagePath : null,
+            'badge_image_path' => $badgeImagePath !== '' ? $badgeImagePath : null,
             'is_paid' => $isPaid,
             'price_cents' => $isPaid ? $priceCents : null,
             'allow_plan_access_only' => $allowPlanAccessOnly,

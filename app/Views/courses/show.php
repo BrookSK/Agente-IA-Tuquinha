@@ -26,6 +26,8 @@ $courseUrl = CourseController::buildCourseUrl($course);
 $completedLessonIds = $completedLessonIds ?? [];
 $modulesData = $modulesData ?? [];
 $hasPaidPurchase = $hasPaidPurchase ?? false;
+$hasFinishedCourse = $hasFinishedCourse ?? false;
+$canFinishCourse = $canFinishCourse ?? false;
 
 $startLessonId = null;
 $startLessonLabel = 'Começar curso';
@@ -171,6 +173,23 @@ if (!empty($user) && !empty($canAccessContent) && !empty($lessons)) {
                         Entrar para se inscrever
                     </a>
                 <?php else: ?>
+                    <?php if (!empty($hasFinishedCourse)): ?>
+                        <span style="
+                            display:inline-flex; align-items:center; gap:6px; padding:8px 16px;
+                            border-radius:999px; border:1px solid #3aa857;
+                            background:#10330f; color:#c8ffd4; font-size:13px;">
+                            Curso finalizado ✅
+                        </span>
+                    <?php elseif (!empty($canFinishCourse) && !empty($isEnrolled)): ?>
+                        <a href="/cursos/encerrar?course_id=<?= (int)($course['id'] ?? 0) ?>" style="
+                            display:inline-flex; align-items:center; gap:6px; padding:8px 16px;
+                            border-radius:999px; border:1px solid #ffcc80;
+                            background:linear-gradient(135deg,#ffcc80,#ff8a65); color:#050509;
+                            font-size:13px; font-weight:700; text-decoration:none;">
+                            Encerrar curso e ganhar insígnia
+                        </a>
+                    <?php endif; ?>
+
                     <?php if ($isEnrolled): ?>
                         <?php if (!empty($canAccessContent) && !empty($startLessonId)): ?>
                             <a href="/cursos/aulas/ver?lesson_id=<?= (int)$startLessonId ?>" style="
@@ -198,7 +217,14 @@ if (!empty($user) && !empty($canAccessContent) && !empty($lessons)) {
                             </button>
                         </form>
                     <?php else: ?>
-                        <?php if ($hasPaidPurchase): ?>
+                        <?php if (!empty($hasFinishedCourse)): ?>
+                            <span style="
+                                display:inline-flex; align-items:center; gap:6px; padding:8px 16px;
+                                border-radius:999px; border:1px solid #272727;
+                                background:#111118; color:#b0b0b0; font-size:13px;">
+                                Você já finalizou este curso
+                            </span>
+                        <?php elseif ($hasPaidPurchase): ?>
                             <?php if (!empty($firstCompletedLessonId)): ?>
                                 <a href="/cursos/aulas/ver?lesson_id=<?= (int)$firstCompletedLessonId ?>" style="
                                     display:inline-flex; align-items:center; gap:6px; padding:8px 16px;
@@ -208,15 +234,12 @@ if (!empty($user) && !empty($canAccessContent) && !empty($lessons)) {
                                     Rever aulas concluídas
                                 </a>
                             <?php endif; ?>
-                            <form action="/cursos/inscrever" method="post" style="display:inline;">
-                                <input type="hidden" name="course_id" value="<?= (int)($course['id'] ?? 0) ?>">
-                                <button type="submit" style="
-                                    border:none; border-radius:999px; padding:8px 16px;
-                                    background:linear-gradient(135deg,#e53935,#ff6f60); color:#050509;
-                                    font-weight:600; font-size:13px; cursor:pointer;">
-                                    Reinscrever neste curso
-                                </button>
-                            </form>
+                            <span style="
+                                display:inline-flex; align-items:center; gap:6px; padding:8px 16px;
+                                border-radius:999px; border:1px solid #272727;
+                                background:#111118; color:#b0b0b0; font-size:13px;">
+                                Você já comprou este curso
+                            </span>
                         <?php else: ?>
                             <?php if (empty($canAccessContent)): ?>
                                 <?php if ($isPaid && $priceCents > 0 && $allowPublicPurchase && !$planAllowsCourses): ?>

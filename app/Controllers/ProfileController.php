@@ -9,6 +9,7 @@ use App\Models\UserScrap;
 use App\Models\UserTestimonial;
 use App\Models\UserFriend;
 use App\Models\CommunityMember;
+use App\Models\UserCourseBadge;
 
 class ProfileController extends Controller
 {
@@ -62,6 +63,7 @@ class ProfileController extends Controller
         $friends = UserFriend::friendsWithUsers($targetId);
         $communities = CommunityMember::communitiesForUser($targetId);
         $friendship = $targetId !== $currentId ? UserFriend::findFriendship($currentId, $targetId) : null;
+        $courseBadges = UserCourseBadge::allWithCoursesByUserId($targetId);
 
         $isFavoriteFriend = false;
         if ($friendship && ($friendship['status'] ?? '') === 'accepted') {
@@ -93,6 +95,7 @@ class ProfileController extends Controller
             'pendingTestimonials' => $pendingTestimonials,
             'friends' => $friends,
             'communities' => $communities,
+            'courseBadges' => $courseBadges,
             'friendship' => $friendship,
             'isFavoriteFriend' => $isFavoriteFriend,
             'success' => $success,

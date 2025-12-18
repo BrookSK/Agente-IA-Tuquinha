@@ -21,6 +21,7 @@ use App\Models\User;
 use App\Models\Community;
 use App\Models\CommunityMember;
 use App\Models\CoursePurchase;
+use App\Models\UserCourseBadge;
 use App\Services\MailService;
 use App\Services\GoogleCalendarService;
 
@@ -31,12 +32,126 @@ class CourseController extends Controller
         if (empty($_SESSION['user_id'])) {
             return null;
         }
+
         $user = User::findById((int)$_SESSION['user_id']);
         if (!$user) {
             unset($_SESSION['user_id'], $_SESSION['user_name'], $_SESSION['user_email']);
             return null;
         }
         return $user;
+    }
+
+    public function finishCourse(): void
+    {
+        $user = $this->getCurrentUser();
+        if (!$user) {
+            header('Location: /login');
+            exit;
+        }
+
+        $courseId = isset($_GET['course_id']) ? (int)$_GET['course_id'] : 0;
+        $course = $courseId > 0 ? Course::findById($courseId) : null;
+        if (!$course || empty($course['is_active'])) {
+            $_SESSION['courses_error'] = 'Curso não encontrado.';
+            header('Location: /cursos');
+            exit;
+        }
+
+        $userId = (int)$user['id'];
+        if (UserCourseBadge::hasEarned($userId, $courseId)) {
+            $_SESSION['courses_error'] = 'Você já finalizou este curso.';
+            header('Location: ' . self::buildCourseUrl($course));
+            exit;
+        }
+
+        if (!CourseEnrollment::isEnrolled($courseId, $userId)) {
+            $_SESSION['courses_error'] = 'Você precisa estar inscrito neste curso para encerrar.';
+            header('Location: ' . self::buildCourseUrl($course));
+            exit;
+        }
+
+        $lessons = CourseLesson::allByCourseId($courseId);
+        $completedLessonIds = CourseLessonProgress::completedLessonIdsByUserAndCourse($courseId, $userId);
+        $modulesData = $this->buildModulesData($courseId, $user, true, $lessons, $completedLessonIds);
+        $isComplete = $this->isCourseFullyCompleted($courseId, $userId, $lessons, $completedLessonIds, $modulesData['modules'] ?? []);
+        if (!$isComplete) {
+            $_SESSION['courses_error'] = 'Você ainda não concluiu todas as aulas e provas deste curso.';
+            header('Location: ' . self::buildCourseUrl($course));
+            exit;
+        }
+
+        $success = $_SESSION['courses_success'] ?? null;
+        $error = $_SESSION['courses_error'] ?? null;
+        unset($_SESSION['courses_success'], $_SESSION['courses_error']);
+
+        $this->view('courses/finish', [
+            'pageTitle' => 'Encerrar curso: ' . (string)($course['title'] ?? ''),
+            'user' => $user,
+            'course' => $course,
+            'success' => $success,
+            'error' => $error,
+        ]);
+    }
+
+    public function finishCourseSubmit(): void
+    {
+        $user = $this->getCurrentUser();
+        if (!$user) {
+            header('Location: /login');
+            exit;
+        }
+
+        $courseId = isset($_POST['course_id']) ? (int)$_POST['course_id'] : 0;
+        $course = $courseId > 0 ? Course::findById($courseId) : null;
+        if (!$course || empty($course['is_active'])) {
+            $_SESSION['courses_error'] = 'Curso não encontrado.';
+            header('Location: /cursos');
+            exit;
+        }
+
+        $userId = (int)$user['id'];
+        if (UserCourseBadge::hasEarned($userId, $courseId)) {
+            $_SESSION['courses_error'] = 'Você já finalizou este curso.';
+            header('Location: ' . self::buildCourseUrl($course));
+            exit;
+        }
+
+        if (!CourseEnrollment::isEnrolled($courseId, $userId)) {
+            $_SESSION['courses_error'] = 'Você precisa estar inscrito neste curso para encerrar.';
+            header('Location: ' . self::buildCourseUrl($course));
+            exit;
+        }
+
+        $lessons = CourseLesson::allByCourseId($courseId);
+        $completedLessonIds = CourseLessonProgress::completedLessonIdsByUserAndCourse($courseId, $userId);
+        $modulesData = $this->buildModulesData($courseId, $user, true, $lessons, $completedLessonIds);
+        $isComplete = $this->isCourseFullyCompleted($courseId, $userId, $lessons, $completedLessonIds, $modulesData['modules'] ?? []);
+        if (!$isComplete) {
+            $_SESSION['courses_error'] = 'Você ainda não concluiu todas as aulas e provas deste curso.';
+            header('Location: ' . self::buildCourseUrl($course));
+            exit;
+        }
+
+        $testimonial = trim((string)($_POST['testimonial_text'] ?? ''));
+        if ($testimonial === '') {
+            $testimonial = null;
+        }
+
+        $ratingRaw = isset($_POST['rating']) ? trim((string)$_POST['rating']) : '';
+        $rating = null;
+        if ($ratingRaw !== '') {
+            $rating = (int)$ratingRaw;
+            if ($rating < 1 || $rating > 5) {
+                $rating = null;
+            }
+        }
+
+        UserCourseBadge::award($userId, $courseId, $testimonial, $rating);
+        CourseEnrollment::unenroll($courseId, $userId);
+
+        $_SESSION['courses_success'] = 'Curso finalizado com sucesso. Você ganhou uma insígnia!';
+        header('Location: ' . self::buildCourseUrl($course));
+        exit;
     }
 
     private function resolvePlanForUser(?array $user): ?array
@@ -90,6 +205,47 @@ class CourseController extends Controller
         }
 
         return false;
+    }
+
+    private function isCourseFullyCompleted(int $courseId, int $userId, array $lessons, array $completedLessonIds, array $modulesData): bool
+    {
+        if ($courseId <= 0 || $userId <= 0) {
+            return false;
+        }
+
+        $publishedLessonIds = [];
+        foreach ($lessons as $lessonRow) {
+            if (empty($lessonRow['is_published'])) {
+                continue;
+            }
+            $lid = (int)($lessonRow['id'] ?? 0);
+            if ($lid > 0) {
+                $publishedLessonIds[$lid] = true;
+            }
+        }
+
+        if (empty($publishedLessonIds)) {
+            return false;
+        }
+
+        foreach ($publishedLessonIds as $lid => $_) {
+            if (empty($completedLessonIds[$lid] ?? false)) {
+                return false;
+            }
+        }
+
+        foreach ($modulesData as $mData) {
+            $exam = $mData['exam'] ?? null;
+            $hasExam = $exam && !empty($exam['is_active']);
+            if (!$hasExam) {
+                continue;
+            }
+            if (empty($mData['has_passed_exam'])) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     private function buildModulesData(int $courseId, ?array $user, bool $isEnrolled, array $lessons, array $completedLessonIds): array
@@ -365,14 +521,19 @@ class CourseController extends Controller
         $isEnrolled = false;
         $myLiveParticipation = [];
         $hasPaidPurchase = false;
+        $hasFinishedCourse = false;
         if ($user) {
             $userId = (int)$user['id'];
             $isEnrolled = CourseEnrollment::isEnrolled($courseId, $userId);
             $myLiveParticipation = CourseLiveParticipant::liveIdsByUser($userId);
             $hasPaidPurchase = CoursePurchase::userHasPaidPurchase($userId, $courseId);
+            $hasFinishedCourse = UserCourseBadge::hasEarned($userId, $courseId);
         }
 
         $canAccessContent = $this->userCanAccessCourseContent($course, $user, $plan, $isEnrolled);
+        if ($hasFinishedCourse) {
+            $canAccessContent = false;
+        }
 
         // Lives futuras e publicadas para o painel do curso
         $lives = [];
@@ -397,6 +558,11 @@ class CourseController extends Controller
         }
 
         $modulesData = $this->buildModulesData($courseId, $user, $isEnrolled, $lessons, $completedLessonIds);
+
+        $canFinishCourse = false;
+        if ($user && $isEnrolled && !$hasFinishedCourse) {
+            $canFinishCourse = $this->isCourseFullyCompleted($courseId, (int)$user['id'], $lessons, $completedLessonIds, $modulesData['modules'] ?? []);
+        }
 
         $commentsByLesson = [];
         $lessonComments = CourseLessonComment::allByCourseWithUser($courseId);
@@ -432,6 +598,8 @@ class CourseController extends Controller
             'courseProgressPercent' => $courseProgressPercent,
             'modulesData' => $modulesData['modules'] ?? [],
             'unassignedLessons' => $modulesData['unassigned_lessons'] ?? [],
+            'hasFinishedCourse' => $hasFinishedCourse,
+            'canFinishCourse' => $canFinishCourse,
             'success' => $success,
             'error' => $error,
         ]);
@@ -463,6 +631,12 @@ class CourseController extends Controller
         $isEnrolled = false;
         $user = $this->getCurrentUser();
         $plan = $this->resolvePlanForUser($user);
+
+        if ($user && !empty($user['id']) && UserCourseBadge::hasEarned((int)$user['id'], $courseId)) {
+            $_SESSION['courses_error'] = 'Você já finalizou este curso e não pode rever as aulas.';
+            header('Location: ' . self::buildCourseUrl($course));
+            exit;
+        }
 
         $completedLessonIds = [];
         $isLessonCompleted = false;
@@ -652,6 +826,12 @@ class CourseController extends Controller
         $userId = (int)$user['id'];
         $isEnrolled = CourseEnrollment::isEnrolled($courseId, $userId);
 
+        if (UserCourseBadge::hasEarned($userId, $courseId)) {
+            $_SESSION['courses_error'] = 'Você já finalizou este curso e não pode alterar o progresso das aulas.';
+            header('Location: ' . self::buildCourseUrl($course));
+            exit;
+        }
+
         $canAccessContent = $this->userCanAccessCourseContent($course, $user, $plan, $isEnrolled);
         if (!$canAccessContent) {
             $_SESSION['courses_error'] = 'Você precisa concluir a compra deste curso ou ter um plano que libera cursos para marcar esta aula como concluída.';
@@ -775,6 +955,11 @@ class CourseController extends Controller
         }
 
         $userId = (int)$user['id'];
+        if (UserCourseBadge::hasEarned($userId, $courseId)) {
+            $_SESSION['courses_error'] = 'Você já finalizou este curso e não pode acessar as provas novamente.';
+            header('Location: ' . self::buildCourseUrl($course));
+            exit;
+        }
         $isEnrolled = CourseEnrollment::isEnrolled($courseId, $userId);
         if (!$isEnrolled) {
             $_SESSION['courses_error'] = 'Você precisa estar inscrito neste curso para fazer a prova deste módulo.';
@@ -898,6 +1083,11 @@ class CourseController extends Controller
         }
 
         $userId = (int)$user['id'];
+        if (UserCourseBadge::hasEarned($userId, $courseId)) {
+            $_SESSION['courses_error'] = 'Você já finalizou este curso e não pode enviar provas novamente.';
+            header('Location: ' . self::buildCourseUrl($course));
+            exit;
+        }
         $isEnrolled = CourseEnrollment::isEnrolled($courseId, $userId);
         if (!$isEnrolled) {
             $_SESSION['courses_error'] = 'Você precisa estar inscrito neste curso para fazer a prova deste módulo.';
@@ -1047,6 +1237,12 @@ class CourseController extends Controller
             exit;
         }
 
+        if (UserCourseBadge::hasEarned((int)$user['id'], $courseId)) {
+            $_SESSION['courses_error'] = 'Você já finalizou este curso e não pode se inscrever novamente.';
+            header('Location: ' . self::buildCourseUrl($course));
+            exit;
+        }
+
         $allowPlanOnly = !empty($course['allow_plan_access_only']);
         $allowPublicPurchase = !empty($course['allow_public_purchase']);
         $priceCents = isset($course['price_cents']) ? (int)$course['price_cents'] : 0;
@@ -1150,6 +1346,11 @@ HTML;
         }
 
         $userId = (int)$user['id'];
+        if (UserCourseBadge::hasEarned($userId, $courseId)) {
+            $_SESSION['courses_error'] = 'Você já finalizou este curso e não pode cancelar ou alterar a inscrição.';
+            header('Location: ' . self::buildCourseUrl($course));
+            exit;
+        }
         if (!CourseEnrollment::isEnrolled($courseId, $userId)) {
             $_SESSION['courses_error'] = 'Você não está inscrito neste curso.';
             header('Location: ' . self::buildCourseUrl($course));
