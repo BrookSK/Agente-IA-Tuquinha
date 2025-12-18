@@ -66,6 +66,9 @@ foreach ($media as $m) {
 
             <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
                 <a href="/perfil/portfolio?user_id=<?= $ownerId ?>" style="font-size:12px; color:#ff6f60; text-decoration:none;">Voltar ao portfólio</a>
+                <?php if (!empty($canEdit) || $isOwner): ?>
+                    <a href="/perfil/portfolio/gerenciar?owner_user_id=<?= (int)$ownerId ?>&edit_id=<?= (int)($item['id'] ?? 0) ?>" style="border-radius:999px; padding:6px 10px; border:1px solid var(--border-subtle); background:var(--surface-subtle); color:var(--text-primary); font-size:12px; text-decoration:none;">Editar</a>
+                <?php endif; ?>
                 <button type="button" id="portfolioLikeBtn" aria-pressed="<?= $isLiked ? 'true' : 'false' ?>" style="border:1px solid var(--border-subtle); background:var(--surface-subtle); color:var(--text-primary); border-radius:999px; padding:6px 10px; font-size:12px; cursor:pointer;">
                     <span id="portfolioLikeIcon"><?= $isLiked ? '❤' : '♡' ?></span>
                     <span id="portfolioLikeCount" style="margin-left:4px;"><?= (int)$likesCount ?></span>

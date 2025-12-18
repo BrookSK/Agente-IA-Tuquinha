@@ -7,12 +7,21 @@
 /** @var bool|null $canShare */
 /** @var array|null $collaborators */
 /** @var array|null $pendingInvites */
+/** @var array|null $editItem */
 
 $userId = (int)($user['id'] ?? 0);
 $ownerUserId = isset($ownerId) ? (int)$ownerId : $userId;
 $canShare = !empty($canShare);
 $collaborators = is_array($collaborators ?? null) ? $collaborators : [];
 $pendingInvites = is_array($pendingInvites ?? null) ? $pendingInvites : [];
+
+$editItem = is_array($editItem ?? null) ? $editItem : null;
+$isEditing = !empty($editItem) && !empty($editItem['id']);
+$editItemId = $isEditing ? (int)($editItem['id'] ?? 0) : 0;
+$editTitle = $isEditing ? (string)($editItem['title'] ?? '') : '';
+$editDescription = $isEditing ? (string)($editItem['description'] ?? '') : '';
+$editExternalUrl = $isEditing ? (string)($editItem['external_url'] ?? '') : '';
+$editProjectId = $isEditing ? (int)($editItem['project_id'] ?? 0) : 0;
 ?>
 <style>
     @media (max-width: 900px) {
@@ -245,29 +254,34 @@ $pendingInvites = is_array($pendingInvites ?? null) ? $pendingInvites : [];
     <?php endif; ?>
 
     <section style="background:var(--surface-card); border-radius:16px; border:1px solid var(--border-subtle); padding:12px 14px;">
-        <h2 style="font-size:16px; margin-bottom:8px;">Novo portfólio</h2>
+        <h2 style="font-size:16px; margin-bottom:8px;"><?= $isEditing ? 'Editar portfólio' : 'Novo portfólio' ?></h2>
         <form action="/perfil/portfolio/salvar" method="post" style="display:flex; flex-direction:column; gap:10px;">
-            <input type="hidden" name="id" value="">
+            <input type="hidden" name="id" value="<?= $isEditing ? (int)$editItemId : '' ?>">
             <input type="hidden" name="owner_user_id" value="<?= (int)$ownerUserId ?>">
             <div>
                 <label style="display:block; font-size:12px; color:var(--text-secondary); margin-bottom:3px;">Título</label>
-                <input name="title" type="text" maxlength="200" required style="width:100%; padding:8px 10px; border-radius:10px; border:1px solid var(--border-subtle); background:var(--surface-subtle); color:var(--text-primary); font-size:13px;">
+                <input name="title" type="text" maxlength="200" required value="<?= htmlspecialchars($editTitle, ENT_QUOTES, 'UTF-8') ?>" style="width:100%; padding:8px 10px; border-radius:10px; border:1px solid var(--border-subtle); background:var(--surface-subtle); color:var(--text-primary); font-size:13px;">
             </div>
             <div>
                 <label style="display:block; font-size:12px; color:var(--text-secondary); margin-bottom:3px;">Descrição</label>
-                <textarea name="description" rows="3" style="width:100%; padding:8px 10px; border-radius:10px; border:1px solid var(--border-subtle); background:var(--surface-subtle); color:var(--text-primary); font-size:13px; resize:vertical;"></textarea>
+                <textarea name="description" rows="3" style="width:100%; padding:8px 10px; border-radius:10px; border:1px solid var(--border-subtle); background:var(--surface-subtle); color:var(--text-primary); font-size:13px; resize:vertical;"><?= htmlspecialchars($editDescription, ENT_QUOTES, 'UTF-8') ?></textarea>
             </div>
             <div style="display:flex; gap:10px; flex-wrap:wrap;">
                 <div style="flex:1 1 240px; min-width:0;">
                     <label style="display:block; font-size:12px; color:var(--text-secondary); margin-bottom:3px;">Link externo (opcional)</label>
-                    <input name="external_url" type="url" maxlength="800" placeholder="https://..." style="width:100%; padding:8px 10px; border-radius:10px; border:1px solid var(--border-subtle); background:var(--surface-subtle); color:var(--text-primary); font-size:13px;">
+                    <input name="external_url" type="url" maxlength="800" placeholder="https://..." value="<?= htmlspecialchars($editExternalUrl, ENT_QUOTES, 'UTF-8') ?>" style="width:100%; padding:8px 10px; border-radius:10px; border:1px solid var(--border-subtle); background:var(--surface-subtle); color:var(--text-primary); font-size:13px;">
                 </div>
                 <div style="flex:0 0 220px; min-width:0;">
                     <label style="display:block; font-size:12px; color:var(--text-secondary); margin-bottom:3px;">Projeto (opcional)</label>
-                    <input name="project_id" type="number" min="0" placeholder="ID do projeto" style="width:100%; padding:8px 10px; border-radius:10px; border:1px solid var(--border-subtle); background:var(--surface-subtle); color:var(--text-primary); font-size:13px;">
+                    <input name="project_id" type="number" min="0" placeholder="ID do projeto" value="<?= $editProjectId > 0 ? (int)$editProjectId : '' ?>" style="width:100%; padding:8px 10px; border-radius:10px; border:1px solid var(--border-subtle); background:var(--surface-subtle); color:var(--text-primary); font-size:13px;">
                 </div>
             </div>
-            <button type="submit" style="align-self:flex-end; border:none; border-radius:999px; padding:7px 12px; background:linear-gradient(135deg,#e53935,#ff6f60); color:#050509; font-size:12px; font-weight:650; cursor:pointer;">Criar</button>
+            <div style="display:flex; gap:8px; justify-content:flex-end; flex-wrap:wrap;">
+                <?php if ($isEditing): ?>
+                    <a href="/perfil/portfolio/gerenciar?owner_user_id=<?= (int)$ownerUserId ?>" style="border-radius:999px; padding:7px 12px; border:1px solid var(--border-subtle); background:var(--surface-card); color:var(--text-primary); font-size:12px; text-decoration:none;">Cancelar</a>
+                <?php endif; ?>
+                <button type="submit" style="border:none; border-radius:999px; padding:7px 12px; background:linear-gradient(135deg,#e53935,#ff6f60); color:#050509; font-size:12px; font-weight:650; cursor:pointer;"><?= $isEditing ? 'Salvar' : 'Criar' ?></button>
+            </div>
         </form>
     </section>
 
@@ -292,6 +306,7 @@ $pendingInvites = is_array($pendingInvites ?? null) ? $pendingInvites : [];
                             </div>
                             <div style="display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end;">
                                 <a href="/perfil/portfolio/ver?id=<?= $iid ?>" style="border:1px solid var(--border-subtle); background:var(--surface-card); color:var(--text-primary); border-radius:999px; padding:5px 10px; font-size:12px; text-decoration:none;">Detalhes</a>
+                                <a href="/perfil/portfolio/gerenciar?owner_user_id=<?= (int)$ownerUserId ?>&edit_id=<?= $iid ?>" style="border:1px solid var(--border-subtle); background:var(--surface-card); color:var(--text-primary); border-radius:999px; padding:5px 10px; font-size:12px; text-decoration:none;">Editar</a>
                                 <form action="/perfil/portfolio/excluir" method="post" style="margin:0;" onsubmit="return confirm('Excluir este portfólio?');">
                                     <input type="hidden" name="id" value="<?= $iid ?>">
                                     <input type="hidden" name="owner_user_id" value="<?= (int)$ownerUserId ?>">

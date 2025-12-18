@@ -177,6 +177,17 @@ class SocialPortfolioController extends Controller
 
         $items = SocialPortfolioItem::allForUser($ownerId, 200);
 
+        $editId = isset($_GET['edit_id']) ? (int)$_GET['edit_id'] : 0;
+        $editItem = null;
+        if ($editId > 0) {
+            foreach ($items as $it) {
+                if ((int)($it['id'] ?? 0) === $editId) {
+                    $editItem = $it;
+                    break;
+                }
+            }
+        }
+
         $canShare = $ownerId === $currentId;
         $collaborators = $canShare ? SocialPortfolioCollaborator::allWithUsers($ownerId) : [];
         $pendingInvites = $canShare ? SocialPortfolioInvitation::allPendingForOwner($ownerId) : [];
@@ -197,6 +208,7 @@ class SocialPortfolioController extends Controller
             'canShare' => $canShare,
             'collaborators' => $collaborators,
             'pendingInvites' => $pendingInvites,
+            'editItem' => $editItem,
         ]);
     }
 
