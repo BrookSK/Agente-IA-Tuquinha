@@ -574,7 +574,14 @@ if (!empty($_SESSION['user_id'])) {
                     $hasUser = !empty($_SESSION['user_id']);
                     $isAdmin = !empty($_SESSION['is_admin']);
                     $currentSlug = $_SESSION['plan_slug'] ?? null;
-                    $canUseProjects = $hasUser && ($isAdmin || ($currentSlug && $currentSlug !== 'free'));
+                    $currentPlanId = isset($_SESSION['plan_id']) ? (int)$_SESSION['plan_id'] : 0;
+                    $canUseProjects = false;
+                    if ($hasUser && $isAdmin) {
+                        $canUseProjects = true;
+                    } elseif ($hasUser && $currentPlanId > 0) {
+                        $plan = \App\Models\Plan::findById($currentPlanId);
+                        $canUseProjects = !empty($plan['allow_projects_access']);
+                    }
                 ?>
 
                 <?php if ($canUseProjects): ?>
