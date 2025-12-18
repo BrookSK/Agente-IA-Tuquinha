@@ -775,6 +775,7 @@
                                 btn.textContent = 'Salvo';
                                 btn.style.color = '#c8ffd4';
                                 btn.style.borderColor = '#2e7d32';
+                                showToast('Salvo com sucesso', 'success');
                                 try {
                                     if (btn.dataset && btn.dataset.savedTimeout) {
                                         clearTimeout(parseInt(btn.dataset.savedTimeout, 10));
