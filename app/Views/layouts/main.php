@@ -6,6 +6,40 @@ use App\Models\CoursePartner;
 
 $pageTitle = $pageTitle ?? 'Resenha 2.0 - Tuquinha';
 
+$menuIconMap = [];
+try {
+    if (class_exists('App\\Models\\MenuIcon')) {
+        $menuIconMap = \App\Models\MenuIcon::allAssoc();
+    }
+} catch (\Throwable $e) {
+    $menuIconMap = [];
+}
+
+$renderMenuIcon = function (string $key, string $fallbackHtml) use ($menuIconMap): string {
+    $entry = $menuIconMap[$key] ?? null;
+    if (!is_array($entry)) {
+        return $fallbackHtml;
+    }
+    $dark = isset($entry['dark_path']) ? (string)$entry['dark_path'] : '';
+    $light = isset($entry['light_path']) ? (string)$entry['light_path'] : '';
+    if ($dark === '' && $light === '') {
+        return $fallbackHtml;
+    }
+
+    $darkImg = $dark !== '' ? '<img class="menu-custom-icon menu-custom-icon--dark" src="' . htmlspecialchars($dark, ENT_QUOTES, 'UTF-8') . '" alt="" />' : '';
+    $lightImg = $light !== '' ? '<img class="menu-custom-icon menu-custom-icon--light" src="' . htmlspecialchars($light, ENT_QUOTES, 'UTF-8') . '" alt="" />' : '';
+    $single = '';
+    if ($darkImg !== '' && $lightImg === '') {
+        $single = '<img class="menu-custom-icon" src="' . htmlspecialchars($dark, ENT_QUOTES, 'UTF-8') . '" alt="" />';
+        return $single;
+    }
+    if ($lightImg !== '' && $darkImg === '') {
+        $single = '<img class="menu-custom-icon" src="' . htmlspecialchars($light, ENT_QUOTES, 'UTF-8') . '" alt="" />';
+        return $single;
+    }
+    return $darkImg . $lightImg;
+};
+
 $isCoursePartner = false;
 if (!empty($_SESSION['user_id'])) {
     $isCoursePartner = (bool)CoursePartner::findByUserId((int)$_SESSION['user_id']);
@@ -237,6 +271,30 @@ if (!empty($_SESSION['user_id'])) {
         /* No tema claro, remove o "blur" vermelho de fundo e usa apenas a cor base */
         body[data-theme="light"] .main {
             background: var(--bg-main);
+        }
+
+        body[data-theme="light"] .tuquinha-home-icon--dark {
+            display: none !important;
+        }
+
+        body[data-theme="light"] .tuquinha-home-icon--light {
+            display: inline-block !important;
+        }
+
+        .menu-custom-icon {
+            width: 18px;
+            height: 18px;
+            object-fit: contain;
+            display: inline-block;
+        }
+        .menu-custom-icon--light {
+            display: none;
+        }
+        body[data-theme="light"] .menu-custom-icon--dark {
+            display: none;
+        }
+        body[data-theme="light"] .menu-custom-icon--light {
+            display: inline-block;
         }
 
         .main-header {
@@ -489,15 +547,26 @@ if (!empty($_SESSION['user_id'])) {
                 <?php endif; ?>
                 <div class="sidebar-section-title" style="margin-top: 10px;">Guias rápidos</div>
                 <a href="/" class="sidebar-button">
-                    <span class="icon">🏠</span>
+                    <span class="icon" aria-hidden="true"><?php
+                        echo $renderMenuIcon('quick_home', '<svg class="tuquinha-home-icon tuquinha-home-icon--dark" width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="display:inline-block;">
+                            <path d="M3 10.5L12 3l9 7.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M5 9.8V20a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V9.8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M18 4.8V7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                        </svg>
+                        <svg class="tuquinha-home-icon tuquinha-home-icon--light" width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="display:none;">
+                            <path d="M3 10.5L12 3l9 7.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M5 9.8V20a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V9.8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M18 4.8V7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                        </svg>');
+                    ?></span>
                     <span>Quem é o Tuquinha</span>
                 </a>
                 <a href="/planos" class="sidebar-button">
-                    <span class="icon">💳</span>
+                    <span class="icon" aria-hidden="true"><?php echo $renderMenuIcon('quick_plans', '💳'); ?></span>
                     <span>Planos e limites</span>
                 </a>
                 <a href="/cursos" class="sidebar-button">
-                    <span class="icon">🎓</span>
+                    <span class="icon" aria-hidden="true"><?php echo $renderMenuIcon('quick_courses', '🎓'); ?></span>
                     <span>Cursos</span>
                 </a>
 
@@ -511,11 +580,11 @@ if (!empty($_SESSION['user_id'])) {
                 <?php if ($canUseProjects): ?>
                     <div class="sidebar-section-title" style="margin-top: 10px;">Projetos</div>
                     <a href="/projetos" class="sidebar-button">
-                        <span class="icon">📁</span>
+                        <span class="icon" aria-hidden="true"><?php echo $renderMenuIcon('projects_list', '📁'); ?></span>
                         <span>Meus projetos</span>
                     </a>
                     <a href="/projetos/novo" class="sidebar-button">
-                        <span class="icon">➕</span>
+                        <span class="icon" aria-hidden="true"><?php echo $renderMenuIcon('projects_new', '➕'); ?></span>
                         <span>Novo projeto</span>
                     </a>
                 <?php endif; ?>
@@ -523,57 +592,41 @@ if (!empty($_SESSION['user_id'])) {
                 <?php if (!empty($_SESSION['user_id'])): ?>
                     <div class="sidebar-section-title" style="margin-top: 10px;">Rede social do Tuquinha</div>
                     <a href="/perfil" class="sidebar-button">
-                        <span class="icon">
-                            🧑
-                        </span>
+                        <span class="icon" aria-hidden="true"><?php echo $renderMenuIcon('social_profile', '🧑'); ?></span>
                         <span>Perfil social</span>
                     </a>
                     <a href="/amigos" class="sidebar-button">
-                        <span class="icon">
-                            👥
-                        </span>
+                        <span class="icon" aria-hidden="true"><?php echo $renderMenuIcon('social_friends', '👥'); ?></span>
                         <span>Amigos</span>
                     </a>
                     <a href="/comunidades" class="sidebar-button">
-                        <span class="icon">
-                            💬
-                        </span>
-                        <span>Fóruns e Comunidades</span>
+                        <span class="icon" aria-hidden="true"><?php echo $renderMenuIcon('social_communities', '💬'); ?></span>
+                        <span>Comunidades</span>
                     </a>
                 <?php endif; ?>
 
                 <?php if (!empty($_SESSION['user_id'])): ?>
                     <div class="sidebar-section-title" style="margin-top: 10px;">Conta</div>
                     <a href="/conta" class="sidebar-button">
-                        <span class="icon">
-                            👤
-                        </span>
+                        <span class="icon" aria-hidden="true"><?php echo $renderMenuIcon('account_home', '👤'); ?></span>
                         <span>Minha conta</span>
                     </a>
                     <a href="/conta/personalidade" class="sidebar-button">
-                        <span class="icon">
-                            🎭
-                        </span>
+                        <span class="icon" aria-hidden="true"><?php echo $renderMenuIcon('account_persona', '🎭'); ?></span>
                         <span>Personalidade padrão</span>
                     </a>
                     <a href="/tokens/historico" class="sidebar-button">
-                        <span class="icon">
-                            🔋
-                        </span>
+                        <span class="icon" aria-hidden="true"><?php echo $renderMenuIcon('account_tokens', '🔋'); ?></span>
                         <span>Histórico de tokens extras</span>
                     </a>
                     <?php if (!empty($isCoursePartner)): ?>
                         <a href="/parceiro/cursos" class="sidebar-button">
-                            <span class="icon">
-                                🎓
-                            </span>
+                            <span class="icon" aria-hidden="true"><?php echo $renderMenuIcon('partner_courses', '🎓'); ?></span>
                             <span>Meus cursos (parceiro)</span>
                         </a>
                     <?php endif; ?>
                     <a href="/logout" class="sidebar-button" style="margin-top: 6px;">
-                        <span class="icon">
-                            ⏻
-                        </span>
+                        <span class="icon" aria-hidden="true"><?php echo $renderMenuIcon('logout', '⏻'); ?></span>
                         <span>Sair da conta</span>
                     </a>
                 <?php endif; ?>
@@ -581,27 +634,31 @@ if (!empty($_SESSION['user_id'])) {
                 <?php if (!empty($_SESSION['is_admin'])): ?>
                     <div class="sidebar-section-title" style="margin-top: 10px;">Admin</div>
                     <a href="/admin" class="sidebar-button">
-                        <span class="icon">📊</span>
+                        <span class="icon" aria-hidden="true"><?php echo $renderMenuIcon('admin_dashboard', '📊'); ?></span>
                         <span>Dashboard</span>
                     </a>
                     <a href="/admin/config" class="sidebar-button">
-                        <span class="icon">⚙</span>
+                        <span class="icon" aria-hidden="true"><?php echo $renderMenuIcon('admin_config', '⚙'); ?></span>
                         <span>Configurações do sistema</span>
                     </a>
+                    <a href="/admin/menu-icones" class="sidebar-button" style="margin-top: 6px;">
+                        <span class="icon" aria-hidden="true">🖼</span>
+                        <span>Ícones do menu</span>
+                    </a>
                     <a href="/admin/planos" class="sidebar-button" style="margin-top: 6px;">
-                        <span class="icon">🧩</span>
+                        <span class="icon" aria-hidden="true"><?php echo $renderMenuIcon('admin_plans', '🧩'); ?></span>
                         <span>Gerenciar planos</span>
                     </a>
                     <a href="/admin/cursos" class="sidebar-button" style="margin-top: 6px;">
-                        <span class="icon">🎓</span>
+                        <span class="icon" aria-hidden="true"><?php echo $renderMenuIcon('admin_courses', '🎓'); ?></span>
                         <span>Cursos</span>
                     </a>
                     <a href="/admin/personalidades" class="sidebar-button" style="margin-top: 6px;">
-                        <span class="icon">🎭</span>
+                        <span class="icon" aria-hidden="true"><?php echo $renderMenuIcon('admin_personalities', '🎭'); ?></span>
                         <span>Personalidades do Tuquinha</span>
                     </a>
                     <a href="/admin/usuarios" class="sidebar-button" style="margin-top: 6px;">
-                        <span class="icon">👥</span>
+                        <span class="icon" aria-hidden="true"><?php echo $renderMenuIcon('admin_users', '👥'); ?></span>
                         <span>Usuários</span>
                     </a>
                     <!-- <a href="/admin/comunidade/bloqueios" class="sidebar-button" style="margin-top: 6px;">
@@ -609,11 +666,11 @@ if (!empty($_SESSION['user_id'])) {
                         <span>Bloqueios da comunidade</span>
                     </a> -->
                     <a href="/admin/assinaturas" class="sidebar-button" style="margin-top: 6px;">
-                        <span class="icon">📑</span>
+                        <span class="icon" aria-hidden="true"><?php echo $renderMenuIcon('admin_subscriptions', '📑'); ?></span>
                         <span>Assinaturas</span>
                     </a>
                     <a href="/admin/comunidade/categorias" class="sidebar-button" style="margin-top: 6px;">
-                        <span class="icon">💬</span>
+                        <span class="icon" aria-hidden="true"><?php echo $renderMenuIcon('admin_community_categories', '💬'); ?></span>
                         <span>Categorias de comunidades</span>
                     </a>
                     <!-- <a href="/debug/asaas" class="sidebar-button" style="margin-top: 6px;">

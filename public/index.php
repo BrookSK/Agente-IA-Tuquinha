@@ -211,6 +211,8 @@ $router->get('/admin', 'AdminDashboardController@index');
 $router->get('/admin/config', 'AdminConfigController@index');
 $router->post('/admin/config', 'AdminConfigController@save');
 $router->post('/admin/config/test-email', 'AdminConfigController@sendTestEmail');
+$router->get('/admin/menu-icones', 'AdminMenuIconController@index');
+$router->post('/admin/menu-icones/salvar', 'AdminMenuIconController@save');
 $router->get('/admin/planos', 'AdminPlanController@index');
 $router->get('/admin/planos/novo', 'AdminPlanController@form');
 $router->get('/admin/planos/editar', 'AdminPlanController@form');
