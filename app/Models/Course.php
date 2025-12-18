@@ -50,8 +50,8 @@ class Course
     public static function create(array $data): int
     {
         $pdo = Database::getConnection();
-        $stmt = $pdo->prepare('INSERT INTO courses (owner_user_id, title, slug, short_description, description, image_path, badge_image_path, is_paid, price_cents, allow_plan_access_only, allow_public_purchase, is_active)
-            VALUES (:owner_user_id, :title, :slug, :short_description, :description, :image_path, :badge_image_path, :is_paid, :price_cents, :allow_plan_access_only, :allow_public_purchase, :is_active)');
+        $stmt = $pdo->prepare('INSERT INTO courses (owner_user_id, title, slug, short_description, description, image_path, badge_image_path, certificate_syllabus, certificate_workload_hours, certificate_location, is_paid, price_cents, allow_plan_access_only, allow_public_purchase, is_active)
+            VALUES (:owner_user_id, :title, :slug, :short_description, :description, :image_path, :badge_image_path, :certificate_syllabus, :certificate_workload_hours, :certificate_location, :is_paid, :price_cents, :allow_plan_access_only, :allow_public_purchase, :is_active)');
         $stmt->execute([
             'owner_user_id' => $data['owner_user_id'] ?? null,
             'title' => $data['title'] ?? '',
@@ -60,6 +60,9 @@ class Course
             'description' => $data['description'] ?? null,
             'image_path' => $data['image_path'] ?? null,
             'badge_image_path' => $data['badge_image_path'] ?? null,
+            'certificate_syllabus' => $data['certificate_syllabus'] ?? null,
+            'certificate_workload_hours' => $data['certificate_workload_hours'] ?? null,
+            'certificate_location' => $data['certificate_location'] ?? null,
             'is_paid' => (int)($data['is_paid'] ?? 0),
             'price_cents' => $data['price_cents'] ?? null,
             'allow_plan_access_only' => (int)($data['allow_plan_access_only'] ?? 1),
@@ -80,6 +83,9 @@ class Course
             description = :description,
             image_path = :image_path,
             badge_image_path = :badge_image_path,
+            certificate_syllabus = :certificate_syllabus,
+            certificate_workload_hours = :certificate_workload_hours,
+            certificate_location = :certificate_location,
             is_paid = :is_paid,
             price_cents = :price_cents,
             allow_plan_access_only = :allow_plan_access_only,
@@ -96,6 +102,9 @@ class Course
             'description' => $data['description'] ?? null,
             'image_path' => $data['image_path'] ?? null,
             'badge_image_path' => $data['badge_image_path'] ?? null,
+            'certificate_syllabus' => $data['certificate_syllabus'] ?? null,
+            'certificate_workload_hours' => $data['certificate_workload_hours'] ?? null,
+            'certificate_location' => $data['certificate_location'] ?? null,
             'is_paid' => (int)($data['is_paid'] ?? 0),
             'price_cents' => $data['price_cents'] ?? null,
             'allow_plan_access_only' => (int)($data['allow_plan_access_only'] ?? 1),

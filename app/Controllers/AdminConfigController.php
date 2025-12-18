@@ -8,6 +8,7 @@ use App\Models\Setting;
 use App\Models\AsaasConfig;
 use App\Models\TuquinhaEngine;
 use App\Services\MailService;
+use App\Services\MediaStorageService;
 
 class AdminConfigController extends Controller
 {
@@ -58,6 +59,9 @@ class AdminConfigController extends Controller
         $mediaVideoEndpoint = Setting::get('media_video_upload_endpoint', defined('MEDIA_VIDEO_UPLOAD_ENDPOINT') ? MEDIA_VIDEO_UPLOAD_ENDPOINT : '');
         $textExtractionEndpoint = Setting::get('text_extraction_endpoint', '');
 
+        $certificateIssuerName = Setting::get('certificate_issuer_name', 'Thiago Marques');
+        $certificateSignatureImagePath = Setting::get('certificate_signature_image_path', '');
+
         $asaas = AsaasConfig::getActive();
 
         $this->view('admin/config', [
@@ -87,6 +91,8 @@ class AdminConfigController extends Controller
             'mediaEndpoint' => $mediaEndpoint,
             'mediaVideoEndpoint' => $mediaVideoEndpoint,
             'textExtractionEndpoint' => $textExtractionEndpoint,
+            'certificateIssuerName' => $certificateIssuerName,
+            'certificateSignatureImagePath' => $certificateSignatureImagePath,
             'asaasEnvironment' => $asaas['environment'] ?? 'sandbox',
             'asaasSandboxKey' => $asaas['sandbox_api_key'] ?? '',
             'asaasProdKey' => $asaas['production_api_key'] ?? '',
@@ -141,6 +147,28 @@ class AdminConfigController extends Controller
         $mediaVideoEndpoint = trim($_POST['media_video_endpoint'] ?? '');
         $textExtractionEndpoint = trim($_POST['text_extraction_endpoint'] ?? '');
 
+        $certificateIssuerName = trim($_POST['certificate_issuer_name'] ?? 'Thiago Marques');
+        if ($certificateIssuerName === '') {
+            $certificateIssuerName = 'Thiago Marques';
+        }
+        $certificateSignatureImagePath = trim($_POST['certificate_signature_image_path'] ?? '');
+
+        // Upload opcional da assinatura do emissor (imagem) para servidor de mídia externo
+        if (!empty($_FILES['certificate_signature_upload']['tmp_name'])) {
+            $imgError = $_FILES['certificate_signature_upload']['error'] ?? UPLOAD_ERR_NO_FILE;
+            if ($imgError === UPLOAD_ERR_OK) {
+                $imgTmp = (string)($_FILES['certificate_signature_upload']['tmp_name'] ?? '');
+                $imgName = (string)($_FILES['certificate_signature_upload']['name'] ?? '');
+                $imgMime = (string)($_FILES['certificate_signature_upload']['type'] ?? '');
+                if ($imgTmp !== '' && is_file($imgTmp)) {
+                    $remote = MediaStorageService::uploadFile($imgTmp, $imgName, $imgMime);
+                    if ($remote !== null) {
+                        $certificateSignatureImagePath = $remote;
+                    }
+                }
+            }
+        }
+
         $pdo = Database::getConnection();
         $stmt = $pdo->prepare('INSERT INTO settings (`key`, `value`) VALUES (:key, :value)
             ON DUPLICATE KEY UPDATE `value` = VALUES(`value`)');
@@ -179,6 +207,8 @@ class AdminConfigController extends Controller
             'media_upload_endpoint' => $mediaEndpoint !== '' ? $mediaEndpoint : (defined('MEDIA_UPLOAD_ENDPOINT') ? MEDIA_UPLOAD_ENDPOINT : ''),
             'media_video_upload_endpoint' => $mediaVideoEndpoint !== '' ? $mediaVideoEndpoint : (defined('MEDIA_VIDEO_UPLOAD_ENDPOINT') ? MEDIA_VIDEO_UPLOAD_ENDPOINT : ''),
             'text_extraction_endpoint' => $textExtractionEndpoint,
+            'certificate_issuer_name' => $certificateIssuerName,
+            'certificate_signature_image_path' => $certificateSignatureImagePath,
         ];
 
         foreach ($settingsToSave as $sKey => $sValue) {
@@ -209,6 +239,8 @@ class AdminConfigController extends Controller
             'systemPrompt' => $settingsToSave['tuquinha_system_prompt'],
             'systemPromptExtra' => $settingsToSave['tuquinha_system_prompt_extra'],
             'historyRetentionDays' => $historyRetentionDays,
+            'freeGlobalLimit' => $freeGlobalLimit,
+            'freeChatLimit' => $freeChatLimit,
             'smtpHost' => $smtpHost,
             'smtpPort' => $smtpPort,
             'smtpUser' => $smtpUser,
@@ -225,6 +257,8 @@ class AdminConfigController extends Controller
             'mediaEndpoint' => $mediaEndpoint !== '' ? $mediaEndpoint : (defined('MEDIA_UPLOAD_ENDPOINT') ? MEDIA_UPLOAD_ENDPOINT : ''),
             'mediaVideoEndpoint' => $mediaVideoEndpoint !== '' ? $mediaVideoEndpoint : (defined('MEDIA_VIDEO_UPLOAD_ENDPOINT') ? MEDIA_VIDEO_UPLOAD_ENDPOINT : ''),
             'textExtractionEndpoint' => $textExtractionEndpoint,
+            'certificateIssuerName' => $certificateIssuerName,
+            'certificateSignatureImagePath' => $certificateSignatureImagePath,
             'asaasEnvironment' => $asaasEnv === 'production' ? 'production' : 'sandbox',
             'asaasSandboxKey' => $asaasSandboxKey,
             'asaasProdKey' => $asaasProdKey,
@@ -261,6 +295,32 @@ class AdminConfigController extends Controller
         $smtpFromEmail = Setting::get('smtp_from_email', '');
         $smtpFromName = Setting::get('smtp_from_name', 'Tuquinha IA');
 
+        $freeGlobalLimit = (int)Setting::get('free_memory_global_chars', '500');
+        if ($freeGlobalLimit <= 0) {
+            $freeGlobalLimit = 500;
+        }
+        $freeChatLimit = (int)Setting::get('free_memory_chat_chars', '400');
+        if ($freeChatLimit <= 0) {
+            $freeChatLimit = 400;
+        }
+
+        $adminErrorEmail = Setting::get('admin_error_notification_email', '');
+        $adminErrorWebhook = Setting::get('admin_error_webhook_url', '');
+
+        $extraTokenPricePer1kGlobal = Setting::get('extra_token_price_per_1k_global', '');
+
+        $googleClientId = Setting::get('google_calendar_client_id', '');
+        $googleClientSecret = Setting::get('google_calendar_client_secret', '');
+        $googleRefreshToken = Setting::get('google_calendar_refresh_token', '');
+        $googleCalendarId = Setting::get('google_calendar_calendar_id', 'primary');
+
+        $mediaEndpoint = Setting::get('media_upload_endpoint', defined('MEDIA_UPLOAD_ENDPOINT') ? MEDIA_UPLOAD_ENDPOINT : '');
+        $mediaVideoEndpoint = Setting::get('media_video_upload_endpoint', defined('MEDIA_VIDEO_UPLOAD_ENDPOINT') ? MEDIA_VIDEO_UPLOAD_ENDPOINT : '');
+        $textExtractionEndpoint = Setting::get('text_extraction_endpoint', '');
+
+        $certificateIssuerName = Setting::get('certificate_issuer_name', 'Thiago Marques');
+        $certificateSignatureImagePath = Setting::get('certificate_signature_image_path', '');
+
         $asaas = AsaasConfig::getActive();
 
         $status = null;
@@ -288,12 +348,26 @@ class AdminConfigController extends Controller
             'systemPrompt' => $systemPrompt,
             'systemPromptExtra' => $systemPromptExtra,
             'historyRetentionDays' => $historyRetentionDays,
+            'freeGlobalLimit' => $freeGlobalLimit,
+            'freeChatLimit' => $freeChatLimit,
             'smtpHost' => $smtpHost,
             'smtpPort' => $smtpPort,
             'smtpUser' => $smtpUser,
             'smtpPassword' => $smtpPassword,
             'smtpFromEmail' => $smtpFromEmail,
             'smtpFromName' => $smtpFromName,
+            'adminErrorEmail' => $adminErrorEmail,
+            'adminErrorWebhook' => $adminErrorWebhook,
+            'extraTokenPricePer1kGlobal' => $extraTokenPricePer1kGlobal,
+            'googleClientId' => $googleClientId,
+            'googleClientSecret' => $googleClientSecret,
+            'googleRefreshToken' => $googleRefreshToken,
+            'googleCalendarId' => $googleCalendarId,
+            'mediaEndpoint' => $mediaEndpoint,
+            'mediaVideoEndpoint' => $mediaVideoEndpoint,
+            'textExtractionEndpoint' => $textExtractionEndpoint,
+            'certificateIssuerName' => $certificateIssuerName,
+            'certificateSignatureImagePath' => $certificateSignatureImagePath,
             'asaasEnvironment' => $asaas['environment'] ?? 'sandbox',
             'asaasSandboxKey' => $asaas['sandbox_api_key'] ?? '',
             'asaasProdKey' => $asaas['production_api_key'] ?? '',

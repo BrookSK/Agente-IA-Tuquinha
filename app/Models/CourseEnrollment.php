@@ -64,4 +64,23 @@ class CourseEnrollment
         $stmt->execute(['user_id' => $userId]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
+
+    public static function findEnrolledAt(int $courseId, int $userId): ?string
+    {
+        if ($courseId <= 0 || $userId <= 0) {
+            return null;
+        }
+
+        $pdo = Database::getConnection();
+        $stmt = $pdo->prepare('SELECT created_at FROM course_enrollments WHERE course_id = :course_id AND user_id = :user_id LIMIT 1');
+        $stmt->execute([
+            'course_id' => $courseId,
+            'user_id' => $userId,
+        ]);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        if (!$row || empty($row['created_at'])) {
+            return null;
+        }
+        return (string)$row['created_at'];
+    }
 }

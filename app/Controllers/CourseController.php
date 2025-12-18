@@ -146,10 +146,15 @@ class CourseController extends Controller
             }
         }
 
-        UserCourseBadge::award($userId, $courseId, $testimonial, $rating);
+        $enrolledAt = CourseEnrollment::findEnrolledAt($courseId, $userId);
+        $startedAt = $enrolledAt ? date('Y-m-d', strtotime($enrolledAt)) : date('Y-m-d');
+        $finishedAt = date('Y-m-d');
+        $certificateCode = bin2hex(random_bytes(16));
+
+        UserCourseBadge::awardWithCertificate($userId, $courseId, $testimonial, $rating, $certificateCode, $startedAt, $finishedAt);
         CourseEnrollment::unenroll($courseId, $userId);
 
-        $_SESSION['courses_success'] = 'Curso finalizado com sucesso. Você ganhou uma insígnia!';
+        $_SESSION['courses_success'] = 'Curso finalizado com sucesso. Você ganhou uma insígnia e um certificado!';
         header('Location: ' . self::buildCourseUrl($course));
         exit;
     }

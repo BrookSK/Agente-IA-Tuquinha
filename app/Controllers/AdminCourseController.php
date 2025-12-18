@@ -96,6 +96,9 @@ class AdminCourseController extends Controller
         $description = trim($_POST['description'] ?? '');
         $imagePath = trim($_POST['image_path'] ?? '');
         $badgeImagePath = trim($_POST['badge_image_path'] ?? '');
+        $certificateSyllabus = trim($_POST['certificate_syllabus'] ?? '');
+        $certificateWorkloadHours = isset($_POST['certificate_workload_hours']) ? (int)$_POST['certificate_workload_hours'] : 0;
+        $certificateLocation = trim($_POST['certificate_location'] ?? '');
         $removeImage = !empty($_POST['remove_image']);
         $removeBadgeImage = !empty($_POST['remove_badge_image']);
         $partnerEmail = trim($_POST['partner_email'] ?? '');
@@ -192,6 +195,9 @@ class AdminCourseController extends Controller
             'description' => $description !== '' ? $description : null,
             'image_path' => $imagePath !== '' ? $imagePath : null,
             'badge_image_path' => $badgeImagePath !== '' ? $badgeImagePath : null,
+            'certificate_syllabus' => $certificateSyllabus !== '' ? $certificateSyllabus : null,
+            'certificate_workload_hours' => $certificateWorkloadHours > 0 ? $certificateWorkloadHours : null,
+            'certificate_location' => $certificateLocation !== '' ? $certificateLocation : null,
             'is_paid' => $isPaid,
             'price_cents' => $isPaid ? $priceCents : null,
             'allow_plan_access_only' => $allowPlanAccessOnly,

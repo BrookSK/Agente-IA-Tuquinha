@@ -42,7 +42,7 @@ $badge = trim((string)($course['badge_image_path'] ?? ''));
         </div>
 
         <div style="margin-top:12px; font-size:13px; color:var(--text-secondary); line-height:1.5;">
-            Ao confirmar, você vai ganhar a insígnia deste curso no seu perfil social e não poderá refazer o curso.
+            Ao confirmar, você vai ganhar a insígnia deste curso no seu perfil social, emitir um certificado e não poderá refazer o curso.
         </div>
 
         <form action="/cursos/encerrar" method="post" style="margin-top:12px; display:flex; flex-direction:column; gap:10px;">
@@ -67,7 +67,7 @@ $badge = trim((string)($course['badge_image_path'] ?? ''));
 
             <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:6px;">
                 <button type="submit" onclick="return confirm('Tem certeza que deseja encerrar este curso? Depois disso você não poderá refazer nem rever as aulas.');" style="border:none; border-radius:999px; padding:9px 18px; background:linear-gradient(135deg,#e53935,#ff6f60); color:#050509; font-weight:700; font-size:13px; cursor:pointer;">
-                    Confirmar e ganhar insígnia
+                    Confirmar e emitir certificado
                 </button>
                 <a href="/cursos/ver?id=<?= $courseId ?>" style="display:inline-flex; align-items:center; padding:9px 16px; border-radius:999px; border:1px solid var(--border-subtle); background:var(--surface-subtle); color:var(--text-primary); font-size:13px; text-decoration:none;">
                     Voltar ao curso

@@ -26,6 +26,8 @@
 /** @var string $googleCalendarId */
 /** @var string $mediaEndpoint */
 /** @var string $textExtractionEndpoint */
+/** @var string $certificateIssuerName */
+/** @var string $certificateSignatureImagePath */
 /** @var bool $saved */
 /** @var bool|null $testEmailStatus */
 /** @var string|null $testEmailError */
@@ -60,7 +62,7 @@ $knownModels = [
         </div>
     <?php endif; ?>
 
-    <form action="/admin/config" method="post" style="display: flex; flex-direction: column; gap: 16px;">
+    <form action="/admin/config" method="post" enctype="multipart/form-data" style="display: flex; flex-direction: column; gap: 16px;">
         <div>
             <label style="font-size: 12px; color: #b0b0b0;">Chave da API OpenAI</label>
             <input name="openai_key" type="password" value="<?= htmlspecialchars($openaiKey) ?>" style="
@@ -104,6 +106,45 @@ $knownModels = [
                 background: #050509; color: #f5f5f5; font-size: 13px;
             " placeholder="https://media.seusite.com/video.php">
             <small style="color:#777; font-size:11px;">Se deixar em branco, o sistema usa o endpoint geral acima ou o padrão configurado em código.</small>
+        </div>
+
+        <div style="margin-top: 8px; padding:10px 12px; border-radius:10px; border:1px solid #272727; background:#0a0a10;">
+            <div style="font-size:13px; color:#b0b0b0; margin-bottom:8px;">
+                <strong>Certificados</strong><br>
+                Configure o emissor e a assinatura que aparecerão nos certificados dos cursos.
+            </div>
+            <div style="display:flex; flex-direction:column; gap:10px;">
+                <div>
+                    <label style="font-size: 12px; color: #b0b0b0;">Nome do emissor / instituição</label>
+                    <input name="certificate_issuer_name" value="<?= htmlspecialchars($certificateIssuerName ?? 'Thiago Marques') ?>" style="
+                        width: 100%; padding: 8px 10px; border-radius: 8px; border: 1px solid #272727;
+                        background: #050509; color: #f5f5f5; font-size: 13px;
+                    " placeholder="Thiago Marques">
+                </div>
+
+                <div>
+                    <label style="font-size: 12px; color: #b0b0b0;">Assinatura (URL)</label>
+                    <input name="certificate_signature_image_path" value="<?= htmlspecialchars($certificateSignatureImagePath ?? '') ?>" style="
+                        width: 100%; padding: 8px 10px; border-radius: 8px; border: 1px solid #272727;
+                        background: #050509; color: #f5f5f5; font-size: 13px;
+                    " placeholder="Opcional. Você pode colar uma URL direta ou enviar um arquivo abaixo.">
+                    <div style="margin-top:6px; display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+                        <label style="font-size:12px; color:#b0b0b0; cursor:pointer; display:inline-flex; align-items:center; gap:6px;">
+                            <span>✍️</span>
+                            <span>Enviar arquivo</span>
+                            <input type="file" name="certificate_signature_upload" accept="image/*" style="display:none;">
+                        </label>
+                        <div style="font-size:11px; color:#777;">A assinatura será hospedada no servidor de mídia e este campo será preenchido automaticamente.</div>
+                    </div>
+
+                    <?php if (!empty($certificateSignatureImagePath)): ?>
+                        <div style="margin-top:8px; border-radius:10px; border:1px solid #272727; background:#050509; padding:10px 10px;">
+                            <div style="font-size:11px; color:#777; margin-bottom:6px;">Pré-visualização:</div>
+                            <img src="<?= htmlspecialchars($certificateSignatureImagePath, ENT_QUOTES, 'UTF-8') ?>" alt="Assinatura" style="height:64px; max-width:320px; object-fit:contain; display:block;">
+                        </div>
+                    <?php endif; ?>
+                </div>
+            </div>
         </div>
 
         <div style="margin-top: 8px; padding:10px 12px; border-radius:10px; border:1px solid #272727; background:#0a0a10;">

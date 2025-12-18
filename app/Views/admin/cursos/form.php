@@ -143,6 +143,33 @@ $partnerEmail = $partnerEmail ?? '';
             </div>
         </div>
 
+        <div style="margin-top:4px; padding:10px 12px; border-radius:12px; border:1px solid var(--border-subtle); background:var(--surface-subtle);">
+            <div style="font-size:13px; font-weight:650; margin-bottom:6px;">Dados do certificado</div>
+
+            <div style="margin-bottom:10px;">
+                <label style="font-size:13px; color:var(--text-primary); display:block; margin-bottom:4px;">Conteúdo programático (tópicos)</label>
+                <textarea name="certificate_syllabus" rows="6" placeholder="Ex:\n- Introdução ao branding\n- Identidade visual\n- ..." style="
+                    width:100%; padding:8px 10px; border-radius:8px; border:1px solid var(--border-subtle);
+                    background:var(--surface-card); color:var(--text-primary); font-size:13px; resize:vertical;">
+<?= htmlspecialchars($course['certificate_syllabus'] ?? '') ?></textarea>
+            </div>
+
+            <div style="display:flex; gap:12px; flex-wrap:wrap; align-items:flex-end;">
+                <div>
+                    <label style="font-size:13px; color:var(--text-primary); display:block; margin-bottom:4px;">Carga horária (horas)</label>
+                    <input type="number" name="certificate_workload_hours" min="0" value="<?= htmlspecialchars((string)($course['certificate_workload_hours'] ?? '')) ?>" style="
+                        width:140px; padding:8px 10px; border-radius:8px; border:1px solid var(--border-subtle);
+                        background:var(--surface-card); color:var(--text-primary); font-size:13px;">
+                </div>
+                <div style="flex:1; min-width:220px;">
+                    <label style="font-size:13px; color:var(--text-primary); display:block; margin-bottom:4px;">Local (opcional)</label>
+                    <input type="text" name="certificate_location" value="<?= htmlspecialchars($course['certificate_location'] ?? '') ?>" placeholder="Online / São Paulo - SP" style="
+                        width:100%; padding:8px 10px; border-radius:8px; border:1px solid var(--border-subtle);
+                        background:var(--surface-card); color:var(--text-primary); font-size:13px;">
+                </div>
+            </div>
+        </div>
+
         <div style="display:flex; gap:14px; flex-wrap:wrap;">
             <div style="flex:1 1 260px;">
                 <label style="font-size:13px; color:var(--text-primary); display:block; margin-bottom:4px;">E-mail do professor/parceiro (opcional)</label>
