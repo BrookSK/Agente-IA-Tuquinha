@@ -149,6 +149,9 @@ $router->post('/comunidade/desbloquear-usuario', 'CommunityController@unblockUse
 
 $router->get('/perfil', 'ProfileController@show');
 $router->post('/perfil/scrap', 'ProfileController@postScrap');
+$router->post('/perfil/scrap/editar', 'ProfileController@editScrap');
+$router->post('/perfil/scrap/excluir', 'ProfileController@deleteScrap');
+$router->post('/perfil/scrap/visibilidade', 'ProfileController@toggleScrapVisibility');
 $router->post('/perfil/depoimento', 'ProfileController@submitTestimonial');
 $router->post('/perfil/depoimento/decidir', 'ProfileController@decideTestimonial');
 

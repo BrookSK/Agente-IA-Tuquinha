@@ -521,7 +521,15 @@ $profileId = (int)($profileUser['id'] ?? 0);
             <?php else: ?>
                 <div style="display:flex; flex-direction:column; gap:8px;">
                     <?php foreach ($scraps as $s): ?>
-                        <div style="background:var(--surface-subtle); border-radius:12px; border:1px solid var(--border-subtle); padding:8px 10px;">
+                        <?php
+                            $scrapId = (int)($s['id'] ?? 0);
+                            $scrapFromId = (int)($s['from_user_id'] ?? 0);
+                            $scrapToId = (int)($s['to_user_id'] ?? 0);
+                            $isHidden = !empty($s['is_hidden']);
+                            $canEdit = $scrapFromId === $currentId;
+                            $canModerate = $isOwnProfile && $scrapToId === $currentId;
+                        ?>
+                        <div style="background:var(--surface-subtle); border-radius:12px; border:1px solid var(--border-subtle); padding:8px 10px; <?= $isHidden ? 'opacity:0.72;' : '' ?>">
                             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px; font-size:12px; color:var(--text-secondary);">
                                 <div>
                                     <strong>
@@ -529,14 +537,50 @@ $profileId = (int)($profileUser['id'] ?? 0);
                                             <?= htmlspecialchars((string)($s['from_user_name'] ?? 'Usuário'), ENT_QUOTES, 'UTF-8') ?>
                                         </a>
                                     </strong>
+                                    <?php if ($isHidden): ?>
+                                        <span style="margin-left:6px; font-size:11px; padding:2px 6px; border-radius:999px; border:1px solid var(--border-subtle); background:var(--surface-card); color:var(--text-secondary);">oculto</span>
+                                    <?php endif; ?>
                                 </div>
                                 <?php if (!empty($s['created_at'])): ?>
                                     <span><?= htmlspecialchars(date('d/m/Y H:i', strtotime((string)$s['created_at'])), ENT_QUOTES, 'UTF-8') ?></span>
                                 <?php endif; ?>
                             </div>
-                            <div style="font-size:13px; color:var(--text-primary);">
-                                <?= nl2br(htmlspecialchars((string)($s['body'] ?? ''), ENT_QUOTES, 'UTF-8')) ?>
-                            </div>
+
+                            <?php if ($canEdit && isset($_GET['edit_scrap']) && (int)$_GET['edit_scrap'] === $scrapId): ?>
+                                <form action="/perfil/scrap/editar" method="post" style="display:flex; flex-direction:column; gap:6px;">
+                                    <input type="hidden" name="scrap_id" value="<?= (int)$scrapId ?>">
+                                    <textarea name="body" rows="3" style="width:100%; padding:8px 10px; border-radius:10px; border:1px solid var(--border-subtle); background:var(--surface-card); color:var(--text-primary); font-size:13px; resize:vertical;" maxlength="4000"><?= htmlspecialchars((string)($s['body'] ?? ''), ENT_QUOTES, 'UTF-8') ?></textarea>
+                                    <div style="display:flex; gap:8px; justify-content:flex-end; flex-wrap:wrap;">
+                                        <a href="/perfil?user_id=<?= (int)$profileId ?>#scraps" style="text-decoration:none; display:inline-block; border-radius:999px; padding:6px 12px; border:1px solid var(--border-subtle); background:var(--surface-card); color:var(--text-primary); font-size:12px;">Cancelar</a>
+                                        <button type="submit" style="border:none; border-radius:999px; padding:6px 12px; background:linear-gradient(135deg,#4caf50,#8bc34a); color:#050509; font-weight:650; font-size:12px; cursor:pointer;">Salvar</button>
+                                    </div>
+                                </form>
+                            <?php else: ?>
+                                <div style="font-size:13px; color:var(--text-primary);">
+                                    <?= nl2br(htmlspecialchars((string)($s['body'] ?? ''), ENT_QUOTES, 'UTF-8')) ?>
+                                </div>
+                            <?php endif; ?>
+
+                            <?php if ($canEdit || $canModerate): ?>
+                                <div style="display:flex; gap:8px; justify-content:flex-end; flex-wrap:wrap; margin-top:6px;">
+                                    <?php if ($canModerate): ?>
+                                        <form action="/perfil/scrap/visibilidade" method="post">
+                                            <input type="hidden" name="scrap_id" value="<?= (int)$scrapId ?>">
+                                            <button type="submit" name="action" value="<?= $isHidden ? 'show' : 'hide' ?>" style="border:none; border-radius:999px; padding:5px 10px; background:var(--surface-card); border:1px solid var(--border-subtle); color:var(--text-primary); font-size:12px; cursor:pointer;">
+                                                <?= $isHidden ? 'Mostrar' : 'Ocultar' ?>
+                                            </button>
+                                        </form>
+                                    <?php endif; ?>
+
+                                    <?php if ($canEdit): ?>
+                                        <a href="/perfil?user_id=<?= (int)$profileId ?>&edit_scrap=<?= (int)$scrapId ?>#scraps" style="text-decoration:none; display:inline-block; border-radius:999px; padding:5px 10px; border:1px solid var(--border-subtle); background:var(--surface-card); color:var(--text-primary); font-size:12px;">Editar</a>
+                                        <form action="/perfil/scrap/excluir" method="post" onsubmit="return confirm('Excluir este scrap?');">
+                                            <input type="hidden" name="scrap_id" value="<?= (int)$scrapId ?>">
+                                            <button type="submit" style="border:none; border-radius:999px; padding:5px 10px; background:#311; color:#ffbaba; border:1px solid #a33; font-size:12px; cursor:pointer;">Excluir</button>
+                                        </form>
+                                    <?php endif; ?>
+                                </div>
+                            <?php endif; ?>
                         </div>
                     <?php endforeach; ?>
                 </div>

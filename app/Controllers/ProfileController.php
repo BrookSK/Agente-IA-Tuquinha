@@ -54,7 +54,9 @@ class ProfileController extends Controller
             UserSocialProfile::incrementVisit($targetId);
         }
 
-        $scraps = UserScrap::allForUser($targetId, 50);
+        $scraps = $targetId === $currentId
+            ? UserScrap::allForUser($targetId, 50)
+            : UserScrap::allVisibleForUser($targetId, 50);
         $publicTestimonials = UserTestimonial::allPublicForUser($targetId);
         $pendingTestimonials = $targetId === $currentId ? UserTestimonial::pendingForUser($currentId) : [];
         $friends = UserFriend::friendsWithUsers($targetId);
@@ -306,6 +308,98 @@ class ProfileController extends Controller
 
         $_SESSION['social_success'] = 'Scrap enviado no mural.';
         header('Location: /perfil?user_id=' . $toUserId);
+        exit;
+    }
+
+    public function editScrap(): void
+    {
+        $currentUser = $this->requireLogin();
+        $currentId = (int)$currentUser['id'];
+
+        $scrapId = isset($_POST['scrap_id']) ? (int)$_POST['scrap_id'] : 0;
+        $body = trim((string)($_POST['body'] ?? ''));
+
+        $scrap = UserScrap::findById($scrapId);
+        if (!$scrap || (int)($scrap['is_deleted'] ?? 0) === 1) {
+            $_SESSION['social_error'] = 'Scrap não encontrado.';
+            header('Location: /perfil');
+            exit;
+        }
+
+        if ((int)($scrap['from_user_id'] ?? 0) !== $currentId) {
+            $_SESSION['social_error'] = 'Você não tem permissão para editar esse scrap.';
+            header('Location: /perfil?user_id=' . (int)($scrap['to_user_id'] ?? 0));
+            exit;
+        }
+
+        if ($body === '') {
+            $_SESSION['social_error'] = 'O scrap não pode ficar em branco.';
+            header('Location: /perfil?user_id=' . (int)($scrap['to_user_id'] ?? 0));
+            exit;
+        }
+
+        if (strlen($body) > 4000) {
+            $_SESSION['social_error'] = 'O scrap pode ter no máximo 4000 caracteres.';
+            header('Location: /perfil?user_id=' . (int)($scrap['to_user_id'] ?? 0));
+            exit;
+        }
+
+        UserScrap::updateBodyByAuthor($scrapId, $currentId, $body);
+        $_SESSION['social_success'] = 'Scrap atualizado.';
+        header('Location: /perfil?user_id=' . (int)($scrap['to_user_id'] ?? 0) . '#scraps');
+        exit;
+    }
+
+    public function deleteScrap(): void
+    {
+        $currentUser = $this->requireLogin();
+        $currentId = (int)$currentUser['id'];
+
+        $scrapId = isset($_POST['scrap_id']) ? (int)$_POST['scrap_id'] : 0;
+        $scrap = UserScrap::findById($scrapId);
+        if (!$scrap || (int)($scrap['is_deleted'] ?? 0) === 1) {
+            $_SESSION['social_error'] = 'Scrap não encontrado.';
+            header('Location: /perfil');
+            exit;
+        }
+
+        if ((int)($scrap['from_user_id'] ?? 0) !== $currentId) {
+            $_SESSION['social_error'] = 'Você não tem permissão para excluir esse scrap.';
+            header('Location: /perfil?user_id=' . (int)($scrap['to_user_id'] ?? 0));
+            exit;
+        }
+
+        UserScrap::softDeleteByAuthor($scrapId, $currentId);
+        $_SESSION['social_success'] = 'Scrap excluído.';
+        header('Location: /perfil?user_id=' . (int)($scrap['to_user_id'] ?? 0) . '#scraps');
+        exit;
+    }
+
+    public function toggleScrapVisibility(): void
+    {
+        $currentUser = $this->requireLogin();
+        $currentId = (int)$currentUser['id'];
+
+        $scrapId = isset($_POST['scrap_id']) ? (int)$_POST['scrap_id'] : 0;
+        $action = trim((string)($_POST['action'] ?? ''));
+        $hide = $action === 'hide';
+
+        $scrap = UserScrap::findById($scrapId);
+        if (!$scrap || (int)($scrap['is_deleted'] ?? 0) === 1) {
+            $_SESSION['social_error'] = 'Scrap não encontrado.';
+            header('Location: /perfil');
+            exit;
+        }
+
+        if ((int)($scrap['to_user_id'] ?? 0) !== $currentId) {
+            $_SESSION['social_error'] = 'Só o dono do perfil pode ocultar/mostrar scraps.';
+            header('Location: /perfil?user_id=' . (int)($scrap['to_user_id'] ?? 0));
+            exit;
+        }
+
+        UserScrap::setHiddenByProfileOwner($scrapId, $currentId, $hide);
+        $_SESSION['social_success'] = $hide ? 'Scrap ocultado do seu perfil.' : 'Scrap voltou a aparecer no seu perfil.';
+        header('Location: /perfil#scraps');
         exit;
     }
 
