@@ -39,7 +39,7 @@ $pendingCount = is_array($pending) ? count($pending) : 0;
                         <a href="/perfil?user_id=<?= $friendId ?>" style="text-decoration:none; display:flex; align-items:center; gap:8px;">
                             <div style="width:32px; height:32px; border-radius:50%; background:radial-gradient(circle at 30% 20%, #fff 0, #ff8a65 25%, #e53935 65%, #050509 100%); display:flex; align-items:center; justify-content:center; font-size:16px; font-weight:700; color:#050509;">
                                 <?php if ($avatarPath !== ''): ?>
-                                    <img src="<?= htmlspecialchars($avatarPath, ENT_QUOTES, 'UTF-8') ?>" alt="Avatar" style="width:100%; height:100%; object-fit:cover; display:block;">
+                                    <img src="<?= htmlspecialchars($avatarPath, ENT_QUOTES, 'UTF-8') ?>" alt="Avatar" style="width:100%; height:100%; object-fit:cover; display:block; border-radius:50%;">
                                 <?php else: ?>
                                     <?= htmlspecialchars($initial, ENT_QUOTES, 'UTF-8') ?>
                                 <?php endif; ?>
@@ -57,6 +57,10 @@ $pendingCount = is_array($pending) ? count($pending) : 0;
                             <a href="/perfil?user_id=<?= $friendId ?>" style="display:inline-block; font-size:11px; padding:4px 8px; border-radius:999px; border:1px solid #272727; background:#111118; color:#f5f5f5; text-decoration:none; font-weight:600;">
                                 Ver perfil
                             </a>
+                            <form action="/amigos/remover" method="post" onsubmit="return confirm('Tem certeza que deseja remover este amigo?');" style="display:inline; margin:0;">
+                                <input type="hidden" name="user_id" value="<?= $friendId ?>">
+                                <button type="submit" style="border:none; border-radius:999px; padding:4px 8px; background:#311; color:#ffbaba; border:1px solid #a33; font-size:11px; cursor:pointer;">Remover</button>
+                            </form>
                         </div>
                     </div>
                 <?php endforeach; ?>
@@ -84,7 +88,7 @@ $pendingCount = is_array($pending) ? count($pending) : 0;
                         <div style="display:flex; align-items:center; gap:8px;">
                             <div style="width:32px; height:32px; border-radius:50%; background:radial-gradient(circle at 30% 20%, #fff 0, #ff8a65 25%, #e53935 65%, #050509 100%); display:flex; align-items:center; justify-content:center; font-size:16px; font-weight:700; color:#050509;">
                                 <?php if ($avatarPath !== ''): ?>
-                                    <img src="<?= htmlspecialchars($avatarPath, ENT_QUOTES, 'UTF-8') ?>" alt="Avatar" style="width:100%; height:100%; object-fit:cover; display:block;">
+                                    <img src="<?= htmlspecialchars($avatarPath, ENT_QUOTES, 'UTF-8') ?>" alt="Avatar" style="width:100%; height:100%; object-fit:cover; display:block; border-radius:50%;">
                                 <?php else: ?>
                                     <?= htmlspecialchars($initial, ENT_QUOTES, 'UTF-8') ?>
                                 <?php endif; ?>

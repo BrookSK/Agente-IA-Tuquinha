@@ -130,4 +130,16 @@ class UserFriend
         $stmt->execute(['uid' => $userId]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
     }
+
+    public static function removeFriendship(int $userId1, int $userId2): void
+    {
+        if ($userId1 <= 0 || $userId2 <= 0 || $userId1 === $userId2) {
+            return;
+        }
+
+        [$u1, $u2] = self::normalizePair($userId1, $userId2);
+        $pdo = Database::getConnection();
+        $stmt = $pdo->prepare('DELETE FROM user_friends WHERE user_id = :u1 AND friend_user_id = :u2');
+        $stmt->execute(['u1' => $u1, 'u2' => $u2]);
+    }
 }

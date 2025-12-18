@@ -167,4 +167,48 @@ class FriendsController extends Controller
         header('Location: /amigos');
         exit;
     }
+
+    public function remove(): void
+    {
+        $user = $this->requireLogin();
+        $currentUserId = (int)$user['id'];
+
+        $otherUserId = isset($_POST['user_id']) ? (int)$_POST['user_id'] : 0;
+        if ($otherUserId <= 0 || $otherUserId === $currentUserId) {
+            if ($this->wantsJson()) {
+                http_response_code(422);
+                header('Content-Type: application/json; charset=utf-8');
+                echo json_encode(['ok' => false, 'error' => 'Amigo inválido.']);
+                return;
+            }
+            $_SESSION['friends_error'] = 'Amigo inválido.';
+            header('Location: /amigos');
+            exit;
+        }
+
+        $friendship = UserFriend::findFriendship($currentUserId, $otherUserId);
+        if (!$friendship || ($friendship['status'] ?? '') !== 'accepted') {
+            if ($this->wantsJson()) {
+                http_response_code(404);
+                header('Content-Type: application/json; charset=utf-8');
+                echo json_encode(['ok' => false, 'error' => 'Amizade não encontrada.']);
+                return;
+            }
+            $_SESSION['friends_error'] = 'Amizade não encontrada.';
+            header('Location: /amigos');
+            exit;
+        }
+
+        UserFriend::removeFriendship($currentUserId, $otherUserId);
+
+        if ($this->wantsJson()) {
+            header('Content-Type: application/json; charset=utf-8');
+            echo json_encode(['ok' => true]);
+            return;
+        }
+
+        $_SESSION['friends_success'] = 'Amizade removida.';
+        header('Location: /amigos');
+        exit;
+    }
 }
