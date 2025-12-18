@@ -371,7 +371,7 @@
                 </div>
             </form>
 
-            <div style="display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:10px;">
+            <div class="project-files-grid" style="display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:10px;">
                 <?php foreach ($baseFiles as $bf): ?>
                     <?php $fid = (int)($bf['id'] ?? 0); ?>
                     <?php $ver = $latestByFileId[$fid] ?? null; ?>
@@ -399,6 +399,14 @@
                     </div>
                 <?php endforeach; ?>
             </div>
+
+            <style>
+                @media (max-width: 720px) {
+                    .project-files-grid {
+                        grid-template-columns:repeat(1, minmax(0, 1fr)) !important;
+                    }
+                }
+            </style>
 
             <script>
                 (function () {
