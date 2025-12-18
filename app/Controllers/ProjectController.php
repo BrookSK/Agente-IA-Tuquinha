@@ -79,19 +79,8 @@ class ProjectController extends Controller
             exit;
         }
 
-        $permission = strtolower(trim($permission));
-        if ($permission === 'create' && empty($plan['allow_projects_create'])) {
-            header('Location: /planos');
-            exit;
-        }
-        if ($permission === 'edit' && empty($plan['allow_projects_edit'])) {
-            header('Location: /planos');
-            exit;
-        }
-        if ($permission === 'share' && empty($plan['allow_projects_share'])) {
-            header('Location: /planos');
-            exit;
-        }
+        // Se o plano libera acesso a projetos, ele libera tudo (criar/editar/compartilhar).
+        // Mantemos as flags allow_projects_* no banco por compatibilidade, mas a regra é unificada.
     }
 
     private function extractTextFromFile(string $tmpPath, string $mime, string $fileName): ?string

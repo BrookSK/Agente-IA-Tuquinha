@@ -58,9 +58,9 @@ class AdminPlanController extends Controller
         $allowPersonalities = !empty($_POST['allow_personalities']) ? 1 : 0;
         $allowCourses = !empty($_POST['allow_courses']) ? 1 : 0;
         $allowProjectsAccess = !empty($_POST['allow_projects_access']) ? 1 : 0;
-        $allowProjectsCreate = !empty($_POST['allow_projects_create']) ? 1 : 0;
-        $allowProjectsEdit = !empty($_POST['allow_projects_edit']) ? 1 : 0;
-        $allowProjectsShare = !empty($_POST['allow_projects_share']) ? 1 : 0;
+        $allowProjectsCreate = $allowProjectsAccess;
+        $allowProjectsEdit = $allowProjectsAccess;
+        $allowProjectsShare = $allowProjectsAccess;
         $isActive = !empty($_POST['is_active']) ? 1 : 0;
         $isDefaultForUsers = !empty($_POST['is_default_for_users']) ? 1 : 0;
         $allowedModels = isset($_POST['allowed_models']) && is_array($_POST['allowed_models'])

@@ -217,19 +217,7 @@ if ($slugForCycle !== '') {
             </label>
             <label style="display:flex; align-items:center; gap:5px;">
                 <input type="checkbox" name="allow_projects_access" value="1" <?= !empty($plan['allow_projects_access']) ? 'checked' : '' ?>>
-                <span>Projetos: acesso</span>
-            </label>
-            <label style="display:flex; align-items:center; gap:5px;">
-                <input type="checkbox" name="allow_projects_create" value="1" <?= !empty($plan['allow_projects_create']) ? 'checked' : '' ?>>
-                <span>Projetos: criar</span>
-            </label>
-            <label style="display:flex; align-items:center; gap:5px;">
-                <input type="checkbox" name="allow_projects_edit" value="1" <?= !empty($plan['allow_projects_edit']) ? 'checked' : '' ?>>
-                <span>Projetos: editar</span>
-            </label>
-            <label style="display:flex; align-items:center; gap:5px;">
-                <input type="checkbox" name="allow_projects_share" value="1" <?= !empty($plan['allow_projects_share']) ? 'checked' : '' ?>>
-                <span>Projetos: compartilhar</span>
+                <span>Permitir acesso a projetos</span>
             </label>
             <label style="display:flex; align-items:center; gap:5px;">
                 <input type="checkbox" name="is_active" value="1" <?= !isset($plan['is_active']) || !empty($plan['is_active']) ? 'checked' : '' ?>>
