@@ -30,16 +30,6 @@ $profileId = (int)($profileUser['id'] ?? 0);
         min-width: 0;
     }
 
-    @media (max-width: 1200px) {
-        #socialProfileLayout {
-            flex-wrap: wrap !important;
-        }
-        #socialProfileWidgets {
-            flex: 1 1 100% !important;
-            width: 100% !important;
-        }
-    }
-
     @media (max-width: 900px) {
         #socialProfileLayout {
             flex-direction: column !important;
