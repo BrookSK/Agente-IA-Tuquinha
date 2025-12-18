@@ -574,13 +574,22 @@ if (!empty($_SESSION['user_id'])) {
                     $hasUser = !empty($_SESSION['user_id']);
                     $isAdmin = !empty($_SESSION['is_admin']);
                     $currentSlug = $_SESSION['plan_slug'] ?? null;
-                    $currentPlanId = isset($_SESSION['plan_id']) ? (int)$_SESSION['plan_id'] : 0;
                     $canUseProjects = false;
                     if ($hasUser && $isAdmin) {
                         $canUseProjects = true;
-                    } elseif ($hasUser && $currentPlanId > 0) {
-                        $plan = \App\Models\Plan::findById($currentPlanId);
-                        $canUseProjects = !empty($plan['allow_projects_access']);
+                    } elseif ($hasUser) {
+                        $userEmail = (string)($_SESSION['user_email'] ?? '');
+                        if ($userEmail !== '') {
+                            $sub = \App\Models\Subscription::findLastByEmail($userEmail);
+                            if ($sub && !empty($sub['plan_id'])) {
+                                $status = strtolower((string)($sub['status'] ?? ''));
+                                $isActive = !in_array($status, ['canceled', 'expired'], true);
+                                if ($isActive) {
+                                    $plan = \App\Models\Plan::findById((int)$sub['plan_id']);
+                                    $canUseProjects = !empty($plan['allow_projects_access']);
+                                }
+                            }
+                        }
                     }
                 ?>
 
