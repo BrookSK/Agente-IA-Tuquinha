@@ -21,13 +21,15 @@ if (!empty($messages)) {
     .main-content {
         overflow: hidden;
         height: calc(100vh - 56px);
+        padding: 0 !important;
+        box-sizing: border-box;
     }
 
     #socialChatLayout {
         max-width: none !important;
         margin: 0 !important;
         width: 100% !important;
-        padding: 0 16px;
+        padding: 12px 16px;
         box-sizing: border-box;
         height: 100%;
     }
@@ -58,6 +60,14 @@ if (!empty($messages)) {
 
     /* Desktop: chat menor à esquerda, câmeras maiores à direita */
     @media (min-width: 901px) {
+        body {
+            overflow: hidden;
+        }
+        .main {
+            height: 100vh;
+            overflow: hidden;
+        }
+
         #socialChatLayout {
             flex-wrap: nowrap !important;
             align-items: stretch !important;
@@ -87,6 +97,16 @@ if (!empty($messages)) {
 
     @media (max-width: 900px) {
         .main-content {
+            height: auto;
+            overflow: visible;
+            padding: 16px 14px 20px 14px !important;
+        }
+
+        body {
+            overflow: auto;
+        }
+
+        .main {
             height: auto;
             overflow: visible;
         }
