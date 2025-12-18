@@ -26,19 +26,50 @@ if (!empty($messages)) {
         box-sizing: border-box;
     }
 
+    #social-chat-messages {
+        scrollbar-width: thin;
+        scrollbar-color: rgba(255, 255, 255, 0.18) #050509;
+    }
+
+    #social-chat-messages::-webkit-scrollbar {
+        width: 10px;
+    }
+
+    #social-chat-messages::-webkit-scrollbar-track {
+        background: #050509;
+        border-radius: 999px;
+    }
+
+    #social-chat-messages::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.18);
+        border-radius: 999px;
+        border: 2px solid #050509;
+    }
+
+    #social-chat-messages::-webkit-scrollbar-thumb:hover {
+        background: rgba(255, 255, 255, 0.28);
+    }
+
     /* Desktop: chat menor à esquerda, câmeras maiores à direita */
     @media (min-width: 901px) {
+        #socialChatLayout {
+            flex-wrap: nowrap !important;
+            align-items: stretch !important;
+        }
+
         #socialChatMainPane {
-            order: 1;
+            order: 2;
             flex: 1 1 38% !important;
             max-width: 38% !important;
+            min-width: 340px;
             max-height: calc(100vh - 140px) !important;
         }
 
         #socialChatCallPane {
-            order: 2;
+            order: 1;
             flex: 1 1 62% !important;
             max-width: 62% !important;
+            min-width: 520px;
         }
 
         #socialChatCallPane .tuquinha-video-box {

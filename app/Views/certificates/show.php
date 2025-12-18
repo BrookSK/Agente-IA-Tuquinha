@@ -149,6 +149,37 @@ $autoPrint = isset($_GET['print']) && (string)$_GET['print'] === '1';
         font-size: 20px !important;
     }
 }
+
+body[data-theme="light"] #certificateSheet {
+    background: var(--surface-card) !important;
+    border-color: var(--border-subtle) !important;
+}
+
+body[data-theme="light"] #certificateSheet [style*="background:#0b0b10"],
+body[data-theme="light"] #certificateSheet [style*="background: #0b0b10"] {
+    background: var(--surface-subtle) !important;
+}
+
+body[data-theme="light"] #certificateSheet [style*="border:1px solid #272727"],
+body[data-theme="light"] #certificateSheet [style*="border: 1px solid #272727"] {
+    border-color: var(--border-subtle) !important;
+}
+
+body[data-theme="light"] #certificateSheet [style*="color:#fff"],
+body[data-theme="light"] #certificateSheet [style*="color: #fff"],
+body[data-theme="light"] #certificateSheet [style*="color:#ffffff"],
+body[data-theme="light"] #certificateSheet [style*="color: #ffffff"] {
+    color: var(--text-primary) !important;
+}
+
+body[data-theme="light"] #certificateSheet [style*="color:#d8d8d8"],
+body[data-theme="light"] #certificateSheet [style*="color: #d8d8d8"],
+body[data-theme="light"] #certificateSheet [style*="color:#d0d0d0"],
+body[data-theme="light"] #certificateSheet [style*="color: #d0d0d0"],
+body[data-theme="light"] #certificateSheet [style*="color:#777"],
+body[data-theme="light"] #certificateSheet [style*="color: #777"] {
+    color: var(--text-secondary) !important;
+}
 </style>
 
 <?php if ($autoPrint): ?>

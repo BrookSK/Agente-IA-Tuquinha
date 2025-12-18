@@ -41,9 +41,9 @@ $items = is_array($items ?? null) ? $items : [];
                         <a href="/cursos/ver?id=<?= $courseId ?>" style="display:inline-flex; align-items:center; padding:7px 12px; border-radius:999px; border:1px solid var(--border-subtle); background:var(--surface-subtle); color:var(--text-primary); font-size:12px; text-decoration:none;">Ver curso</a>
                         <?php if ($hasCertificate): ?>
                             <a href="/certificados/ver?course_id=<?= $courseId ?>" style="display:inline-flex; align-items:center; padding:7px 12px; border-radius:999px; border:1px solid #ffcc80; background:linear-gradient(135deg,#ffcc80,#ff8a65); color:#050509; font-size:12px; font-weight:700; text-decoration:none;">Abrir certificado</a>
-                            <a href="/certificados/ver?course_id=<?= $courseId ?>&print=1" target="_blank" rel="noopener" style="display:inline-flex; align-items:center; padding:7px 12px; border-radius:999px; border:1px solid var(--border-subtle); background:#111118; color:var(--text-primary); font-size:12px; text-decoration:none;">Baixar/Imprimir</a>
+                            <a href="/certificados/ver?course_id=<?= $courseId ?>&print=1" target="_blank" rel="noopener" style="display:inline-flex; align-items:center; padding:7px 12px; border-radius:999px; border:1px solid var(--border-subtle); background:var(--surface-subtle); color:var(--text-primary); font-size:12px; text-decoration:none;">Baixar/Imprimir</a>
                         <?php else: ?>
-                            <span style="display:inline-flex; align-items:center; padding:7px 12px; border-radius:999px; border:1px solid var(--border-subtle); background:#111118; color:#777; font-size:12px;">Certificado indisponível</span>
+                            <span style="display:inline-flex; align-items:center; padding:7px 12px; border-radius:999px; border:1px solid var(--border-subtle); background:var(--surface-subtle); color:var(--text-secondary); font-size:12px;">Certificado indisponível</span>
                         <?php endif; ?>
                     </div>
                 </div>
