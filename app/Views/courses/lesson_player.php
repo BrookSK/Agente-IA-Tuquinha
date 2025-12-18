@@ -5,6 +5,11 @@
 /** @var array $lessons */
 /** @var array $lessonComments */
 /** @var bool $isEnrolled */
+/** @var array|null $completedLessonIds */
+/** @var int|null $currentModuleId */
+/** @var bool|null $hasModuleExam */
+/** @var bool|null $canTakeModuleExam */
+/** @var bool|null $showExamPrompt */
 
 use App\Controllers\CourseController;
 
@@ -34,6 +39,24 @@ $currentLessonId = (int)($lesson['id'] ?? 0);
 
 $courseUrl = CourseController::buildCourseUrl($course);
 
+$completedLessonIds = is_array($completedLessonIds ?? null) ? $completedLessonIds : [];
+
+$currentModuleId = isset($currentModuleId) ? (int)$currentModuleId : (int)($lesson['module_id'] ?? 0);
+$hasModuleExam = !empty($hasModuleExam);
+$canTakeModuleExam = !empty($canTakeModuleExam);
+$showExamPrompt = !empty($showExamPrompt);
+
+$moduleLessons = [];
+foreach ($lessons as $l) {
+    if (empty($l['is_published'])) {
+        continue;
+    }
+    if ((int)($l['module_id'] ?? 0) !== $currentModuleId) {
+        continue;
+    }
+    $moduleLessons[] = $l;
+}
+
 $isAdmin = !empty($_SESSION['is_admin']);
 $isOwner = $user && !empty($course['owner_user_id']) && (int)$course['owner_user_id'] === (int)($user['id'] ?? 0);
 $canCommentLesson = $user && ($isEnrolled || $isOwner || $isAdmin);
@@ -41,15 +64,16 @@ $canCommentLesson = $user && ($isEnrolled || $isOwner || $isAdmin);
 <div style="max-width: 1120px; margin: 0 auto; display:flex; gap:18px;">
     <aside style="flex:0 0 220px; border-radius:16px; border:1px solid #272727; background:#050509; padding:10px 8px; max-height:80vh; overflow:auto;">
         <div style="font-size:13px; font-weight:600; margin-bottom:8px; color:#f5f5f5;">Aulas do curso</div>
-        <?php if (empty($lessons)): ?>
+        <?php if (empty($moduleLessons)): ?>
             <div style="font-size:12px; color:#777;">Nenhuma aula cadastrada.</div>
         <?php else: ?>
             <ul style="list-style:none; padding:0; margin:0; display:flex; flex-direction:column; gap:6px;">
-                <?php foreach ($lessons as $idx => $item): ?>
+                <?php foreach ($moduleLessons as $idx => $item): ?>
                     <?php
                         $lid = (int)($item['id'] ?? 0);
                         $ltitle = trim((string)($item['title'] ?? ''));
                         $isCurrent = $lid === $currentLessonId;
+                        $isCompleted = $lid > 0 && !empty($completedLessonIds[$lid] ?? false);
                         $label = $ltitle !== '' ? $ltitle : ('Aula ' . ($idx + 1));
                     ?>
                     <li>
@@ -60,16 +84,56 @@ $canCommentLesson = $user && ($isEnrolled || $isOwner || $isAdmin);
                             color:<?= $isCurrent ? '#ffcc80' : '#f5f5f5' ?>;
                             border:1px solid <?= $isCurrent ? '#ff6f60' : 'transparent' ?>;
                         ">
-                            <span style="width:10px; height:10px; border-radius:50%; border:2px solid #7cb342; background:<?= $isCurrent ? '#7cb342' : 'transparent' ?>;"></span>
+                            <span style="width:10px; height:10px; border-radius:50%; border:2px solid #7cb342; background:<?= ($isCompleted || $isCurrent) ? '#7cb342' : 'transparent' ?>;"></span>
                             <span style="flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
                                 <?= htmlspecialchars($label) ?>
                             </span>
+                            <?php if ($isCompleted): ?>
+                                <span style="font-size:10px; color:#6be28d;">feita</span>
+                            <?php endif; ?>
                         </a>
                     </li>
                 <?php endforeach; ?>
+
+                <?php if ($hasModuleExam): ?>
+                    <li style="margin-top:6px; padding-top:6px; border-top:1px dashed #272727;">
+                        <?php
+                            $examUrl = '/cursos/modulos/prova?course_id=' . (int)($course['id'] ?? 0) . '&module_id=' . (int)$currentModuleId;
+                            $disabled = !$canTakeModuleExam;
+                        ?>
+                        <a href="<?= $disabled ? 'javascript:void(0)' : htmlspecialchars($examUrl, ENT_QUOTES, 'UTF-8') ?>" style="
+                            display:flex; align-items:center; gap:8px; padding:6px 8px; border-radius:999px;
+                            text-decoration:none; font-size:12px;
+                            background:transparent;
+                            color:<?= $disabled ? '#777' : '#f5f5f5' ?>;
+                            border:1px solid transparent;
+                            cursor:<?= $disabled ? 'not-allowed' : 'pointer' ?>;
+                            opacity:<?= $disabled ? '0.7' : '1' ?>;
+                        ">
+                            <span style="width:10px; height:10px; border-radius:50%; border:2px solid #ff6f60; background:<?= $disabled ? 'transparent' : '#ff6f60' ?>;"></span>
+                            <span style="flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">Prova do módulo</span>
+                            <?php if ($disabled): ?>
+                                <span style="font-size:10px; color:#777;">bloqueada</span>
+                            <?php endif; ?>
+                        </a>
+                    </li>
+                <?php endif; ?>
             </ul>
         <?php endif; ?>
     </aside>
+
+    <?php if ($showExamPrompt && $hasModuleExam && $canTakeModuleExam): ?>
+        <script>
+            (function(){
+                try {
+                    var go = confirm('Você concluiu todas as aulas deste módulo. Quer fazer a prova agora?');
+                    if (go) {
+                        window.location.href = '<?= '/cursos/modulos/prova?course_id=' . (int)($course['id'] ?? 0) . '&module_id=' . (int)$currentModuleId ?>';
+                    }
+                } catch (e) {}
+            })();
+        </script>
+    <?php endif; ?>
 
     <main style="flex:1 1 auto; display:flex; flex-direction:column; gap:12px;">
         <header style="margin-bottom:4px;">

@@ -52,11 +52,16 @@
                     $slug = (string)($c['slug'] ?? '');
                     $category = (string)($c['category'] ?? '');
                     $initial = mb_strtoupper(mb_substr($name, 0, 1, 'UTF-8'), 'UTF-8');
+                    $imagePath = trim((string)($c['cover_image_path'] ?? $c['image_path'] ?? ''));
                     ?>
                     <div style="background:var(--surface-subtle); border-radius:14px; border:1px solid var(--border-subtle); padding:10px 12px; display:flex; flex-direction:column; gap:6px;">
                         <div style="display:flex; align-items:center; gap:8px;">
                             <div style="width:36px; height:36px; border-radius:8px; background:radial-gradient(circle at 30% 20%, #fff 0, #ff8a65 25%, #e53935 65%, #050509 100%); display:flex; align-items:center; justify-content:center; font-size:18px; font-weight:700; color:#050509;">
-                                <?= htmlspecialchars($initial, ENT_QUOTES, 'UTF-8') ?>
+                                <?php if ($imagePath !== ''): ?>
+                                    <img src="<?= htmlspecialchars($imagePath, ENT_QUOTES, 'UTF-8') ?>" alt="Imagem da comunidade" style="width:100%; height:100%; object-fit:cover; display:block;">
+                                <?php else: ?>
+                                    <?= htmlspecialchars($initial, ENT_QUOTES, 'UTF-8') ?>
+                                <?php endif; ?>
                             </div>
                             <div>
                                 <a href="/comunidades/ver?slug=<?= urlencode($slug) ?>" style="font-size:14px; font-weight:600; color:var(--text-primary); text-decoration:none;">

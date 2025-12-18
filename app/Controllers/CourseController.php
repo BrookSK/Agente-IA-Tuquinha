@@ -158,7 +158,8 @@ class CourseController extends Controller
 
             $canTakeExam = false;
             $maxAttempts = $exam && isset($exam['max_attempts']) ? (int)$exam['max_attempts'] : 0;
-            if ($userId > 0 && $isEnrolled && $hasExam && !$isLocked && !$hasPassedExam) {
+            $hasCompletedAllLessons = $totalLessons > 0 && $doneLessons >= $totalLessons;
+            if ($userId > 0 && $isEnrolled && $hasExam && !$isLocked && !$hasPassedExam && $hasCompletedAllLessons) {
                 if ($maxAttempts <= 0 || $examAttempts < $maxAttempts) {
                     $canTakeExam = true;
                 }
@@ -178,6 +179,7 @@ class CourseController extends Controller
                 'has_passed_exam' => $hasPassedExam,
                 'can_take_exam' => $canTakeExam,
                 'is_locked' => $isLocked,
+                'has_completed_all_lessons' => $hasCompletedAllLessons,
             ];
         }
 
@@ -501,6 +503,9 @@ class CourseController extends Controller
         $prevUrl = null;
         $nextUrl = null;
         $nextIsExam = false;
+        $currentModuleId = (int)($lesson['module_id'] ?? 0);
+        $hasModuleExam = false;
+        $canTakeModuleExam = false;
 
         if ($user && $canAccessContent) {
             $countLessons = count($lessons);
@@ -535,17 +540,61 @@ class CourseController extends Controller
             }
 
             // Se não houver próxima aula desbloqueada, tenta mandar para a prova do módulo atual
-            $currentModuleId = (int)($lesson['module_id'] ?? 0);
             if (!$nextUrl && $currentModuleId > 0) {
                 $exam = CourseModuleExam::findByModuleId($currentModuleId);
                 if ($exam && !empty($exam['is_active'])) {
+                    $hasModuleExam = true;
                     $nextUrl = '/cursos/modulos/prova?course_id=' . $courseId . '&module_id=' . $currentModuleId;
                     $nextIsExam = true;
+                }
+            }
+
+            // Sidebar: liberar prova somente após concluir todas as aulas do módulo
+            if ($currentModuleId > 0) {
+                $exam = CourseModuleExam::findByModuleId($currentModuleId);
+                if ($exam && !empty($exam['is_active'])) {
+                    $hasModuleExam = true;
+                    $totalModuleLessons = 0;
+                    $doneModuleLessons = 0;
+                    foreach ($lessons as $lr) {
+                        if (empty($lr['is_published'])) {
+                            continue;
+                        }
+                        if ((int)($lr['module_id'] ?? 0) !== $currentModuleId) {
+                            continue;
+                        }
+                        $lid = (int)($lr['id'] ?? 0);
+                        if ($lid <= 0) {
+                            continue;
+                        }
+                        $totalModuleLessons++;
+                        if (!empty($completedLessonIds[$lid] ?? false)) {
+                            $doneModuleLessons++;
+                        }
+                    }
+
+                    $hasCompletedAll = $totalModuleLessons > 0 && $doneModuleLessons >= $totalModuleLessons;
+                    $dummyLesson = ['module_id' => $currentModuleId];
+                    $isLocked = $this->isLessonLockedByModules($course, $dummyLesson, $user);
+                    if ($hasCompletedAll && !$isLocked) {
+                        $canTakeModuleExam = true;
+                    }
                 }
             }
         }
 
         $lessonComments = CourseLessonComment::allByLessonWithUser($lessonId);
+
+        $showExamPrompt = false;
+        if (!empty($_SESSION['courses_exam_prompt']) && is_array($_SESSION['courses_exam_prompt'])) {
+            $prompt = $_SESSION['courses_exam_prompt'];
+            $promptCourseId = isset($prompt['course_id']) ? (int)$prompt['course_id'] : 0;
+            $promptModuleId = isset($prompt['module_id']) ? (int)$prompt['module_id'] : 0;
+            if ($promptCourseId === $courseId && $promptModuleId > 0 && $promptModuleId === (int)($lesson['module_id'] ?? 0)) {
+                $showExamPrompt = true;
+            }
+            unset($_SESSION['courses_exam_prompt']);
+        }
 
         $this->view('courses/lesson_player', [
             'pageTitle' => 'Aula: ' . (string)($lesson['title'] ?? ''),
@@ -556,10 +605,15 @@ class CourseController extends Controller
             'lessonComments' => $lessonComments,
             'isEnrolled' => $isEnrolled,
             'isLessonCompleted' => $isLessonCompleted,
+            'completedLessonIds' => $completedLessonIds,
             'canAccessContent' => $canAccessContent,
             'prevUrl' => $prevUrl,
             'nextUrl' => $nextUrl,
             'nextIsExam' => $nextIsExam,
+            'showExamPrompt' => $showExamPrompt,
+            'currentModuleId' => $currentModuleId,
+            'hasModuleExam' => $hasModuleExam,
+            'canTakeModuleExam' => $canTakeModuleExam,
         ]);
     }
 
@@ -624,8 +678,81 @@ class CourseController extends Controller
 
         CourseLessonProgress::markCompleted($courseId, $lessonId, (int)$user['id']);
 
+        // Redireciona para a próxima aula do mesmo módulo; se acabou o módulo e houver prova,
+        // pergunta se quer ir para a prova agora.
+        $nextLessonId = 0;
+        $lessonModuleId = (int)($lesson['module_id'] ?? 0);
+        if ($lessonModuleId > 0) {
+            $courseLessons = CourseLesson::allByCourseId($courseId);
+            $moduleLessonIds = [];
+            foreach ($courseLessons as $l) {
+                if (empty($l['is_published'])) {
+                    continue;
+                }
+                if ((int)($l['module_id'] ?? 0) !== $lessonModuleId) {
+                    continue;
+                }
+                $lid = (int)($l['id'] ?? 0);
+                if ($lid > 0) {
+                    $moduleLessonIds[] = $lid;
+                }
+            }
+            $count = count($moduleLessonIds);
+            for ($i = 0; $i < $count; $i++) {
+                if ($moduleLessonIds[$i] === $lessonId) {
+                    if ($i + 1 < $count) {
+                        $nextLessonId = (int)$moduleLessonIds[$i + 1];
+                    }
+                    break;
+                }
+            }
+        }
+
         $_SESSION['courses_success'] = 'Marcamos esta aula como concluída para você.';
-        header('Location: /cursos/aulas/ver?lesson_id=' . $lessonId);
+
+        if ($nextLessonId > 0) {
+            header('Location: /cursos/aulas/ver?lesson_id=' . $nextLessonId);
+            exit;
+        }
+
+        // Se não houver próxima aula no módulo, mas existir prova e todas as aulas do módulo estiverem concluídas,
+        // mostra um prompt na próxima renderização.
+        if ($lessonModuleId > 0) {
+            $exam = CourseModuleExam::findByModuleId($lessonModuleId);
+            if ($exam && !empty($exam['is_active'])) {
+                $completedLessonIds = CourseLessonProgress::completedLessonIdsByUserAndCourse($courseId, $userId);
+                $courseLessons = CourseLesson::allByCourseId($courseId);
+                $moduleLessonTotal = 0;
+                $moduleLessonDone = 0;
+                foreach ($courseLessons as $l) {
+                    if (empty($l['is_published'])) {
+                        continue;
+                    }
+                    if ((int)($l['module_id'] ?? 0) !== $lessonModuleId) {
+                        continue;
+                    }
+                    $lid = (int)($l['id'] ?? 0);
+                    if ($lid <= 0) {
+                        continue;
+                    }
+                    $moduleLessonTotal++;
+                    if (!empty($completedLessonIds[$lid] ?? false)) {
+                        $moduleLessonDone++;
+                    }
+                }
+
+                if ($moduleLessonTotal > 0 && $moduleLessonDone >= $moduleLessonTotal) {
+                    $_SESSION['courses_exam_prompt'] = [
+                        'course_id' => $courseId,
+                        'module_id' => $lessonModuleId,
+                    ];
+                    header('Location: /cursos/aulas/ver?lesson_id=' . $lessonId);
+                    exit;
+                }
+            }
+        }
+
+        header('Location: ' . self::buildCourseUrl($course));
         exit;
     }
 
@@ -665,6 +792,31 @@ class CourseController extends Controller
         $dummyLesson = ['module_id' => $moduleId];
         if ($this->isLessonLockedByModules($course, $dummyLesson, $user)) {
             $_SESSION['courses_error'] = 'Este módulo está bloqueado até você passar na prova do módulo anterior.';
+            header('Location: ' . self::buildCourseUrl($course));
+            exit;
+        }
+
+        // Só libera prova após concluir todas as aulas do módulo.
+        $completedLessonIds = CourseLessonProgress::completedLessonIdsByUserAndCourse($courseId, $userId);
+        $courseLessons = CourseLesson::allByCourseId($courseId);
+        $moduleLessonTotal = 0;
+        $moduleLessonDone = 0;
+        foreach ($courseLessons as $l) {
+            if ((int)($l['module_id'] ?? 0) !== $moduleId) {
+                continue;
+            }
+            $lid = (int)($l['id'] ?? 0);
+            if ($lid <= 0) {
+                continue;
+            }
+            $moduleLessonTotal++;
+            if (!empty($completedLessonIds[$lid] ?? false)) {
+                $moduleLessonDone++;
+            }
+        }
+
+        if ($moduleLessonTotal > 0 && $moduleLessonDone < $moduleLessonTotal) {
+            $_SESSION['courses_error'] = 'Para fazer a prova deste módulo, conclua todas as aulas do módulo primeiro.';
             header('Location: ' . self::buildCourseUrl($course));
             exit;
         }
@@ -763,6 +915,31 @@ class CourseController extends Controller
         $dummyLesson = ['module_id' => $moduleId];
         if ($this->isLessonLockedByModules($course, $dummyLesson, $user)) {
             $_SESSION['courses_error'] = 'Este módulo está bloqueado até você passar na prova do módulo anterior.';
+            header('Location: ' . self::buildCourseUrl($course));
+            exit;
+        }
+
+        // Só aceita envio da prova após concluir todas as aulas do módulo.
+        $completedLessonIds = CourseLessonProgress::completedLessonIdsByUserAndCourse($courseId, $userId);
+        $courseLessons = CourseLesson::allByCourseId($courseId);
+        $moduleLessonTotal = 0;
+        $moduleLessonDone = 0;
+        foreach ($courseLessons as $l) {
+            if ((int)($l['module_id'] ?? 0) !== $moduleId) {
+                continue;
+            }
+            $lid = (int)($l['id'] ?? 0);
+            if ($lid <= 0) {
+                continue;
+            }
+            $moduleLessonTotal++;
+            if (!empty($completedLessonIds[$lid] ?? false)) {
+                $moduleLessonDone++;
+            }
+        }
+
+        if ($moduleLessonTotal > 0 && $moduleLessonDone < $moduleLessonTotal) {
+            $_SESSION['courses_error'] = 'Para enviar a prova deste módulo, conclua todas as aulas do módulo primeiro.';
             header('Location: ' . self::buildCourseUrl($course));
             exit;
         }

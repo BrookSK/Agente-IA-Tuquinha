@@ -33,11 +33,16 @@ $pendingCount = is_array($pending) ? count($pending) : 0;
                     $friendId = (int)($f['friend_id'] ?? 0);
                     $friendName = (string)($f['friend_name'] ?? 'Amigo');
                     $initial = mb_strtoupper(mb_substr($friendName, 0, 1, 'UTF-8'), 'UTF-8');
+                    $avatarPath = isset($f['friend_avatar_path']) ? trim((string)$f['friend_avatar_path']) : '';
                     ?>
                     <div style="background:#050509; border-radius:12px; border:1px solid #272727; padding:8px 10px; display:flex; flex-direction:column; gap:6px;">
                         <a href="/perfil?user_id=<?= $friendId ?>" style="text-decoration:none; display:flex; align-items:center; gap:8px;">
                             <div style="width:32px; height:32px; border-radius:50%; background:radial-gradient(circle at 30% 20%, #fff 0, #ff8a65 25%, #e53935 65%, #050509 100%); display:flex; align-items:center; justify-content:center; font-size:16px; font-weight:700; color:#050509;">
-                                <?= htmlspecialchars($initial, ENT_QUOTES, 'UTF-8') ?>
+                                <?php if ($avatarPath !== ''): ?>
+                                    <img src="<?= htmlspecialchars($avatarPath, ENT_QUOTES, 'UTF-8') ?>" alt="Avatar" style="width:100%; height:100%; object-fit:cover; display:block;">
+                                <?php else: ?>
+                                    <?= htmlspecialchars($initial, ENT_QUOTES, 'UTF-8') ?>
+                                <?php endif; ?>
                             </div>
                             <div>
                                 <div style="font-size:13px; font-weight:600; color:#f5f5f5;">
@@ -73,11 +78,16 @@ $pendingCount = is_array($pending) ? count($pending) : 0;
                     $otherId = (int)($p['other_id'] ?? 0);
                     $otherName = (string)($p['other_name'] ?? 'Usuário');
                     $initial = mb_strtoupper(mb_substr($otherName, 0, 1, 'UTF-8'), 'UTF-8');
+                    $avatarPath = isset($p['other_avatar_path']) ? trim((string)$p['other_avatar_path']) : '';
                     ?>
                     <div style="background:#050509; border-radius:12px; border:1px solid #272727; padding:8px 10px; display:flex; align-items:center; justify-content:space-between; gap:10px;">
                         <div style="display:flex; align-items:center; gap:8px;">
                             <div style="width:32px; height:32px; border-radius:50%; background:radial-gradient(circle at 30% 20%, #fff 0, #ff8a65 25%, #e53935 65%, #050509 100%); display:flex; align-items:center; justify-content:center; font-size:16px; font-weight:700; color:#050509;">
-                                <?= htmlspecialchars($initial, ENT_QUOTES, 'UTF-8') ?>
+                                <?php if ($avatarPath !== ''): ?>
+                                    <img src="<?= htmlspecialchars($avatarPath, ENT_QUOTES, 'UTF-8') ?>" alt="Avatar" style="width:100%; height:100%; object-fit:cover; display:block;">
+                                <?php else: ?>
+                                    <?= htmlspecialchars($initial, ENT_QUOTES, 'UTF-8') ?>
+                                <?php endif; ?>
                             </div>
                             <div>
                                 <a href="/perfil?user_id=<?= $otherId ?>" style="font-size:13px; font-weight:600; color:#f5f5f5; text-decoration:none;">

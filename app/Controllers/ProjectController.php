@@ -94,6 +94,12 @@ class ProjectController extends Controller
             return;
         }
 
+        // Acesso (listar/ver) não deve exigir plano. Mantemos a exigência de plano
+        // apenas para ações que geram custo/uso intensivo (criar/editar/compartilhar).
+        if ($permission === 'access') {
+            return;
+        }
+
         $email = (string)($user['email'] ?? '');
         $plan = $this->getActivePlanForEmail($email);
         if (!$plan) {

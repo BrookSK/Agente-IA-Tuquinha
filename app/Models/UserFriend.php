@@ -95,9 +95,11 @@ class UserFriend
         $pdo = Database::getConnection();
         $sql = 'SELECT f.*, 
                 CASE WHEN f.user_id = :uid THEN f.friend_user_id ELSE f.user_id END AS friend_id,
-                u.name AS friend_name
+                u.name AS friend_name,
+                sp.avatar_path AS friend_avatar_path
             FROM user_friends f
             JOIN users u ON u.id = CASE WHEN f.user_id = :uid THEN f.friend_user_id ELSE f.user_id END
+            LEFT JOIN user_social_profiles sp ON sp.user_id = u.id
             WHERE (f.user_id = :uid OR f.friend_user_id = :uid)
               AND f.status = "accepted"
             ORDER BY u.name ASC';
@@ -115,9 +117,11 @@ class UserFriend
         $pdo = Database::getConnection();
         $sql = 'SELECT f.*, 
                 CASE WHEN f.user_id = :uid THEN f.friend_user_id ELSE f.user_id END AS other_id,
-                u.name AS other_name
+                u.name AS other_name,
+                sp.avatar_path AS other_avatar_path
             FROM user_friends f
             JOIN users u ON u.id = CASE WHEN f.user_id = :uid THEN f.friend_user_id ELSE f.user_id END
+            LEFT JOIN user_social_profiles sp ON sp.user_id = u.id
             WHERE (f.user_id = :uid OR f.friend_user_id = :uid)
               AND f.status = "pending"
               AND f.requested_by_user_id != :uid
