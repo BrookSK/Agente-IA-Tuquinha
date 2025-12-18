@@ -10,6 +10,8 @@ $baseName = (string)($profileUser['preferred_name'] ?? $profileUser['name'] ?? '
 $initial = mb_strtoupper(mb_substr($baseName, 0, 1, 'UTF-8'), 'UTF-8');
 $avatarPath = isset($profile['avatar_path']) ? trim((string)$profile['avatar_path']) : '';
 
+$nickname = trim((string)($profileUser['nickname'] ?? ''));
+
 $friendsCount = is_array($friends) ? count($friends) : 0;
 $scrapsCount = is_array($scraps) ? count($scraps) : 0;
 $communitiesCount = is_array($communities) ? count($communities) : 0;
@@ -67,6 +69,11 @@ $profileId = (int)($profileUser['id'] ?? 0);
                 <div style="font-size:18px; font-weight:650;">
                     <?= htmlspecialchars($displayName, ENT_QUOTES, 'UTF-8') ?>
                 </div>
+                <?php if ($nickname !== ''): ?>
+                    <div style="font-size:12px; color:var(--text-secondary);">
+                        @<?= htmlspecialchars($nickname, ENT_QUOTES, 'UTF-8') ?>
+                    </div>
+                <?php endif; ?>
                 <?php if (!empty($profileUser['name']) && $displayName !== $profileUser['name']): ?>
                     <div style="font-size:12px; color:var(--text-secondary);">
                         <?= htmlspecialchars($profileUser['name'], ENT_QUOTES, 'UTF-8') ?>
@@ -328,6 +335,12 @@ $profileId = (int)($profileUser['id'] ?? 0);
                             <input id="avatar_file" type="file" name="avatar_file" accept="image/*" style="font-size:12px;">
                             <div style="font-size:11px; color:var(--text-secondary); margin-top:2px;">Formatos comuns (JPG, PNG) até 2 MB.</div>
                         </div>
+                    </div>
+
+                    <div>
+                        <label for="nickname" style="display:block; font-size:12px; color:var(--text-secondary); margin-bottom:3px;">Nickname (vai aparecer como @nickname)</label>
+                        <input id="nickname" name="nickname" type="text" value="<?= htmlspecialchars((string)($profileUser['nickname'] ?? ''), ENT_QUOTES, 'UTF-8') ?>" placeholder="ex: joao_silva" style="width:100%; padding:6px 8px; border-radius:8px; border:1px solid var(--border-subtle); background:var(--surface-subtle); color:var(--text-primary); font-size:13px;">
+                        <div style="font-size:11px; color:var(--text-secondary); margin-top:2px;">Apenas letras minúsculas, números, _ e -. Sem espaço.</div>
                     </div>
 
                     <div>

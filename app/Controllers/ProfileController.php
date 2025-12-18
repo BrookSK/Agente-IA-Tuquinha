@@ -94,6 +94,29 @@ class ProfileController extends Controller
         $currentUser = $this->requireLogin();
         $userId = (int)$currentUser['id'];
 
+        $nicknameRaw = trim((string)($_POST['nickname'] ?? ''));
+        $nicknameRaw = ltrim($nicknameRaw, '@');
+        $nickname = $nicknameRaw !== '' ? strtolower($nicknameRaw) : '';
+        if ($nickname !== '' && (strlen($nickname) < 3 || strlen($nickname) > 32)) {
+            $_SESSION['social_error'] = 'O nickname deve ter entre 3 e 32 caracteres.';
+            header('Location: /perfil');
+            exit;
+        }
+        if ($nickname !== '' && !preg_match('/^[a-z0-9_-]+$/', $nickname)) {
+            $_SESSION['social_error'] = 'O nickname só pode ter letras minúsculas, números, "_" e "-" (sem espaços).';
+            header('Location: /perfil');
+            exit;
+        }
+
+        if ($nickname !== '') {
+            $existing = User::findByNickname($nickname);
+            if ($existing && (int)($existing['id'] ?? 0) !== $userId) {
+                $_SESSION['social_error'] = 'Este nickname já está em uso. Escolha outro.';
+                header('Location: /perfil');
+                exit;
+            }
+        }
+
         $aboutMe = trim((string)($_POST['about_me'] ?? ''));
         $interests = trim((string)($_POST['interests'] ?? ''));
         $favoriteMusic = trim((string)($_POST['favorite_music'] ?? ''));
@@ -225,6 +248,7 @@ class ProfileController extends Controller
         }
 
         try {
+            User::updateNickname($userId, $nickname !== '' ? $nickname : null);
             UserSocialProfile::upsertForUser($userId, [
                 'about_me' => $aboutMe !== '' ? $aboutMe : null,
                 'interests' => $interests !== '' ? $interests : null,

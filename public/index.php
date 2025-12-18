@@ -168,6 +168,8 @@ $router->post('/perfil/portfolio/upload', 'SocialPortfolioController@uploadMedia
 $router->post('/perfil/portfolio/midia/excluir', 'SocialPortfolioController@deleteMedia');
 
 $router->get('/amigos', 'FriendsController@index');
+$router->get('/amigos/adicionar', 'FriendsController@add');
+$router->get('/amigos/buscar', 'FriendsController@search');
 $router->post('/amigos/solicitar', 'FriendsController@request');
 $router->post('/amigos/decidir', 'FriendsController@decide');
 

@@ -19,7 +19,10 @@ $pendingCount = is_array($pending) ? count($pending) : 0;
     <section style="background:#111118; border-radius:16px; border:1px solid #272727; padding:12px 14px;">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
             <h1 style="font-size:18px;">Meus amigos</h1>
-            <span style="font-size:12px; color:#b0b0b0;"><?= (int)$friendsCount ?> amigo(s)</span>
+            <div style="display:flex; align-items:center; gap:10px;">
+                <a href="/amigos/adicionar" style="display:inline-block; font-size:12px; padding:6px 10px; border-radius:999px; background:linear-gradient(135deg,#e53935,#ff6f60); color:#050509; text-decoration:none; font-weight:700;">Adicionar amigo</a>
+                <span style="font-size:12px; color:#b0b0b0;"><?= (int)$friendsCount ?> amigo(s)</span>
+            </div>
         </div>
         <?php if (empty($friends)): ?>
             <p style="font-size:13px; color:#b0b0b0;">Você ainda não tem amigos aceitos aqui. Comece visitando perfis na comunidade e enviando pedidos de amizade.</p>

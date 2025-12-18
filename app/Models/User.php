@@ -7,6 +7,30 @@ use PDO;
 
 class User
 {
+    public static function findByNickname(string $nickname): ?array
+    {
+        $nickname = trim($nickname);
+        if ($nickname === '') {
+            return null;
+        }
+
+        $pdo = Database::getConnection();
+        $stmt = $pdo->prepare('SELECT * FROM users WHERE nickname = :n LIMIT 1');
+        $stmt->execute(['n' => $nickname]);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $row ?: null;
+    }
+
+    public static function updateNickname(int $id, ?string $nickname): void
+    {
+        $pdo = Database::getConnection();
+        $stmt = $pdo->prepare('UPDATE users SET nickname = :n WHERE id = :id LIMIT 1');
+        $stmt->execute([
+            'id' => $id,
+            'n' => ($nickname !== null && $nickname !== '') ? $nickname : null,
+        ]);
+    }
+
     public static function findAdminByEmail(string $email): ?array
     {
         $pdo = Database::getConnection();
@@ -168,6 +192,37 @@ class User
         $like = '%' . $term . '%';
         $stmt = $pdo->prepare('SELECT * FROM users WHERE name LIKE :q OR email LIKE :q ORDER BY created_at DESC');
         $stmt->execute(['q' => $like]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+    }
+
+    public static function searchForFriend(string $term, int $excludeUserId, int $limit = 10): array
+    {
+        $term = trim($term);
+        if ($term === '') {
+            return [];
+        }
+
+        $pdo = Database::getConnection();
+        $like = '%' . $term . '%';
+        $stmt = $pdo->prepare('SELECT id, name, preferred_name, email, nickname
+            FROM users
+            WHERE id != :exclude
+              AND (
+                email LIKE :q
+                OR nickname LIKE :q
+                OR name LIKE :q
+                OR preferred_name LIKE :q
+              )
+            ORDER BY
+              CASE WHEN nickname = :exact THEN 0 ELSE 1 END,
+              CASE WHEN email = :exact THEN 0 ELSE 1 END,
+              created_at DESC
+            LIMIT :lim');
+        $stmt->bindValue(':exclude', $excludeUserId, PDO::PARAM_INT);
+        $stmt->bindValue(':q', $like, PDO::PARAM_STR);
+        $stmt->bindValue(':exact', $term, PDO::PARAM_STR);
+        $stmt->bindValue(':lim', max(1, min(50, $limit)), PDO::PARAM_INT);
+        $stmt->execute();
         return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
     }
 

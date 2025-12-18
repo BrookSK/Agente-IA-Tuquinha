@@ -8,9 +8,30 @@ use App\Models\UserFriend;
 
 class FriendsController extends Controller
 {
+    private function wantsJson(): bool
+    {
+        $accept = (string)($_SERVER['HTTP_ACCEPT'] ?? '');
+        if ($accept !== '' && stripos($accept, 'application/json') !== false) {
+            return true;
+        }
+
+        $xrw = (string)($_SERVER['HTTP_X_REQUESTED_WITH'] ?? '');
+        if ($xrw !== '' && strtolower($xrw) === 'xmlhttprequest') {
+            return true;
+        }
+
+        return false;
+    }
+
     private function requireLogin(): array
     {
         if (empty($_SESSION['user_id'])) {
+            if ($this->wantsJson()) {
+                http_response_code(401);
+                header('Content-Type: application/json; charset=utf-8');
+                echo json_encode(['ok' => false, 'error' => 'Não autenticado.']);
+                exit;
+            }
             header('Location: /login');
             exit;
         }
@@ -18,6 +39,12 @@ class FriendsController extends Controller
         $user = User::findById((int)$_SESSION['user_id']);
         if (!$user) {
             unset($_SESSION['user_id'], $_SESSION['user_name'], $_SESSION['user_email']);
+            if ($this->wantsJson()) {
+                http_response_code(401);
+                header('Content-Type: application/json; charset=utf-8');
+                echo json_encode(['ok' => false, 'error' => 'Sessão inválida.']);
+                exit;
+            }
             header('Location: /login');
             exit;
         }
@@ -47,6 +74,35 @@ class FriendsController extends Controller
         ]);
     }
 
+    public function add(): void
+    {
+        $user = $this->requireLogin();
+        $this->view('social/friends_add', [
+            'pageTitle' => 'Adicionar amigo',
+            'user' => $user,
+        ]);
+    }
+
+    public function search(): void
+    {
+        $user = $this->requireLogin();
+        $userId = (int)($user['id'] ?? 0);
+
+        $q = trim((string)($_GET['q'] ?? ''));
+        $q = ltrim($q, '@');
+        $q = trim($q);
+
+        if ($q === '') {
+            header('Content-Type: application/json; charset=utf-8');
+            echo json_encode(['ok' => true, 'items' => []]);
+            return;
+        }
+
+        $items = User::searchForFriend($q, $userId, 10);
+        header('Content-Type: application/json; charset=utf-8');
+        echo json_encode(['ok' => true, 'items' => $items]);
+    }
+
     public function request(): void
     {
         $user = $this->requireLogin();
@@ -54,6 +110,12 @@ class FriendsController extends Controller
 
         $otherUserId = isset($_POST['user_id']) ? (int)$_POST['user_id'] : 0;
         if ($otherUserId <= 0 || $otherUserId === $fromUserId) {
+            if ($this->wantsJson()) {
+                http_response_code(422);
+                header('Content-Type: application/json; charset=utf-8');
+                echo json_encode(['ok' => false, 'error' => 'Usuário inválido para pedido de amizade.']);
+                return;
+            }
             $_SESSION['friends_error'] = 'Usuário inválido para pedido de amizade.';
             header('Location: /amigos');
             exit;
@@ -61,12 +123,24 @@ class FriendsController extends Controller
 
         $other = User::findById($otherUserId);
         if (!$other) {
+            if ($this->wantsJson()) {
+                http_response_code(404);
+                header('Content-Type: application/json; charset=utf-8');
+                echo json_encode(['ok' => false, 'error' => 'Usuário não encontrado.']);
+                return;
+            }
             $_SESSION['friends_error'] = 'Usuário não encontrado.';
             header('Location: /amigos');
             exit;
         }
 
         UserFriend::request($fromUserId, $otherUserId);
+
+        if ($this->wantsJson()) {
+            header('Content-Type: application/json; charset=utf-8');
+            echo json_encode(['ok' => true]);
+            return;
+        }
 
         $_SESSION['friends_success'] = 'Pedido de amizade enviado.';
         header('Location: /perfil?user_id=' . $otherUserId);
