@@ -182,12 +182,14 @@ class ProjectController extends Controller
     {
         $user = $this->requireLogin();
         $this->requireProjectPermission($user, 'access');
-        $projects = Project::allForUser((int)$user['id']);
+        $onlyFavorites = isset($_GET['favoritos']) && (string)$_GET['favoritos'] === '1';
+        $projects = Project::allForUserWithFavorites((int)$user['id'], $onlyFavorites);
 
         $this->view('projects/index', [
             'pageTitle' => 'Projetos - Tuquinha',
             'user' => $user,
             'projects' => $projects,
+            'onlyFavorites' => $onlyFavorites,
         ]);
     }
 

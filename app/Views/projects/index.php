@@ -49,6 +49,21 @@
         </a>
     </div>
 
+    <?php $onlyFavorites = !empty($onlyFavorites); ?>
+    <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-bottom:12px;">
+        <a href="/projetos" style="display:inline-flex; align-items:center; gap:8px; border:1px solid #272727; border-radius:999px; padding:7px 12px; background:<?= $onlyFavorites ? '#111118' : '#1a1a22' ?>; color:#f5f5f5; font-weight:600; font-size:13px; text-decoration:none;">
+            <span>📋</span>
+            <span>Todos</span>
+        </a>
+        <a href="/projetos?favoritos=1" style="display:inline-flex; align-items:center; gap:8px; border:1px solid #272727; border-radius:999px; padding:7px 12px; background:<?= $onlyFavorites ? '#1a1a22' : '#111118' ?>; color:#f5f5f5; font-weight:600; font-size:13px; text-decoration:none;">
+            <span>⭐</span>
+            <span>Favoritos</span>
+        </a>
+        <?php if ($onlyFavorites): ?>
+            <div style="color:#8d8d8d; font-size:12px;">Mostrando apenas projetos marcados com estrela.</div>
+        <?php endif; ?>
+    </div>
+
     <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap; margin-bottom:14px;">
         <div style="flex:1; min-width:260px; border:1px solid #2b2b2b; background:#111118; border-radius:12px; padding:10px 12px; display:flex; align-items:center; gap:10px;">
             <span style="color:#8d8d8d; font-size:14px;">🔍</span>
@@ -65,7 +80,7 @@
 
     <?php if (empty($projects)): ?>
         <div style="background:#111118; border:1px solid #272727; border-radius:14px; padding:14px; color:#b0b0b0; font-size:14px;">
-            Você ainda não tem projetos.
+            <?= $onlyFavorites ? 'Você ainda não marcou nenhum projeto como favorito.' : 'Você ainda não tem projetos.' ?>
         </div>
     <?php else: ?>
         <div id="projectsGrid" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(300px, 1fr)); gap:14px;">
@@ -75,6 +90,7 @@
                     $desc = (string)($p['description'] ?? '');
                     $updated = (string)($p['updated_at'] ?? ($p['created_at'] ?? ''));
                     $ago = $timeAgo($updated);
+                    $isFav = !empty($p['is_favorite']);
                 ?>
                 <a
                     href="/projetos/ver?id=<?= (int)($p['id'] ?? 0) ?>"
@@ -84,8 +100,13 @@
                     data-updated="<?= htmlspecialchars($updated) ?>"
                     style="display:block; background:#111118; border:1px solid #272727; border-radius:14px; padding:16px; text-decoration:none; color:#f5f5f5;"
                 >
-                    <div style="font-weight:650; font-size:14px; margin-bottom:8px;">
-                        <?= htmlspecialchars($name) ?>
+                    <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:10px; margin-bottom:8px;">
+                        <div style="font-weight:650; font-size:14px;">
+                            <?= htmlspecialchars($name) ?>
+                        </div>
+                        <?php if ($isFav): ?>
+                            <div title="Favorito" style="font-size:14px; line-height:1; color:#ffcc80;">⭐</div>
+                        <?php endif; ?>
                     </div>
                     <div style="color:#b0b0b0; font-size:12px; line-height:1.35; min-height:34px;">
                         <?= $desc !== '' ? nl2br(htmlspecialchars($desc)) : 'Sem descrição.' ?>

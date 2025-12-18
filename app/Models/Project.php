@@ -50,6 +50,31 @@ class Project
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
+    public static function allForUserWithFavorites(int $userId, bool $onlyFavorites = false): array
+    {
+        if ($userId <= 0) {
+            return [];
+        }
+
+        $pdo = Database::getConnection();
+
+        $sql = 'SELECT DISTINCT p.*, (pf.id IS NOT NULL) AS is_favorite
+             FROM projects p
+             LEFT JOIN project_members pm ON pm.project_id = p.id
+             LEFT JOIN project_favorites pf ON pf.project_id = p.id AND pf.user_id = :uid
+             WHERE (p.owner_user_id = :uid OR pm.user_id = :uid)';
+
+        if ($onlyFavorites) {
+            $sql .= ' AND pf.id IS NOT NULL';
+        }
+
+        $sql .= ' ORDER BY p.created_at DESC, p.id DESC';
+
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute(['uid' => $userId]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
     public static function updateDescription(int $projectId, ?string $description): void
     {
         if ($projectId <= 0) {
