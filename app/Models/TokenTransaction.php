@@ -20,4 +20,18 @@ class TokenTransaction
 
         return (int)$pdo->lastInsertId();
     }
+
+    public static function allByUserId(int $userId, int $limit = 500): array
+    {
+        if ($userId <= 0) {
+            return [];
+        }
+
+        $limit = $limit > 0 ? $limit : 500;
+
+        $pdo = Database::getConnection();
+        $stmt = $pdo->prepare('SELECT * FROM token_transactions WHERE user_id = :uid ORDER BY created_at ASC LIMIT ' . (int)$limit);
+        $stmt->execute(['uid' => $userId]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+    }
 }

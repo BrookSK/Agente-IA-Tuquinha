@@ -54,11 +54,16 @@
                 </div>
 
                 <div style="display:flex; flex-direction:column; gap:6px;">
-                    <?php foreach ($options as $opt): ?>
+                    <?php foreach ($options as $optIdx => $opt): ?>
                         <?php $optId = (int)($opt['id'] ?? 0); ?>
                         <label style="display:flex; align-items:flex-start; gap:6px; font-size:13px; color:#ddd;">
                             <input type="radio" name="answers[<?= $qid ?>]" value="<?= $optId ?>" style="margin-top:2px;">
-                            <span><?= htmlspecialchars($opt['option_text'] ?? '') ?></span>
+                            <span>
+                                <span style="display:inline-block; min-width:22px; font-weight:650; color:#ffcc80;">
+                                    <?= htmlspecialchars(chr(65 + (int)$optIdx) . '-', ENT_QUOTES, 'UTF-8') ?>
+                                </span>
+                                <?= htmlspecialchars($opt['option_text'] ?? '') ?>
+                            </span>
                         </label>
                     <?php endforeach; ?>
                 </div>

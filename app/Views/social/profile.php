@@ -329,7 +329,11 @@ $profileId = (int)($profileUser['id'] ?? 0);
 
         <?php if ($isOwnProfile): ?>
             <section style="background:var(--surface-card); border-radius:16px; border:1px solid var(--border-subtle); padding:12px 14px;">
-                <h2 style="font-size:16px; margin-bottom:6px; color:var(--text-primary);">Editar meu perfil social</h2>
+                <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:6px; flex-wrap:wrap;">
+                    <h2 style="font-size:16px; margin:0; color:var(--text-primary);">Editar meu perfil social</h2>
+                    <button type="button" id="toggleSocialProfileEdit" style="border:none; border-radius:999px; padding:6px 12px; background:var(--surface-subtle); border:1px solid var(--border-subtle); color:var(--text-primary); font-size:12px; font-weight:650; cursor:pointer;">Editar</button>
+                </div>
+                <div id="socialProfileEditPanel" style="display:none;">
                 <form action="/perfil/salvar" method="post" enctype="multipart/form-data" style="display:flex; flex-direction:column; gap:10px; font-size:13px; color:var(--text-primary);">
                     <div style="display:flex; flex-wrap:wrap; gap:10px; align-items:center;">
                         <div style="width:72px; height:72px; border-radius:50%; overflow:hidden; background:radial-gradient(circle at 30% 20%, #fff 0, #ff8a65 25%, #e53935 65%, #050509 100%); display:flex; align-items:center; justify-content:center; font-size:28px; font-weight:700; color:#050509;">
@@ -511,6 +515,28 @@ $profileId = (int)($profileUser['id'] ?? 0);
                         <button type="submit" style="border:none; border-radius:999px; padding:6px 12px; background:linear-gradient(135deg,#e53935,#ff6f60); color:#050509; font-size:12px; font-weight:600; cursor:pointer;">Salvar perfil</button>
                     </div>
                 </form>
+                </div>
+
+                <script>
+                (function () {
+                    var btn = document.getElementById('toggleSocialProfileEdit');
+                    var panel = document.getElementById('socialProfileEditPanel');
+                    if (!btn || !panel) return;
+
+                    function setOpen(open) {
+                        panel.style.display = open ? 'block' : 'none';
+                        btn.textContent = open ? 'Fechar' : 'Editar';
+                    }
+
+                    btn.addEventListener('click', function () {
+                        setOpen(panel.style.display === 'none');
+                    });
+
+                    if (window.location && window.location.hash === '#editar-perfil') {
+                        setOpen(true);
+                    }
+                })();
+                </script>
             </section>
         <?php endif; ?>
 
@@ -669,8 +695,13 @@ $profileId = (int)($profileUser['id'] ?? 0);
             <?php else: ?>
                 <div style="display:flex; flex-direction:column; gap:4px; font-size:12px;">
                     <?php foreach ($communities as $c): ?>
+                        <?php $communityImage = trim((string)($c['cover_image_path'] ?? $c['image_path'] ?? '')); ?>
                         <a href="/comunidades/ver?slug=<?= urlencode((string)($c['slug'] ?? '')) ?>" style="display:flex; align-items:center; gap:6px; padding:4px 6px; border-radius:8px; border:1px solid var(--border-subtle); background:var(--surface-subtle); text-decoration:none;">
-                            <div style="width:18px; height:18px; border-radius:4px; background:#e53935;"></div>
+                            <div style="width:18px; height:18px; border-radius:50%; overflow:hidden; background:#e53935; flex:0 0 18px;">
+                                <?php if ($communityImage !== ''): ?>
+                                    <img src="<?= htmlspecialchars($communityImage, ENT_QUOTES, 'UTF-8') ?>" alt="Imagem da comunidade" style="width:100%; height:100%; object-fit:cover; display:block;">
+                                <?php endif; ?>
+                            </div>
                             <span style="color:var(--text-primary);"><?= htmlspecialchars((string)($c['name'] ?? 'Comunidade'), ENT_QUOTES, 'UTF-8') ?></span>
                         </a>
                     <?php endforeach; ?>

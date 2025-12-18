@@ -3,6 +3,12 @@
 <?php /** @var array|null $plan */ ?>
 <?php /** @var array $timeline */ ?>
 <?php /** @var array|null $coursePartner */ ?>
+<?php /** @var array|null $asaasSub */ ?>
+<?php /** @var int|null $subscriptionAmountCents */ ?>
+<?php /** @var int|null $trialDays */ ?>
+<?php /** @var string|null $trialEndsAt */ ?>
+<?php /** @var string|null $paidStartsAt */ ?>
+<?php /** @var array|null $referral */ ?>
 
 <div style="max-width: 800px; margin: 0 auto;">
     <h1 style="font-size: 22px; margin-bottom: 16px;">Detalhes do usuário</h1>
@@ -92,6 +98,35 @@
             </p>
             <p style="font-size:13px; margin-bottom:4px;"><strong>Início da assinatura:</strong> <?= htmlspecialchars($subscription['started_at'] ?? $subscription['created_at'] ?? '') ?></p>
             <p style="font-size:13px; margin-bottom:4px;"><strong>Último pagamento:</strong> <?= htmlspecialchars($subscription['started_at'] ?? $subscription['created_at'] ?? '') ?></p>
+            <?php
+                $subscriptionAmountCents = isset($subscriptionAmountCents) ? (int)$subscriptionAmountCents : 0;
+                $subscriptionAmountFormatted = $subscriptionAmountCents > 0 ? number_format($subscriptionAmountCents / 100, 2, ',', '.') : '';
+            ?>
+            <p style="font-size:13px; margin-bottom:4px;"><strong>Valor (plano):</strong>
+                <?= $subscriptionAmountFormatted !== '' ? ('R$ ' . htmlspecialchars($subscriptionAmountFormatted)) : '<span style="color:#b0b0b0;">(não disponível)</span>' ?>
+            </p>
+
+            <?php if (!empty($trialDays) && !empty($trialEndsAt) && !empty($paidStartsAt)): ?>
+                <p style="font-size:13px; margin-bottom:4px;"><strong>Período grátis:</strong> <?= (int)$trialDays ?> dia(s)</p>
+                <p style="font-size:13px; margin-bottom:4px;"><strong>Fim do grátis:</strong> <?= htmlspecialchars((string)$trialEndsAt) ?></p>
+                <p style="font-size:13px; margin-bottom:4px;"><strong>Início do pago:</strong> <?= htmlspecialchars((string)$paidStartsAt) ?></p>
+            <?php endif; ?>
+
+            <?php if (!empty($referral) && is_array($referral)): ?>
+                <div style="margin-top:10px; padding-top:10px; border-top:1px dashed #272727;">
+                    <div style="font-size:12px; color:#b0b0b0; margin-bottom:6px;">Indicação</div>
+                    <p style="font-size:13px; margin-bottom:4px;"><strong>Veio por indicação:</strong> Sim</p>
+                    <p style="font-size:13px; margin-bottom:4px;"><strong>Status:</strong> <?= htmlspecialchars((string)($referral['status'] ?? '')) ?></p>
+                    <p style="font-size:13px; margin-bottom:4px;"><strong>Data:</strong> <?= htmlspecialchars((string)($referral['created_at'] ?? '')) ?></p>
+                    <p style="font-size:13px; margin-bottom:4px;"><strong>Concluída em:</strong> <?= htmlspecialchars((string)($referral['completed_at'] ?? '')) ?></p>
+                    <p style="font-size:13px; margin-bottom:0;"><strong>Quem indicou (user_id):</strong> <?= (int)($referral['referrer_user_id'] ?? 0) ?></p>
+                </div>
+            <?php else: ?>
+                <div style="margin-top:10px; padding-top:10px; border-top:1px dashed #272727;">
+                    <div style="font-size:12px; color:#b0b0b0; margin-bottom:6px;">Indicação</div>
+                    <p style="font-size:13px; margin:0;"><strong>Veio por indicação:</strong> Não</p>
+                </div>
+            <?php endif; ?>
             <p style="font-size:13px; margin-bottom:4px;"><strong>CPF:</strong> <?= htmlspecialchars($subscription['customer_cpf'] ?? '') ?></p>
             <p style="font-size:13px; margin-bottom:4px;"><strong>Telefone:</strong> <?= htmlspecialchars($subscription['customer_phone'] ?? '') ?></p>
             <p style="font-size:13px; margin-top:6px;"><strong>Endereço:</strong><br>
@@ -119,14 +154,29 @@
                     $date = $item['date'] ?? '';
                     ?>
                     <div style="position:relative;">
-                        <div style="position:absolute; left:-12px; top:4px; width:8px; height:8px; border-radius:50%; background:<?= $type === 'subscription' ? '#ff6f60' : '#64b5f6' ?>;"></div>
+                        <?php
+                            $dot = '#64b5f6';
+                            if ($type === 'subscription') { $dot = '#ff6f60'; }
+                            elseif ($type === 'token_tx') { $dot = '#ffcc80'; }
+                            elseif ($type === 'referral') { $dot = '#ba68c8'; }
+                            elseif ($type === 'trial_end') { $dot = '#8bc34a'; }
+                        ?>
+                        <div style="position:absolute; left:-12px; top:4px; width:8px; height:8px; border-radius:50%; background:<?= $dot ?>;"></div>
                         <div style="padding:6px 8px; border-radius:10px; background:#050509; border:1px solid #272727; font-size:13px;">
                             <div style="display:flex; justify-content:space-between; gap:10px; margin-bottom:4px;">
                                 <span style="font-weight:600;">
                                     <?php if ($type === 'subscription'): ?>
                                         Mudança de plano / Assinatura
-                                    <?php else: ?>
+                                    <?php elseif ($type === 'topup'): ?>
                                         Crédito de tokens avulsos
+                                    <?php elseif ($type === 'token_tx'): ?>
+                                        Bônus de tokens (indicação)
+                                    <?php elseif ($type === 'referral'): ?>
+                                        Indicação registrada
+                                    <?php elseif ($type === 'trial_end'): ?>
+                                        Fim do grátis / início do pago
+                                    <?php else: ?>
+                                        Evento
                                     <?php endif; ?>
                                 </span>
                                 <span style="font-size:11px; color:#b0b0b0;">
@@ -140,7 +190,7 @@
                                     <div><strong>Status:</strong> <?= htmlspecialchars($raw['status'] ?? '') ?></div>
                                     <div><strong>Início:</strong> <?= htmlspecialchars($raw['started_at'] ?? $raw['created_at'] ?? '') ?></div>
                                 </div>
-                            <?php else: ?>
+                            <?php elseif ($type === 'topup'): ?>
                                 <?php
                                 $amountCents = (int)($raw['amount_cents'] ?? 0);
                                 $amountFormatted = number_format($amountCents / 100, 2, ',', '.');
@@ -150,6 +200,26 @@
                                     <div><strong>Valor:</strong> R$ <?= htmlspecialchars($amountFormatted) ?></div>
                                     <div><strong>Status:</strong> <?= htmlspecialchars($raw['status'] ?? '') ?></div>
                                     <div><strong>Pago em:</strong> <?= htmlspecialchars($raw['paid_at'] ?? '') ?></div>
+                                </div>
+                            <?php elseif ($type === 'token_tx'): ?>
+                                <?php
+                                    $amount = (int)($raw['amount'] ?? 0);
+                                    $reason = (string)($raw['reason'] ?? '');
+                                ?>
+                                <div style="font-size:12px; color:#cccccc;">
+                                    <div><strong>Tokens:</strong> <?= htmlspecialchars((string)$amount) ?></div>
+                                    <div><strong>Motivo:</strong> <?= htmlspecialchars($reason) ?></div>
+                                </div>
+                            <?php elseif ($type === 'referral'): ?>
+                                <div style="font-size:12px; color:#cccccc;">
+                                    <div><strong>Status:</strong> <?= htmlspecialchars((string)($raw['status'] ?? '')) ?></div>
+                                    <div><strong>Referrer user_id:</strong> <?= (int)($raw['referrer_user_id'] ?? 0) ?></div>
+                                    <div><strong>Concluída em:</strong> <?= htmlspecialchars((string)($raw['completed_at'] ?? '')) ?></div>
+                                </div>
+                            <?php elseif ($type === 'trial_end'): ?>
+                                <div style="font-size:12px; color:#cccccc;">
+                                    <div><strong>Dias grátis:</strong> <?= (int)($raw['trial_days'] ?? 0) ?></div>
+                                    <div><strong>Início do pago:</strong> <?= htmlspecialchars((string)($raw['paid_starts_at'] ?? '')) ?></div>
                                 </div>
                             <?php endif; ?>
                         </div>

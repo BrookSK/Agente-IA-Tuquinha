@@ -62,4 +62,32 @@ class UserReferral
         $stmt = $pdo->prepare('UPDATE user_referrals SET status = "completed", completed_at = NOW() WHERE id = :id');
         $stmt->execute(['id' => $id]);
     }
+
+    public static function findLastForReferredUserOrEmail(int $referredUserId, string $referredEmail): ?array
+    {
+        $referredEmail = trim($referredEmail);
+        if ($referredUserId <= 0 && $referredEmail === '') {
+            return null;
+        }
+
+        $pdo = Database::getConnection();
+
+        if ($referredUserId > 0) {
+            $stmt = $pdo->prepare('SELECT * FROM user_referrals WHERE referred_user_id = :uid ORDER BY created_at DESC LIMIT 1');
+            $stmt->execute(['uid' => $referredUserId]);
+            $row = $stmt->fetch(PDO::FETCH_ASSOC);
+            if ($row) {
+                return $row;
+            }
+        }
+
+        if ($referredEmail !== '') {
+            $stmt = $pdo->prepare('SELECT * FROM user_referrals WHERE referred_email = :email ORDER BY created_at DESC LIMIT 1');
+            $stmt->execute(['email' => $referredEmail]);
+            $row = $stmt->fetch(PDO::FETCH_ASSOC);
+            return $row ?: null;
+        }
+
+        return null;
+    }
 }
