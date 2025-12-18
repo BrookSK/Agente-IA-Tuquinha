@@ -18,12 +18,18 @@ if (!empty($messages)) {
 
 ?>
 <style>
+    .main-content {
+        overflow: hidden;
+        height: calc(100vh - 56px);
+    }
+
     #socialChatLayout {
         max-width: none !important;
         margin: 0 !important;
         width: 100% !important;
         padding: 0 16px;
         box-sizing: border-box;
+        height: 100%;
     }
 
     #social-chat-messages {
@@ -62,7 +68,8 @@ if (!empty($messages)) {
             flex: 1 1 38% !important;
             max-width: 38% !important;
             min-width: 340px;
-            max-height: calc(100vh - 140px) !important;
+            max-height: none !important;
+            height: 100% !important;
         }
 
         #socialChatCallPane {
@@ -70,6 +77,7 @@ if (!empty($messages)) {
             flex: 1 1 62% !important;
             max-width: 62% !important;
             min-width: 520px;
+            height: 100% !important;
         }
 
         #socialChatCallPane .tuquinha-video-box {
@@ -78,6 +86,11 @@ if (!empty($messages)) {
     }
 
     @media (max-width: 900px) {
+        .main-content {
+            height: auto;
+            overflow: visible;
+        }
+
         #socialChatLayout {
             max-width: none !important;
             margin: 0 !important;
