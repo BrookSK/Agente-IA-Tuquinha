@@ -179,6 +179,7 @@ $router->get('/amigos/buscar', 'FriendsController@search');
 $router->post('/amigos/solicitar', 'FriendsController@request');
 $router->post('/amigos/decidir', 'FriendsController@decide');
 $router->post('/amigos/remover', 'FriendsController@remove');
+$router->post('/amigos/favorito', 'FriendsController@favorite');
 
 $router->get('/social/chat', 'SocialChatController@open');
 $router->post('/social/chat/enviar', 'SocialChatController@send');

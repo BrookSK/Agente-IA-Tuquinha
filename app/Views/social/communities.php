@@ -1,6 +1,7 @@
 <?php
 /** @var array $categories */
 /** @var string $selectedCategory */
+/** @var string|null $q */
 ?>
 <div style="max-width: 980px; margin: 0 auto; display:flex; flex-direction:column; gap:14px;">
     <?php if (!empty($error)): ?>
@@ -24,8 +25,11 @@
         </div>
 
         <div style="display:flex; justify-content:space-between; align-items:center; gap:10px; margin-bottom:10px; flex-wrap:wrap;">
-            <form action="/comunidades" method="get" style="display:flex; align-items:center; gap:6px; font-size:12px;">
-                <label for="category" style="color:var(--text-secondary);">Filtrar por categoria:</label>
+            <?php $q = isset($q) ? trim((string)$q) : ''; ?>
+            <form action="/comunidades" method="get" style="display:flex; align-items:center; gap:6px; font-size:12px; flex-wrap:wrap;">
+                <label for="q" style="color:var(--text-secondary);">Pesquisar:</label>
+                <input id="q" name="q" type="text" value="<?= htmlspecialchars($q, ENT_QUOTES, 'UTF-8') ?>" placeholder="Nome da comunidade..." style="min-width:220px; padding:4px 8px; border-radius:8px; border:1px solid var(--border-subtle); background:var(--surface-subtle); color:var(--text-primary); font-size:12px;" />
+                <label for="category" style="color:var(--text-secondary);">Categoria:</label>
                 <select id="category" name="category" onchange="this.form.submit()" style="min-width:160px; padding:4px 8px; border-radius:8px; border:1px solid var(--border-subtle); background:var(--surface-subtle); color:var(--text-primary); font-size:12px;">
                     <option value="">Todas as categorias</option>
                     <?php if (!empty($categories)): ?>
@@ -37,6 +41,7 @@
                         <?php endforeach; ?>
                     <?php endif; ?>
                 </select>
+                <button type="submit" style="border:none; border-radius:999px; padding:6px 10px; background:linear-gradient(135deg,#e53935,#ff6f60); color:#050509; font-size:12px; font-weight:650; cursor:pointer;">Buscar</button>
             </form>
         </div>
 

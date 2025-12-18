@@ -7,17 +7,28 @@ use PDO;
 
 class Community
 {
-    public static function allActive(?string $category = null): array
+    public static function allActive(?string $category = null, ?string $q = null): array
     {
         $pdo = Database::getConnection();
 
         $category = $category !== null ? trim($category) : '';
+        $q = $q !== null ? trim($q) : '';
+
+        $where = 'is_active = 1';
+        $params = [];
+
         if ($category !== '') {
-            $stmt = $pdo->prepare('SELECT * FROM communities WHERE is_active = 1 AND category = :category ORDER BY name ASC');
-            $stmt->execute(['category' => $category]);
-        } else {
-            $stmt = $pdo->query('SELECT * FROM communities WHERE is_active = 1 ORDER BY name ASC');
+            $where .= ' AND category = :category';
+            $params['category'] = $category;
         }
+
+        if ($q !== '') {
+            $where .= ' AND (name LIKE :q OR description LIKE :q)';
+            $params['q'] = '%' . $q . '%';
+        }
+
+        $stmt = $pdo->prepare('SELECT * FROM communities WHERE ' . $where . ' ORDER BY name ASC');
+        $stmt->execute($params);
 
         return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
     }

@@ -86,25 +86,41 @@ class UserFriend
         ]);
     }
 
-    public static function friendsWithUsers(int $userId): array
+    public static function friendsWithUsers(int $userId, string $q = '', bool $onlyFavorites = false): array
     {
         if ($userId <= 0) {
             return [];
         }
 
+        $q = trim($q);
+
         $pdo = Database::getConnection();
         $sql = 'SELECT f.*, 
                 CASE WHEN f.user_id = :uid THEN f.friend_user_id ELSE f.user_id END AS friend_id,
                 u.name AS friend_name,
-                sp.avatar_path AS friend_avatar_path
+                sp.avatar_path AS friend_avatar_path,
+                CASE WHEN f.user_id = :uid THEN f.is_favorite_user1 ELSE f.is_favorite_user2 END AS is_favorite
             FROM user_friends f
             JOIN users u ON u.id = CASE WHEN f.user_id = :uid THEN f.friend_user_id ELSE f.user_id END
             LEFT JOIN user_social_profiles sp ON sp.user_id = u.id
             WHERE (f.user_id = :uid OR f.friend_user_id = :uid)
-              AND f.status = "accepted"
-            ORDER BY u.name ASC';
+              AND f.status = "accepted"';
+
+        $params = ['uid' => $userId];
+
+        if ($onlyFavorites) {
+            $sql .= ' AND (CASE WHEN f.user_id = :uid THEN f.is_favorite_user1 ELSE f.is_favorite_user2 END) = 1';
+        }
+
+        if ($q !== '') {
+            $sql .= ' AND u.name LIKE :q';
+            $params['q'] = '%' . $q . '%';
+        }
+
+        $sql .= ' ORDER BY (CASE WHEN f.user_id = :uid THEN f.is_favorite_user1 ELSE f.is_favorite_user2 END) DESC, u.name ASC';
+
         $stmt = $pdo->prepare($sql);
-        $stmt->execute(['uid' => $userId]);
+        $stmt->execute($params);
         return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
     }
 
@@ -141,5 +157,28 @@ class UserFriend
         $pdo = Database::getConnection();
         $stmt = $pdo->prepare('DELETE FROM user_friends WHERE user_id = :u1 AND friend_user_id = :u2');
         $stmt->execute(['u1' => $u1, 'u2' => $u2]);
+    }
+
+    public static function setFavorite(int $currentUserId, int $otherUserId, bool $isFavorite): void
+    {
+        if ($currentUserId <= 0 || $otherUserId <= 0 || $currentUserId === $otherUserId) {
+            return;
+        }
+
+        [$u1, $u2] = self::normalizePair($currentUserId, $otherUserId);
+        $friendship = self::findFriendship($currentUserId, $otherUserId);
+        if (!$friendship || ($friendship['status'] ?? '') !== 'accepted') {
+            return;
+        }
+
+        $pdo = Database::getConnection();
+        $fav = $isFavorite ? 1 : 0;
+        if ($currentUserId === $u1) {
+            $stmt = $pdo->prepare('UPDATE user_friends SET is_favorite_user1 = :fav WHERE user_id = :u1 AND friend_user_id = :u2');
+            $stmt->execute(['fav' => $fav, 'u1' => $u1, 'u2' => $u2]);
+        } else {
+            $stmt = $pdo->prepare('UPDATE user_friends SET is_favorite_user2 = :fav WHERE user_id = :u1 AND friend_user_id = :u2');
+            $stmt->execute(['fav' => $fav, 'u1' => $u1, 'u2' => $u2]);
+        }
     }
 }

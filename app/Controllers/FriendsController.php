@@ -57,7 +57,13 @@ class FriendsController extends Controller
         $user = $this->requireLogin();
         $userId = (int)$user['id'];
 
-        $friends = UserFriend::friendsWithUsers($userId);
+        $q = isset($_GET['q']) ? trim((string)$_GET['q']) : '';
+        $q = preg_replace('/\s+/', ' ', (string)$q);
+
+        $fav = isset($_GET['fav']) ? trim((string)$_GET['fav']) : '';
+        $onlyFavorites = ($fav === '1' || strtolower($fav) === 'true');
+
+        $friends = UserFriend::friendsWithUsers($userId, $q, $onlyFavorites);
         $pending = UserFriend::pendingForUser($userId);
 
         $success = $_SESSION['friends_success'] ?? null;
@@ -71,6 +77,8 @@ class FriendsController extends Controller
             'pending' => $pending,
             'success' => $success,
             'error' => $error,
+            'q' => $q,
+            'onlyFavorites' => $onlyFavorites,
         ]);
     }
 
@@ -209,6 +217,38 @@ class FriendsController extends Controller
 
         $_SESSION['friends_success'] = 'Amizade removida.';
         header('Location: /amigos');
+        exit;
+    }
+
+    public function favorite(): void
+    {
+        $user = $this->requireLogin();
+        $currentUserId = (int)$user['id'];
+
+        $otherUserId = isset($_POST['user_id']) ? (int)$_POST['user_id'] : 0;
+        $isFavorite = !empty($_POST['is_favorite']);
+
+        if ($otherUserId <= 0 || $otherUserId === $currentUserId) {
+            if ($this->wantsJson()) {
+                http_response_code(422);
+                header('Content-Type: application/json; charset=utf-8');
+                echo json_encode(['ok' => false, 'error' => 'Amigo inválido.']);
+                return;
+            }
+            $_SESSION['friends_error'] = 'Amigo inválido.';
+            header('Location: /amigos');
+            exit;
+        }
+
+        UserFriend::setFavorite($currentUserId, $otherUserId, $isFavorite);
+
+        if ($this->wantsJson()) {
+            header('Content-Type: application/json; charset=utf-8');
+            echo json_encode(['ok' => true]);
+            return;
+        }
+
+        header('Location: /perfil?user_id=' . $otherUserId);
         exit;
     }
 }

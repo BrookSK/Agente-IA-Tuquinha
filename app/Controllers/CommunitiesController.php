@@ -151,7 +151,10 @@ class CommunitiesController extends Controller
 
         $category = isset($_GET['category']) ? trim((string)$_GET['category']) : '';
 
-        $communities = Community::allActive($category !== '' ? $category : null);
+        $q = isset($_GET['q']) ? trim((string)$_GET['q']) : '';
+        $q = preg_replace('/\s+/', ' ', (string)$q);
+
+        $communities = Community::allActive($category !== '' ? $category : null, $q !== '' ? $q : null);
         $memberships = [];
         foreach ($communities as $c) {
             $cid = (int)($c['id'] ?? 0);
@@ -174,6 +177,7 @@ class CommunitiesController extends Controller
             'memberships' => $memberships,
             'categories' => $categories,
             'selectedCategory' => $category,
+            'q' => $q,
             'success' => $success,
             'error' => $error,
         ]);

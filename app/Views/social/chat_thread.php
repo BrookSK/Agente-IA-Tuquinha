@@ -18,6 +18,34 @@ if (!empty($messages)) {
 
 ?>
 <style>
+    #socialChatLayout {
+        max-width: none !important;
+        margin: 0 !important;
+        width: 100% !important;
+        padding: 0 16px;
+        box-sizing: border-box;
+    }
+
+    /* Desktop: chat menor à esquerda, câmeras maiores à direita */
+    @media (min-width: 901px) {
+        #socialChatMainPane {
+            order: 1;
+            flex: 1 1 38% !important;
+            max-width: 38% !important;
+            max-height: calc(100vh - 140px) !important;
+        }
+
+        #socialChatCallPane {
+            order: 2;
+            flex: 1 1 62% !important;
+            max-width: 62% !important;
+        }
+
+        #socialChatCallPane .tuquinha-video-box {
+            height: 240px !important;
+        }
+    }
+
     @media (max-width: 900px) {
         #socialChatLayout {
             max-width: none !important;
@@ -46,19 +74,19 @@ if (!empty($messages)) {
 </style>
 
 <div id="socialChatLayout" style="max-width: 1040px; margin: 0 auto; display:flex; gap:16px; align-items:flex-start; flex-wrap:wrap;">
-    <aside id="socialChatCallPane" style="flex:0 0 320px; max-width:100%; border-radius:18px; border:1px solid #272727; background:#111118; padding:10px 12px;">
+    <aside id="socialChatCallPane" style="flex:1 1 520px; max-width:100%; border-radius:18px; border:1px solid #272727; background:#111118; padding:10px 12px;">
         <div style="font-size:13px; font-weight:600; color:#f5f5f5; margin-bottom:6px;">
             Chamada com <?= htmlspecialchars($otherName, ENT_QUOTES, 'UTF-8') ?>
         </div>
 
         <div style="display:flex; flex-direction:column; gap:8px;">
-            <div style="background:#000; border-radius:12px; height:160px; overflow:hidden; position:relative; border:1px solid #272727;">
+            <div class="tuquinha-video-box" style="background:#000; border-radius:12px; height:200px; overflow:hidden; position:relative; border:1px solid #272727;">
                 <video id="tuquinhaLocalVideo" autoplay playsinline muted style="width:100%; height:100%; object-fit:cover; display:none;"></video>
                 <div id="tuquinha-local-video" style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; color:#b0b0b0; font-size:12px;">
                     Sua câmera aparecerá aqui quando a chamada for iniciada.
                 </div>
             </div>
-            <div style="background:#000; border-radius:12px; height:160px; overflow:hidden; position:relative; border:1px solid #272727;">
+            <div class="tuquinha-video-box" style="background:#000; border-radius:12px; height:200px; overflow:hidden; position:relative; border:1px solid #272727;">
                 <video id="tuquinhaRemoteVideo" autoplay playsinline style="width:100%; height:100%; object-fit:cover; display:none;"></video>
                 <div id="tuquinha-remote-badges" style="position:absolute; left:8px; top:8px; display:none; gap:6px; align-items:center; z-index:5;">
                     <span id="badge-remote-mic" style="display:none; font-size:11px; padding:3px 8px; border-radius:999px; background:rgba(0,0,0,0.55); border:1px solid #272727; color:#ffbaba;">Áudio mutado</span>

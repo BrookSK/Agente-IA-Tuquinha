@@ -23,6 +23,8 @@ if (is_array($friendship)) {
     $requestedById = isset($friendship['requested_by_user_id']) ? (int)$friendship['requested_by_user_id'] : null;
 }
 
+$isFavoriteFriend = !empty($isFavoriteFriend);
+
 $currentId = (int)($user['id'] ?? 0);
 $profileId = (int)($profileUser['id'] ?? 0);
 
@@ -109,6 +111,13 @@ $profileId = (int)($profileUser['id'] ?? 0);
                     <div style="font-size:12px; color:#8bc34a; background:var(--surface-subtle); border-radius:10px; border:1px solid var(--border-subtle); padding:6px 8px; text-align:center;">
                         Vocês são amigos na rede social do Tuquinha.
                     </div>
+                    <form action="/amigos/favorito" method="post" style="margin:0;">
+                        <input type="hidden" name="user_id" value="<?= (int)$profileId ?>">
+                        <input type="hidden" name="is_favorite" value="<?= $isFavoriteFriend ? '0' : '1' ?>">
+                        <button type="submit" style="width:100%; border:none; border-radius:999px; padding:7px 10px; font-size:13px; font-weight:650; cursor:pointer; background:<?= $isFavoriteFriend ? '#0b0b10' : 'var(--surface-subtle)' ?>; border:1px solid var(--border-subtle); color:<?= $isFavoriteFriend ? '#ffcc80' : 'var(--text-primary)' ?>;">
+                            <?= $isFavoriteFriend ? '★ Remover dos favoritos' : '☆ Favoritar amigo' ?>
+                        </button>
+                    </form>
                     <a href="/social/chat?user_id=<?= (int)$profileId ?>" style="display:block; text-align:center; font-size:12px; color:#050509; text-decoration:none; margin-top:4px;">
                         <span style="display:inline-block; padding:6px 12px; border-radius:999px; background:linear-gradient(135deg,#e53935,#ff6f60); font-weight:600;">Abrir chat privado</span>
                     </a>

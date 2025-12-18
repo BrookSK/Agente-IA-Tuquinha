@@ -63,6 +63,16 @@ class ProfileController extends Controller
         $communities = CommunityMember::communitiesForUser($targetId);
         $friendship = $targetId !== $currentId ? UserFriend::findFriendship($currentId, $targetId) : null;
 
+        $isFavoriteFriend = false;
+        if ($friendship && ($friendship['status'] ?? '') === 'accepted') {
+            $pairUserId = (int)($friendship['user_id'] ?? 0);
+            if ($pairUserId === $currentId) {
+                $isFavoriteFriend = !empty($friendship['is_favorite_user1']);
+            } else {
+                $isFavoriteFriend = !empty($friendship['is_favorite_user2']);
+            }
+        }
+
         $success = $_SESSION['social_success'] ?? null;
         $error = $_SESSION['social_error'] ?? null;
         unset($_SESSION['social_success'], $_SESSION['social_error']);
@@ -84,6 +94,7 @@ class ProfileController extends Controller
             'friends' => $friends,
             'communities' => $communities,
             'friendship' => $friendship,
+            'isFavoriteFriend' => $isFavoriteFriend,
             'success' => $success,
             'error' => $error,
         ]);
