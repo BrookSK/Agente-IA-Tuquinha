@@ -6,6 +6,54 @@ use App\Models\Setting;
 
 class MailService
 {
+    public static function buildDefaultTemplate(string $greetingName, string $contentHtml, ?string $ctaText = null, ?string $ctaUrl = null, ?string $logoUrl = null): string
+    {
+        $safeGreeting = htmlspecialchars($greetingName, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+        $safeLogoUrl = $logoUrl !== null && trim($logoUrl) !== ''
+            ? htmlspecialchars($logoUrl, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')
+            : '';
+
+        $brandAvatar = '<div style="width:32px; height:32px; line-height:32px; border-radius:50%; background:radial-gradient(circle at 30% 20%, #fff 0, #ff8a65 25%, #e53935 65%, #050509 100%); text-align:center; font-weight:700; font-size:16px; color:#050509;">T</div>';
+        if ($safeLogoUrl !== '') {
+            $brandAvatar = '<div style="width:32px; height:32px; border-radius:50%; overflow:hidden; background:#050509; box-shadow:0 0 18px rgba(229,57,53,0.8);">'
+                . '<img src="' . $safeLogoUrl . '" alt="Tuquinha" style="width:100%; height:100%; display:block; object-fit:cover;">'
+                . '</div>';
+        }
+
+        $ctaBlock = '';
+        if ($ctaText !== null && $ctaUrl !== null && trim($ctaText) !== '' && trim($ctaUrl) !== '') {
+            $safeCtaText = htmlspecialchars($ctaText, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+            $safeCtaUrl = htmlspecialchars($ctaUrl, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+            $ctaBlock = '<div style="text-align:center; margin:14px 0 8px 0;">'
+                . '<a href="' . $safeCtaUrl . '" style="display:inline-block; padding:9px 18px; border-radius:999px; background:linear-gradient(135deg,#e53935,#ff6f60); color:#050509; font-weight:600; font-size:13px; text-decoration:none;">'
+                . $safeCtaText
+                . '</a>'
+                . '</div>'
+                . '<p style="font-size:12px; color:#777; margin:8px 0 0 0;">Se o botão não funcionar, copie e cole este link no navegador:<br>'
+                . '<a href="' . $safeCtaUrl . '" style="color:#ff6f60; text-decoration:none; word-break:break-all;">' . $safeCtaUrl . '</a>'
+                . '</p>';
+        }
+
+        return '<html>'
+            . '<body style="margin:0; padding:0; background:#050509; font-family:system-ui, -apple-system, BlinkMacSystemFont, \'Segoe UI\', sans-serif; color:#f5f5f5;">'
+            . '<div style="width:100%; padding:24px 0;">'
+            . '<div style="max-width:520px; margin:0 auto; background:#111118; border-radius:16px; border:1px solid #272727; padding:18px 20px;">'
+            . '<div style="display:flex; align-items:center; gap:10px; margin-bottom:12px;">'
+            . $brandAvatar
+            . '<div>'
+            . '<div style="font-weight:700; font-size:15px;">Resenha 2.0 - Tuquinha</div>'
+            . '<div style="font-size:11px; color:#b0b0b0;">Branding vivo na veia</div>'
+            . '</div>'
+            . '</div>'
+            . '<p style="font-size:14px; margin:0 0 10px 0;">Oi, ' . $safeGreeting . ' 👋</p>'
+            . $contentHtml
+            . $ctaBlock
+            . '</div>'
+            . '</div>'
+            . '</body>'
+            . '</html>';
+    }
+
     public static function send(string $toEmail, string $toName, string $subject, string $body): bool
     {
         $host = Setting::get('smtp_host', '');

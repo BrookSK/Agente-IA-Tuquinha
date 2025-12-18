@@ -39,81 +39,59 @@ class ProjectController extends Controller
         return $user;
     }
 
-    private function requirePaidPlan(array $user): void
+    private function getActivePlanForEmail(string $email): ?array
+    {
+        $email = trim($email);
+        if ($email === '') {
+            return null;
+        }
+
+        $subscription = Subscription::findLastByEmail($email);
+        if (!$subscription || empty($subscription['plan_id'])) {
+            return null;
+        }
+
+        $status = strtolower((string)($subscription['status'] ?? ''));
+        $isActive = !in_array($status, ['canceled', 'expired'], true);
+        if (!$isActive) {
+            return null;
+        }
+
+        $plan = Plan::findById((int)$subscription['plan_id']);
+        return $plan ?: null;
+    }
+
+    private function requireProjectPermission(array $user, string $permission): void
     {
         if (!empty($_SESSION['is_admin'])) {
             return;
         }
 
         $email = (string)($user['email'] ?? '');
-        if ($email === '') {
+        $plan = $this->getActivePlanForEmail($email);
+        if (!$plan) {
             header('Location: /planos');
             exit;
         }
 
-        $subscription = Subscription::findLastByEmail($email);
-        if (!$subscription || empty($subscription['plan_id'])) {
+        if (empty($plan['allow_projects_access'])) {
             header('Location: /planos');
             exit;
         }
 
-        $plan = Plan::findById((int)$subscription['plan_id']);
-        $slug = $plan ? (string)($plan['slug'] ?? '') : '';
-        $status = strtolower((string)($subscription['status'] ?? ''));
-
-        $isPaid = ($slug !== '' && $slug !== 'free');
-        $isActive = !in_array($status, ['canceled', 'expired'], true);
-
-        if (!$isPaid || !$isActive) {
+        $permission = strtolower(trim($permission));
+        if ($permission === 'create' && empty($plan['allow_projects_create'])) {
             header('Location: /planos');
             exit;
         }
-    }
-
-    private function emailHasActivePaidPlan(string $email): bool
-    {
-        $email = trim($email);
-        if ($email === '') {
-            return false;
+        if ($permission === 'edit' && empty($plan['allow_projects_edit'])) {
+            header('Location: /planos');
+            exit;
         }
-
-        if (!empty($_SESSION['is_admin'])) {
-            return true;
+        if ($permission === 'share' && empty($plan['allow_projects_share'])) {
+            header('Location: /planos');
+            exit;
         }
-
-        $emailsToTry = [$email];
-        $atPos = strpos($email, '@');
-        if ($atPos !== false) {
-            $local = substr($email, 0, $atPos);
-            $domain = substr($email, $atPos + 1);
-            $plusPos = strpos($local, '+');
-            if ($plusPos !== false) {
-                $normalized = substr($local, 0, $plusPos) . '@' . $domain;
-                if ($normalized !== '' && !in_array($normalized, $emailsToTry, true)) {
-                    $emailsToTry[] = $normalized;
-                }
-            }
-        }
-
-        $subscription = null;
-        foreach ($emailsToTry as $e) {
-            $subscription = Subscription::findLastByEmail($e);
-            if ($subscription && !empty($subscription['plan_id'])) {
-                break;
-            }
-        }
-        if (!$subscription || empty($subscription['plan_id'])) {
-            return false;
-        }
-
-        $plan = Plan::findById((int)$subscription['plan_id']);
-        $slug = $plan ? (string)($plan['slug'] ?? '') : '';
-        $status = strtolower((string)($subscription['status'] ?? ''));
-
-        $isPaid = ($slug !== '' && $slug !== 'free');
-        $isActive = !in_array($status, ['canceled', 'expired'], true);
-
-        return $isPaid && $isActive;
     }
 
     private function extractTextFromFile(string $tmpPath, string $mime, string $fileName): ?string
@@ -214,7 +192,7 @@ class ProjectController extends Controller
     public function index(): void
     {
         $user = $this->requireLogin();
-        $this->requirePaidPlan($user);
+        $this->requireProjectPermission($user, 'access');
         $projects = Project::allForUser((int)$user['id']);
 
         $this->view('projects/index', [
@@ -227,7 +205,7 @@ class ProjectController extends Controller
     public function createForm(): void
     {
         $user = $this->requireLogin();
-        $this->requirePaidPlan($user);
+        $this->requireProjectPermission($user, 'create');
 
         $this->view('projects/new', [
             'pageTitle' => 'Novo projeto - Tuquinha',
@@ -239,7 +217,7 @@ class ProjectController extends Controller
     public function create(): void
     {
         $user = $this->requireLogin();
-        $this->requirePaidPlan($user);
+        $this->requireProjectPermission($user, 'create');
 
         $name = trim((string)($_POST['name'] ?? ''));
         $description = trim((string)($_POST['description'] ?? ''));
@@ -265,7 +243,7 @@ class ProjectController extends Controller
     public function show(): void
     {
         $user = $this->requireLogin();
-        $this->requirePaidPlan($user);
+        $this->requireProjectPermission($user, 'access');
         $projectId = isset($_GET['id']) ? (int)$_GET['id'] : 0;
 
         if ($projectId <= 0 || !ProjectMember::canRead($projectId, (int)$user['id'])) {
@@ -321,7 +299,7 @@ class ProjectController extends Controller
     public function updateMemoryItem(): void
     {
         $user = $this->requireLogin();
-        $this->requirePaidPlan($user);
+        $this->requireProjectPermission($user, 'edit');
         $userId = (int)($user['id'] ?? 0);
 
         $projectId = isset($_POST['project_id']) ? (int)$_POST['project_id'] : 0;
@@ -351,7 +329,7 @@ class ProjectController extends Controller
     public function deleteMemoryItem(): void
     {
         $user = $this->requireLogin();
-        $this->requirePaidPlan($user);
+        $this->requireProjectPermission($user, 'edit');
         $userId = (int)($user['id'] ?? 0);
 
         $projectId = isset($_POST['project_id']) ? (int)$_POST['project_id'] : 0;
@@ -372,7 +350,7 @@ class ProjectController extends Controller
     public function inviteCollaborator(): void
     {
         $user = $this->requireLogin();
-        $this->requirePaidPlan($user);
+        $this->requireProjectPermission($user, 'share');
         $userId = (int)($user['id'] ?? 0);
 
         $projectId = isset($_POST['project_id']) ? (int)$_POST['project_id'] : 0;
@@ -409,12 +387,6 @@ class ProjectController extends Controller
         }
 
         $invitedEmail = (string)($invitedUser['email'] ?? $email);
-        if (!$this->emailHasActivePaidPlan($invitedEmail)) {
-            http_response_code(422);
-            header('Content-Type: application/json; charset=utf-8');
-            echo json_encode(['ok' => false, 'error' => 'O usuário precisa ter um plano ativo para colaborar.']);
-            return;
-        }
 
         $invitedUserId = (int)($invitedUser['id'] ?? 0);
         if ($invitedUserId > 0 && ProjectMember::canRead($projectId, $invitedUserId)) {
@@ -451,11 +423,25 @@ class ProjectController extends Controller
             $toName = $invitedEmail;
         }
 
-        $body = '<p>Você foi convidado para colaborar no projeto <strong>' . htmlspecialchars($projectName, ENT_QUOTES, 'UTF-8') . '</strong> no Tuquinha.</p>'
-            . '<p>Permissão: <strong>' . htmlspecialchars($role, ENT_QUOTES, 'UTF-8') . '</strong></p>'
-            . '<p>Para aceitar o convite, clique no link abaixo:</p>'
-            . '<p><a href="' . htmlspecialchars($link, ENT_QUOTES, 'UTF-8') . '">' . htmlspecialchars($link, ENT_QUOTES, 'UTF-8') . '</a></p>'
-            . '<p>Se você não reconhece este convite, pode ignorar este e-mail.</p>';
+        $safeProjectName = htmlspecialchars($projectName, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+        $safeRole = htmlspecialchars($role, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+
+        $contentHtml = '<p style="font-size:14px; margin:0 0 10px 0;">Você foi convidado para colaborar no projeto <strong>' . $safeProjectName . '</strong> no Tuquinha.</p>'
+            . '<p style="font-size:14px; margin:0 0 10px 0;">Permissão: <strong>' . $safeRole . '</strong></p>'
+            . '<p style="font-size:12px; color:#777; margin:10px 0 0 0;">Se você não reconhece este convite, pode ignorar este e-mail.</p>';
+
+        $scheme = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') ? 'https://' : 'http://';
+        $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+        $baseUrl = $scheme . $host;
+        $logoUrl = $baseUrl . '/public/favicon.png';
+
+        $body = MailService::buildDefaultTemplate(
+            $toName,
+            $contentHtml,
+            'Aceitar convite',
+            $link,
+            $logoUrl
+        );
 
         $sentToInvitee = MailService::send($invitedEmail, $toName, $subject, $body);
 
@@ -469,9 +455,18 @@ class ProjectController extends Controller
                 $ownerName = $ownerEmail;
             }
             $ownerSubject = 'Convite enviado: ' . $invitedEmail;
-            $ownerBody = '<p>Você convidou <strong>' . htmlspecialchars($invitedEmail, ENT_QUOTES, 'UTF-8') . '</strong> para o projeto <strong>'
-                . htmlspecialchars($projectName, ENT_QUOTES, 'UTF-8') . '</strong> com permissão <strong>' . htmlspecialchars($role, ENT_QUOTES, 'UTF-8') . '</strong>.</p>'
-                . '<p>Link de aceite:</p><p><a href="' . htmlspecialchars($link, ENT_QUOTES, 'UTF-8') . '">' . htmlspecialchars($link, ENT_QUOTES, 'UTF-8') . '</a></p>';
+            $safeInvitedEmail = htmlspecialchars($invitedEmail, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+            $ownerContentHtml = '<p style="font-size:14px; margin:0 0 10px 0;">Você convidou <strong>' . $safeInvitedEmail . '</strong> para o projeto <strong>'
+                . $safeProjectName . '</strong> com permissão <strong>' . $safeRole . '</strong>.</p>'
+                . '<p style="font-size:13px; margin:0;">O aceite vai aparecer assim que a pessoa clicar no link do convite.</p>';
+
+            $ownerBody = MailService::buildDefaultTemplate(
+                $ownerName,
+                $ownerContentHtml,
+                'Ver link do convite',
+                $link,
+                $logoUrl
+            );
             MailService::send($ownerEmail, $ownerName, $ownerSubject, $ownerBody);
         }
 
@@ -482,7 +477,7 @@ class ProjectController extends Controller
     public function acceptInvite(): void
     {
         $user = $this->requireLogin();
-        $this->requirePaidPlan($user);
+        $this->requireProjectPermission($user, 'access');
         $userId = (int)($user['id'] ?? 0);
 
         $token = trim((string)($_GET['token'] ?? ''));
@@ -506,11 +501,6 @@ class ProjectController extends Controller
             exit;
         }
 
-        if (!$this->emailHasActivePaidPlan($userEmail)) {
-            header('Location: /planos');
-            exit;
-        }
-
         $projectId = (int)($invite['project_id'] ?? 0);
         $role = (string)($invite['role'] ?? 'read');
 
@@ -531,7 +521,7 @@ class ProjectController extends Controller
     public function revokeInvite(): void
     {
         $user = $this->requireLogin();
-        $this->requirePaidPlan($user);
+        $this->requireProjectPermission($user, 'share');
         $userId = (int)($user['id'] ?? 0);
 
         $projectId = isset($_POST['project_id']) ? (int)$_POST['project_id'] : 0;
@@ -551,7 +541,7 @@ class ProjectController extends Controller
     public function updateMemberRole(): void
     {
         $user = $this->requireLogin();
-        $this->requirePaidPlan($user);
+        $this->requireProjectPermission($user, 'share');
         $userId = (int)($user['id'] ?? 0);
 
         $projectId = isset($_POST['project_id']) ? (int)$_POST['project_id'] : 0;
@@ -581,7 +571,7 @@ class ProjectController extends Controller
     public function removeMember(): void
     {
         $user = $this->requireLogin();
-        $this->requirePaidPlan($user);
+        $this->requireProjectPermission($user, 'share');
         $userId = (int)($user['id'] ?? 0);
 
         $projectId = isset($_POST['project_id']) ? (int)$_POST['project_id'] : 0;
@@ -610,7 +600,7 @@ class ProjectController extends Controller
     public function saveMemory(): void
     {
         $user = $this->requireLogin();
-        $this->requirePaidPlan($user);
+        $this->requireProjectPermission($user, 'edit');
         $userId = (int)($user['id'] ?? 0);
 
         $projectId = isset($_POST['project_id']) ? (int)$_POST['project_id'] : 0;
@@ -644,7 +634,7 @@ class ProjectController extends Controller
     public function createChat(): void
     {
         $user = $this->requireLogin();
-        $this->requirePaidPlan($user);
+        $this->requireProjectPermission($user, 'access');
         $userId = (int)($user['id'] ?? 0);
 
         $projectId = isset($_POST['project_id']) ? (int)$_POST['project_id'] : 0;
@@ -676,7 +666,7 @@ class ProjectController extends Controller
     public function toggleFavorite(): void
     {
         $user = $this->requireLogin();
-        $this->requirePaidPlan($user);
+        $this->requireProjectPermission($user, 'access');
         $userId = (int)($user['id'] ?? 0);
 
         $projectId = isset($_POST['project_id']) ? (int)$_POST['project_id'] : 0;
@@ -695,7 +685,7 @@ class ProjectController extends Controller
     public function rename(): void
     {
         $user = $this->requireLogin();
-        $this->requirePaidPlan($user);
+        $this->requireProjectPermission($user, 'edit');
         $userId = (int)($user['id'] ?? 0);
 
         $projectId = isset($_POST['project_id']) ? (int)$_POST['project_id'] : 0;
@@ -716,7 +706,7 @@ class ProjectController extends Controller
     public function delete(): void
     {
         $user = $this->requireLogin();
-        $this->requirePaidPlan($user);
+        $this->requireProjectPermission($user, 'edit');
         $userId = (int)($user['id'] ?? 0);
 
         $projectId = isset($_POST['project_id']) ? (int)$_POST['project_id'] : 0;
@@ -735,7 +725,7 @@ class ProjectController extends Controller
     public function uploadBaseFile(): void
     {
         $user = $this->requireLogin();
-        $this->requirePaidPlan($user);
+        $this->requireProjectPermission($user, 'edit');
         $userId = (int)($user['id'] ?? 0);
 
         $projectId = isset($_POST['project_id']) ? (int)$_POST['project_id'] : 0;
@@ -860,7 +850,7 @@ class ProjectController extends Controller
     public function createBaseText(): void
     {
         $user = $this->requireLogin();
-        $this->requirePaidPlan($user);
+        $this->requireProjectPermission($user, 'edit');
         $userId = (int)($user['id'] ?? 0);
 
         $projectId = isset($_POST['project_id']) ? (int)$_POST['project_id'] : 0;

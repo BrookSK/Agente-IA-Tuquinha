@@ -57,6 +57,10 @@ class AdminPlanController extends Controller
         $allowFiles = !empty($_POST['allow_files']) ? 1 : 0;
         $allowPersonalities = !empty($_POST['allow_personalities']) ? 1 : 0;
         $allowCourses = !empty($_POST['allow_courses']) ? 1 : 0;
+        $allowProjectsAccess = !empty($_POST['allow_projects_access']) ? 1 : 0;
+        $allowProjectsCreate = !empty($_POST['allow_projects_create']) ? 1 : 0;
+        $allowProjectsEdit = !empty($_POST['allow_projects_edit']) ? 1 : 0;
+        $allowProjectsShare = !empty($_POST['allow_projects_share']) ? 1 : 0;
         $isActive = !empty($_POST['is_active']) ? 1 : 0;
         $isDefaultForUsers = !empty($_POST['is_default_for_users']) ? 1 : 0;
         $allowedModels = isset($_POST['allowed_models']) && is_array($_POST['allowed_models'])
@@ -142,6 +146,10 @@ class AdminPlanController extends Controller
             'allow_files' => $allowFiles,
             'allow_personalities' => $allowPersonalities,
             'allow_courses' => $allowCourses,
+            'allow_projects_access' => $allowProjectsAccess,
+            'allow_projects_create' => $allowProjectsCreate,
+            'allow_projects_edit' => $allowProjectsEdit,
+            'allow_projects_share' => $allowProjectsShare,
             'is_active' => $isActive,
             'is_default_for_users' => $isDefaultForUsers,
             'referral_enabled' => $referralEnabled,
