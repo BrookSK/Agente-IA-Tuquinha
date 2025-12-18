@@ -101,4 +101,18 @@ class ProjectFile
         $stmt->execute();
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
+
+    public static function softDelete(int $id): void
+    {
+        if ($id <= 0) {
+            return;
+        }
+
+        $pdo = Database::getConnection();
+        $stmt = $pdo->prepare('UPDATE project_files SET deleted_at = :deleted_at WHERE id = :id LIMIT 1');
+        $stmt->execute([
+            'deleted_at' => date('Y-m-d H:i:s'),
+            'id' => $id,
+        ]);
+    }
 }

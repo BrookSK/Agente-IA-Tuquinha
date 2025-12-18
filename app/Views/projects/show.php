@@ -410,6 +410,15 @@
                         <div style="font-size:11px; color:#8d8d8d; margin-top:6px;">
                             v<?= (int)($ver['version'] ?? 0) ?>
                         </div>
+                        <?php if (!empty($canAdmin)): ?>
+                            <div style="display:flex; justify-content:flex-end; margin-top:8px;">
+                                <form action="/projetos/arquivo-base/remover" method="post" onsubmit="return confirm('Remover este arquivo do projeto?');" style="margin:0;" onclick="event.stopPropagation();">
+                                    <input type="hidden" name="project_id" value="<?= (int)($project['id'] ?? 0) ?>">
+                                    <input type="hidden" name="file_id" value="<?= $fid ?>">
+                                    <button type="submit" style="font-size:11px; color:#ffbaba; text-decoration:none; border:1px solid #3a1f1f; background:#1a0c10; padding:4px 8px; border-radius:999px; cursor:pointer;">Excluir</button>
+                                </form>
+                            </div>
+                        <?php endif; ?>
                         <?php if ($storageUrl !== ''): ?>
                             <div style="display:flex; gap:8px; margin-top:8px;">
                                 <a href="<?= htmlspecialchars($storageUrl) ?>" target="_blank" rel="noopener noreferrer" style="font-size:11px; color:#c8ffd4; text-decoration:none; border:1px solid #2e7d32; background:#102312; padding:4px 8px; border-radius:999px;" onclick="event.stopPropagation();">Abrir</a>

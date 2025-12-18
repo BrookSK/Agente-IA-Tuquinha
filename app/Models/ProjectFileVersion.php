@@ -70,4 +70,15 @@ class ProjectFileVersion
         }
         return $map;
     }
+
+    public static function deleteAllForFile(int $projectFileId): void
+    {
+        if ($projectFileId <= 0) {
+            return;
+        }
+
+        $pdo = Database::getConnection();
+        $stmt = $pdo->prepare('DELETE FROM project_file_versions WHERE project_file_id = :fid');
+        $stmt->execute(['fid' => $projectFileId]);
+    }
 }

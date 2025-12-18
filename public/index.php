@@ -114,6 +114,7 @@ $router->post('/projetos/memoria-itens/atualizar', 'ProjectController@updateMemo
 $router->post('/projetos/memoria-itens/excluir', 'ProjectController@deleteMemoryItem');
 $router->post('/projetos/arquivo-base/upload', 'ProjectController@uploadBaseFile');
 $router->post('/projetos/arquivo-base/texto', 'ProjectController@createBaseText');
+$router->post('/projetos/arquivo-base/remover', 'ProjectController@removeBaseFile');
 $router->get('/conta', 'AccountController@index');
 $router->post('/conta', 'AccountController@updateProfile');
 $router->post('/conta/senha', 'AccountController@updatePassword');

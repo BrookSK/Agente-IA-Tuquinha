@@ -259,10 +259,12 @@ class ProjectController extends Controller
         $conversations = Conversation::allByProjectForUser($projectId, (int)$user['id']);
         $isFavorite = ProjectFavorite::isFavorite($projectId, (int)$user['id']);
 
+        $canAdmin = ProjectMember::canAdmin($projectId, (int)$user['id']);
+
         $members = [];
         $pendingInvites = [];
         $projectMemoryItems = [];
-        if (ProjectMember::canAdmin($projectId, (int)$user['id'])) {
+        if ($canAdmin) {
             $members = ProjectMember::allWithUsers($projectId);
             $pendingInvites = ProjectInvitation::allPendingForProject($projectId);
             $projectMemoryItems = ProjectMemoryItem::allActiveForProject($projectId, 200);
@@ -277,6 +279,7 @@ class ProjectController extends Controller
             'latestByFileId' => $latestByFileId,
             'conversations' => $conversations,
             'isFavorite' => $isFavorite,
+            'canAdmin' => $canAdmin,
             'members' => $members,
             'pendingInvites' => $pendingInvites,
             'projectMemoryItems' => $projectMemoryItems,
@@ -285,6 +288,41 @@ class ProjectController extends Controller
         ]);
 
         unset($_SESSION['project_upload_error'], $_SESSION['project_upload_ok']);
+    }
+
+    public function removeBaseFile(): void
+    {
+        $user = $this->requireLogin();
+        $this->requireProjectPermission($user, 'edit');
+        $userId = (int)($user['id'] ?? 0);
+
+        $projectId = isset($_POST['project_id']) ? (int)$_POST['project_id'] : 0;
+        $fileId = isset($_POST['file_id']) ? (int)$_POST['file_id'] : 0;
+
+        if ($projectId <= 0 || $fileId <= 0 || !ProjectMember::canAdmin($projectId, $userId)) {
+            header('Location: /projetos');
+            exit;
+        }
+
+        $project = Project::findById($projectId);
+        if (!$project) {
+            header('Location: /projetos');
+            exit;
+        }
+
+        $file = ProjectFile::findById($fileId);
+        if (!$file || (int)($file['project_id'] ?? 0) !== $projectId || empty($file['is_base'])) {
+            $_SESSION['project_upload_error'] = 'Arquivo inválido.';
+            header('Location: /projetos/ver?id=' . $projectId);
+            exit;
+        }
+
+        ProjectFileVersion::deleteAllForFile($fileId);
+        ProjectFile::softDelete($fileId);
+
+        $_SESSION['project_upload_ok'] = 'Arquivo removido com sucesso.';
+        header('Location: /projetos/ver?id=' . $projectId);
+        exit;
     }
 
     public function updateMemoryItem(): void
