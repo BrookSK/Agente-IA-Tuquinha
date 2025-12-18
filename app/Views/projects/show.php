@@ -765,10 +765,26 @@
                             fd.append('content', ta.value || '');
                             btn.disabled = true;
                             try {
-                                var res = await fetch('/projetos/memoria-itens/atualizar', { method: 'POST', body: fd, credentials: 'same-origin' });
+                                var res = await fetch('/projetos/memoria-itens/atualizar', {
+                                    method: 'POST',
+                                    body: fd,
+                                    credentials: 'same-origin',
+                                    headers: {
+                                        'Accept': 'application/json',
+                                        'X-Requested-With': 'XMLHttpRequest'
+                                    }
+                                });
+
                                 var json = await res.json().catch(function(){ return null; });
-                                if (!json || !json.ok) {
-                                    window.location.reload();
+
+                                if (res.status === 401) {
+                                    window.location.href = '/login';
+                                    return;
+                                }
+
+                                if (!res.ok || !json || !json.ok) {
+                                    var msg = (json && json.error) ? json.error : 'Não foi possível salvar.';
+                                    showToast(msg, 'error');
                                     return;
                                 }
 
@@ -789,7 +805,7 @@
                                 }, 1500);
                                 try { if (btn.dataset) { btn.dataset.savedTimeout = String(t); } } catch (e4) {}
                             } catch (e) {
-                                window.location.reload();
+                                showToast('Não foi possível salvar.', 'error');
                             } finally {
                                 btn.disabled = false;
                             }

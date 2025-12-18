@@ -22,9 +22,30 @@ use App\Services\TextExtractionService;
 
 class ProjectController extends Controller
 {
+    private function wantsJson(): bool
+    {
+        $accept = (string)($_SERVER['HTTP_ACCEPT'] ?? '');
+        if ($accept !== '' && stripos($accept, 'application/json') !== false) {
+            return true;
+        }
+
+        $xrw = (string)($_SERVER['HTTP_X_REQUESTED_WITH'] ?? '');
+        if ($xrw !== '' && strtolower($xrw) === 'xmlhttprequest') {
+            return true;
+        }
+
+        return false;
+    }
+
     private function requireLogin(): array
     {
         if (empty($_SESSION['user_id'])) {
+            if ($this->wantsJson()) {
+                http_response_code(401);
+                header('Content-Type: application/json; charset=utf-8');
+                echo json_encode(['ok' => false, 'error' => 'Não autenticado.']);
+                exit;
+            }
             header('Location: /login');
             exit;
         }
@@ -32,6 +53,12 @@ class ProjectController extends Controller
         $user = User::findById((int)$_SESSION['user_id']);
         if (!$user) {
             unset($_SESSION['user_id'], $_SESSION['user_name'], $_SESSION['user_email']);
+            if ($this->wantsJson()) {
+                http_response_code(401);
+                header('Content-Type: application/json; charset=utf-8');
+                echo json_encode(['ok' => false, 'error' => 'Sessão inválida.']);
+                exit;
+            }
             header('Location: /login');
             exit;
         }
@@ -70,11 +97,23 @@ class ProjectController extends Controller
         $email = (string)($user['email'] ?? '');
         $plan = $this->getActivePlanForEmail($email);
         if (!$plan) {
+            if ($this->wantsJson()) {
+                http_response_code(403);
+                header('Content-Type: application/json; charset=utf-8');
+                echo json_encode(['ok' => false, 'error' => 'Sem plano ativo.']);
+                exit;
+            }
             header('Location: /planos');
             exit;
         }
 
         if (empty($plan['allow_projects_access'])) {
+            if ($this->wantsJson()) {
+                http_response_code(403);
+                header('Content-Type: application/json; charset=utf-8');
+                echo json_encode(['ok' => false, 'error' => 'Seu plano não permite acesso a projetos.']);
+                exit;
+            }
             header('Location: /planos');
             exit;
         }
