@@ -537,11 +537,11 @@ if (!empty($_SESSION['user_id'])) {
                 <?php
                     $currentSlug = $_SESSION['plan_slug'] ?? null;
                     $isAdmin = !empty($_SESSION['is_admin']);
-                    $canSeeHistory = $hasUser && ($isAdmin || ($currentSlug && $currentSlug !== 'free'));
+                    $canSeeHistory = $hasUser;
                 ?>
                 <?php if ($canSeeHistory): ?>
                     <a href="/historico" class="sidebar-button" style="margin-bottom: 8px;">
-                        <span class="icon">🕒</span>
+                        <span class="icon" aria-hidden="true"><?php echo $renderMenuIcon('chat_history', '🕒'); ?></span>
                         <span>Histórico de chats</span>
                     </a>
                 <?php endif; ?>

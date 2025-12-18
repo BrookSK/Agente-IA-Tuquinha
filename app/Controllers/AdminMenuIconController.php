@@ -19,6 +19,7 @@ class AdminMenuIconController extends Controller
     private function getMenuItems(): array
     {
         return [
+            'chat_history' => 'Histórico de chats',
             'quick_home' => 'Quem é o Tuquinha',
             'quick_plans' => 'Planos e limites',
             'quick_courses' => 'Cursos',
