@@ -9,6 +9,9 @@
 $title = trim((string)($course['title'] ?? ''));
 $studentName = trim((string)($user['name'] ?? ''));
 $syllabus = trim((string)($course['certificate_syllabus'] ?? ''));
+if ($syllabus !== '') {
+    $syllabus = str_replace(["\\r\\n", "\\n", "\\r"], ["\n", "\n", "\n"], $syllabus);
+}
 $hours = isset($course['certificate_workload_hours']) ? (int)$course['certificate_workload_hours'] : 0;
 $location = trim((string)($course['certificate_location'] ?? ''));
 $startedAt = $badge['started_at'] ?? null;

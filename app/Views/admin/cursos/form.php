@@ -148,7 +148,7 @@ $partnerEmail = $partnerEmail ?? '';
 
             <div style="margin-bottom:10px;">
                 <label style="font-size:13px; color:var(--text-primary); display:block; margin-bottom:4px;">Conteúdo programático (tópicos)</label>
-                <textarea name="certificate_syllabus" rows="6" placeholder="Ex:\n- Introdução ao branding\n- Identidade visual\n- ..." style="
+                <textarea name="certificate_syllabus" rows="6" placeholder="Ex:&#10;- Introdução ao branding&#10;- Identidade visual&#10;- ..." style="
                     width:100%; padding:8px 10px; border-radius:8px; border:1px solid var(--border-subtle);
                     background:var(--surface-card); color:var(--text-primary); font-size:13px; resize:vertical;">
 <?= htmlspecialchars($course['certificate_syllabus'] ?? '') ?></textarea>

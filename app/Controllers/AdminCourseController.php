@@ -97,6 +97,9 @@ class AdminCourseController extends Controller
         $imagePath = trim($_POST['image_path'] ?? '');
         $badgeImagePath = trim($_POST['badge_image_path'] ?? '');
         $certificateSyllabus = trim($_POST['certificate_syllabus'] ?? '');
+        if ($certificateSyllabus !== '') {
+            $certificateSyllabus = str_replace(["\\r\\n", "\\n", "\\r"], ["\n", "\n", "\n"], $certificateSyllabus);
+        }
         $certificateWorkloadHours = isset($_POST['certificate_workload_hours']) ? (int)$_POST['certificate_workload_hours'] : 0;
         $certificateLocation = trim($_POST['certificate_location'] ?? '');
         $removeImage = !empty($_POST['remove_image']);
