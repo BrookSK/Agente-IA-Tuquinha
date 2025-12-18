@@ -115,6 +115,40 @@ $autoPrint = isset($_GET['print']) && (string)$_GET['print'] === '1';
         color: #000 !important;
     }
 }
+
+@media (max-width: 520px) {
+    .no-print {
+        flex-direction: column !important;
+        align-items: stretch !important;
+    }
+    .no-print > div:last-child {
+        width: 100% !important;
+    }
+    .no-print a,
+    .no-print button {
+        width: 100% !important;
+        justify-content: center !important;
+    }
+    #certificateSheet {
+        padding: 12px 12px !important;
+        border-radius: 14px !important;
+    }
+    #certificateSheet > div:first-child {
+        flex-direction: column !important;
+    }
+    #certificateSheet div[style*="width:220px"] {
+        width: 100% !important;
+        max-width: 340px !important;
+        margin: 0 auto !important;
+    }
+    #certificateSheet img[alt="QR Code"] {
+        width: 160px !important;
+        height: 160px !important;
+    }
+    #certificateSheet div[style*="font-size:24px"] {
+        font-size: 20px !important;
+    }
+}
 </style>
 
 <?php if ($autoPrint): ?>
