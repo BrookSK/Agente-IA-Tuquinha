@@ -375,13 +375,23 @@
                 <?php foreach ($baseFiles as $bf): ?>
                     <?php $fid = (int)($bf['id'] ?? 0); ?>
                     <?php $ver = $latestByFileId[$fid] ?? null; ?>
-                    <div style="border:1px solid #272727; background:#050509; border-radius:12px; padding:10px; min-height:90px; display:flex; flex-direction:column; justify-content:space-between;">
+                    <?php $storageUrl = is_array($ver) ? (string)($ver['storage_url'] ?? '') : ''; ?>
+                    <div
+                        style="border:1px solid #272727; background:#050509; border-radius:12px; padding:10px; min-height:90px; display:flex; flex-direction:column; justify-content:space-between;<?= $storageUrl !== '' ? ' cursor:pointer;' : '' ?>"
+                        <?= $storageUrl !== '' ? 'role="link" tabindex="0" onclick="window.open(\'' . htmlspecialchars($storageUrl, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') . '\', \"_blank\")" onkeydown="if(event.key===\"Enter\"||event.key===\" \" ){event.preventDefault(); window.open(\'' . htmlspecialchars($storageUrl, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') . '\', \"_blank\")}"' : '' ?>
+                    >
                         <div style="font-size:12px; font-weight:650; color:#f5f5f5; overflow:hidden; text-overflow:ellipsis; overflow-wrap:anywhere; word-break:break-word; line-height:1.2;">
                             <?= htmlspecialchars((string)($bf['name'] ?? '')) ?>
                         </div>
                         <div style="font-size:11px; color:#8d8d8d; margin-top:6px;">
                             v<?= (int)($ver['version'] ?? 0) ?>
                         </div>
+                        <?php if ($storageUrl !== ''): ?>
+                            <div style="display:flex; gap:8px; margin-top:8px;">
+                                <a href="<?= htmlspecialchars($storageUrl) ?>" target="_blank" rel="noopener noreferrer" style="font-size:11px; color:#c8ffd4; text-decoration:none; border:1px solid #2e7d32; background:#102312; padding:4px 8px; border-radius:999px;" onclick="event.stopPropagation();">Abrir</a>
+                                <a href="<?= htmlspecialchars($storageUrl) ?>" download style="font-size:11px; color:#f5f5f5; text-decoration:none; border:1px solid #272727; background:#0a0a10; padding:4px 8px; border-radius:999px;" onclick="event.stopPropagation();">Baixar</a>
+                            </div>
+                        <?php endif; ?>
                         <div style="display:flex; justify-content:space-between; align-items:center; margin-top:8px;">
                             <div style="font-size:10px; color:#8d8d8d; border:1px solid #272727; background:#0a0a10; border-radius:8px; padding:3px 6px; max-width:190px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"><?= !empty($bf['mime_type']) ? htmlspecialchars((string)$bf['mime_type']) : 'ARQ' ?></div>
                             <div style="font-size:10px; color:<?= !empty($ver['extracted_text']) ? '#c8ffd4' : '#8d8d8d' ?>;"><?= !empty($ver['extracted_text']) ? 'ok' : '—' ?></div>

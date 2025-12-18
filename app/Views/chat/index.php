@@ -1242,6 +1242,28 @@ if (!empty($currentPlan) && is_array($currentPlan)) {
             sendViaAjax();
         });
 
+        // Autosend: usado quando o usuário inicia o chat vindo de Projetos.
+        // Ex: /chat?c=123&autosend=1 (texto vem do draftMessage do servidor)
+        try {
+            const params = new URLSearchParams(window.location.search || '');
+            if (params.get('autosend') === '1') {
+                window.setTimeout(() => {
+                    if (!messageInput || !messageInput.value || messageInput.value.trim() === '') {
+                        return;
+                    }
+                    sendViaAjax();
+
+                    // Evita reenvio se o usuário der refresh
+                    try {
+                        params.delete('autosend');
+                        const qs = params.toString();
+                        const newUrl = window.location.pathname + (qs ? ('?' + qs) : '');
+                        window.history.replaceState({}, '', newUrl);
+                    } catch (e2) {}
+                }, 250);
+            }
+        } catch (e) {}
+
         const errorBox = document.getElementById('chat-error-report');
         const btnOpenReport = document.getElementById('btn-open-error-report');
         const btnCloseReport = document.getElementById('btn-close-error-report');
