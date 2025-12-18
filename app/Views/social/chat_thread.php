@@ -90,8 +90,27 @@ if (!empty($messages)) {
             height: 100% !important;
         }
 
+        #socialChatCallPane {
+            display: flex !important;
+            flex-direction: column !important;
+        }
+
+        #socialChatCallPane .call-pane-body {
+            flex: 1 1 auto !important;
+            min-height: 0 !important;
+            display: flex !important;
+            flex-direction: column !important;
+        }
+
         #socialChatCallPane .tuquinha-video-box {
-            height: 240px !important;
+            flex: 1 1 0 !important;
+            min-height: 160px !important;
+            height: auto !important;
+        }
+
+        #socialChatCallPane .call-pane-actions {
+            margin-top: auto !important;
+            padding-top: 8px;
         }
     }
 
@@ -143,7 +162,7 @@ if (!empty($messages)) {
             Chamada com <?= htmlspecialchars($otherName, ENT_QUOTES, 'UTF-8') ?>
         </div>
 
-        <div style="display:flex; flex-direction:column; gap:8px;">
+        <div class="call-pane-body" style="display:flex; flex-direction:column; gap:8px;">
             <div class="tuquinha-video-box" style="background:#000; border-radius:12px; height:200px; overflow:hidden; position:relative; border:1px solid #272727;">
                 <video id="tuquinhaLocalVideo" autoplay playsinline muted style="width:100%; height:100%; object-fit:cover; display:none;"></video>
                 <div id="tuquinha-local-video" style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; color:#b0b0b0; font-size:12px;">
@@ -163,7 +182,7 @@ if (!empty($messages)) {
                     <span id="tuquinha-call-status">Chamada não iniciada.</span>
                 </div>
             </div>
-            <div style="display:flex; gap:8px; margin-top:4px; justify-content:center; flex-wrap:wrap;">
+            <div class="call-pane-actions" style="display:flex; gap:8px; margin-top:4px; justify-content:center; flex-wrap:wrap;">
                 <button type="button" id="btn-start-call" style="border:none; border-radius:999px; padding:6px 12px; font-size:12px; font-weight:600; cursor:pointer; background:linear-gradient(135deg,#4caf50,#8bc34a); color:#050509;">
                     Iniciar chamada de vídeo
                 </button>
