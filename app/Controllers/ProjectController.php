@@ -453,7 +453,10 @@ class ProjectController extends Controller
         }
 
         $safeProjectName = htmlspecialchars($projectName, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
-        $safeRole = htmlspecialchars($role, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+        $roleLabel = 'Leitura';
+        if ($role === 'write') { $roleLabel = 'Escrita'; }
+        if ($role === 'admin') { $roleLabel = 'Administrador'; }
+        $safeRole = htmlspecialchars($roleLabel, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
 
         $contentHtml = '<p style="font-size:14px; margin:0 0 10px 0;">Você foi convidado para colaborar no projeto <strong>' . $safeProjectName . '</strong> no Tuquinha.</p>'
             . '<p style="font-size:14px; margin:0 0 10px 0;">Permissão: <strong>' . $safeRole . '</strong></p>'

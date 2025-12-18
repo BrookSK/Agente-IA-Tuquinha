@@ -214,7 +214,7 @@
                         <select id="inviteRole" style="flex:0 0 auto; min-width:120px; max-width:100%; padding:10px 10px; border-radius:12px; border:1px solid #272727; background:#050509; color:#f5f5f5; font-size:13px; outline:none;">
                             <option value="read">Leitura</option>
                             <option value="write">Escrita</option>
-                            <option value="admin">Admin</option>
+                            <option value="admin">Administrador</option>
                         </select>
                         <button type="button" id="sendInviteBtn" style="flex:0 0 auto; max-width:100%; border:none; border-radius:12px; padding:10px 12px; background:linear-gradient(135deg,#e53935,#ff6f60); color:#050509; font-weight:700; cursor:pointer;">Convidar</button>
                     </div>
@@ -225,10 +225,16 @@
                             <div style="font-size:12px; color:#b0b0b0; margin-bottom:6px;">Convites pendentes</div>
                             <div style="display:flex; flex-direction:column; gap:8px;">
                                 <?php foreach ($pendingInvites as $inv): ?>
+                                    <?php
+                                        $roleLabel = 'Leitura';
+                                        $rawRole = (string)($inv['role'] ?? 'read');
+                                        if ($rawRole === 'write') { $roleLabel = 'Escrita'; }
+                                        if ($rawRole === 'admin') { $roleLabel = 'Administrador'; }
+                                    ?>
                                     <div style="display:flex; justify-content:space-between; align-items:center; gap:10px; border:1px solid #272727; border-radius:12px; padding:10px 12px; background:#0a0a10; flex-wrap:wrap;">
                                         <div style="min-width:0;">
                                             <div style="font-size:12px; color:#f5f5f5; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"><?= htmlspecialchars((string)($inv['invited_email'] ?? '')) ?></div>
-                                            <div style="font-size:11px; color:#8d8d8d;">Permissão: <?= htmlspecialchars((string)($inv['role'] ?? 'read')) ?></div>
+                                            <div style="font-size:11px; color:#8d8d8d;">Permissão: <?= htmlspecialchars($roleLabel) ?></div>
                                         </div>
                                         <button type="button" class="revokeInviteBtn" data-invite-id="<?= (int)($inv['id'] ?? 0) ?>" style="border:1px solid #272727; background:#050509; color:#ffbaba; border-radius:10px; padding:8px 10px; cursor:pointer;">Revogar</button>
                                     </div>
@@ -256,9 +262,9 @@
                                         </div>
                                         <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
                                             <select class="memberRoleSelect" data-user-id="<?= $uid ?>" style="padding:8px 10px; border-radius:10px; border:1px solid #272727; background:#050509; color:#f5f5f5; font-size:12px; outline:none;">
-                                                <option value="read" <?= $role === 'read' ? 'selected' : '' ?>>read</option>
-                                                <option value="write" <?= $role === 'write' ? 'selected' : '' ?>>write</option>
-                                                <option value="admin" <?= $role === 'admin' ? 'selected' : '' ?>>admin</option>
+                                                <option value="read" <?= $role === 'read' ? 'selected' : '' ?>>Leitura</option>
+                                                <option value="write" <?= $role === 'write' ? 'selected' : '' ?>>Escrita</option>
+                                                <option value="admin" <?= $role === 'admin' ? 'selected' : '' ?>>Administrador</option>
                                             </select>
                                             <button type="button" class="removeMemberBtn" data-user-id="<?= $uid ?>" style="border:1px solid #272727; background:#050509; color:#ffbaba; border-radius:10px; padding:8px 10px; cursor:pointer;">Remover</button>
                                         </div>
@@ -267,21 +273,9 @@
                             </div>
                         </div>
                     <?php endif; ?>
+
                 </div>
                 <?php endif; ?>
-
-                <div style="background:#111118; border:1px solid #272727; border-radius:14px; padding:14px;">
-                    <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:6px;">
-                        <div style="font-weight:650;">Memória</div>
-                        <div style="display:flex; align-items:center; gap:8px;">
-                            <div style="font-size:11px; color:#8d8d8d; border:1px solid #272727; border-radius:999px; padding:5px 8px; background:#0a0a10;">Apenas você</div>
-                            <button type="button" id="openProjectMemory" style="border:none; background:transparent; color:#8d8d8d; cursor:pointer;">✎</button>
-                        </div>
-                    </div>
-                    <div id="projectMemoryText" style="color:#b0b0b0; font-size:12px; line-height:1.35;">
-                        <?= !empty($project['description']) ? nl2br(htmlspecialchars((string)$project['description'])) : 'Nenhuma memória definida.' ?>
-                    </div>
-                </div>
 
                 <?php if (!empty($projectMemoryItems)): ?>
                 <div style="background:#111118; border:1px solid #272727; border-radius:14px; padding:14px;">
@@ -762,6 +756,9 @@
                             if (!id) return;
                             var ta = document.querySelector('.pmiText[data-item-id="' + id + '"]');
                             if (!ta) return;
+                            var oldText = btn.textContent;
+                            var oldBorder = btn.style.borderColor;
+                            var oldColor = btn.style.color;
                             var fd = new FormData();
                             fd.append('project_id', '<?= (int)($project['id'] ?? 0) ?>');
                             fd.append('item_id', id);
@@ -772,7 +769,24 @@
                                 var json = await res.json().catch(function(){ return null; });
                                 if (!json || !json.ok) {
                                     window.location.reload();
+                                    return;
                                 }
+
+                                btn.textContent = 'Salvo';
+                                btn.style.color = '#c8ffd4';
+                                btn.style.borderColor = '#2e7d32';
+                                try {
+                                    if (btn.dataset && btn.dataset.savedTimeout) {
+                                        clearTimeout(parseInt(btn.dataset.savedTimeout, 10));
+                                    }
+                                } catch (e2) {}
+                                var t = window.setTimeout(function () {
+                                    btn.textContent = oldText;
+                                    btn.style.borderColor = oldBorder;
+                                    btn.style.color = oldColor;
+                                    try { if (btn.dataset) { delete btn.dataset.savedTimeout; } } catch (e3) {}
+                                }, 1500);
+                                try { if (btn.dataset) { btn.dataset.savedTimeout = String(t); } } catch (e4) {}
                             } catch (e) {
                                 window.location.reload();
                             } finally {
