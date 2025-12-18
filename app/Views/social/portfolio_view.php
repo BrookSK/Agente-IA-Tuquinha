@@ -7,6 +7,7 @@
 /** @var int $likesCount */
 /** @var bool $isLiked */
 /** @var bool $isOwner */
+/** @var bool|null $canEdit */
 
 $ownerId = (int)($profileUser['id'] ?? 0);
 $title = (string)($item['title'] ?? 'Portfólio');
@@ -96,11 +97,12 @@ foreach ($media as $m) {
         </div>
     <?php endif; ?>
 
-    <?php if ($isOwner): ?>
+    <?php if (!empty($canEdit) || $isOwner): ?>
         <section style="background:var(--surface-card); border-radius:16px; border:1px solid var(--border-subtle); padding:12px 14px;">
             <h2 style="font-size:16px; margin-bottom:8px;">Adicionar mídia</h2>
             <form action="/perfil/portfolio/upload" method="post" enctype="multipart/form-data" style="display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap;">
                 <input type="hidden" name="item_id" value="<?= (int)($item['id'] ?? 0) ?>">
+                <input type="hidden" name="owner_user_id" value="<?= (int)$ownerId ?>">
                 <div style="flex:1 1 260px; min-width:0;">
                     <label style="display:block; font-size:12px; color:var(--text-secondary); margin-bottom:3px;">Arquivo (imagem ou documento)</label>
                     <input type="file" name="file" required style="font-size:12px;">
@@ -121,9 +123,10 @@ foreach ($media as $m) {
                         <a href="<?= htmlspecialchars($url, ENT_QUOTES, 'UTF-8') ?>" target="_blank" rel="noopener noreferrer" style="display:block;">
                             <img src="<?= htmlspecialchars($url, ENT_QUOTES, 'UTF-8') ?>" alt="Imagem" style="width:100%; height:160px; object-fit:cover; display:block;">
                         </a>
-                        <?php if ($isOwner): ?>
+                        <?php if (!empty($canEdit) || $isOwner): ?>
                             <form action="/perfil/portfolio/midia/excluir" method="post" style="margin:0; padding:8px; display:flex; justify-content:flex-end;" onsubmit="return confirm('Excluir esta mídia?');">
                                 <input type="hidden" name="item_id" value="<?= (int)($item['id'] ?? 0) ?>">
+                                <input type="hidden" name="owner_user_id" value="<?= (int)$ownerId ?>">
                                 <input type="hidden" name="media_id" value="<?= $mid ?>">
                                 <button type="submit" style="border:1px solid var(--border-subtle); background:var(--surface-card); color:#ffbaba; border-radius:999px; padding:5px 10px; font-size:12px; cursor:pointer;">Excluir</button>
                             </form>
@@ -147,9 +150,10 @@ foreach ($media as $m) {
                         </div>
                         <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
                             <a href="<?= htmlspecialchars($url, ENT_QUOTES, 'UTF-8') ?>" target="_blank" rel="noopener noreferrer" style="border-radius:999px; padding:5px 10px; border:1px solid var(--border-subtle); background:var(--surface-card); color:var(--text-primary); font-size:12px; text-decoration:none;">Baixar</a>
-                            <?php if ($isOwner): ?>
+                            <?php if (!empty($canEdit) || $isOwner): ?>
                                 <form action="/perfil/portfolio/midia/excluir" method="post" style="margin:0;" onsubmit="return confirm('Excluir este arquivo?');">
                                     <input type="hidden" name="item_id" value="<?= (int)($item['id'] ?? 0) ?>">
+                                    <input type="hidden" name="owner_user_id" value="<?= (int)$ownerId ?>">
                                     <input type="hidden" name="media_id" value="<?= $mid ?>">
                                     <button type="submit" style="border:1px solid var(--border-subtle); background:var(--surface-card); color:#ffbaba; border-radius:999px; padding:5px 10px; font-size:12px; cursor:pointer;">Excluir</button>
                                 </form>

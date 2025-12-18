@@ -167,6 +167,12 @@ $router->post('/perfil/portfolio/curtir', 'SocialPortfolioController@toggleLike'
 $router->post('/perfil/portfolio/upload', 'SocialPortfolioController@uploadMedia');
 $router->post('/perfil/portfolio/midia/excluir', 'SocialPortfolioController@deleteMedia');
 
+$router->post('/perfil/portfolio/compartilhar/convidar', 'SocialPortfolioController@inviteCollaborator');
+$router->get('/perfil/portfolio/aceitar-convite', 'SocialPortfolioController@acceptInvite');
+$router->post('/perfil/portfolio/compartilhar/revogar', 'SocialPortfolioController@revokeInvite');
+$router->post('/perfil/portfolio/compartilhar/alterar-role', 'SocialPortfolioController@updateCollaboratorRole');
+$router->post('/perfil/portfolio/compartilhar/remover', 'SocialPortfolioController@removeCollaborator');
+
 $router->get('/amigos', 'FriendsController@index');
 $router->get('/amigos/adicionar', 'FriendsController@add');
 $router->get('/amigos/buscar', 'FriendsController@search');
