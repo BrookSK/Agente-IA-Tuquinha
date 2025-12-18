@@ -132,19 +132,43 @@
     <div id="projectPageGrid" style="display:grid; grid-template-columns:minmax(0, 1fr) 360px; gap:14px; align-items:start;">
         <div style="min-width:0;">
             <div style="background:#111118; border:1px solid #272727; border-radius:14px; padding:14px;">
+                <?php
+                    $composerModel = (string)($_SESSION['chat_model'] ?? '');
+                    if ($composerModel === '') {
+                        try {
+                            if (!empty($_SESSION['is_admin'])) {
+                                $p = \App\Models\Plan::findTopActive();
+                                $composerModel = is_array($p) ? (string)($p['default_model'] ?? '') : '';
+                            } else {
+                                $userEmail = (string)($_SESSION['user_email'] ?? '');
+                                if ($userEmail !== '') {
+                                    $sub = \App\Models\Subscription::findLastByEmail($userEmail);
+                                    if (is_array($sub) && !empty($sub['plan_id'])) {
+                                        $status = strtolower((string)($sub['status'] ?? ''));
+                                        $isActive = !in_array($status, ['canceled', 'expired'], true);
+                                        if ($isActive) {
+                                            $p = \App\Models\Plan::findById((int)$sub['plan_id']);
+                                            $composerModel = is_array($p) ? (string)($p['default_model'] ?? '') : '';
+                                        }
+                                    }
+                                }
+                            }
+                        } catch (\Throwable $e) {
+                        }
+                    }
+                    if ($composerModel === '') {
+                        $composerModel = (string)\App\Models\Setting::get('openai_default_model', AI_MODEL);
+                    }
+                ?>
                 <form id="projectComposerForm" action="/projetos/chat/criar" method="post" style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
                     <input type="hidden" name="project_id" value="<?= (int)($project['id'] ?? 0) ?>">
                     <div style="flex:1; background:#0a0a10; border:1px solid #272727; border-radius:14px; padding:14px; color:#8d8d8d; font-size:13px;">
                         <textarea name="message" id="projectComposerMessage" placeholder="Responder..." rows="3" style="width:100%; border:none; outline:none; background:transparent; color:#f5f5f5; font-size:13px; resize:none; min-height:46px;"></textarea>
-                        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:10px;">
-                            <div style="display:flex; gap:10px; align-items:center;">
-                                <button type="button" id="composerFilesBtn" style="width:18px; height:18px; border-radius:6px; border:1px solid #272727; display:flex; align-items:center; justify-content:center; color:#8d8d8d; background:transparent; cursor:pointer; padding:0;">+</button>
-                                <button type="button" id="composerClockBtn" style="width:18px; height:18px; border-radius:6px; border:1px solid #272727; display:flex; align-items:center; justify-content:center; color:#8d8d8d; background:transparent; cursor:pointer; padding:0;">⏱</button>
-                            </div>
+                        <div style="display:flex; justify-content:flex-end; align-items:center; margin-top:10px;">
                             <button type="submit" style="display:inline-flex; align-items:center; justify-content:center; width:34px; height:34px; border-radius:10px; border:1px solid #2e7d32; background:#102312; color:#c8ffd4; text-decoration:none; font-weight:700; cursor:pointer;">↑</button>
                         </div>
+                        <div style="color:#8d8d8d; font-size:12px; white-space:nowrap; margin-top:8px;"><?= htmlspecialchars($composerModel) ?> ✓</div>
                     </div>
-                    <div style="color:#8d8d8d; font-size:12px; white-space:nowrap; margin-left:10px;">Sonnet 4.5 ✓</div>
                 </form>
             </div>
 
@@ -486,26 +510,6 @@
 
                     bindProjectInstructionsModal();
                     document.addEventListener('DOMContentLoaded', bindProjectInstructionsModal);
-
-                    var composerFilesBtn = document.getElementById('composerFilesBtn');
-                    if (composerFilesBtn) {
-                        composerFilesBtn.addEventListener('click', function (e) {
-                            e.preventDefault();
-                            if (btn) {
-                                btn.click();
-                            } else if (menu) {
-                                menu.style.display = menu.style.display === 'none' || menu.style.display === '' ? 'block' : 'none';
-                            }
-                        });
-                    }
-
-                    var composerClockBtn = document.getElementById('composerClockBtn');
-                    if (composerClockBtn) {
-                        composerClockBtn.addEventListener('click', function (e) {
-                            e.preventDefault();
-                            alert('Em breve');
-                        });
-                    }
 
                     var ellipsisBtn = document.getElementById('projectEllipsisBtn');
                     var ellipsisMenu = document.getElementById('projectEllipsisMenu');

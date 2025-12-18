@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Models\Setting;
+use App\Models\Personality;
 
 class TuquinhaEngine
 {
@@ -277,13 +278,46 @@ class TuquinhaEngine
             $personaName = isset($persona['name']) ? trim((string)$persona['name']) : '';
             $personaArea = isset($persona['area']) ? trim((string)$persona['area']) : '';
             $personaPrompt = isset($persona['prompt']) ? trim((string)$persona['prompt']) : '';
+            $personaId = isset($persona['id']) ? (int)$persona['id'] : 0;
 
             if ($personaName !== '' || $personaArea !== '') {
                 $title = $personaName;
                 if ($personaArea !== '') {
                     $title = $title !== '' ? ($title . ' (' . $personaArea . ')') : $personaArea;
                 }
-                $personaLines[] = 'PERSONALIDADE ATUAL DO TUQUINHA: ' . $title . '.';
+                $personaLines[] = 'PERSONALIDADE ATUAL: ' . $title . '.';
+            }
+
+            if ($personaName !== '') {
+                $personaLines[] = 'SEU NOME NESTE CHAT É "' . $personaName . '". Quando o usuário perguntar "qual o seu nome?", responda apenas com esse nome. Não diga que seu nome é "Tuquinha" (a menos que a personalidade se chame exatamente "Tuquinha").';
+            }
+
+            // Handoff por área: quando a pergunta não for do seu domínio, oriente o usuário a abrir um chat com a personalidade correta.
+            $otherPersonas = [];
+            try {
+                $all = Personality::allActive();
+                foreach ($all as $p) {
+                    $pid = (int)($p['id'] ?? 0);
+                    if ($pid > 0 && $personaId > 0 && $pid === $personaId) {
+                        continue;
+                    }
+                    $n = trim((string)($p['name'] ?? ''));
+                    $a = trim((string)($p['area'] ?? ''));
+                    if ($n === '' || $a === '') {
+                        continue;
+                    }
+                    $otherPersonas[] = $n . ' — ' . $a;
+                    if (count($otherPersonas) >= 12) {
+                        break;
+                    }
+                }
+            } catch (\Throwable $e) {
+                $otherPersonas = [];
+            }
+
+            if ($personaArea !== '' && $otherPersonas) {
+                $personaLines[] = "OUTRAS PERSONALIDADES DISPONÍVEIS (NOME — ÁREA):\n- " . implode("\n- ", $otherPersonas);
+                $personaLines[] = 'REGRA DE ESPECIALIDADE: responda sempre priorizando sua área (' . $personaArea . '). Se o usuário fizer uma pergunta claramente fora da sua área e que se encaixe melhor na área de outra personalidade, recomende explicitamente abrir um NOVO CHAT com a personalidade correta, citando o NOME exato e a ÁREA (por exemplo: "Para isso, abra um chat com \"NOME\" (ÁREA)"). Em seguida, se possível, dê apenas uma orientação geral e curta, e indique o que ele deve perguntar no chat da personalidade recomendada.';
             }
 
             if ($personaPrompt !== '') {
