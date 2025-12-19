@@ -18,7 +18,8 @@ $startedAt = $badge['started_at'] ?? null;
 $finishedAt = $badge['finished_at'] ?? null;
 $code = trim((string)($badge['certificate_code'] ?? ''));
 
-$qrUrl = 'https://chart.googleapis.com/chart?chs=200x200&cht=qr&chl=' . urlencode($verifyUrl);
+$qrUrlPrimary = 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=' . rawurlencode($verifyUrl);
+$qrUrlFallback = 'https://chart.googleapis.com/chart?chs=200x200&cht=qr&chl=' . rawurlencode($verifyUrl);
 
 $autoPrint = isset($_GET['print']) && (string)$_GET['print'] === '1';
 ?>
@@ -77,7 +78,13 @@ $autoPrint = isset($_GET['print']) && (string)$_GET['print'] === '1';
             <div style="flex:0 0 auto; text-align:center;">
                 <div style="border-radius:16px; border:1px solid #272727; background:#0b0b10; padding:10px 10px; width:220px;">
                     <div style="font-size:11px; color:#b0b0b0; margin-bottom:6px;">Verificação online</div>
-                    <img src="<?= htmlspecialchars($qrUrl, ENT_QUOTES, 'UTF-8') ?>" alt="QR Code" style="width:180px; height:180px; display:block; margin:0 auto; border-radius:12px;">
+                    <img
+                        src="<?= htmlspecialchars($qrUrlPrimary, ENT_QUOTES, 'UTF-8') ?>"
+                        data-fallback="<?= htmlspecialchars($qrUrlFallback, ENT_QUOTES, 'UTF-8') ?>"
+                        alt="QR Code"
+                        style="width:180px; height:180px; display:block; margin:0 auto; border-radius:12px;"
+                        onerror="(function(img){ if(!img || img.dataset.fallbackUsed==='1') return; img.dataset.fallbackUsed='1'; if(img.dataset.fallback){ img.src = img.dataset.fallback; } })(this);"
+                    >
                     <div style="font-size:10px; color:#777; margin-top:6px; word-break:break-all;">
                         <?= htmlspecialchars($verifyUrl, ENT_QUOTES, 'UTF-8') ?>
                     </div>
@@ -106,16 +113,43 @@ $autoPrint = isset($_GET['print']) && (string)$_GET['print'] === '1';
 
 <style>
 @media print {
-    body {
+    @page {
+        margin: 0;
+    }
+
+    html, body {
+        height: 100% !important;
         background: #fff !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
     }
-    .no-print {
-        display: none !important;
+
+    /* Esconde tudo do layout (menu, header, etc) */
+    body * {
+        visibility: hidden !important;
     }
+
+    /* Mostra somente o certificado */
+    #certificateSheet, #certificateSheet * {
+        visibility: visible !important;
+    }
+
     #certificateSheet {
+        position: fixed !important;
+        left: 0 !important;
+        top: 0 !important;
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 18px 18px !important;
         border: none !important;
+        border-radius: 0 !important;
         background: #fff !important;
         color: #000 !important;
+        box-shadow: none !important;
+    }
+
+    .no-print {
+        display: none !important;
     }
 }
 
