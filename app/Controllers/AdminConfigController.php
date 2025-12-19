@@ -12,12 +12,17 @@ use App\Services\MediaStorageService;
 
 class AdminConfigController extends Controller
 {
-    public function index(): void
+    private function ensureAdmin(): void
     {
         if (empty($_SESSION['is_admin'])) {
             header('Location: /admin/login');
             exit;
         }
+    }
+
+    public function index(): void
+    {
+        $this->ensureAdmin();
         $openaiKey = Setting::get('openai_api_key', '');
         $anthropicKey = Setting::get('anthropic_api_key', ANTHROPIC_API_KEY);
         $defaultModel = Setting::get('openai_default_model', AI_MODEL);
@@ -104,10 +109,7 @@ class AdminConfigController extends Controller
 
     public function save(): void
     {
-        if (empty($_SESSION['is_admin'])) {
-            header('Location: /admin/login');
-            exit;
-        }
+        $this->ensureAdmin();
         $openaiKey = trim($_POST['openai_key'] ?? '');
         $anthropicKey = trim($_POST['anthropic_key'] ?? '');
         $defaultModel = trim($_POST['default_model'] ?? '');
@@ -270,10 +272,7 @@ class AdminConfigController extends Controller
 
     public function sendTestEmail(): void
     {
-        if (empty($_SESSION['is_admin'])) {
-            header('Location: /admin/login');
-            exit;
-        }
+        $this->ensureAdmin();
 
         $toEmail = trim($_POST['test_email'] ?? '');
 
@@ -375,5 +374,49 @@ class AdminConfigController extends Controller
             'testEmailStatus' => $status,
             'testEmailError' => $error,
         ]);
+    }
+
+    public function certificatePreview(): void
+    {
+        $this->ensureAdmin();
+
+        $issuerName = Setting::get('certificate_issuer_name', 'Thiago Marques') ?: 'Thiago Marques';
+        $issuerSignatureImage = Setting::get('certificate_signature_image_path', '') ?: '';
+
+        $theme = isset($_GET['theme']) ? (string)$_GET['theme'] : '';
+        if ($theme !== 'light' && $theme !== 'dark') {
+            $theme = 'dark';
+        }
+
+        $course = [
+            'title' => 'Curso Exemplo - Tuquinha',
+            'certificate_workload_hours' => 12,
+            'certificate_location' => 'Online',
+            'certificate_syllabus' => "- Introdução\n- Conteúdo\n- Prática",
+        ];
+
+        $user = [
+            'name' => 'Aluno Exemplo',
+        ];
+
+        $badge = [
+            'certificate_code' => 'PREVIEW-0001',
+            'started_at' => date('Y-m-d', strtotime('-14 days')),
+            'finished_at' => date('Y-m-d'),
+        ];
+
+        $scheme = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') ? 'https://' : 'http://';
+        $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+        $verifyUrl = $scheme . $host . '/certificados/verificar?code=' . urlencode((string)($badge['certificate_code'] ?? ''));
+
+        $viewFile = __DIR__ . '/../Views/admin/config_certificate_preview.php';
+        if (!file_exists($viewFile)) {
+            http_response_code(500);
+            echo 'View não encontrada';
+            return;
+        }
+
+        header('Content-Type: text/html; charset=utf-8');
+        include $viewFile;
     }
 }

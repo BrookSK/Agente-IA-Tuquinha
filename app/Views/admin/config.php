@@ -412,4 +412,39 @@ $knownModels = [
             </button>
         </form>
     </div>
+
+    <div style="margin-top:16px; padding:10px 12px; border-radius:10px; border:1px solid var(--border-subtle); background:var(--surface-card);">
+        <div style="font-size:13px; color:var(--text-primary); margin-bottom:8px; font-weight:700;">Pré-visualização do certificado</div>
+        <div style="font-size:12px; color:var(--text-secondary); margin-bottom:10px; line-height:1.4;">
+            Este preview usa as configurações atuais de emissor e assinatura. É apenas uma simulação para você ver como ficará para o usuário.
+        </div>
+
+        <iframe
+            id="certificatePreviewFrame"
+            title="Preview do certificado"
+            src="/admin/config/certificado-preview"
+            style="width:100%; height:640px; border:1px solid var(--border-subtle); border-radius:14px; background:var(--surface-subtle);"
+        ></iframe>
+    </div>
 </div>
+
+<script>
+    (function () {
+        var frame = document.getElementById('certificatePreviewFrame');
+        if (!frame) return;
+
+        var theme = (document.body && document.body.getAttribute('data-theme')) ? document.body.getAttribute('data-theme') : 'dark';
+        if (theme !== 'light' && theme !== 'dark') theme = 'dark';
+
+        var src = '/admin/config/certificado-preview?theme=' + encodeURIComponent(theme);
+        frame.setAttribute('src', src);
+
+        function adjustHeight() {
+            var w = window.innerWidth || 1024;
+            frame.style.height = (w <= 520) ? '520px' : '640px';
+        }
+
+        window.addEventListener('resize', adjustHeight);
+        adjustHeight();
+    })();
+</script>

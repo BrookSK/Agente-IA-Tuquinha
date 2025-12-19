@@ -232,6 +232,7 @@ $router->get('/admin/comissoes/detalhes', 'AdminCommissionsController@details');
 $router->post('/admin/comissoes/marcar-pago', 'AdminCommissionsController@markPaid');
 $router->get('/admin/config', 'AdminConfigController@index');
 $router->post('/admin/config', 'AdminConfigController@save');
+$router->get('/admin/config/certificado-preview', 'AdminConfigController@certificatePreview');
 $router->post('/admin/config/test-email', 'AdminConfigController@sendTestEmail');
 $router->get('/admin/menu-icones', 'AdminMenuIconController@index');
 $router->post('/admin/menu-icones/salvar', 'AdminMenuIconController@save');
