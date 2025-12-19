@@ -223,6 +223,14 @@ class AdminCourseController extends Controller
 
         if ($ownerUserId) {
             $partner = CoursePartner::findByUserId((int)$ownerUserId);
+            if (!$partner) {
+                CoursePartner::create([
+                    'user_id' => (int)$ownerUserId,
+                    'default_commission_percent' => 0.0,
+                ]);
+                $partner = CoursePartner::findByUserId((int)$ownerUserId);
+            }
+
             if ($partner && !empty($partner['id'])) {
                 $partnerId = (int)$partner['id'];
                 if ($partnerCommissionRaw === '') {
