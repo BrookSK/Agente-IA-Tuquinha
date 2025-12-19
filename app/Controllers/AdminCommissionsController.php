@@ -116,6 +116,7 @@ class AdminCommissionsController extends Controller
         $partnerId = isset($_POST['partner_id']) ? (int)$_POST['partner_id'] : 0;
         $year = isset($_POST['year']) ? (int)$_POST['year'] : (int)date('Y');
         $month = isset($_POST['month']) ? (int)$_POST['month'] : (int)date('n');
+        $amountPaidRaw = trim((string)($_POST['amount_paid'] ?? ''));
         if ($month < 1) $month = 1;
         if ($month > 12) $month = 12;
 
@@ -141,7 +142,30 @@ class AdminCommissionsController extends Controller
             exit;
         }
 
-        CoursePartnerPayout::createPaid($partnerId, $year, $month, $owedCents);
+        if ($amountPaidRaw === '') {
+            $_SESSION['admin_commissions_error'] = 'Informe o valor pago.';
+            header('Location: /admin/comissoes/detalhes?partner_id=' . $partnerId . '&year=' . $year . '&month=' . $month);
+            exit;
+        }
+
+        $normalized = str_replace(['.', ' '], ['', ''], $amountPaidRaw);
+        $normalized = str_replace([','], ['.'], $normalized);
+        $amountPaid = is_numeric($normalized) ? (float)$normalized : -1.0;
+        $amountPaidCents = (int)round($amountPaid * 100);
+
+        if ($amountPaidCents <= 0) {
+            $_SESSION['admin_commissions_error'] = 'O valor pago deve ser maior que zero.';
+            header('Location: /admin/comissoes/detalhes?partner_id=' . $partnerId . '&year=' . $year . '&month=' . $month);
+            exit;
+        }
+
+        if ($amountPaidCents > $owedCents) {
+            $_SESSION['admin_commissions_error'] = 'O valor pago não pode ser maior que o valor disponível para pagamento.';
+            header('Location: /admin/comissoes/detalhes?partner_id=' . $partnerId . '&year=' . $year . '&month=' . $month);
+            exit;
+        }
+
+        CoursePartnerPayout::createPaid($partnerId, $year, $month, $amountPaidCents);
 
         $_SESSION['admin_commissions_success'] = 'Pagamento registrado com sucesso.';
         header('Location: /admin/comissoes/detalhes?partner_id=' . $partnerId . '&year=' . $year . '&month=' . $month);

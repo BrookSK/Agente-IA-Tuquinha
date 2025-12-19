@@ -70,6 +70,17 @@ $minPayout = $minPayoutCents / 100;
             <input type="hidden" name="partner_id" value="<?= (int)($partner['id'] ?? 0) ?>">
             <input type="hidden" name="year" value="<?= (int)$year ?>">
             <input type="hidden" name="month" value="<?= (int)$month ?>">
+            <div style="display:flex; flex-direction:column; gap:4px;">
+                <div style="font-size:12px; color:var(--text-secondary);">Valor pago (R$)</div>
+                <input
+                    type="text"
+                    name="amount_paid"
+                    placeholder="<?= number_format(((int)$owedCents)/100, 2, ',', '.') ?>"
+                    style="width:160px; padding:9px 10px; border-radius:10px; border:1px solid var(--border-subtle); background:var(--surface-card); color:var(--text-primary);"
+                    <?= $eligible ? '' : 'disabled' ?>
+                >
+                <div style="font-size:11px; color:var(--text-secondary);">Máximo disponível: <strong>R$ <?= number_format(((int)$owedCents)/100, 2, ',', '.') ?></strong></div>
+            </div>
             <button type="submit" <?= $eligible ? '' : 'disabled' ?> style="border:none; border-radius:999px; padding:9px 14px; font-weight:800; cursor:pointer; background:<?= $eligible ? 'linear-gradient(135deg,#e53935,#ff6f60)' : 'var(--surface-subtle)' ?>; color:#050509; opacity:<?= $eligible ? '1' : '0.55' ?>;">
                 Marcar como pago (<?= sprintf('%02d/%04d', (int)$month, (int)$year) ?>)
             </button>

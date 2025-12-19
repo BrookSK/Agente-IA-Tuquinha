@@ -627,6 +627,10 @@ if (!empty($_SESSION['user_id'])) {
                         <span class="icon" aria-hidden="true"><?php echo $renderMenuIcon('account_home', '👤'); ?></span>
                         <span>Minha conta</span>
                     </a>
+                    <a href="/certificados" class="sidebar-button">
+                        <span class="icon" aria-hidden="true"><?php echo $renderMenuIcon('account_certificates', '🏅'); ?></span>
+                        <span>Cursos concluídos</span>
+                    </a>
                     <a href="/conta/personalidade" class="sidebar-button">
                         <span class="icon" aria-hidden="true"><?php echo $renderMenuIcon('account_persona', '🎭'); ?></span>
                         <span>Personalidade padrão</span>

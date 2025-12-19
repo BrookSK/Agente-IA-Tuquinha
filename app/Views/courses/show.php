@@ -180,6 +180,20 @@ if (!empty($user) && !empty($canAccessContent) && !empty($lessons)) {
                             background:#10330f; color:#c8ffd4; font-size:13px;">
                             Curso finalizado ✅
                         </span>
+                        <a href="/certificados/ver?course_id=<?= (int)($course['id'] ?? 0) ?>" style="
+                            display:inline-flex; align-items:center; gap:6px; padding:8px 16px;
+                            border-radius:999px; border:1px solid #ffcc80;
+                            background:linear-gradient(135deg,#ffcc80,#ff8a65); color:#050509;
+                            font-size:13px; font-weight:700; text-decoration:none;">
+                            Abrir certificado
+                        </a>
+                        <a href="/certificados" style="
+                            display:inline-flex; align-items:center; gap:6px; padding:8px 16px;
+                            border-radius:999px; border:1px solid var(--border-subtle);
+                            background:var(--surface-subtle); color:var(--text-primary);
+                            font-size:13px; font-weight:600; text-decoration:none;">
+                            Meus cursos concluídos
+                        </a>
                     <?php elseif (!empty($canFinishCourse) && !empty($isEnrolled)): ?>
                         <a href="/cursos/encerrar?course_id=<?= (int)($course['id'] ?? 0) ?>" style="
                             display:inline-flex; align-items:center; gap:6px; padding:8px 16px;

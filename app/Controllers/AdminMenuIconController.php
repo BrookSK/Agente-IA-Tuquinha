@@ -29,6 +29,7 @@ class AdminMenuIconController extends Controller
             'social_friends' => 'Amigos',
             'social_communities' => 'Comunidades',
             'account_home' => 'Minha conta',
+            'account_certificates' => 'Cursos concluídos',
             'account_persona' => 'Personalidade padrão',
             'account_tokens' => 'Histórico de tokens extras',
             'partner_courses' => 'Meus cursos (parceiro)',

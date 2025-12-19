@@ -155,8 +155,44 @@ class CourseController extends Controller
         CourseEnrollment::unenroll($courseId, $userId);
 
         $_SESSION['courses_success'] = 'Curso finalizado com sucesso. Você ganhou uma insígnia e um certificado!';
-        header('Location: ' . self::buildCourseUrl($course));
+        header('Location: /cursos/encerrar/sucesso?course_id=' . (int)$courseId);
         exit;
+    }
+
+    public function finishCourseSuccess(): void
+    {
+        $user = $this->getCurrentUser();
+        if (!$user) {
+            header('Location: /login');
+            exit;
+        }
+
+        $courseId = isset($_GET['course_id']) ? (int)$_GET['course_id'] : 0;
+        $course = $courseId > 0 ? Course::findById($courseId) : null;
+        if (!$course || empty($course['is_active'])) {
+            header('Location: /cursos');
+            exit;
+        }
+
+        $badge = UserCourseBadge::findByUserAndCourse((int)($user['id'] ?? 0), $courseId);
+        if (!$badge) {
+            // Se por algum motivo não gravou, volta pro curso.
+            header('Location: ' . self::buildCourseUrl($course));
+            exit;
+        }
+
+        $success = $_SESSION['courses_success'] ?? null;
+        $error = $_SESSION['courses_error'] ?? null;
+        unset($_SESSION['courses_success'], $_SESSION['courses_error']);
+
+        $this->view('courses/finish_success', [
+            'pageTitle' => 'Curso finalizado',
+            'user' => $user,
+            'course' => $course,
+            'badge' => $badge,
+            'success' => $success,
+            'error' => $error,
+        ]);
     }
 
     private function resolvePlanForUser(?array $user): ?array

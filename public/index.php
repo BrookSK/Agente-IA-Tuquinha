@@ -138,6 +138,7 @@ $router->get('/cursos/modulos/prova', 'CourseController@moduleExam');
 $router->post('/cursos/modulos/prova', 'CourseController@moduleExamSubmit');
 $router->get('/cursos/encerrar', 'CourseController@finishCourse');
 $router->post('/cursos/encerrar', 'CourseController@finishCourseSubmit');
+$router->get('/cursos/encerrar/sucesso', 'CourseController@finishCourseSuccess');
 $router->post('/cursos/lives/comentar', 'CourseController@commentLive');
 $router->post('/cursos/aulas/comentar', 'CourseController@commentLesson');
 $router->get('/cursos/comprar', 'CoursePurchaseController@show');
