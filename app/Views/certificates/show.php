@@ -114,6 +114,7 @@ $autoPrint = isset($_GET['print']) && (string)$_GET['print'] === '1';
 <style>
 @media print {
     @page {
+        size: A4 landscape;
         margin: 0;
     }
 
@@ -140,12 +141,63 @@ $autoPrint = isset($_GET['print']) && (string)$_GET['print'] === '1';
         top: 0 !important;
         width: 100% !important;
         margin: 0 !important;
-        padding: 18px 18px !important;
+        padding: 18px 22px !important;
         border: none !important;
         border-radius: 0 !important;
         background: #fff !important;
         color: #000 !important;
         box-shadow: none !important;
+        break-inside: avoid;
+        page-break-inside: avoid;
+    }
+
+    /* Remove fundos escuros internos e garante contraste */
+    #certificateSheet [style*="background:#0b0b10"],
+    #certificateSheet [style*="background: #0b0b10"],
+    #certificateSheet [style*="background:#050509"],
+    #certificateSheet [style*="background: #050509"],
+    #certificateSheet [style*="background:radial-gradient"],
+    #certificateSheet [style*="background: radial-gradient"] {
+        background: #fff !important;
+    }
+    #certificateSheet [style*="border:1px solid #272727"],
+    #certificateSheet [style*="border: 1px solid #272727"] {
+        border-color: #d1d5db !important;
+    }
+    #certificateSheet [style*="color:#fff"],
+    #certificateSheet [style*="color: #fff"],
+    #certificateSheet [style*="color:#d8d8d8"],
+    #certificateSheet [style*="color: #d8d8d8"],
+    #certificateSheet [style*="color:#d0d0d0"],
+    #certificateSheet [style*="color: #d0d0d0"],
+    #certificateSheet [style*="color:#b0b0b0"],
+    #certificateSheet [style*="color: #b0b0b0"],
+    #certificateSheet [style*="color:#777"],
+    #certificateSheet [style*="color: #777"] {
+        color: #111827 !important;
+    }
+
+    /* Layout estável na impressão: mantém QR code ao lado */
+    #certificateSheet > div:first-child {
+        display: flex !important;
+        flex-wrap: nowrap !important;
+        gap: 14px !important;
+        align-items: flex-start !important;
+    }
+    #certificateSheet > div:first-child > div:first-child {
+        flex: 1 1 auto !important;
+        min-width: 0 !important;
+    }
+    #certificateSheet > div:first-child > div:last-child {
+        flex: 0 0 240px !important;
+        width: 240px !important;
+    }
+    #certificateSheet div[style*="width:220px"] {
+        width: 240px !important;
+    }
+    #certificateSheet img[alt="QR Code"] {
+        width: 190px !important;
+        height: 190px !important;
     }
 
     .no-print {
