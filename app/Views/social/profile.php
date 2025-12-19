@@ -153,6 +153,12 @@ $profileId = (int)($profileUser['id'] ?? 0);
                     <div style="font-size:12px; color:#ffb74d; background:var(--surface-subtle); border-radius:10px; border:1px solid var(--border-subtle); padding:6px 8px; text-align:center;">
                         Pedido de amizade enviado. Aguardando resposta.
                     </div>
+                    <form action="/amigos/cancelar" method="post" style="margin:0;">
+                        <input type="hidden" name="user_id" value="<?= (int)$profileId ?>">
+                        <button type="submit" style="width:100%; border:none; border-radius:999px; padding:7px 10px; font-size:13px; font-weight:650; cursor:pointer; background:#311; color:#ffbaba; border:1px solid #a33;">
+                            Cancelar solicitação
+                        </button>
+                    </form>
                 <?php elseif ($friendStatus === 'pending' && $requestedById !== $currentId): ?>
                     <form action="/amigos/decidir" method="post" style="display:flex; flex-direction:column; gap:6px;">
                         <div style="font-size:12px; color:var(--text-secondary); text-align:center;">Esta pessoa quer ser sua amiga.</div>

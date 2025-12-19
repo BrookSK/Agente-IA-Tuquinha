@@ -196,17 +196,22 @@ class TokenTopupController extends Controller
         try {
             $asaas = new AsaasClient();
 
+            // Define dueDate conforme o tipo de cobrança exigido pelo Asaas
+            $dueDate = date('Y-m-d'); // hoje por padrão
+            if ($billingType === 'BOLETO') {
+                $dueDate = date('Y-m-d', strtotime('+3 days'));
+            } elseif ($billingType === 'PIX') {
+                $dueDate = date('Y-m-d', strtotime('+1 day'));
+            }
+
             $payload = [
                 'customer'          => $subscription['asaas_customer_id'],
                 'billingType'       => $billingType,
                 'value'             => $amountCents / 100,
                 'description'       => 'Crédito de ' . $tokens . ' tokens extras no Tuquinha',
                 'externalReference' => 'token_topup:' . $topupId,
+                'dueDate'           => $dueDate,
             ];
-
-            if ($billingType === 'BOLETO') {
-                $payload['dueDate'] = date('Y-m-d', strtotime('+3 days'));
-            }
 
             $resp = $asaas->createPayment($payload);
             $paymentId = $resp['id'] ?? null;
