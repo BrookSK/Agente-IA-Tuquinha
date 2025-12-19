@@ -3,6 +3,8 @@
 $communityName = (string)($community['name'] ?? 'Comunidade');
 $slug = (string)($community['slug'] ?? '');
 
+$canClosePolls = !empty($canClosePolls);
+
 ?>
 <div style="max-width: 980px; margin: 0 auto; display:flex; flex-direction:column; gap:14px;">
     <?php if (!empty($error)): ?>
@@ -63,19 +65,32 @@ $slug = (string)($community['slug'] ?? '');
                     $totalVotes = (int)($item['total_votes'] ?? 0);
                     $userVote = $item['user_vote'] ?? null;
                     $pollId = (int)($poll['id'] ?? 0);
+                    $isClosed = !empty($poll['closed_at']);
                     ?>
                     <div id="poll-<?= $pollId ?>" style="background:var(--surface-subtle); border-radius:14px; border:1px solid var(--border-subtle); padding:10px 12px; display:flex; flex-direction:column; gap:6px;">
                         <div style="font-size:13px; font-weight:600; color:var(--text-primary);">
                             <?= htmlspecialchars((string)($poll['question'] ?? 'Enquete'), ENT_QUOTES, 'UTF-8') ?>
                         </div>
+                        <?php if ($isClosed): ?>
+                            <div style="font-size:11px; color:var(--text-secondary);">Enquete encerrada.</div>
+                        <?php endif; ?>
                         <?php if ($totalVotes > 0): ?>
                             <div style="font-size:11px; color:var(--text-secondary); margin-bottom:2px;">
                                 <?= $totalVotes ?> voto(s)
                             </div>
                         <?php endif; ?>
 
+                        <?php if (!empty($canModerate) && $canClosePolls): ?>
+                            <form action="<?= $isClosed ? '/comunidades/enquetes/reabrir' : '/comunidades/enquetes/fechar' ?>" method="post" style="margin:0; display:flex; justify-content:flex-end;">
+                                <input type="hidden" name="poll_id" value="<?= $pollId ?>">
+                                <button type="submit" style="border:none; border-radius:999px; padding:4px 8px; background:var(--surface-card); border:1px solid var(--border-subtle); color:var(--text-primary); font-size:11px; cursor:pointer;">
+                                    <?= $isClosed ? 'Reabrir' : 'Encerrar' ?>
+                                </button>
+                            </form>
+                        <?php endif; ?>
+
                         <?php if (!empty($isMember)): ?>
-                            <form action="/comunidades/enquetes/votar" method="post" style="display:flex; flex-direction:column; gap:4px;">
+                            <form action="/comunidades/enquetes/votar" method="post" style="display:flex; flex-direction:column; gap:4px;" <?= $isClosed ? 'onsubmit="return false;"' : '' ?>>
                                 <input type="hidden" name="poll_id" value="<?= $pollId ?>">
                                 <?php foreach ($options as $num => $label): ?>
                                     <?php
@@ -86,7 +101,7 @@ $slug = (string)($community['slug'] ?? '');
                                     ?>
                                     <label style="display:flex; flex-direction:column; gap:2px; font-size:12px; color:var(--text-primary); cursor:pointer;">
                                         <span style="display:flex; align-items:center; gap:6px;">
-                                            <input type="radio" name="option" value="<?= (int)$num ?>" <?= $selected ? 'checked' : '' ?> style="margin:0;">
+                                            <input type="radio" name="option" value="<?= (int)$num ?>" <?= $selected ? 'checked' : '' ?> <?= $isClosed ? 'disabled' : '' ?> style="margin:0;">
                                             <?= htmlspecialchars((string)$label, ENT_QUOTES, 'UTF-8') ?>
                                             <span style="font-size:11px; color:var(--text-secondary); margin-left:auto;">
                                                 <?= $count ?> voto(s) · <?= $pct ?>%
@@ -97,7 +112,7 @@ $slug = (string)($community['slug'] ?? '');
                                         </span>
                                     </label>
                                 <?php endforeach; ?>
-                                <button type="submit" style="margin-top:4px; align-self:flex-end; border:none; border-radius:999px; padding:4px 8px; background:var(--surface-card); border:1px solid var(--border-subtle); color:var(--text-primary); font-size:11px; cursor:pointer;">Votar</button>
+                                <button type="submit" <?= $isClosed ? 'disabled' : '' ?> style="margin-top:4px; align-self:flex-end; border:none; border-radius:999px; padding:4px 8px; background:var(--surface-card); border:1px solid var(--border-subtle); color:var(--text-primary); font-size:11px; cursor:pointer;">Votar</button>
                             </form>
                         <?php else: ?>
                             <p style="font-size:12px; color:var(--text-secondary);">Entre na comunidade para votar nas enquetes.</p>

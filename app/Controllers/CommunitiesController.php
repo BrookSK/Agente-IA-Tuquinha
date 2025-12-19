@@ -144,6 +144,36 @@ class CommunitiesController extends Controller
         exit;
     }
 
+    private function userCanClosePolls(array $community, array $user): bool
+    {
+        if (empty($community['allow_poll_closing'])) {
+            return false;
+        }
+
+        if (!empty($_SESSION['is_admin'])) {
+            return true;
+        }
+
+        $userId = (int)($user['id'] ?? 0);
+        if ($userId <= 0) {
+            return false;
+        }
+
+        $ownerId = (int)($community['owner_user_id'] ?? 0);
+        if ($ownerId > 0 && $ownerId === $userId) {
+            return true;
+        }
+
+        $communityId = (int)($community['id'] ?? 0);
+        if ($communityId <= 0) {
+            return false;
+        }
+
+        $member = CommunityMember::findMember($communityId, $userId);
+        $role = (string)($member['role'] ?? 'member');
+        return $role === 'moderator';
+    }
+
     public function index(): void
     {
         $user = $this->requireLogin();
@@ -216,6 +246,7 @@ class CommunitiesController extends Controller
         $communityType = (string)($_POST['community_type'] ?? 'public');
         $postingPolicy = (string)($_POST['posting_policy'] ?? 'any_member');
         $forumType = (string)($_POST['forum_type'] ?? 'non_anonymous');
+        $allowPollClosing = !empty($_POST['allow_poll_closing']) ? 1 : 0;
         $moderatorsRaw = trim((string)($_POST['moderators_emails'] ?? ''));
 
         if ($communityType !== 'private') {
@@ -360,6 +391,7 @@ class CommunitiesController extends Controller
                 'community_type' => (string)($community['community_type'] ?? 'public'),
                 'posting_policy' => (string)($community['posting_policy'] ?? 'any_member'),
                 'forum_type' => (string)($community['forum_type'] ?? 'non_anonymous'),
+                'allow_poll_closing' => !empty($community['allow_poll_closing']) ? 1 : 0,
             ];
         }
 
@@ -419,6 +451,7 @@ class CommunitiesController extends Controller
             'community_type' => $communityType,
             'posting_policy' => $postingPolicy,
             'forum_type' => $forumType,
+            'allow_poll_closing' => $allowPollClosing,
         ];
 
         if ($name === '') {
@@ -452,6 +485,7 @@ class CommunitiesController extends Controller
             'community_type' => $communityType,
             'posting_policy' => $postingPolicy,
             'forum_type' => $forumType,
+            'allow_poll_closing' => $allowPollClosing,
             'cover_image_path' => $coverImagePath !== '' ? $coverImagePath : null,
         ]);
 
@@ -935,6 +969,7 @@ class CommunitiesController extends Controller
             'polls' => $polls,
             'isMember' => $isMember,
             'canModerate' => $canModerate,
+            'canClosePolls' => $this->userCanClosePolls($community, $user),
             'success' => $success,
             'error' => $error,
         ]);
@@ -1028,6 +1063,18 @@ class CommunitiesController extends Controller
             exit;
         }
 
+        if (!empty($poll['closed_at'])) {
+            $_SESSION['communities_error'] = 'Esta enquete está encerrada e não aceita mais votos.';
+            $community = Community::findById((int)$poll['community_id']);
+            $slug = $community ? (string)($community['slug'] ?? '') : '';
+            if ($slug !== '') {
+                header('Location: /comunidades/enquetes?slug=' . urlencode($slug) . '#poll-' . $pollId);
+                exit;
+            }
+            header('Location: /comunidades');
+            exit;
+        }
+
         $community = Community::findById((int)$poll['community_id']);
         if (!$community || empty($community['is_active'])) {
             $_SESSION['communities_error'] = 'Comunidade desta enquete não foi encontrada.';
@@ -1067,6 +1114,80 @@ class CommunitiesController extends Controller
 
         $_SESSION['communities_success'] = 'Seu voto foi registrado.';
         header('Location: /comunidades/enquetes?slug=' . urlencode((string)$community['slug']) . '#poll-' . $pollId);
+        exit;
+    }
+
+    public function closePoll(): void
+    {
+        $user = $this->requireLogin();
+
+        $pollId = isset($_POST['poll_id']) ? (int)$_POST['poll_id'] : 0;
+        if ($pollId <= 0) {
+            $_SESSION['communities_error'] = 'Enquete inválida.';
+            header('Location: /comunidades');
+            exit;
+        }
+
+        $poll = CommunityPoll::findById($pollId);
+        if (!$poll) {
+            $_SESSION['communities_error'] = 'Enquete não encontrada.';
+            header('Location: /comunidades');
+            exit;
+        }
+
+        $community = Community::findById((int)($poll['community_id'] ?? 0));
+        if (!$community || empty($community['is_active'])) {
+            $_SESSION['communities_error'] = 'Comunidade desta enquete não foi encontrada.';
+            header('Location: /comunidades');
+            exit;
+        }
+
+        if (!$this->userCanClosePolls($community, $user)) {
+            $_SESSION['communities_error'] = 'Você não tem permissão para encerrar enquetes nesta comunidade.';
+            header('Location: /comunidades/enquetes?slug=' . urlencode((string)($community['slug'] ?? '')));
+            exit;
+        }
+
+        CommunityPoll::close($pollId);
+        $_SESSION['communities_success'] = 'Enquete encerrada.';
+        header('Location: /comunidades/enquetes?slug=' . urlencode((string)($community['slug'] ?? '')) . '#poll-' . $pollId);
+        exit;
+    }
+
+    public function reopenPoll(): void
+    {
+        $user = $this->requireLogin();
+
+        $pollId = isset($_POST['poll_id']) ? (int)$_POST['poll_id'] : 0;
+        if ($pollId <= 0) {
+            $_SESSION['communities_error'] = 'Enquete inválida.';
+            header('Location: /comunidades');
+            exit;
+        }
+
+        $poll = CommunityPoll::findById($pollId);
+        if (!$poll) {
+            $_SESSION['communities_error'] = 'Enquete não encontrada.';
+            header('Location: /comunidades');
+            exit;
+        }
+
+        $community = Community::findById((int)($poll['community_id'] ?? 0));
+        if (!$community || empty($community['is_active'])) {
+            $_SESSION['communities_error'] = 'Comunidade desta enquete não foi encontrada.';
+            header('Location: /comunidades');
+            exit;
+        }
+
+        if (!$this->userCanClosePolls($community, $user)) {
+            $_SESSION['communities_error'] = 'Você não tem permissão para reabrir enquetes nesta comunidade.';
+            header('Location: /comunidades/enquetes?slug=' . urlencode((string)($community['slug'] ?? '')));
+            exit;
+        }
+
+        CommunityPoll::reopen($pollId);
+        $_SESSION['communities_success'] = 'Enquete reaberta.';
+        header('Location: /comunidades/enquetes?slug=' . urlencode((string)($community['slug'] ?? '')) . '#poll-' . $pollId);
         exit;
     }
 

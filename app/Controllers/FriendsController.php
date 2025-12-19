@@ -155,6 +155,48 @@ class FriendsController extends Controller
         exit;
     }
 
+    public function cancelRequest(): void
+    {
+        $user = $this->requireLogin();
+        $fromUserId = (int)$user['id'];
+
+        $otherUserId = isset($_POST['user_id']) ? (int)$_POST['user_id'] : 0;
+        if ($otherUserId <= 0 || $otherUserId === $fromUserId) {
+            if ($this->wantsJson()) {
+                http_response_code(422);
+                header('Content-Type: application/json; charset=utf-8');
+                echo json_encode(['ok' => false, 'error' => 'Usuário inválido para cancelar pedido.']);
+                return;
+            }
+            $_SESSION['friends_error'] = 'Usuário inválido para cancelar pedido.';
+            header('Location: /amigos');
+            exit;
+        }
+
+        $ok = UserFriend::cancelRequest($fromUserId, $otherUserId);
+        if (!$ok) {
+            if ($this->wantsJson()) {
+                http_response_code(404);
+                header('Content-Type: application/json; charset=utf-8');
+                echo json_encode(['ok' => false, 'error' => 'Pedido de amizade não encontrado para cancelamento.']);
+                return;
+            }
+            $_SESSION['friends_error'] = 'Pedido de amizade não encontrado para cancelamento.';
+            header('Location: /amigos');
+            exit;
+        }
+
+        if ($this->wantsJson()) {
+            header('Content-Type: application/json; charset=utf-8');
+            echo json_encode(['ok' => true]);
+            return;
+        }
+
+        $_SESSION['friends_success'] = 'Pedido de amizade cancelado.';
+        header('Location: /perfil?user_id=' . $otherUserId);
+        exit;
+    }
+
     public function decide(): void
     {
         $user = $this->requireLogin();

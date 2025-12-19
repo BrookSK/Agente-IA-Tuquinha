@@ -49,7 +49,57 @@
         return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\"/g,'&quot;').replace(/'/g,'&#039;');
     }
 
-    async function sendRequest(userId, btn){
+    function setRightMode(rightEl, mode, userId){
+        if (!rightEl) return;
+        rightEl.innerHTML = '';
+
+        if (mode === 'sent') {
+            var sent = document.createElement('span');
+            sent.textContent = 'Enviado';
+            sent.style.display = 'inline-block';
+            sent.style.fontSize = '12px';
+            sent.style.fontWeight = '700';
+            sent.style.color = '#ffb74d';
+            sent.style.padding = '7px 10px';
+            sent.style.borderRadius = '999px';
+            sent.style.border = '1px solid #272727';
+            sent.style.background = '#0b0b10';
+
+            var cancelBtn = document.createElement('button');
+            cancelBtn.type = 'button';
+            cancelBtn.textContent = 'Cancelar';
+            cancelBtn.style.border = '1px solid #a33';
+            cancelBtn.style.borderRadius = '999px';
+            cancelBtn.style.padding = '7px 10px';
+            cancelBtn.style.background = '#311';
+            cancelBtn.style.color = '#ffbaba';
+            cancelBtn.style.fontWeight = '700';
+            cancelBtn.style.cursor = 'pointer';
+            cancelBtn.addEventListener('click', function(){ cancelRequest(userId, rightEl, cancelBtn); });
+
+            rightEl.style.display = 'flex';
+            rightEl.style.alignItems = 'center';
+            rightEl.style.gap = '6px';
+            rightEl.appendChild(sent);
+            rightEl.appendChild(cancelBtn);
+            return;
+        }
+
+        var btn = document.createElement('button');
+        btn.type = 'button';
+        btn.textContent = 'Enviar solicitação';
+        btn.style.border = 'none';
+        btn.style.borderRadius = '999px';
+        btn.style.padding = '7px 10px';
+        btn.style.background = 'linear-gradient(135deg,#e53935,#ff6f60)';
+        btn.style.color = '#050509';
+        btn.style.fontWeight = '700';
+        btn.style.cursor = 'pointer';
+        btn.addEventListener('click', function(){ sendRequest(userId, rightEl, btn); });
+        rightEl.appendChild(btn);
+    }
+
+    async function sendRequest(userId, rightEl, btn){
         if (!userId) return;
         var fd = new FormData();
         fd.append('user_id', String(userId));
@@ -74,11 +124,42 @@
                 return;
             }
             setStatus('Pedido de amizade enviado.', true);
-            if (btn) {
-                btn.textContent = 'Enviado';
-            }
+            setRightMode(rightEl, 'sent', userId);
         } catch (e) {
             setStatus('Não foi possível enviar o pedido.', false);
+        } finally {
+            if (btn) btn.disabled = false;
+        }
+    }
+
+    async function cancelRequest(userId, rightEl, btn){
+        if (!userId) return;
+        var fd = new FormData();
+        fd.append('user_id', String(userId));
+        if (btn) btn.disabled = true;
+        try {
+            var res = await fetch('/amigos/cancelar', {
+                method: 'POST',
+                body: fd,
+                credentials: 'same-origin',
+                headers: {
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            });
+            var json = await res.json().catch(function(){ return null; });
+            if (res.status === 401) {
+                window.location.href = '/login';
+                return;
+            }
+            if (!res.ok || !json || !json.ok) {
+                setStatus((json && json.error) ? json.error : 'Não foi possível cancelar o pedido.', false);
+                return;
+            }
+            setStatus('Pedido de amizade cancelado.', true);
+            setRightMode(rightEl, 'send', userId);
+        } catch (e) {
+            setStatus('Não foi possível cancelar o pedido.', false);
         } finally {
             if (btn) btn.disabled = false;
         }
@@ -112,18 +193,7 @@
                 + (email ? '<div style="font-size:11px; color:#8d8d8d;">' + escapeHtml(email) + '</div>' : '');
 
             var right = document.createElement('div');
-            var btn = document.createElement('button');
-            btn.type = 'button';
-            btn.textContent = 'Enviar solicitação';
-            btn.style.border = 'none';
-            btn.style.borderRadius = '999px';
-            btn.style.padding = '7px 10px';
-            btn.style.background = 'linear-gradient(135deg,#e53935,#ff6f60)';
-            btn.style.color = '#050509';
-            btn.style.fontWeight = '700';
-            btn.style.cursor = 'pointer';
-            btn.addEventListener('click', function(){ sendRequest(u.id, btn); });
-            right.appendChild(btn);
+            setRightMode(right, 'send', u.id);
 
             div.appendChild(left);
             div.appendChild(right);

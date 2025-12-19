@@ -13,6 +13,7 @@ $category = (string)($old['category'] ?? '');
 $communityType = (string)($old['community_type'] ?? 'public');
 $postingPolicy = (string)($old['posting_policy'] ?? 'any_member');
 $forumType = (string)($old['forum_type'] ?? 'non_anonymous');
+$allowPollClosing = !empty($old['allow_poll_closing']);
 
 $communityId = (int)($community['id'] ?? 0);
 $communitySlug = (string)($community['slug'] ?? '');
@@ -120,6 +121,15 @@ $currentCover = (string)($community['cover_image_path'] ?? $community['image_pat
                         <input type="radio" name="forum_type" value="anonymous" <?= $forumType === 'anonymous' ? 'checked' : '' ?> style="accent-color:#e53935;">
                         <span>Anônimo (apenas para membros)</span>
                     </label>
+                </div>
+
+                <div style="flex:1 1 220px; min-width:0;">
+                    <div style="font-size:12px; color:var(--text-secondary); margin-bottom:3px;">Enquetes</div>
+                    <label style="font-size:12px; display:flex; align-items:center; gap:6px; color:var(--text-secondary);">
+                        <input type="checkbox" name="allow_poll_closing" value="1" <?= $allowPollClosing ? 'checked' : '' ?> style="accent-color:#e53935;">
+                        <span>Permitir que moderadores/dono encerrem e reabram enquetes</span>
+                    </label>
+                    <div style="font-size:11px; color:var(--text-secondary); margin-top:4px;">Se desativado, enquetes não poderão ser encerradas pela comunidade (votação segue aberta).</div>
                 </div>
             </div>
 

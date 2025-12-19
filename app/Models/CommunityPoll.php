@@ -142,4 +142,24 @@ class CommunityPoll
 
         return $result;
     }
+
+    public static function close(int $pollId): void
+    {
+        if ($pollId <= 0) {
+            return;
+        }
+        $pdo = Database::getConnection();
+        $stmt = $pdo->prepare('UPDATE community_polls SET closed_at = NOW() WHERE id = :id AND closed_at IS NULL');
+        $stmt->execute(['id' => $pollId]);
+    }
+
+    public static function reopen(int $pollId): void
+    {
+        if ($pollId <= 0) {
+            return;
+        }
+        $pdo = Database::getConnection();
+        $stmt = $pdo->prepare('UPDATE community_polls SET closed_at = NULL WHERE id = :id');
+        $stmt->execute(['id' => $pollId]);
+    }
 }

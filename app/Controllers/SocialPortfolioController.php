@@ -74,19 +74,51 @@ class SocialPortfolioController extends Controller
         return $ownerId;
     }
 
-    private function requirePortfolioEdit(int $ownerUserId, int $currentUserId): void
+    private function requirePortfolioOwner(int $ownerUserId, int $currentUserId): void
     {
         if ($ownerUserId === $currentUserId) {
             return;
         }
-        if (!SocialPortfolioCollaborator::canEdit($ownerUserId, $currentUserId)) {
+        if ($this->wantsJson()) {
+            http_response_code(403);
+            header('Content-Type: application/json; charset=utf-8');
+            echo json_encode(['ok' => false, 'error' => 'Somente o dono pode gerenciar este portfólio.']);
+            exit;
+        }
+        $_SESSION['portfolio_error'] = 'Somente o dono pode gerenciar este portfólio.';
+        header('Location: /perfil/portfolio');
+        exit;
+    }
+
+    private function requirePortfolioItemEdit(array $item, int $currentUserId): void
+    {
+        $itemId = (int)($item['id'] ?? 0);
+        $ownerId = (int)($item['user_id'] ?? 0);
+
+        if ($itemId <= 0 || $ownerId <= 0) {
+            if ($this->wantsJson()) {
+                http_response_code(404);
+                header('Content-Type: application/json; charset=utf-8');
+                echo json_encode(['ok' => false, 'error' => 'Item do portfólio não encontrado.']);
+                exit;
+            }
+            $_SESSION['portfolio_error'] = 'Item do portfólio não encontrado.';
+            header('Location: /perfil/portfolio');
+            exit;
+        }
+
+        if ($ownerId === $currentUserId) {
+            return;
+        }
+
+        if (!SocialPortfolioCollaborator::canEditItem($ownerId, $currentUserId, $itemId)) {
             if ($this->wantsJson()) {
                 http_response_code(403);
                 header('Content-Type: application/json; charset=utf-8');
-                echo json_encode(['ok' => false, 'error' => 'Sem permissão para editar este portfólio.']);
+                echo json_encode(['ok' => false, 'error' => 'Sem permissão para editar este item do portfólio.']);
                 exit;
             }
-            $_SESSION['portfolio_error'] = 'Sem permissão para editar este portfólio.';
+            $_SESSION['portfolio_error'] = 'Sem permissão para editar este item do portfólio.';
             header('Location: /perfil/portfolio');
             exit;
         }
@@ -151,7 +183,7 @@ class SocialPortfolioController extends Controller
             'items' => $items,
             'likesCountById' => $likesCountById,
             'isOwn' => $targetId === $currentId,
-            'canManage' => ($targetId === $currentId) ? true : SocialPortfolioCollaborator::canEdit($targetId, $currentId),
+            'canManage' => $targetId === $currentId,
         ]);
     }
 
@@ -160,7 +192,7 @@ class SocialPortfolioController extends Controller
         $currentUser = $this->requireLogin();
         $currentId = (int)($currentUser['id'] ?? 0);
         $ownerId = $this->getOwnerIdFromRequest($currentId);
-        $this->requirePortfolioEdit($ownerId, $currentId);
+        $this->requirePortfolioOwner($ownerId, $currentId);
 
         $ownerUser = $ownerId === $currentId ? $currentUser : User::findById($ownerId);
         if (!$ownerUser) {
@@ -188,9 +220,9 @@ class SocialPortfolioController extends Controller
             }
         }
 
-        $canShare = $ownerId === $currentId;
-        $collaborators = $canShare ? SocialPortfolioCollaborator::allWithUsers($ownerId) : [];
-        $pendingInvites = $canShare ? SocialPortfolioInvitation::allPendingForOwner($ownerId) : [];
+        $canShare = true;
+        $collaborators = SocialPortfolioCollaborator::allWithUsers($ownerId);
+        $pendingInvites = SocialPortfolioInvitation::allPendingForOwner($ownerId);
 
         $success = $_SESSION['portfolio_success'] ?? null;
         $error = $_SESSION['portfolio_error'] ?? null;
@@ -217,7 +249,7 @@ class SocialPortfolioController extends Controller
         $currentUser = $this->requireLogin();
         $currentId = (int)($currentUser['id'] ?? 0);
         $ownerId = $this->getOwnerIdFromRequest($currentId);
-        $this->requirePortfolioEdit($ownerId, $currentId);
+        $this->requirePortfolioOwner($ownerId, $currentId);
 
         $id = isset($_POST['id']) ? (int)$_POST['id'] : 0;
         $title = trim((string)($_POST['title'] ?? ''));
@@ -257,7 +289,7 @@ class SocialPortfolioController extends Controller
         $currentUser = $this->requireLogin();
         $currentId = (int)($currentUser['id'] ?? 0);
         $ownerId = $this->getOwnerIdFromRequest($currentId);
-        $this->requirePortfolioEdit($ownerId, $currentId);
+        $this->requirePortfolioOwner($ownerId, $currentId);
 
         $id = isset($_POST['id']) ? (int)$_POST['id'] : 0;
         if ($id <= 0) {
@@ -301,7 +333,13 @@ class SocialPortfolioController extends Controller
         $likesCount = SocialPortfolioLike::countForItem($id);
         $isLiked = $currentId > 0 ? SocialPortfolioLike::isLikedByUser($id, $currentId) : false;
 
-        $canEdit = $ownerId === $currentId ? true : SocialPortfolioCollaborator::canEdit($ownerId, $currentId);
+        if ($ownerId !== $currentId && !SocialPortfolioCollaborator::canReadItem($ownerId, $currentId, $id)) {
+            $_SESSION['portfolio_error'] = 'Sem permissão para ver este item do portfólio.';
+            header('Location: /perfil/portfolio?user_id=' . $ownerId);
+            exit;
+        }
+
+        $canEdit = $ownerId === $currentId ? true : SocialPortfolioCollaborator::canEditItem($ownerId, $currentId, $id);
 
         $this->view('social/portfolio_view', [
             'pageTitle' => 'Portfólio - ' . (string)($item['title'] ?? 'Item'),
@@ -341,16 +379,14 @@ class SocialPortfolioController extends Controller
     {
         $currentUser = $this->requireLogin();
         $currentId = (int)($currentUser['id'] ?? 0);
-        $ownerId = $this->getOwnerIdFromRequest($currentId);
-        $this->requirePortfolioEdit($ownerId, $currentId);
-
         $itemId = isset($_POST['item_id']) ? (int)$_POST['item_id'] : 0;
         $item = $itemId > 0 ? SocialPortfolioItem::findById($itemId) : null;
-        if (!$item || (int)($item['user_id'] ?? 0) !== $ownerId) {
-            $_SESSION['portfolio_error'] = 'Sem permissão para enviar arquivos para este portfólio.';
-            header('Location: /perfil/portfolio/gerenciar?owner_user_id=' . $ownerId);
+        if (!$item) {
+            $_SESSION['portfolio_error'] = 'Item não encontrado.';
+            header('Location: /perfil/portfolio');
             exit;
         }
+        $this->requirePortfolioItemEdit($item, $currentId);
 
         if (empty($_FILES['file']) || !is_array($_FILES['file'])) {
             $_SESSION['portfolio_error'] = 'Envie um arquivo.';
@@ -397,18 +433,16 @@ class SocialPortfolioController extends Controller
     {
         $currentUser = $this->requireLogin();
         $currentId = (int)($currentUser['id'] ?? 0);
-        $ownerId = $this->getOwnerIdFromRequest($currentId);
-        $this->requirePortfolioEdit($ownerId, $currentId);
-
         $itemId = isset($_POST['item_id']) ? (int)$_POST['item_id'] : 0;
         $mediaId = isset($_POST['media_id']) ? (int)$_POST['media_id'] : 0;
 
         $item = $itemId > 0 ? SocialPortfolioItem::findById($itemId) : null;
-        if (!$item || (int)($item['user_id'] ?? 0) !== $ownerId) {
-            $_SESSION['portfolio_error'] = 'Sem permissão.';
-            header('Location: /perfil/portfolio/gerenciar?owner_user_id=' . $ownerId);
+        if (!$item) {
+            $_SESSION['portfolio_error'] = 'Item não encontrado.';
+            header('Location: /perfil/portfolio');
             exit;
         }
+        $this->requirePortfolioItemEdit($item, $currentId);
 
         SocialPortfolioMedia::softDelete($mediaId, $itemId);
         $_SESSION['portfolio_success'] = 'Arquivo removido.';
@@ -429,6 +463,15 @@ class SocialPortfolioController extends Controller
             return;
         }
         $this->requirePortfolioShare($ownerId, $currentId);
+
+        $portfolioItemId = isset($_POST['portfolio_item_id']) ? (int)$_POST['portfolio_item_id'] : 0;
+        $portfolioItem = $portfolioItemId > 0 ? SocialPortfolioItem::findById($portfolioItemId) : null;
+        if (!$portfolioItem || (int)($portfolioItem['user_id'] ?? 0) !== $ownerId) {
+            http_response_code(422);
+            header('Content-Type: application/json; charset=utf-8');
+            echo json_encode(['ok' => false, 'error' => 'Selecione um item válido do portfólio.']);
+            return;
+        }
 
         $email = trim((string)($_POST['email'] ?? ''));
         $role = trim((string)($_POST['role'] ?? 'read'));
@@ -458,14 +501,14 @@ class SocialPortfolioController extends Controller
 
         $invitedEmail = (string)($invitedUser['email'] ?? $email);
         $invitedUserId = (int)($invitedUser['id'] ?? 0);
-        if ($invitedUserId > 0 && SocialPortfolioCollaborator::canRead($ownerId, $invitedUserId)) {
+        if ($invitedUserId > 0 && SocialPortfolioCollaborator::canReadItem($ownerId, $invitedUserId, $portfolioItemId)) {
             http_response_code(422);
             header('Content-Type: application/json; charset=utf-8');
-            echo json_encode(['ok' => false, 'error' => 'Este usuário já tem acesso ao portfólio.']);
+            echo json_encode(['ok' => false, 'error' => 'Este usuário já tem acesso a este item do portfólio.']);
             return;
         }
 
-        if (SocialPortfolioInvitation::hasValidInviteForEmail($ownerId, $invitedEmail)) {
+        if (SocialPortfolioInvitation::hasValidInviteForEmail($ownerId, $portfolioItemId, $invitedEmail)) {
             http_response_code(422);
             header('Content-Type: application/json; charset=utf-8');
             echo json_encode(['ok' => false, 'error' => 'Já existe um convite pendente para este e-mail.']);
@@ -473,7 +516,7 @@ class SocialPortfolioController extends Controller
         }
 
         $token = bin2hex(random_bytes(16));
-        SocialPortfolioInvitation::create($ownerId, $currentId, $invitedEmail, null, $role, $token);
+        SocialPortfolioInvitation::create($ownerId, $portfolioItemId, $currentId, $invitedEmail, null, $role, $token);
 
         $ownerUser = User::findById($ownerId);
         $ownerName = $ownerUser ? trim((string)($ownerUser['preferred_name'] ?? $ownerUser['name'] ?? '')) : 'Portfólio';
@@ -484,6 +527,11 @@ class SocialPortfolioController extends Controller
         $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https://' : 'http://';
         $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
         $link = $scheme . $host . '/perfil/portfolio/aceitar-convite?token=' . urlencode($token);
+
+        $itemTitle = trim((string)($portfolioItem['title'] ?? ''));
+        if ($itemTitle === '') {
+            $itemTitle = 'item do portfólio';
+        }
 
         $subject = 'Convite para colaborar no portfólio de ' . $ownerName;
 
@@ -496,9 +544,11 @@ class SocialPortfolioController extends Controller
         }
 
         $safeOwnerName = htmlspecialchars($ownerName, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+        $safeItemTitle = htmlspecialchars($itemTitle, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
         $roleLabel = $role === 'edit' ? 'Edição' : 'Leitura';
         $safeRole = htmlspecialchars($roleLabel, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
         $contentHtml = '<p style="font-size:14px; margin:0 0 10px 0;">Você foi convidado para colaborar no portfólio de <strong>' . $safeOwnerName . '</strong> no Tuquinha.</p>'
+            . '<p style="font-size:14px; margin:0 0 10px 0;">Item: <strong>' . $safeItemTitle . '</strong></p>'
             . '<p style="font-size:14px; margin:0 0 10px 0;">Permissão: <strong>' . $safeRole . '</strong></p>'
             . '<p style="font-size:12px; color:#777; margin:10px 0 0 0;">Se você não reconhece este convite, pode ignorar este e-mail.</p>';
 
@@ -547,18 +597,26 @@ class SocialPortfolioController extends Controller
         }
 
         $ownerId = (int)($invite['owner_user_id'] ?? 0);
+        $portfolioItemId = (int)($invite['portfolio_item_id'] ?? 0);
         $role = (string)($invite['role'] ?? 'read');
-        if ($ownerId <= 0) {
+        if ($ownerId <= 0 || $portfolioItemId <= 0) {
             $_SESSION['portfolio_error'] = 'Portfólio do convite não encontrado.';
             header('Location: /perfil/portfolio');
             exit;
         }
 
-        SocialPortfolioCollaborator::addOrUpdate($ownerId, $currentId, $role);
+        $portfolioItem = SocialPortfolioItem::findById($portfolioItemId);
+        if (!$portfolioItem || (int)($portfolioItem['user_id'] ?? 0) !== $ownerId) {
+            $_SESSION['portfolio_error'] = 'Item do portfólio do convite não encontrado.';
+            header('Location: /perfil/portfolio');
+            exit;
+        }
+
+        SocialPortfolioCollaborator::addOrUpdate($ownerId, $currentId, $portfolioItemId, $role);
         SocialPortfolioInvitation::markAccepted((int)($invite['id'] ?? 0));
 
-        $_SESSION['portfolio_success'] = 'Convite aceito. Você agora tem acesso a este portfólio.';
-        header('Location: /perfil/portfolio/gerenciar?owner_user_id=' . $ownerId);
+        $_SESSION['portfolio_success'] = 'Convite aceito. Você agora tem acesso a este item do portfólio.';
+        header('Location: /perfil/portfolio/ver?id=' . $portfolioItemId);
         exit;
     }
 
@@ -589,18 +647,20 @@ class SocialPortfolioController extends Controller
         $currentId = (int)($user['id'] ?? 0);
 
         $ownerId = isset($_POST['owner_user_id']) ? (int)$_POST['owner_user_id'] : $currentId;
+        $portfolioItemId = isset($_POST['portfolio_item_id']) ? (int)$_POST['portfolio_item_id'] : 0;
         $collabUserId = isset($_POST['user_id']) ? (int)$_POST['user_id'] : 0;
         $role = trim((string)($_POST['role'] ?? 'read'));
 
         $this->requirePortfolioShare($ownerId, $currentId);
-        if ($ownerId <= 0 || $collabUserId <= 0 || $collabUserId === $ownerId) {
+        $portfolioItem = $portfolioItemId > 0 ? SocialPortfolioItem::findById($portfolioItemId) : null;
+        if ($ownerId <= 0 || $portfolioItemId <= 0 || !$portfolioItem || (int)($portfolioItem['user_id'] ?? 0) !== $ownerId || $collabUserId <= 0 || $collabUserId === $ownerId) {
             http_response_code(422);
             header('Content-Type: application/json; charset=utf-8');
             echo json_encode(['ok' => false, 'error' => 'Colaborador inválido.']);
             return;
         }
 
-        SocialPortfolioCollaborator::updateRole($ownerId, $collabUserId, $role);
+        SocialPortfolioCollaborator::updateRole($ownerId, $collabUserId, $portfolioItemId, $role);
         header('Content-Type: application/json; charset=utf-8');
         echo json_encode(['ok' => true]);
     }
@@ -611,17 +671,19 @@ class SocialPortfolioController extends Controller
         $currentId = (int)($user['id'] ?? 0);
 
         $ownerId = isset($_POST['owner_user_id']) ? (int)$_POST['owner_user_id'] : $currentId;
+        $portfolioItemId = isset($_POST['portfolio_item_id']) ? (int)$_POST['portfolio_item_id'] : 0;
         $collabUserId = isset($_POST['user_id']) ? (int)$_POST['user_id'] : 0;
 
         $this->requirePortfolioShare($ownerId, $currentId);
-        if ($ownerId <= 0 || $collabUserId <= 0 || $collabUserId === $ownerId) {
+        $portfolioItem = $portfolioItemId > 0 ? SocialPortfolioItem::findById($portfolioItemId) : null;
+        if ($ownerId <= 0 || $portfolioItemId <= 0 || !$portfolioItem || (int)($portfolioItem['user_id'] ?? 0) !== $ownerId || $collabUserId <= 0 || $collabUserId === $ownerId) {
             http_response_code(422);
             header('Content-Type: application/json; charset=utf-8');
             echo json_encode(['ok' => false, 'error' => 'Colaborador inválido.']);
             return;
         }
 
-        SocialPortfolioCollaborator::remove($ownerId, $collabUserId);
+        SocialPortfolioCollaborator::remove($ownerId, $collabUserId, $portfolioItemId);
         header('Content-Type: application/json; charset=utf-8');
         echo json_encode(['ok' => true]);
     }

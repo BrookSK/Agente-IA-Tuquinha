@@ -64,6 +64,12 @@ $editProjectId = $isEditing ? (int)($editItem['project_id'] ?? 0) : 0;
         <section style="background:var(--surface-card); border-radius:16px; border:1px solid var(--border-subtle); padding:12px 14px;">
             <h2 style="font-size:16px; margin-bottom:8px;">Compartilhar</h2>
             <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+                <select id="portfolioInviteItem" style="flex:1 1 220px; min-width:180px; max-width:100%; padding:10px 10px; border-radius:12px; border:1px solid var(--border-subtle); background:var(--surface-subtle); color:var(--text-primary); font-size:13px; outline:none;">
+                    <option value="">Selecione um item</option>
+                    <?php foreach (($items ?? []) as $it): ?>
+                        <option value="<?= (int)($it['id'] ?? 0) ?>"><?= htmlspecialchars((string)($it['title'] ?? 'Item'), ENT_QUOTES, 'UTF-8') ?></option>
+                    <?php endforeach; ?>
+                </select>
                 <input id="portfolioInviteEmail" type="email" placeholder="Email do colaborador" style="flex:1 1 220px; min-width:180px; max-width:100%; padding:10px 12px; border-radius:12px; border:1px solid var(--border-subtle); background:var(--surface-subtle); color:var(--text-primary); font-size:13px; outline:none;" />
                 <select id="portfolioInviteRole" style="flex:0 0 auto; min-width:140px; max-width:100%; padding:10px 10px; border-radius:12px; border:1px solid var(--border-subtle); background:var(--surface-subtle); color:var(--text-primary); font-size:13px; outline:none;">
                     <option value="read">Leitura</option>
@@ -81,10 +87,13 @@ $editProjectId = $isEditing ? (int)($editItem['project_id'] ?? 0) : 0;
                             <?php
                                 $rawRole = (string)($inv['role'] ?? 'read');
                                 $roleLabel = $rawRole === 'edit' ? 'Edição' : 'Leitura';
+                                $invItemTitle = trim((string)($inv['portfolio_item_title'] ?? ''));
+                                if ($invItemTitle === '') { $invItemTitle = 'Item'; }
                             ?>
                             <div style="display:flex; justify-content:space-between; align-items:center; gap:10px; border:1px solid var(--border-subtle); border-radius:12px; padding:10px 12px; background:var(--surface-subtle); flex-wrap:wrap;">
                                 <div style="min-width:0;">
                                     <div style="font-size:12px; color:var(--text-primary); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"><?= htmlspecialchars((string)($inv['invited_email'] ?? '')) ?></div>
+                                    <div style="font-size:11px; color:var(--text-secondary); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">Item: <?= htmlspecialchars($invItemTitle, ENT_QUOTES, 'UTF-8') ?></div>
                                     <div style="font-size:11px; color:var(--text-secondary);">Permissão: <?= htmlspecialchars($roleLabel) ?></div>
                                 </div>
                                 <button type="button" class="revokePortfolioInviteBtn" data-invite-id="<?= (int)($inv['id'] ?? 0) ?>" style="border:1px solid var(--border-subtle); background:var(--surface-card); color:#ffbaba; border-radius:10px; padding:8px 10px; cursor:pointer;">Revogar</button>
@@ -105,18 +114,26 @@ $editProjectId = $isEditing ? (int)($editItem['project_id'] ?? 0) : 0;
                                 if ($label === '') { $label = (string)($m['user_email'] ?? ''); }
                                 $uid = (int)($m['collaborator_user_id'] ?? 0);
                                 $role = (string)($m['role'] ?? 'read');
+                                $itemId = (int)($m['portfolio_item_id'] ?? 0);
+                                $itemTitle = trim((string)($m['portfolio_item_title'] ?? ''));
+                                if ($itemTitle === '') { $itemTitle = 'Item'; }
+                                $hasValidItem = $itemId > 0;
                             ?>
                             <div style="display:flex; justify-content:space-between; align-items:center; gap:10px; border:1px solid var(--border-subtle); border-radius:12px; padding:10px 12px; background:var(--surface-subtle); flex-wrap:wrap;">
                                 <div style="min-width:0;">
                                     <div style="font-size:12px; color:var(--text-primary); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"><?= htmlspecialchars($label) ?></div>
                                     <div style="font-size:11px; color:var(--text-secondary); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"><?= htmlspecialchars((string)($m['user_email'] ?? '')) ?></div>
+                                    <div style="font-size:11px; color:var(--text-secondary); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">Item: <?= htmlspecialchars($itemTitle, ENT_QUOTES, 'UTF-8') ?></div>
+                                    <?php if (!$hasValidItem): ?>
+                                        <div style="font-size:11px; color:var(--text-secondary);">Este compartilhamento é antigo e não está vinculado a um item.</div>
+                                    <?php endif; ?>
                                 </div>
                                 <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
-                                    <select class="portfolioCollabRoleSelect" data-user-id="<?= $uid ?>" style="padding:8px 10px; border-radius:10px; border:1px solid var(--border-subtle); background:var(--surface-card); color:var(--text-primary); font-size:12px; outline:none;">
+                                    <select class="portfolioCollabRoleSelect" data-user-id="<?= $uid ?>" data-item-id="<?= (int)$itemId ?>" <?= !$hasValidItem ? 'disabled' : '' ?> style="padding:8px 10px; border-radius:10px; border:1px solid var(--border-subtle); background:var(--surface-card); color:var(--text-primary); font-size:12px; outline:none;">
                                         <option value="read" <?= $role === 'read' ? 'selected' : '' ?>>Leitura</option>
                                         <option value="edit" <?= $role === 'edit' ? 'selected' : '' ?>>Edição</option>
                                     </select>
-                                    <button type="button" class="removePortfolioCollabBtn" data-user-id="<?= $uid ?>" style="border:1px solid var(--border-subtle); background:var(--surface-card); color:#ffbaba; border-radius:10px; padding:8px 10px; cursor:pointer;">Remover</button>
+                                    <button type="button" class="removePortfolioCollabBtn" data-user-id="<?= $uid ?>" data-item-id="<?= (int)$itemId ?>" <?= !$hasValidItem ? 'disabled' : '' ?> style="border:1px solid var(--border-subtle); background:var(--surface-card); color:#ffbaba; border-radius:10px; padding:8px 10px; cursor:pointer;">Remover</button>
                                 </div>
                             </div>
                         <?php endforeach; ?>
@@ -129,12 +146,14 @@ $editProjectId = $isEditing ? (int)($editItem['project_id'] ?? 0) : 0;
                     var sendBtn = document.getElementById('sendPortfolioInviteBtn');
                     if (sendBtn) {
                         sendBtn.addEventListener('click', async function () {
+                            var itemEl = document.getElementById('portfolioInviteItem');
                             var emailEl = document.getElementById('portfolioInviteEmail');
                             var roleEl = document.getElementById('portfolioInviteRole');
                             var fb = document.getElementById('portfolioInviteFeedback');
-                            if (!emailEl || !roleEl) return;
+                            if (!itemEl || !emailEl || !roleEl) return;
                             var fd = new FormData();
                             fd.append('owner_user_id', '<?= (int)$ownerUserId ?>');
+                            fd.append('portfolio_item_id', itemEl.value || '');
                             fd.append('email', emailEl.value || '');
                             fd.append('role', roleEl.value || 'read');
                             sendBtn.disabled = true;
@@ -152,6 +171,7 @@ $editProjectId = $isEditing ? (int)($editItem['project_id'] ?? 0) : 0;
                                     fb.textContent = (json && json.ok) ? 'Convite enviado.' : ((json && json.error) ? json.error : 'Não foi possível convidar.');
                                 }
                                 if (json && json.ok) {
+                                    itemEl.value = '';
                                     emailEl.value = '';
                                     setTimeout(function(){ window.location.reload(); }, 600);
                                 }
@@ -196,10 +216,12 @@ $editProjectId = $isEditing ? (int)($editItem['project_id'] ?? 0) : 0;
                     document.querySelectorAll('.portfolioCollabRoleSelect').forEach(function (sel) {
                         sel.addEventListener('change', async function () {
                             var uid = sel.getAttribute('data-user-id');
+                            var itemId = sel.getAttribute('data-item-id');
                             var role = sel.value;
-                            if (!uid) return;
+                            if (!uid || !itemId) return;
                             var fd = new FormData();
                             fd.append('owner_user_id', '<?= (int)$ownerUserId ?>');
+                            fd.append('portfolio_item_id', itemId);
                             fd.append('user_id', uid);
                             fd.append('role', role);
                             sel.disabled = true;
@@ -224,11 +246,13 @@ $editProjectId = $isEditing ? (int)($editItem['project_id'] ?? 0) : 0;
 
                     document.querySelectorAll('.removePortfolioCollabBtn').forEach(function (btn) {
                         btn.addEventListener('click', async function () {
-                            if (!confirm('Remover este colaborador do portfólio?')) return;
+                            if (!confirm('Remover este colaborador deste item do portfólio?')) return;
                             var uid = btn.getAttribute('data-user-id');
-                            if (!uid) return;
+                            var itemId = btn.getAttribute('data-item-id');
+                            if (!uid || !itemId) return;
                             var fd = new FormData();
                             fd.append('owner_user_id', '<?= (int)$ownerUserId ?>');
+                            fd.append('portfolio_item_id', itemId);
                             fd.append('user_id', uid);
                             btn.disabled = true;
                             try {

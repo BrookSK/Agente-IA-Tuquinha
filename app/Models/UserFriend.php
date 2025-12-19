@@ -86,6 +86,29 @@ class UserFriend
         ]);
     }
 
+    public static function cancelRequest(int $fromUserId, int $toUserId): bool
+    {
+        if ($fromUserId <= 0 || $toUserId <= 0 || $fromUserId === $toUserId) {
+            return false;
+        }
+
+        $friendship = self::findFriendship($fromUserId, $toUserId);
+        if (!$friendship) {
+            return false;
+        }
+
+        if (($friendship['status'] ?? '') !== 'pending') {
+            return false;
+        }
+
+        if ((int)($friendship['requested_by_user_id'] ?? 0) !== $fromUserId) {
+            return false;
+        }
+
+        self::removeFriendship($fromUserId, $toUserId);
+        return true;
+    }
+
     public static function friendsWithUsers(int $userId, string $q = '', bool $onlyFavorites = false): array
     {
         if ($userId <= 0) {

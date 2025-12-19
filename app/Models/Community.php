@@ -71,6 +71,7 @@ class Community
                 community_type,
                 posting_policy,
                 forum_type,
+                allow_poll_closing,
                 image_path,
                 cover_image_path,
                 members_count,
@@ -86,6 +87,7 @@ class Community
                 :community_type,
                 :posting_policy,
                 :forum_type,
+                :allow_poll_closing,
                 :image_path,
                 :cover_image_path,
                 :members_count,
@@ -102,6 +104,7 @@ class Community
             'community_type' => $data['community_type'] ?? 'public',
             'posting_policy' => $data['posting_policy'] ?? 'any_member',
             'forum_type' => $data['forum_type'] ?? 'non_anonymous',
+            'allow_poll_closing' => !empty($data['allow_poll_closing']) ? 1 : 0,
             'image_path' => $data['image_path'] ?? null,
             'cover_image_path' => $data['cover_image_path'] ?? null,
             'members_count' => (int)($data['members_count'] ?? 0),
@@ -131,6 +134,7 @@ class Community
                 community_type = :community_type,
                 posting_policy = :posting_policy,
                 forum_type = :forum_type,
+                allow_poll_closing = :allow_poll_closing,
                 cover_image_path = :cover_image_path
             WHERE id = :id');
         $stmt->execute([
@@ -142,6 +146,7 @@ class Community
             'community_type' => $data['community_type'] ?? 'public',
             'posting_policy' => $data['posting_policy'] ?? 'any_member',
             'forum_type' => $data['forum_type'] ?? 'non_anonymous',
+            'allow_poll_closing' => !empty($data['allow_poll_closing']) ? 1 : 0,
             'cover_image_path' => $data['cover_image_path'] ?? null,
         ]);
     }
