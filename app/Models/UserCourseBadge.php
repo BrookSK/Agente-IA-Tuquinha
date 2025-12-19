@@ -103,6 +103,18 @@ class UserCourseBadge
         return $row ?: null;
     }
 
+    public static function hasAnyByUserId(int $userId): bool
+    {
+        if ($userId <= 0) {
+            return false;
+        }
+
+        $pdo = Database::getConnection();
+        $stmt = $pdo->prepare('SELECT 1 FROM user_course_badges WHERE user_id = :user_id LIMIT 1');
+        $stmt->execute(['user_id' => $userId]);
+        return (bool)$stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
     public static function findByCertificateCode(string $code): ?array
     {
         $code = trim($code);

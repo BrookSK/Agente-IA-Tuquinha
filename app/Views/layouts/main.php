@@ -623,22 +623,62 @@ if (!empty($_SESSION['user_id'])) {
 
                 <?php if (!empty($_SESSION['user_id'])): ?>
                     <div class="sidebar-section-title" style="margin-top: 10px;">Conta</div>
+                    <?php
+                        $userEmailForPlan = (string)($_SESSION['user_email'] ?? '');
+                        $subscriptionForMenu = null;
+                        $currentPlanForMenu = null;
+                        $hasActiveSubscriptionForMenu = false;
+
+                        if ($userEmailForPlan !== '') {
+                            try {
+                                $subscriptionForMenu = \App\Models\Subscription::findLastByEmail($userEmailForPlan);
+                                if ($subscriptionForMenu && !empty($subscriptionForMenu['plan_id'])) {
+                                    $status = strtolower((string)($subscriptionForMenu['status'] ?? ''));
+                                    $hasActiveSubscriptionForMenu = !in_array($status, ['canceled', 'expired'], true);
+                                    if ($hasActiveSubscriptionForMenu) {
+                                        $currentPlanForMenu = \App\Models\Plan::findById((int)$subscriptionForMenu['plan_id']);
+                                    }
+                                }
+                            } catch (\Throwable $e) {
+                                $subscriptionForMenu = null;
+                                $currentPlanForMenu = null;
+                                $hasActiveSubscriptionForMenu = false;
+                            }
+                        }
+
+                        $canUsePersonalities = !empty($_SESSION['is_admin']) || (!empty($currentPlanForMenu) && !empty($currentPlanForMenu['allow_personalities']));
+                        $monthlyTokenLimitForMenu = !empty($currentPlanForMenu) ? (int)($currentPlanForMenu['monthly_token_limit'] ?? 0) : 0;
+                        $canBuyExtraTokens = !empty($_SESSION['is_admin']) || ($hasActiveSubscriptionForMenu && $monthlyTokenLimitForMenu > 0);
+
+                        $hasCompletedCoursesForMenu = false;
+                        try {
+                            $hasCompletedCoursesForMenu = \App\Models\UserCourseBadge::hasAnyByUserId((int)$_SESSION['user_id']);
+                        } catch (\Throwable $e) {
+                            $hasCompletedCoursesForMenu = false;
+                        }
+                    ?>
                     <a href="/conta" class="sidebar-button">
                         <span class="icon" aria-hidden="true"><?php echo $renderMenuIcon('account_home', '👤'); ?></span>
                         <span>Minha conta</span>
                     </a>
-                    <a href="/certificados" class="sidebar-button">
-                        <span class="icon" aria-hidden="true"><?php echo $renderMenuIcon('account_certificates', '🏅'); ?></span>
-                        <span>Cursos concluídos</span>
-                    </a>
-                    <a href="/conta/personalidade" class="sidebar-button">
-                        <span class="icon" aria-hidden="true"><?php echo $renderMenuIcon('account_persona', '🎭'); ?></span>
-                        <span>Personalidade padrão</span>
-                    </a>
-                    <a href="/tokens/historico" class="sidebar-button">
-                        <span class="icon" aria-hidden="true"><?php echo $renderMenuIcon('account_tokens', '🔋'); ?></span>
-                        <span>Histórico de tokens extras</span>
-                    </a>
+                    <?php if ($hasCompletedCoursesForMenu): ?>
+                        <a href="/certificados" class="sidebar-button">
+                            <span class="icon" aria-hidden="true"><?php echo $renderMenuIcon('account_certificates', '🏅'); ?></span>
+                            <span>Cursos concluídos</span>
+                        </a>
+                    <?php endif; ?>
+                    <?php if ($canUsePersonalities): ?>
+                        <a href="/conta/personalidade" class="sidebar-button">
+                            <span class="icon" aria-hidden="true"><?php echo $renderMenuIcon('account_persona', '🎭'); ?></span>
+                            <span>Personalidade padrão</span>
+                        </a>
+                    <?php endif; ?>
+                    <?php if ($canBuyExtraTokens): ?>
+                        <a href="/tokens/historico" class="sidebar-button">
+                            <span class="icon" aria-hidden="true"><?php echo $renderMenuIcon('account_tokens', '🔋'); ?></span>
+                            <span>Histórico de tokens extras</span>
+                        </a>
+                    <?php endif; ?>
                     <?php if (!empty($isCoursePartner)): ?>
                         <a href="/parceiro/cursos" class="sidebar-button">
                             <span class="icon" aria-hidden="true"><?php echo $renderMenuIcon('partner_courses', '🎓'); ?></span>
