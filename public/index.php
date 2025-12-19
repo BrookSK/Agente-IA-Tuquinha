@@ -220,10 +220,15 @@ $router->post('/comunidades/membros/desbloquear', 'CommunitiesController@unblock
 $router->post('/comunidades/membros/denuncias/resolver', 'CommunitiesController@resolveReport');
 
 $router->get('/parceiro/cursos', 'CoursePartnerDashboardController@index');
+$router->get('/parceiro/comissoes', 'PartnerCommissionsController@index');
+$router->post('/parceiro/comissoes/salvar-dados', 'PartnerCommissionsController@savePayoutDetails');
 $router->get('/admin/login', 'AdminAuthController@login');
 $router->post('/admin/login', 'AdminAuthController@authenticate');
 $router->get('/admin/logout', 'AdminAuthController@logout');
 $router->get('/admin', 'AdminDashboardController@index');
+$router->get('/admin/comissoes', 'AdminCommissionsController@index');
+$router->get('/admin/comissoes/detalhes', 'AdminCommissionsController@details');
+$router->post('/admin/comissoes/marcar-pago', 'AdminCommissionsController@markPaid');
 $router->get('/admin/config', 'AdminConfigController@index');
 $router->post('/admin/config', 'AdminConfigController@save');
 $router->post('/admin/config/test-email', 'AdminConfigController@sendTestEmail');

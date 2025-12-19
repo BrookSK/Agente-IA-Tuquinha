@@ -90,6 +90,10 @@ class AdminCourseController extends Controller
         $this->ensureAdmin();
 
         $id = isset($_POST['id']) ? (int)$_POST['id'] : 0;
+        $existingCourse = null;
+        if ($id > 0) {
+            $existingCourse = Course::findById($id);
+        }
         $title = trim($_POST['title'] ?? '');
         $slug = trim($_POST['slug'] ?? '');
         $shortDescription = trim($_POST['short_description'] ?? '');
@@ -157,6 +161,8 @@ class AdminCourseController extends Controller
                 exit;
             }
             $ownerUserId = (int)$ownerUser['id'];
+        } elseif ($existingCourse && !empty($existingCourse['owner_user_id'])) {
+            $ownerUserId = (int)$existingCourse['owner_user_id'];
         }
 
         $priceCents = 0;

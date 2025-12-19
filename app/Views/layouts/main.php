@@ -640,6 +640,10 @@ if (!empty($_SESSION['user_id'])) {
                             <span class="icon" aria-hidden="true"><?php echo $renderMenuIcon('partner_courses', '🎓'); ?></span>
                             <span>Meus cursos (parceiro)</span>
                         </a>
+                        <a href="/parceiro/comissoes" class="sidebar-button" style="margin-top: 6px;">
+                            <span class="icon" aria-hidden="true"><?php echo $renderMenuIcon('partner_commissions', '💰'); ?></span>
+                            <span>Minhas comissões</span>
+                        </a>
                     <?php endif; ?>
                     <a href="/logout" class="sidebar-button" style="margin-top: 6px;">
                         <span class="icon" aria-hidden="true"><?php echo $renderMenuIcon('logout', '⏻'); ?></span>
@@ -668,6 +672,10 @@ if (!empty($_SESSION['user_id'])) {
                     <a href="/admin/cursos" class="sidebar-button" style="margin-top: 6px;">
                         <span class="icon" aria-hidden="true"><?php echo $renderMenuIcon('admin_courses', '🎓'); ?></span>
                         <span>Cursos</span>
+                    </a>
+                    <a href="/admin/comissoes" class="sidebar-button" style="margin-top: 6px;">
+                        <span class="icon" aria-hidden="true"><?php echo $renderMenuIcon('admin_commissions', '💰'); ?></span>
+                        <span>Comissões</span>
                     </a>
                     <a href="/admin/personalidades" class="sidebar-button" style="margin-top: 6px;">
                         <span class="icon" aria-hidden="true"><?php echo $renderMenuIcon('admin_personalities', '🎭'); ?></span>
