@@ -226,6 +226,7 @@ $router->get('/admin/login', 'AdminAuthController@login');
 $router->post('/admin/login', 'AdminAuthController@authenticate');
 $router->get('/admin/logout', 'AdminAuthController@logout');
 $router->get('/admin', 'AdminDashboardController@index');
+$router->get('/admin/financas', 'AdminFinanceController@index');
 $router->get('/admin/comissoes', 'AdminCommissionsController@index');
 $router->get('/admin/comissoes/detalhes', 'AdminCommissionsController@details');
 $router->post('/admin/comissoes/marcar-pago', 'AdminCommissionsController@markPaid');

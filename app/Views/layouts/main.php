@@ -669,6 +669,10 @@ if (!empty($_SESSION['user_id'])) {
                         <span class="icon" aria-hidden="true"><?php echo $renderMenuIcon('admin_plans', '🧩'); ?></span>
                         <span>Gerenciar planos</span>
                     </a>
+                    <a href="/admin/financas" class="sidebar-button" style="margin-top: 6px;">
+                        <span class="icon" aria-hidden="true"><?php echo $renderMenuIcon('admin_finance', '📈'); ?></span>
+                        <span>Finanças</span>
+                    </a>
                     <a href="/admin/cursos" class="sidebar-button" style="margin-top: 6px;">
                         <span class="icon" aria-hidden="true"><?php echo $renderMenuIcon('admin_courses', '🎓'); ?></span>
                         <span>Cursos</span>

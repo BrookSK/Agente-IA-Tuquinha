@@ -11,6 +11,7 @@ use App\Models\TokenTopup;
 use App\Models\CoursePurchase;
 use App\Models\Course;
 use App\Models\CourseEnrollment;
+use App\Models\SubscriptionPayment;
 use App\Services\MailService;
 
 class AsaasWebhookController extends Controller
@@ -180,6 +181,40 @@ HTML;
             http_response_code(200);
             echo 'plan not found';
             return;
+        }
+
+        // Registra este pagamento da assinatura para relatórios financeiros
+        // (necessário para filtrar receita por mês/ano/semestre)
+        try {
+            $value = 0;
+            if (isset($payment['value'])) {
+                $value = (float)$payment['value'];
+            }
+            $paidAt = null;
+            if (!empty($payment['paymentDate'])) {
+                $paidAt = (string)$payment['paymentDate'];
+            } elseif (!empty($payment['confirmedDate'])) {
+                $paidAt = (string)$payment['confirmedDate'];
+            } elseif (!empty($payment['dateCreated'])) {
+                $paidAt = (string)$payment['dateCreated'];
+            }
+
+            if ($paidAt) {
+                // Asaas normalmente manda ISO; strtotime resolve
+                $paidAt = date('Y-m-d H:i:s', strtotime($paidAt));
+            } else {
+                $paidAt = date('Y-m-d H:i:s');
+            }
+
+            SubscriptionPayment::upsertPaid([
+                'subscription_id' => (int)$subscription['id'],
+                'plan_id' => (int)$plan['id'],
+                'amount_cents' => (int)round($value * 100),
+                'asaas_payment_id' => (string)($payment['id'] ?? ''),
+                'billing_type' => (string)($payment['billingType'] ?? ''),
+                'paid_at' => $paidAt,
+            ]);
+        } catch (\Throwable $e) {
         }
 
         // Garante que esta assinatura fique como ativa e cancela outras ativas do mesmo e-mail

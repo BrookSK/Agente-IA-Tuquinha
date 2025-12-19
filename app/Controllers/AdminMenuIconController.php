@@ -37,6 +37,7 @@ class AdminMenuIconController extends Controller
             'admin_dashboard' => 'Dashboard',
             'admin_config' => 'Configurações do sistema',
             'admin_plans' => 'Gerenciar planos',
+            'admin_finance' => 'Finanças (admin)',
             'admin_courses' => 'Cursos (admin)',
             'admin_commissions' => 'Comissões (admin)',
             'admin_personalities' => 'Personalidades do Tuquinha',
