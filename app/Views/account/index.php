@@ -76,10 +76,12 @@ if ($freeChatLimit <= 0) { $freeChatLimit = 400; }
                     <label style="font-size:13px; color:var(--text-secondary); display:block; margin-bottom:4px;">E-mail</label>
                     <input type="email" value="<?= htmlspecialchars($user['email'] ?? '') ?>" disabled style="width:100%; padding:8px 10px; border-radius:8px; border:1px solid #272727; background:#050509; color:#777; font-size:14px;">
                 </div>
-                <div style="font-size:11px; color:#8d8d8d; margin-top:6px;">
-                    Quer escolher uma personalidade padrão para novos chats? Acesse
-                    <a href="/conta/personalidade" style="color:#ff6f60; text-decoration:none;">configurar personalidade do Tuquinha</a>.
-                </div>
+                <?php if (!empty($plan['allow_personalities'])): ?>
+                    <div style="font-size:11px; color:#8d8d8d; margin-top:6px;">
+                        Quer escolher uma personalidade padrão para novos chats? Acesse
+                        <a href="/conta/personalidade" style="color:#ff6f60; text-decoration:none;">configurar personalidade do Tuquinha</a>.
+                    </div>
+                <?php endif; ?>
                 <div style="font-size:12px; color:#b0b0b0;">
                     <?php if (!empty($user['email_verified_at'])): ?>
                         <span style="color:#8bc34a; font-weight:500;">E-mail verificado em <?= htmlspecialchars(date('d/m/Y H:i', strtotime($user['email_verified_at']))) ?></span>
