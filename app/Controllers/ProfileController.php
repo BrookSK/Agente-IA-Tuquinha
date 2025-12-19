@@ -298,7 +298,12 @@ class ProfileController extends Controller
 
             $_SESSION['social_success'] = 'Seu perfil social foi atualizado.';
         } catch (\Throwable $e) {
-            $_SESSION['social_error'] = 'Não foi possível salvar seu perfil social agora. Tente novamente em alguns instantes.';
+            $msg = strtolower((string)$e->getMessage());
+            if ($nickname !== '' && (str_contains($msg, 'uniq_users_nickname') || str_contains($msg, 'duplicate') || str_contains($msg, 'duplicado'))) {
+                $_SESSION['social_error'] = 'Este nickname já está em uso. Escolha outro.';
+            } else {
+                $_SESSION['social_error'] = 'Não foi possível salvar seu perfil social agora. Tente novamente em alguns instantes.';
+            }
         }
 
         header('Location: /perfil');
