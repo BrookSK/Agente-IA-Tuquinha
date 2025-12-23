@@ -346,19 +346,21 @@
                         <button type="submit" style="border:none; border-radius:999px; padding:9px 14px; background:linear-gradient(135deg,#e53935,#ff6f60); color:#050509; font-weight:600; font-size:13px; cursor:pointer;">Enviar</button>
                     </div>
                 </div>
-                <div style="color:#8d8d8d; font-size:12px; line-height:1.35;">
+                <div style="background:#0a0a10; border:1px solid #272727; border-radius:12px; padding:10px 12px; font-size:12px; line-height:1.35; color:#b0b0b0;">
                     Arquivos de texto/código (txt, md, json, php, js, etc.) serão usados como contexto automaticamente.
                 </div>
-                <div style="color:#8d8d8d; font-size:12px; line-height:1.35;">
-                    Se você tem um PDF/Word e quer usar o conteúdo como base, copie o texto do arquivo e cole no campo de texto abaixo.
+                <div style="background:#1a0c10; border:1px solid #a33; border-radius:12px; padding:10px 12px; font-size:12px; line-height:1.35; color:#ffbaba;">
+                    <div style="font-weight:700; margin-bottom:4px;">Atenção (PDF/Word)</div>
+                    Se você tem um PDF/Word e quer usar o conteúdo como base, copie o texto do arquivo e cole no campo <strong>Texto</strong> abaixo.
                 </div>
             </form>
 
             <form id="filesTextForm" action="/projetos/arquivo-base/texto" method="post" style="display:none; flex-direction:column; gap:8px; margin-bottom:14px;">
                 <input type="hidden" name="project_id" value="<?= (int)($project['id'] ?? 0) ?>">
                 <input type="hidden" name="folder_path" value="/base">
-                <div style="background:#0a0a10; border:1px solid #272727; border-radius:10px; padding:10px 12px; color:#b0b0b0; font-size:12px; line-height:1.35;">
-                    Cole aqui o conteúdo que você quer que a IA use como base (por exemplo: texto copiado de um PDF/Word).
+                <div style="background:#1a0c10; border:1px solid #a33; border-radius:12px; padding:10px 12px; color:#ffbaba; font-size:12px; line-height:1.35;">
+                    <div style="font-weight:700; margin-bottom:4px;">Cole o conteúdo no campo abaixo</div>
+                    Cole no campo <strong>Texto</strong> (mais abaixo) o conteúdo que você quer que a IA use como base.
                 </div>
                 <div style="display:flex; gap:8px; flex-wrap:wrap;">
                     <div style="flex:2; min-width:220px;">
