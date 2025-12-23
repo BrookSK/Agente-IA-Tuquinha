@@ -6,9 +6,9 @@ use App\Core\Controller;
 use App\Models\User;
 use App\Models\Project;
 use App\Models\ProjectMember;
-use App\Models\ProjectFolder;
 use App\Models\ProjectFile;
 use App\Models\ProjectFileVersion;
+use App\Models\ProjectFolder;
 use App\Models\Conversation;
 use App\Models\Subscription;
 use App\Models\Plan;
@@ -293,9 +293,7 @@ class ProjectController extends Controller
             exit;
         }
 
-        $folders = ProjectFolder::allForProject($projectId);
-
-        $baseFiles = ProjectFile::allBaseFilesWithFolder($projectId);
+        $baseFiles = ProjectFile::allBaseFiles($projectId);
         $baseFileIds = array_map(static function ($f) {
             return (int)($f['id'] ?? 0);
         }, $baseFiles);
@@ -319,7 +317,6 @@ class ProjectController extends Controller
             'pageTitle' => ($project['name'] ?? 'Projeto') . ' - Tuquinha',
             'user' => $user,
             'project' => $project,
-            'folders' => $folders,
             'baseFiles' => $baseFiles,
             'latestByFileId' => $latestByFileId,
             'conversations' => $conversations,
@@ -806,7 +803,7 @@ class ProjectController extends Controller
         $userId = (int)($user['id'] ?? 0);
 
         $projectId = isset($_POST['project_id']) ? (int)$_POST['project_id'] : 0;
-        $folderPath = trim((string)($_POST['folder_path'] ?? '/base'));
+        $folderPath = '/base';
 
         if ($projectId <= 0 || !ProjectMember::canWrite($projectId, $userId)) {
             header('Location: /projetos');
@@ -819,10 +816,7 @@ class ProjectController extends Controller
             exit;
         }
 
-        if ($folderPath === '' || $folderPath[0] !== '/') {
-            $folderPath = '/' . ltrim($folderPath, '/');
-        }
-
+        ProjectFolder::ensureDefaultTree($projectId);
         $folder = ProjectFolder::findByPath($projectId, $folderPath);
         if (!$folder) {
             $_SESSION['project_upload_error'] = 'Pasta inválida.';
@@ -931,7 +925,7 @@ class ProjectController extends Controller
         $userId = (int)($user['id'] ?? 0);
 
         $projectId = isset($_POST['project_id']) ? (int)$_POST['project_id'] : 0;
-        $folderPath = trim((string)($_POST['folder_path'] ?? '/base'));
+        $folderPath = '/base';
         $fileName = trim((string)($_POST['file_name'] ?? ''));
         $content = (string)($_POST['content'] ?? '');
         $content = str_replace(["\r\n", "\r"], "\n", $content);
@@ -941,9 +935,7 @@ class ProjectController extends Controller
             exit;
         }
 
-        if ($folderPath === '' || $folderPath[0] !== '/') {
-            $folderPath = '/' . ltrim($folderPath, '/');
-        }
+        ProjectFolder::ensureDefaultTree($projectId);
         $folder = ProjectFolder::findByPath($projectId, $folderPath);
         if (!$folder) {
             $_SESSION['project_upload_error'] = 'Pasta inválida.';

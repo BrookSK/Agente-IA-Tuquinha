@@ -336,15 +336,8 @@
 
             <form id="filesUploadForm" action="/projetos/arquivo-base/upload" method="post" enctype="multipart/form-data" style="display:none; flex-direction:column; gap:8px; margin-bottom:12px;">
                 <input type="hidden" name="project_id" value="<?= (int)($project['id'] ?? 0) ?>">
+                <input type="hidden" name="folder_path" value="/base">
                 <div style="display:flex; gap:8px; align-items:flex-end; flex-wrap:wrap;">
-                    <div style="flex:1; min-width:180px;">
-                        <label style="display:block; font-size:12px; color:#b0b0b0; margin-bottom:4px;">Pasta</label>
-                        <select name="folder_path" style="width:100%; padding:7px 9px; border-radius:8px; border:1px solid #272727; background:#050509; color:#f5f5f5; font-size:13px;">
-                            <?php foreach (($folders ?? []) as $f): ?>
-                                <option value="<?= htmlspecialchars((string)($f['path'] ?? '')) ?>"><?= htmlspecialchars((string)($f['path'] ?? '')) ?></option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
                     <div style="flex:2; min-width:220px;">
                         <label style="display:block; font-size:12px; color:#b0b0b0; margin-bottom:4px;">Arquivo</label>
                         <input type="file" name="file" required style="width:100%; padding:7px 9px; border-radius:8px; border:1px solid #272727; background:#050509; color:#f5f5f5; font-size:13px;">
@@ -363,18 +356,11 @@
 
             <form id="filesTextForm" action="/projetos/arquivo-base/texto" method="post" style="display:none; flex-direction:column; gap:8px; margin-bottom:14px;">
                 <input type="hidden" name="project_id" value="<?= (int)($project['id'] ?? 0) ?>">
+                <input type="hidden" name="folder_path" value="/base">
                 <div style="background:#0a0a10; border:1px solid #272727; border-radius:10px; padding:10px 12px; color:#b0b0b0; font-size:12px; line-height:1.35;">
                     Cole aqui o conteúdo que você quer que a IA use como base (por exemplo: texto copiado de um PDF/Word).
                 </div>
                 <div style="display:flex; gap:8px; flex-wrap:wrap;">
-                    <div style="flex:1; min-width:180px;">
-                        <label style="display:block; font-size:12px; color:#b0b0b0; margin-bottom:4px;">Pasta</label>
-                        <select name="folder_path" style="width:100%; padding:7px 9px; border-radius:8px; border:1px solid #272727; background:#050509; color:#f5f5f5; font-size:13px;">
-                            <?php foreach (($folders ?? []) as $f): ?>
-                                <option value="<?= htmlspecialchars((string)($f['path'] ?? '')) ?>"><?= htmlspecialchars((string)($f['path'] ?? '')) ?></option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
                     <div style="flex:2; min-width:220px;">
                         <label style="display:block; font-size:12px; color:#b0b0b0; margin-bottom:4px;">Nome do arquivo</label>
                         <input type="text" name="file_name" placeholder="ex: briefing.md" required style="width:100%; padding:7px 9px; border-radius:8px; border:1px solid #272727; background:#050509; color:#f5f5f5; font-size:13px;">

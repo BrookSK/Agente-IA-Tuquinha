@@ -564,13 +564,13 @@ class ChatController extends Controller
                 }
 
                 if (!empty($baseFiles)) {
-                    $paths = [];
+                    $names = [];
                     foreach ($baseFiles as $bfMeta) {
-                        $paths[] = (string)($bfMeta['path'] ?? '');
+                        $names[] = (string)($bfMeta['name'] ?? '');
                     }
-                    $paths = array_values(array_filter(array_map('trim', $paths)));
-                    if ($paths) {
-                        $parts[] = "ARQUIVOS BASE DISPONÍVEIS (você tem acesso ao conteúdo extraído quando houver):\n- " . implode("\n- ", $paths);
+                    $names = array_values(array_filter(array_map('trim', $names)));
+                    if ($names) {
+                        $parts[] = "ARQUIVOS BASE DISPONÍVEIS (você tem acesso ao conteúdo extraído quando houver):\n- " . implode("\n- ", $names);
                     }
                 }
 
@@ -579,47 +579,75 @@ class ChatController extends Controller
                     $ver = $latestByFileId[$fid] ?? null;
                     $text = is_array($ver) ? (string)($ver['extracted_text'] ?? '') : '';
                     $path = (string)($bf['path'] ?? '');
+                    $displayName = (string)($bf['name'] ?? '');
                     if ($path === '') {
                         continue;
                     }
                     $projectContextFilesUsed[] = $path;
                     if (trim($text) !== '') {
-                        $parts[] = "ARQUIVO BASE DO PROJETO: {$path}\n" . $text;
+                        $label = trim($displayName) !== '' ? $displayName : $path;
+                        $parts[] = "ARQUIVO BASE DO PROJETO: {$label}\n" . $text;
                     } else {
                         $url = is_array($ver) ? (string)($ver['storage_url'] ?? '') : '';
                         if ($url !== '') {
-                            $parts[] = "ARQUIVO BASE DO PROJETO: {$path}\nURL: {$url}";
+                            $label = trim($displayName) !== '' ? $displayName : $path;
+                            $parts[] = "ARQUIVO BASE DO PROJETO: {$label}\nURL: {$url}";
                         }
                     }
                 }
 
                 // Menções explícitas a arquivos no texto do usuário
-                $mentions = [];
-                if (preg_match_all('/(?:(?:^|\s)@?(\/)?)(base|documentacao|codigo|regras|outros)\/([A-Za-z0-9_\.\-\/]+\.[A-Za-z0-9]{1,8})/u', $message, $mm)) {
-                    foreach ($mm[0] as $i => $full) {
-                        $prefix = (string)($mm[2][$i] ?? '');
-                        $rest = (string)($mm[3][$i] ?? '');
-                        $mentions[] = '/' . $prefix . '/' . $rest;
+                $baseFilesByPath = [];
+                $baseFilesByNameLower = [];
+                $baseNameToPaths = [];
+                foreach ($baseFiles as $bfMeta) {
+                    $p = trim((string)($bfMeta['path'] ?? ''));
+                    $n = trim((string)($bfMeta['name'] ?? ''));
+                    if ($p !== '') {
+                        $baseFilesByPath[$p] = $bfMeta;
+                    }
+                    if ($n !== '') {
+                        $baseFilesByNameLower[mb_strtolower($n, 'UTF-8')] = $bfMeta;
+                        $base = $n;
+                        $dotPos = strrpos($base, '.');
+                        if ($dotPos !== false) {
+                            $base = substr($base, 0, $dotPos);
+                        }
+                        $base = trim($base);
+                        if ($base !== '') {
+                            $key = mb_strtolower($base, 'UTF-8');
+                            if (!isset($baseNameToPaths[$key])) {
+                                $baseNameToPaths[$key] = [];
+                            }
+                            $baseNameToPaths[$key][] = $p;
+                        }
                     }
                 }
-                $mentions = array_values(array_unique(array_map('trim', $mentions)));
 
-                foreach ($mentions as $mentionPath) {
-                    $normalized = $mentionPath;
-                    $normalized = preg_replace('/\s+/', '', $normalized);
-                    if (!is_string($normalized) || $normalized === '') {
-                        continue;
-                    }
-                    $normalized = '/' . ltrim($normalized, '/');
+                $mentionedPaths = [];
 
-                    $file = ProjectFile::findByPath($projectId, $normalized);
-                    if (!$file) {
-                        $candidates = ProjectFile::searchByPathSuffix($projectId, $normalized, 10);
+                // 1) Detecta menções tipo "arquivo.ext" no texto
+                if (preg_match_all('/\b([A-Za-z0-9_\-]{1,120}\.[A-Za-z0-9]{1,8})\b/u', $message, $mmNames)) {
+                    $fileNames = array_values(array_unique(array_map('trim', $mmNames[1] ?? [])));
+                    foreach ($fileNames as $fn) {
+                        if ($fn === '') continue;
+                        $lower = mb_strtolower($fn, 'UTF-8');
+                        if (isset($baseFilesByNameLower[$lower])) {
+                            $p = (string)($baseFilesByNameLower[$lower]['path'] ?? '');
+                            if ($p !== '') {
+                                $mentionedPaths[] = $p;
+                                continue;
+                            }
+                        }
+
+                        // fallback: tenta achar por sufixo do path (funciona mesmo se estiver em /base/...)
+                        $suffix = '/' . ltrim($fn, '/');
+                        $candidates = ProjectFile::searchByPathSuffix($projectId, $suffix, 10);
                         if (count($candidates) > 1) {
                             $lines = [];
-                            $lines[] = 'Encontrei mais de um arquivo que pode ser o que você citou. Qual deles você quer usar?';
+                            $lines[] = 'Encontrei mais de um arquivo com esse nome. Qual deles você quer usar?';
                             foreach ($candidates as $c) {
-                                $lines[] = '- ' . (string)($c['path'] ?? '');
+                                $lines[] = '- ' . (string)($c['name'] ?? ($c['path'] ?? ''));
                             }
                             $assistantReply = implode("\n", $lines);
                             Message::create($conversation->id, 'assistant', $assistantReply, null);
@@ -640,24 +668,50 @@ class ChatController extends Controller
                             exit;
                         }
                         if (count($candidates) === 1) {
-                            $file = $candidates[0];
+                            $p = (string)($candidates[0]['path'] ?? '');
+                            if ($p !== '') {
+                                $mentionedPaths[] = $p;
+                            }
                         }
                     }
+                }
 
-                    if ($file) {
-                        $fid = (int)($file['id'] ?? 0);
-                        $ver = $fid > 0 ? ProjectFileVersion::latestForFile($fid) : null;
-                        $text = is_array($ver) ? (string)($ver['extracted_text'] ?? '') : '';
-                        $path = (string)($file['path'] ?? '');
-                        if ($path !== '') {
-                            $projectContextFilesUsed[] = $path;
-                            if (trim($text) !== '') {
-                                $parts[] = "ARQUIVO CITADO PELO USUÁRIO: {$path}\n" . $text;
-                            } else {
-                                $url = is_array($ver) ? (string)($ver['storage_url'] ?? '') : '';
-                                if ($url !== '') {
-                                    $parts[] = "ARQUIVO CITADO PELO USUÁRIO: {$path}\nURL: {$url}";
-                                }
+                // 2) Detecta menções só pelo nome (sem extensão), quando for único
+                foreach ($baseNameToPaths as $baseLower => $pathsForBase) {
+                    if (count($pathsForBase) !== 1) {
+                        continue;
+                    }
+                    $base = (string)$baseLower;
+                    if ($base === '') continue;
+                    $pattern = '/(?<![A-Za-z0-9_\-])' . preg_quote($base, '/') . '(?![A-Za-z0-9_\-])/iu';
+                    if (preg_match($pattern, $message)) {
+                        $mentionedPaths[] = (string)$pathsForBase[0];
+                    }
+                }
+
+                $mentionedPaths = array_values(array_unique(array_filter(array_map('trim', $mentionedPaths))));
+
+                foreach ($mentionedPaths as $path) {
+                    $file = $baseFilesByPath[$path] ?? ProjectFile::findByPath($projectId, $path);
+                    if (!$file) {
+                        continue;
+                    }
+
+                    $fid = (int)($file['id'] ?? 0);
+                    $ver = $fid > 0 ? ProjectFileVersion::latestForFile($fid) : null;
+                    $text = is_array($ver) ? (string)($ver['extracted_text'] ?? '') : '';
+                    $display = trim((string)($file['name'] ?? ''));
+                    if ($display === '') {
+                        $display = (string)($file['path'] ?? '');
+                    }
+                    if ($path !== '') {
+                        $projectContextFilesUsed[] = $path;
+                        if (trim($text) !== '') {
+                            $parts[] = "ARQUIVO CITADO PELO USUÁRIO: {$display}\n" . $text;
+                        } else {
+                            $url = is_array($ver) ? (string)($ver['storage_url'] ?? '') : '';
+                            if ($url !== '') {
+                                $parts[] = "ARQUIVO CITADO PELO USUÁRIO: {$display}\nURL: {$url}";
                             }
                         }
                     }
