@@ -90,7 +90,7 @@ if (!empty($currentPlan) && is_array($currentPlan)) {
                 <span style="margin-left:8px; color:#8d8d8d;">Arquivos base: <?= (int)$withText ?>/<?= (int)$total ?> com texto</span>
             </div>
             <div style="color:#8d8d8d;">
-                Dica: cite arquivos assim: <strong>base/arquivo.md</strong>
+                Dica: cite arquivos assim: <strong>arquivo.md</strong> (ou <strong>arquivo</strong>)
             </div>
         </div>
     <?php endif; ?>
