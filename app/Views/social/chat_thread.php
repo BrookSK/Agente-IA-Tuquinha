@@ -5,6 +5,7 @@
 /** @var array $conversation */
 /** @var array $messages */
 
+$currentId = (int)($user['id'] ?? 0);
 $currentName = trim((string)($user['preferred_name'] ?? ''));
 if ($currentName === '') {
     $currentName = trim((string)($user['name'] ?? ''));
