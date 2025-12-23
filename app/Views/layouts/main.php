@@ -542,9 +542,36 @@ if (!empty($_SESSION['user_id'])) {
                 <?php if ($canSeeHistory): ?>
                     <a href="/historico" class="sidebar-button" style="margin-bottom: 8px;">
                         <span class="icon" aria-hidden="true"><?php echo $renderMenuIcon('chat_history', '🕒'); ?></span>
-                        <span>Histórico de chats</span>
+                        <span>Histórico</span>
                     </a>
                 <?php endif; ?>
+
+                <?php
+                    $canUseProjects = false;
+                    if ($hasUser && $isAdmin) {
+                        $canUseProjects = true;
+                    } elseif ($hasUser) {
+                        $userEmail = (string)($_SESSION['user_email'] ?? '');
+                        if ($userEmail !== '') {
+                            $sub = \App\Models\Subscription::findLastByEmail($userEmail);
+                            if ($sub && !empty($sub['plan_id'])) {
+                                $status = strtolower((string)($sub['status'] ?? ''));
+                                $isActive = !in_array($status, ['canceled', 'expired'], true);
+                                if ($isActive) {
+                                    $plan = \App\Models\Plan::findById((int)$sub['plan_id']);
+                                    $canUseProjects = !empty($plan['allow_projects_access']);
+                                }
+                            }
+                        }
+                    }
+                ?>
+                <?php if ($canUseProjects): ?>
+                    <a href="/projetos" class="sidebar-button" style="margin-bottom: 8px;">
+                        <span class="icon" aria-hidden="true"><?php echo $renderMenuIcon('projects_list', '📁'); ?></span>
+                        <span>Meus projetos</span>
+                    </a>
+                <?php endif; ?>
+
                 <div class="sidebar-section-title" style="margin-top: 10px;">Guias rápidos</div>
                 <a href="/" class="sidebar-button">
                     <span class="icon" aria-hidden="true"><?php
@@ -569,41 +596,6 @@ if (!empty($_SESSION['user_id'])) {
                     <span class="icon" aria-hidden="true"><?php echo $renderMenuIcon('quick_courses', '🎓'); ?></span>
                     <span>Cursos</span>
                 </a>
-
-                <?php
-                    $hasUser = !empty($_SESSION['user_id']);
-                    $isAdmin = !empty($_SESSION['is_admin']);
-                    $currentSlug = $_SESSION['plan_slug'] ?? null;
-                    $canUseProjects = false;
-                    if ($hasUser && $isAdmin) {
-                        $canUseProjects = true;
-                    } elseif ($hasUser) {
-                        $userEmail = (string)($_SESSION['user_email'] ?? '');
-                        if ($userEmail !== '') {
-                            $sub = \App\Models\Subscription::findLastByEmail($userEmail);
-                            if ($sub && !empty($sub['plan_id'])) {
-                                $status = strtolower((string)($sub['status'] ?? ''));
-                                $isActive = !in_array($status, ['canceled', 'expired'], true);
-                                if ($isActive) {
-                                    $plan = \App\Models\Plan::findById((int)$sub['plan_id']);
-                                    $canUseProjects = !empty($plan['allow_projects_access']);
-                                }
-                            }
-                        }
-                    }
-                ?>
-
-                <?php if ($canUseProjects): ?>
-                    <div class="sidebar-section-title" style="margin-top: 10px;">Projetos</div>
-                    <a href="/projetos" class="sidebar-button">
-                        <span class="icon" aria-hidden="true"><?php echo $renderMenuIcon('projects_list', '📁'); ?></span>
-                        <span>Meus projetos</span>
-                    </a>
-                    <a href="/projetos/novo" class="sidebar-button">
-                        <span class="icon" aria-hidden="true"><?php echo $renderMenuIcon('projects_new', '➕'); ?></span>
-                        <span>Novo projeto</span>
-                    </a>
-                <?php endif; ?>
 
                 <?php if (!empty($_SESSION['user_id'])): ?>
                     <div class="sidebar-section-title" style="margin-top: 10px;">Rede social do Tuquinha</div>
