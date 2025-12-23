@@ -538,15 +538,7 @@ if (!empty($_SESSION['user_id'])) {
                     $currentSlug = $_SESSION['plan_slug'] ?? null;
                     $isAdmin = !empty($_SESSION['is_admin']);
                     $canSeeHistory = $hasUser;
-                ?>
-                <?php if ($canSeeHistory): ?>
-                    <a href="/historico" class="sidebar-button" style="margin-bottom: 8px;">
-                        <span class="icon" aria-hidden="true"><?php echo $renderMenuIcon('chat_history', '🕒'); ?></span>
-                        <span>Histórico</span>
-                    </a>
-                <?php endif; ?>
 
-                <?php
                     $canUseProjects = false;
                     if ($hasUser && $isAdmin) {
                         $canUseProjects = true;
@@ -566,9 +558,16 @@ if (!empty($_SESSION['user_id'])) {
                     }
                 ?>
                 <?php if ($canUseProjects): ?>
-                    <a href="/projetos" class="sidebar-button" style="margin-bottom: 8px;">
+                    <a href="/projetos" class="sidebar-button">
                         <span class="icon" aria-hidden="true"><?php echo $renderMenuIcon('projects_list', '📁'); ?></span>
                         <span>Meus projetos</span>
+                    </a>
+                <?php endif; ?>
+
+                <?php if ($canSeeHistory): ?>
+                    <a href="/historico" class="sidebar-button">
+                        <span class="icon" aria-hidden="true"><?php echo $renderMenuIcon('chat_history', '�'); ?></span>
+                        <span>Histórico de chats</span>
                     </a>
                 <?php endif; ?>
 
