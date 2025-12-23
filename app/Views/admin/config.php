@@ -28,6 +28,7 @@
 /** @var string $textExtractionEndpoint */
 /** @var string $certificateIssuerName */
 /** @var string $certificateSignatureImagePath */
+/** @var int $coursePartnerMinPayoutCents */
 /** @var bool $saved */
 /** @var bool|null $testEmailStatus */
 /** @var string|null $testEmailError */
@@ -182,6 +183,25 @@ $knownModels = [
                         background: #050509; color: #f5f5f5; font-size: 13px;
                     " placeholder="primary ou e-mail da conta">
                     <small style="color:#777; font-size:11px;">Normalmente use <strong>primary</strong> para a agenda principal da conta PRO. Você também pode usar o e-mail da conta ou o ID de uma agenda específica.</small>
+                </div>
+            </div>
+        </div>
+
+        <div style="margin-top: 8px; padding:10px 12px; border-radius:10px; border:1px solid #272727; background:#0a0a10;">
+            <div style="font-size:13px; color:#b0b0b0; margin-bottom:8px;">
+                <strong>Comissões de cursos</strong><br>
+                Define o valor mínimo acumulado para liberar pagamento de comissão para parceiros/professores.
+            </div>
+            <div style="display:flex; flex-wrap:wrap; gap:10px; align-items:flex-end;">
+                <div>
+                    <label style="font-size: 12px; color: #b0b0b0;">Mínimo para pagamento (R$)</label>
+                    <input name="course_partner_min_payout" value="<?= number_format(((int)($coursePartnerMinPayoutCents ?? 5000)) / 100, 2, ',', '.') ?>" style="
+                        width: 180px; padding: 8px 10px; border-radius: 8px; border: 1px solid #272727;
+                        background: #050509; color: #f5f5f5; font-size: 13px;
+                    " placeholder="ex: 50,00">
+                </div>
+                <div style="font-size:11px; color:#777; max-width:380px;">
+                    Se o acumulado não atingir esse mínimo no mês, ele fica acumulado para o próximo.
                 </div>
             </div>
         </div>

@@ -5,12 +5,11 @@ namespace App\Controllers;
 use App\Core\Controller;
 use App\Models\CoursePartner;
 use App\Models\CoursePartnerPayout;
+use App\Models\Setting;
 use App\Services\CourseCommissionService;
 
 class AdminCommissionsController extends Controller
 {
-    private const MIN_PAYOUT_CENTS = 5000;
-
     private function ensureAdmin(): void
     {
         if (empty($_SESSION['is_admin'])) {
@@ -22,6 +21,11 @@ class AdminCommissionsController extends Controller
     public function index(): void
     {
         $this->ensureAdmin();
+
+        $minPayoutCents = (int)Setting::get('course_partner_min_payout_cents', '5000');
+        if ($minPayoutCents < 0) {
+            $minPayoutCents = 5000;
+        }
 
         $year = isset($_GET['year']) ? (int)$_GET['year'] : (int)date('Y');
         $month = isset($_GET['month']) ? (int)$_GET['month'] : (int)date('n');
@@ -44,7 +48,7 @@ class AdminCommissionsController extends Controller
             $paidUpTo = CoursePartnerPayout::sumPaidUpTo($partnerId, $year, $month);
             $owedCents = max(0, $accruedUpTo - $paidUpTo);
 
-            $eligible = $owedCents >= self::MIN_PAYOUT_CENTS;
+            $eligible = $owedCents >= $minPayoutCents;
 
             $rows[] = [
                 'partner' => $p,
@@ -61,13 +65,18 @@ class AdminCommissionsController extends Controller
             'year' => $year,
             'month' => $month,
             'rows' => $rows,
-            'minPayoutCents' => self::MIN_PAYOUT_CENTS,
+            'minPayoutCents' => $minPayoutCents,
         ]);
     }
 
     public function details(): void
     {
         $this->ensureAdmin();
+
+        $minPayoutCents = (int)Setting::get('course_partner_min_payout_cents', '5000');
+        if ($minPayoutCents < 0) {
+            $minPayoutCents = 5000;
+        }
 
         $partnerId = isset($_GET['partner_id']) ? (int)$_GET['partner_id'] : 0;
         $year = isset($_GET['year']) ? (int)$_GET['year'] : (int)date('Y');
@@ -90,7 +99,7 @@ class AdminCommissionsController extends Controller
         $accruedUpTo = CourseCommissionService::sumPartnerCommissionUpToByPartnerId($partnerId, $year, $month);
         $paidUpTo = CoursePartnerPayout::sumPaidUpTo($partnerId, $year, $month);
         $owedCents = max(0, $accruedUpTo - $paidUpTo);
-        $eligible = $owedCents >= self::MIN_PAYOUT_CENTS;
+        $eligible = $owedCents >= $minPayoutCents;
 
         $payouts = CoursePartnerPayout::listByPartner($partnerId, 24);
 
@@ -104,7 +113,7 @@ class AdminCommissionsController extends Controller
             'paidUpToCents' => $paidUpTo,
             'owedCents' => $owedCents,
             'eligible' => $eligible,
-            'minPayoutCents' => self::MIN_PAYOUT_CENTS,
+            'minPayoutCents' => $minPayoutCents,
             'payouts' => $payouts,
         ]);
     }
@@ -112,6 +121,11 @@ class AdminCommissionsController extends Controller
     public function markPaid(): void
     {
         $this->ensureAdmin();
+
+        $minPayoutCents = (int)Setting::get('course_partner_min_payout_cents', '5000');
+        if ($minPayoutCents < 0) {
+            $minPayoutCents = 5000;
+        }
 
         $partnerId = isset($_POST['partner_id']) ? (int)$_POST['partner_id'] : 0;
         $year = isset($_POST['year']) ? (int)$_POST['year'] : (int)date('Y');
@@ -129,8 +143,9 @@ class AdminCommissionsController extends Controller
         $paidUpTo = CoursePartnerPayout::sumPaidUpTo($partnerId, $year, $month);
         $owedCents = max(0, $accruedUpTo - $paidUpTo);
 
-        if ($owedCents < self::MIN_PAYOUT_CENTS) {
-            $_SESSION['admin_commissions_error'] = 'Ainda não atingiu o mínimo de R$ 50,00 para pagamento. O valor fica acumulado para o próximo mês.';
+        if ($owedCents < $minPayoutCents) {
+            $minPayout = $minPayoutCents / 100;
+            $_SESSION['admin_commissions_error'] = 'Ainda não atingiu o mínimo de R$ ' . number_format($minPayout, 2, ',', '.') . ' para pagamento. O valor fica acumulado para o próximo mês.';
             header('Location: /admin/comissoes/detalhes?partner_id=' . $partnerId . '&year=' . $year . '&month=' . $month);
             exit;
         }

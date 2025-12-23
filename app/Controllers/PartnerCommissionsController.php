@@ -5,13 +5,12 @@ namespace App\Controllers;
 use App\Core\Controller;
 use App\Models\CoursePartner;
 use App\Models\CoursePartnerPayout;
+use App\Models\Setting;
 use App\Models\User;
 use App\Services\CourseCommissionService;
 
 class PartnerCommissionsController extends Controller
 {
-    private const MIN_PAYOUT_CENTS = 5000;
-
     private function requireLogin(): array
     {
         if (empty($_SESSION['user_id'])) {
@@ -33,6 +32,11 @@ class PartnerCommissionsController extends Controller
     {
         $user = $this->requireLogin();
 
+        $minPayoutCents = (int)Setting::get('course_partner_min_payout_cents', '5000');
+        if ($minPayoutCents < 0) {
+            $minPayoutCents = 5000;
+        }
+
         $partner = CoursePartner::findByUserId((int)$user['id']);
         if (!$partner) {
             $this->view('partner/commissions', [
@@ -44,7 +48,7 @@ class PartnerCommissionsController extends Controller
                 'monthData' => ['total_sales_cents' => 0, 'total_commission_cents' => 0, 'by_course' => []],
                 'owedCents' => 0,
                 'eligible' => false,
-                'minPayoutCents' => self::MIN_PAYOUT_CENTS,
+                'minPayoutCents' => $minPayoutCents,
                 'payouts' => [],
             ]);
             return;
@@ -61,7 +65,7 @@ class PartnerCommissionsController extends Controller
         $accruedUpTo = CourseCommissionService::sumPartnerCommissionUpToByPartnerId($partnerId, $year, $month);
         $paidUpTo = CoursePartnerPayout::sumPaidUpTo($partnerId, $year, $month);
         $owedCents = max(0, $accruedUpTo - $paidUpTo);
-        $eligible = $owedCents >= self::MIN_PAYOUT_CENTS;
+        $eligible = $owedCents >= $minPayoutCents;
 
         $payouts = CoursePartnerPayout::listByPartner($partnerId, 24);
 
@@ -74,7 +78,7 @@ class PartnerCommissionsController extends Controller
             'monthData' => $monthData,
             'owedCents' => $owedCents,
             'eligible' => $eligible,
-            'minPayoutCents' => self::MIN_PAYOUT_CENTS,
+            'minPayoutCents' => $minPayoutCents,
             'payouts' => $payouts,
         ]);
     }

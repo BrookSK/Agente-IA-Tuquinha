@@ -67,6 +67,11 @@ class AdminConfigController extends Controller
         $certificateIssuerName = Setting::get('certificate_issuer_name', 'Thiago Marques');
         $certificateSignatureImagePath = Setting::get('certificate_signature_image_path', '');
 
+        $coursePartnerMinPayoutCents = (int)Setting::get('course_partner_min_payout_cents', '5000');
+        if ($coursePartnerMinPayoutCents < 0) {
+            $coursePartnerMinPayoutCents = 5000;
+        }
+
         $asaas = AsaasConfig::getActive();
 
         $this->view('admin/config', [
@@ -98,6 +103,7 @@ class AdminConfigController extends Controller
             'textExtractionEndpoint' => $textExtractionEndpoint,
             'certificateIssuerName' => $certificateIssuerName,
             'certificateSignatureImagePath' => $certificateSignatureImagePath,
+            'coursePartnerMinPayoutCents' => $coursePartnerMinPayoutCents,
             'asaasEnvironment' => $asaas['environment'] ?? 'sandbox',
             'asaasSandboxKey' => $asaas['sandbox_api_key'] ?? '',
             'asaasProdKey' => $asaas['production_api_key'] ?? '',
@@ -155,6 +161,19 @@ class AdminConfigController extends Controller
         }
         $certificateSignatureImagePath = trim($_POST['certificate_signature_image_path'] ?? '');
 
+        $coursePartnerMinPayoutRaw = trim((string)($_POST['course_partner_min_payout'] ?? ''));
+        $coursePartnerMinPayoutCents = 5000;
+        if ($coursePartnerMinPayoutRaw !== '') {
+            $normalized = str_replace(['.', ' '], ['', ''], $coursePartnerMinPayoutRaw);
+            $normalized = str_replace([','], ['.'], $normalized);
+            if (is_numeric($normalized)) {
+                $coursePartnerMinPayoutCents = (int)round(((float)$normalized) * 100);
+                if ($coursePartnerMinPayoutCents < 0) {
+                    $coursePartnerMinPayoutCents = 5000;
+                }
+            }
+        }
+
         // Upload opcional da assinatura do emissor (imagem) para servidor de mídia externo
         if (!empty($_FILES['certificate_signature_upload']['tmp_name'])) {
             $imgError = $_FILES['certificate_signature_upload']['error'] ?? UPLOAD_ERR_NO_FILE;
@@ -211,6 +230,7 @@ class AdminConfigController extends Controller
             'text_extraction_endpoint' => $textExtractionEndpoint,
             'certificate_issuer_name' => $certificateIssuerName,
             'certificate_signature_image_path' => $certificateSignatureImagePath,
+            'course_partner_min_payout_cents' => (string)$coursePartnerMinPayoutCents,
         ];
 
         foreach ($settingsToSave as $sKey => $sValue) {
@@ -261,6 +281,7 @@ class AdminConfigController extends Controller
             'textExtractionEndpoint' => $textExtractionEndpoint,
             'certificateIssuerName' => $certificateIssuerName,
             'certificateSignatureImagePath' => $certificateSignatureImagePath,
+            'coursePartnerMinPayoutCents' => $coursePartnerMinPayoutCents,
             'asaasEnvironment' => $asaasEnv === 'production' ? 'production' : 'sandbox',
             'asaasSandboxKey' => $asaasSandboxKey,
             'asaasProdKey' => $asaasProdKey,
@@ -320,6 +341,11 @@ class AdminConfigController extends Controller
         $certificateIssuerName = Setting::get('certificate_issuer_name', 'Thiago Marques');
         $certificateSignatureImagePath = Setting::get('certificate_signature_image_path', '');
 
+        $coursePartnerMinPayoutCents = (int)Setting::get('course_partner_min_payout_cents', '5000');
+        if ($coursePartnerMinPayoutCents < 0) {
+            $coursePartnerMinPayoutCents = 5000;
+        }
+
         $asaas = AsaasConfig::getActive();
 
         $status = null;
@@ -367,6 +393,7 @@ class AdminConfigController extends Controller
             'textExtractionEndpoint' => $textExtractionEndpoint,
             'certificateIssuerName' => $certificateIssuerName,
             'certificateSignatureImagePath' => $certificateSignatureImagePath,
+            'coursePartnerMinPayoutCents' => $coursePartnerMinPayoutCents,
             'asaasEnvironment' => $asaas['environment'] ?? 'sandbox',
             'asaasSandboxKey' => $asaas['sandbox_api_key'] ?? '',
             'asaasProdKey' => $asaas['production_api_key'] ?? '',
