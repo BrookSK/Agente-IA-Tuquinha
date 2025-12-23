@@ -58,7 +58,7 @@ $minPayout = $minPayoutCents / 100;
         <div style="flex:1 1 320px; padding:10px 12px; border-radius:12px; border:1px solid var(--border-subtle); background:var(--surface-card);">
             <div style="font-size:12px; color:var(--text-secondary);">Status</div>
             <?php if ($eligible): ?>
-                <div style="margin-top:6px; font-size:13px; color:var(--text-primary); font-weight:800;">Apto para pagamento (admin já pode marcar como pago).</div>
+                <div style="margin-top:6px; font-size:13px; color:var(--text-primary); font-weight:800;">Apto para pagamento (admin já pode realizar o pagamento).</div>
             <?php else: ?>
                 <div style="margin-top:6px; font-size:13px; color:var(--text-secondary);">Ainda não atingiu o mínimo de R$ <?= number_format($minPayout, 2, ',', '.') ?>. O valor fica acumulado.</div>
             <?php endif; ?>
