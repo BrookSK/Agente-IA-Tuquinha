@@ -369,6 +369,19 @@ if (!empty($messages)) {
     var incomingAccept = document.getElementById('incomingCallAccept');
     var incomingDismiss = document.getElementById('incomingCallDismiss');
     var lastIncomingBeepAt = 0;
+
+    function setGlobalIncomingLock(meta) {
+        try {
+            if (!meta) return;
+            if (!window.localStorage) return;
+            var cid = Number(meta.conversation_id) || 0;
+            var fromId = Number(meta.from_user_id) || 0;
+            var createdAt = String(meta.offer_created_at || '');
+            if (!cid || !fromId || !createdAt) return;
+            var key = 'tuquinha_webrtc_incoming_ack:' + cid + ':' + fromId + ':' + createdAt;
+            localStorage.setItem(key, String(Date.now ? Date.now() : 1));
+        } catch (e) {}
+    }
     var typingHideTimer = null;
     var lastTypingSentAt = 0;
     var typingStopTimer = null;
@@ -725,6 +738,11 @@ if (!empty($messages)) {
                             setCallUiState('incoming');
                             if (autoJoinCall) {
                                 autoJoinCall = false;
+                                setGlobalIncomingLock({
+                                    conversation_id: conversationId,
+                                    from_user_id: Number(ev && ev.from_user_id ? ev.from_user_id : 0),
+                                    offer_created_at: String(ev && ev.created_at ? ev.created_at : '')
+                                });
                                 hideIncomingModal();
                                 acceptIncomingCall();
                             } else {

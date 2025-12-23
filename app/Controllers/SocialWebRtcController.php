@@ -305,6 +305,7 @@ class SocialWebRtcController extends Controller
             'conversation_id' => $conversationId,
             'from_user_id' => $callerId,
             'from_user_name' => $callerName,
+            'offer_created_at' => (string)($offer['created_at'] ?? ''),
         ]);
     }
 }

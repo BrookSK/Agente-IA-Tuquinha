@@ -911,6 +911,35 @@ if (!empty($_SESSION['user_id'])) {
             var inFlight = false;
             var snoozeUntil = 0;
 
+            function lockKey(data) {
+                if (!data) return '';
+                var cid = Number(data.conversation_id) || 0;
+                var fromId = Number(data.from_user_id) || 0;
+                var createdAt = String(data.offer_created_at || '');
+                if (!cid || !fromId || !createdAt) return '';
+                return 'tuquinha_webrtc_incoming_ack:' + cid + ':' + fromId + ':' + createdAt;
+            }
+
+            function hasLock(data) {
+                try {
+                    var key = lockKey(data);
+                    if (!key) return false;
+                    if (!window.localStorage) return false;
+                    return !!localStorage.getItem(key);
+                } catch (e) {
+                    return false;
+                }
+            }
+
+            function setLock(data) {
+                try {
+                    var key = lockKey(data);
+                    if (!key) return;
+                    if (!window.localStorage) return;
+                    localStorage.setItem(key, String(Date.now ? Date.now() : 1));
+                } catch (e) {}
+            }
+
             function nowMs() {
                 return Date.now ? Date.now() : 0;
             }
@@ -973,12 +1002,22 @@ if (!empty($_SESSION['user_id'])) {
                     var fromId = Number(json.from_user_id) || 0;
                     if (!cid || !fromId) return;
 
-                    if (!currentIncoming || currentIncoming.conversation_id !== cid || currentIncoming.from_user_id !== fromId) {
-                        showModal({
-                            conversation_id: cid,
-                            from_user_id: fromId,
-                            from_user_name: String(json.from_user_name || 'Seu amigo')
-                        });
+                    var offerCreatedAt = String(json.offer_created_at || '');
+                    var incomingData = {
+                        conversation_id: cid,
+                        from_user_id: fromId,
+                        from_user_name: String(json.from_user_name || 'Seu amigo'),
+                        offer_created_at: offerCreatedAt
+                    };
+
+                    if (hasLock(incomingData)) {
+                        currentIncoming = null;
+                        hideModal();
+                        return;
+                    }
+
+                    if (!currentIncoming || currentIncoming.conversation_id !== cid || currentIncoming.from_user_id !== fromId || String(currentIncoming.offer_created_at || '') !== offerCreatedAt) {
+                        showModal(incomingData);
                     }
                 }).catch(function () {
                 }).finally(function () {
@@ -998,6 +1037,7 @@ if (!empty($_SESSION['user_id'])) {
             });
             acceptBtn.addEventListener('click', function () {
                 if (!currentIncoming || !currentIncoming.from_user_id) return;
+                setLock(currentIncoming);
                 hideModal();
                 var url = '/social/chat?user_id=' + encodeURIComponent(String(currentIncoming.from_user_id)) + '&join_call=1';
                 window.location.href = url;
