@@ -5,8 +5,12 @@
 /** @var array $conversation */
 /** @var array $messages */
 
-$currentId = (int)($user['id'] ?? 0);
-$currentName = (string)($user['name'] ?? 'Você');
+$currentName = trim((string)($user['preferred_name'] ?? ''));
+if ($currentName === '') {
+    $currentName = trim((string)($user['name'] ?? ''));
+}
+
+$autoJoinCall = !empty($_GET['join_call']);
 $otherName = (string)($otherUser['name'] ?? 'Amigo');
 $conversationId = (int)($conversation['id'] ?? 0);
 $initialLastMessageId = 0;
@@ -265,27 +269,6 @@ if (!empty($messages)) {
     </main>
 </div>
 
-<div id="incomingCallModal" style="position:fixed; inset:0; display:none; align-items:center; justify-content:center; z-index:9999;">
-    <div id="incomingCallBackdrop" style="position:absolute; inset:0; background:rgba(0,0,0,0.65);"></div>
-    <div style="position:relative; width:min(420px, calc(100vw - 28px)); border-radius:18px; border:1px solid #272727; background:#111118; padding:14px 14px 12px 14px; box-shadow:0 18px 50px rgba(0,0,0,0.6);">
-        <div style="font-size:12px; color:#b0b0b0;">Chamada de vídeo recebida</div>
-        <div style="font-size:16px; font-weight:650; color:#f5f5f5; margin-top:4px;">
-            <?= htmlspecialchars($otherName, ENT_QUOTES, 'UTF-8') ?> está chamando você
-        </div>
-        <div style="font-size:12px; color:#b0b0b0; margin-top:6px; line-height:1.35;">
-            Clique para entrar na chamada.
-        </div>
-        <div style="display:flex; gap:8px; margin-top:12px;">
-            <button type="button" id="incomingCallAccept" style="flex:1; border:none; border-radius:999px; padding:9px 12px; font-size:13px; font-weight:650; cursor:pointer; background:linear-gradient(135deg,#4caf50,#8bc34a); color:#050509;">
-                Entrar na chamada
-            </button>
-            <button type="button" id="incomingCallDismiss" style="flex:1; border:none; border-radius:999px; padding:9px 12px; font-size:13px; cursor:pointer; background:#1c1c24; color:#f5f5f5; border:1px solid #272727;">
-                Agora não
-            </button>
-        </div>
-    </div>
-</div>
-
 <script>
 (function () {
     var box = document.getElementById('social-chat-messages');
@@ -357,6 +340,7 @@ if (!empty($messages)) {
     var toggleCamBtn = document.getElementById('btn-toggle-cam');
     var currentUserName = <?= json_encode($currentName, JSON_UNESCAPED_UNICODE) ?>;
     var currentUserId = <?= (int)$currentId ?>;
+    var autoJoinCall = <?= $autoJoinCall ? 'true' : 'false' ?>;
     var otherUserId = <?= (int)($otherUser['id'] ?? 0) ?>;
     var conversationId = <?= (int)$conversationId ?>;
     var pc = null;
@@ -739,7 +723,13 @@ if (!empty($messages)) {
                             incomingOffer = payload;
                             setStatus('Seu amigo iniciou uma chamada. Clique em “Entrar na chamada”.');
                             setCallUiState('incoming');
-                            showIncomingModal();
+                            if (autoJoinCall) {
+                                autoJoinCall = false;
+                                hideIncomingModal();
+                                acceptIncomingCall();
+                            } else {
+                                showIncomingModal();
+                            }
                             return;
                         }
 

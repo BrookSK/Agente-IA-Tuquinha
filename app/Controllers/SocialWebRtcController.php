@@ -232,4 +232,79 @@ class SocialWebRtcController extends Controller
             'since_id' => $sinceId,
         ]);
     }
+
+    public function incoming(): void
+    {
+        $currentUser = $this->requireLogin();
+        $currentId = (int)$currentUser['id'];
+
+        if (function_exists('session_write_close')) {
+            @session_write_close();
+        }
+
+        $pdo = Database::getConnection();
+
+        // Procura uma oferta não entregue ainda (chamada recebida) em qualquer conversa
+        $stmt = $pdo->prepare('SELECT s.conversation_id, s.from_user_id, s.created_at
+            FROM social_webrtc_signals s
+            WHERE s.to_user_id = :uid
+              AND s.kind = "offer"
+              AND s.delivered_at IS NULL
+            ORDER BY s.id DESC
+            LIMIT 1');
+        $stmt->execute(['uid' => $currentId]);
+        $offer = $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
+
+        if (!$offer) {
+            header('Content-Type: application/json; charset=utf-8');
+            echo json_encode(['ok' => true, 'incoming' => false]);
+            return;
+        }
+
+        $conversationId = (int)($offer['conversation_id'] ?? 0);
+        $fromUserId = (int)($offer['from_user_id'] ?? 0);
+
+        // Se já houve "end" depois desta offer, não mostra popup
+        $endStmt = $pdo->prepare('SELECT id
+            FROM social_webrtc_signals
+            WHERE conversation_id = :cid
+              AND kind = "end"
+              AND from_user_id = :from_uid
+              AND created_at >= :offer_created
+            ORDER BY id DESC
+            LIMIT 1');
+        $endStmt->execute([
+            'cid' => $conversationId,
+            'from_uid' => $fromUserId,
+            'offer_created' => (string)($offer['created_at'] ?? ''),
+        ]);
+        $ended = (bool)$endStmt->fetch(PDO::FETCH_ASSOC);
+
+        if ($ended) {
+            header('Content-Type: application/json; charset=utf-8');
+            echo json_encode(['ok' => true, 'incoming' => false]);
+            return;
+        }
+
+        // Confere se o usuário participa da conversa e se ainda são amigos (accepted)
+        [$conversation, $otherUserId] = $this->ensureParticipantAndFriends($currentId, $conversationId);
+
+        // O "otherUserId" aqui deve bater com "fromUserId" (quem está chamando)
+        $callerId = $fromUserId > 0 ? $fromUserId : (int)$otherUserId;
+
+        $caller = User::findById($callerId);
+        $callerName = $caller ? (string)($caller['preferred_name'] ?? ($caller['name'] ?? '')) : '';
+        if (trim($callerName) === '') {
+            $callerName = 'Seu amigo';
+        }
+
+        header('Content-Type: application/json; charset=utf-8');
+        echo json_encode([
+            'ok' => true,
+            'incoming' => true,
+            'conversation_id' => $conversationId,
+            'from_user_id' => $callerId,
+            'from_user_name' => $callerName,
+        ]);
+    }
 }

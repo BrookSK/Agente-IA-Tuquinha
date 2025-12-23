@@ -793,6 +793,26 @@ if (!empty($_SESSION['user_id'])) {
             <?php include $viewFile; ?>
         </section>
     </main>
+
+    <div id="incomingCallModal" style="position:fixed; inset:0; display:none; align-items:center; justify-content:center; z-index:9999;">
+        <div id="incomingCallBackdrop" style="position:absolute; inset:0; background:rgba(0,0,0,0.65);"></div>
+        <div style="position:relative; width:min(420px, calc(100vw - 28px)); border-radius:18px; border:1px solid #272727; background:#111118; padding:14px 14px 12px 14px; box-shadow:0 18px 50px rgba(0,0,0,0.6);">
+            <div style="font-size:12px; color:#b0b0b0;">Chamada de vídeo recebida</div>
+            <div style="font-size:16px; font-weight:650; color:#f5f5f5; margin-top:4px;">
+                <span id="incomingCallName">Seu amigo</span> está chamando você
+            </div>
+            <div style="font-size:12px; color:#b0b0b0; margin-top:6px; line-height:1.35;">Clique para entrar na chamada.</div>
+            <div style="display:flex; gap:8px; margin-top:12px;">
+                <button type="button" id="incomingCallAccept" style="flex:1; border:none; border-radius:999px; padding:9px 12px; font-size:13px; font-weight:650; cursor:pointer; background:linear-gradient(135deg,#4caf50,#8bc34a); color:#050509;">
+                    Entrar na chamada
+                </button>
+                <button type="button" id="incomingCallDismiss" style="flex:1; border:none; border-radius:999px; padding:9px 12px; font-size:13px; cursor:pointer; background:#1c1c24; color:#f5f5f5; border:1px solid #272727;">
+                    Agora não
+                </button>
+            </div>
+        </div>
+    </div>
+
     <script>
     (function () {
         var sidebar = document.getElementById('sidebar');
@@ -868,6 +888,126 @@ if (!empty($_SESSION['user_id'])) {
             });
         });
     }
+
+    // Popup global de chamada recebida (exceto ao assistir aula/live)
+    (function () {
+        try {
+            if (!document.body) return;
+            if (!<?= json_encode(!empty($_SESSION['user_id'])) ?>) return;
+
+            var path = window.location.pathname || '';
+            if (path.indexOf('/cursos/aulas/ver') === 0 || path.indexOf('/cursos/lives/ver') === 0) {
+                return;
+            }
+
+            var modal = document.getElementById('incomingCallModal');
+            var backdrop = document.getElementById('incomingCallBackdrop');
+            var acceptBtn = document.getElementById('incomingCallAccept');
+            var dismissBtn = document.getElementById('incomingCallDismiss');
+            var nameSpan = document.getElementById('incomingCallName');
+            if (!modal || !acceptBtn || !dismissBtn) return;
+
+            var currentIncoming = null; // { conversation_id, from_user_id, from_user_name }
+            var inFlight = false;
+            var snoozeUntil = 0;
+
+            function nowMs() {
+                return Date.now ? Date.now() : 0;
+            }
+
+            function playIncomingBeep() {
+                try {
+                    var AudioCtx = window.AudioContext || window.webkitAudioContext;
+                    if (!AudioCtx) return;
+                    var ctx = new AudioCtx();
+                    var o = ctx.createOscillator();
+                    var g = ctx.createGain();
+                    o.type = 'sine';
+                    o.frequency.value = 880;
+                    g.gain.value = 0.001;
+                    o.connect(g);
+                    g.connect(ctx.destination);
+                    o.start();
+                    g.gain.exponentialRampToValueAtTime(0.12, ctx.currentTime + 0.02);
+                    g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.18);
+                    o.stop(ctx.currentTime + 0.2);
+                    o.onended = function () {
+                        try { ctx.close(); } catch (e) {}
+                    };
+                } catch (e) {}
+            }
+
+            function showModal(data) {
+                currentIncoming = data;
+                if (nameSpan && data && data.from_user_name) {
+                    nameSpan.textContent = String(data.from_user_name);
+                }
+                modal.style.display = 'flex';
+                playIncomingBeep();
+            }
+
+            function hideModal() {
+                modal.style.display = 'none';
+            }
+
+            function pollIncoming() {
+                if (inFlight) return;
+                if (nowMs() && nowMs() < snoozeUntil) return;
+                inFlight = true;
+
+                fetch('/social/webrtc/incoming', {
+                    headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' },
+                    credentials: 'same-origin'
+                }).then(function (r) {
+                    return r.json();
+                }).then(function (json) {
+                    if (!json || !json.ok) return;
+
+                    if (!json.incoming) {
+                        currentIncoming = null;
+                        hideModal();
+                        return;
+                    }
+
+                    var cid = Number(json.conversation_id) || 0;
+                    var fromId = Number(json.from_user_id) || 0;
+                    if (!cid || !fromId) return;
+
+                    if (!currentIncoming || currentIncoming.conversation_id !== cid || currentIncoming.from_user_id !== fromId) {
+                        showModal({
+                            conversation_id: cid,
+                            from_user_id: fromId,
+                            from_user_name: String(json.from_user_name || 'Seu amigo')
+                        });
+                    }
+                }).catch(function () {
+                }).finally(function () {
+                    inFlight = false;
+                });
+            }
+
+            if (backdrop) {
+                backdrop.addEventListener('click', function () {
+                    hideModal();
+                    snoozeUntil = (nowMs() || 0) + 30000;
+                });
+            }
+            dismissBtn.addEventListener('click', function () {
+                hideModal();
+                snoozeUntil = (nowMs() || 0) + 30000;
+            });
+            acceptBtn.addEventListener('click', function () {
+                if (!currentIncoming || !currentIncoming.from_user_id) return;
+                hideModal();
+                var url = '/social/chat?user_id=' + encodeURIComponent(String(currentIncoming.from_user_id)) + '&join_call=1';
+                window.location.href = url;
+            });
+
+            // Loop simples
+            setInterval(pollIncoming, 2500);
+            pollIncoming();
+        } catch (e) {}
+    })();
     </script>
 </body>
 </html>

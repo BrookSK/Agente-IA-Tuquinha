@@ -195,6 +195,7 @@ $router->get('/social/chat/stream', 'SocialChatController@stream');
 
 $router->post('/social/webrtc/send', 'SocialWebRtcController@send');
 $router->get('/social/webrtc/poll', 'SocialWebRtcController@poll');
+$router->get('/social/webrtc/incoming', 'SocialWebRtcController@incoming');
 
 $router->get('/social/socket/token', 'SocialSocketController@token');
 
