@@ -30,8 +30,8 @@ function render_markdown_safe(string $text): string {
     // Agrupa blocos separados por linha em branco em parágrafos
     $escaped = str_replace(["\r\n", "\r"], "\n", $escaped);
 
-    // Remove separadores de linha tipo '---' (deixa apenas espaço em branco)
-    $escaped = preg_replace('/^\s*---+\s*$/m', '', $escaped);
+    // Linha separadora estilo ChatGPT: converte '---' em um token que vira <hr>
+    $escaped = preg_replace('/^\s*---+\s*$/m', '[[HR]]', $escaped);
 
     // Se o modelo mandar tudo com 1 quebra de linha, cria respiros automáticos
     // antes de títulos/listas para ficar mais legível (estilo ChatGPT)
@@ -43,6 +43,10 @@ function render_markdown_safe(string $text): string {
     foreach ($blocks as $b) {
         $b = trim((string)$b);
         if ($b === '') {
+            continue;
+        }
+        if ($b === '[[HR]]') {
+            $out .= '<hr class="tuq-chat-hr">';
             continue;
         }
         $b = nl2br($b);
@@ -57,6 +61,7 @@ function render_markdown_safe(string $text): string {
 .tuq-chat-md p:last-child { margin-bottom: 0; }
 .tuq-chat-md ul, .tuq-chat-md ol { margin: 0 0 0.9em 1.2em; padding: 0; }
 .tuq-chat-md li { margin: 0.15em 0; }
+.tuq-chat-md .tuq-chat-hr { border: none; border-top: 1px solid var(--border-subtle); margin: 14px 0; opacity: 0.8; }
 
 @media (max-width: 640px) {
     #chat-input-bar {
@@ -806,16 +811,21 @@ if (!empty($currentPlan) && is_array($currentPlan)) {
             out = out.replace(/^\-\s+/gm, '• ');
             out = out.replace(/\r\n|\r/g, '\n');
 
+            // Linha separadora estilo ChatGPT
+            out = out.replace(/^\s*---+\s*$/gm, '[[HR]]');
+
             // Cria respiros automáticos antes de títulos/listas
             out = out.replace(/\n(?=(?:\d+\.|•)\s)/g, '\n\n');
             out = out.replace(/\n(?=<strong>)/g, '\n\n');
 
-            // Remove separadores tipo '---' (converte em linhas em branco)
-            out = out.replace(/^\s*---+\s*$/gm, '');
-
             // Blocos separados por linha em branco viram parágrafos
             const blocks = out.split(/\n{2,}/g).map((b) => (b || '').trim()).filter(Boolean);
-            const html = blocks.map((b) => '<p>' + b.replace(/\n/g, '<br>') + '</p>').join('');
+            const html = blocks.map((b) => {
+                if (b === '[[HR]]') {
+                    return '<hr class="tuq-chat-hr">';
+                }
+                return '<p>' + b.replace(/\n/g, '<br>') + '</p>';
+            }).join('');
             return '<div class="tuq-chat-md">' + html + '</div>';
         };
 
