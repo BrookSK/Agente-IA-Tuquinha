@@ -228,6 +228,44 @@ class ChatController extends Controller
         ]);
     }
 
+    public function deleteConversation(): void
+    {
+        $sessionId = session_id();
+        $userId = !empty($_SESSION['user_id']) ? (int)$_SESSION['user_id'] : 0;
+
+        $conversationId = isset($_POST['conversation_id']) ? (int)$_POST['conversation_id'] : 0;
+        $projectId = isset($_POST['project_id']) ? (int)$_POST['project_id'] : 0;
+        $redirect = trim((string)($_POST['redirect'] ?? ''));
+
+        $deleted = false;
+        if ($userId > 0) {
+            $deleted = Conversation::deleteByIdForUser($conversationId, $userId);
+        } else {
+            $deleted = Conversation::deleteByIdForSession($conversationId, $sessionId);
+        }
+
+        if (!empty($_SESSION['current_conversation_id']) && (int)$_SESSION['current_conversation_id'] === $conversationId) {
+            unset($_SESSION['current_conversation_id']);
+        }
+
+        if ($deleted) {
+            $_SESSION['chat_error'] = null;
+        }
+
+        if ($redirect !== '') {
+            header('Location: ' . $redirect);
+            exit;
+        }
+
+        if ($projectId > 0) {
+            header('Location: /projetos/ver?id=' . $projectId);
+            exit;
+        }
+
+        header('Location: /historico');
+        exit;
+    }
+
     public function send(): void
     {
         $rawInput = (string)($_POST['message'] ?? '');

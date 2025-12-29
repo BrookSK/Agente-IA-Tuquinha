@@ -64,6 +64,21 @@
                             <span>Abrir chat</span>
                             <span>➜</span>
                         </a>
+
+                        <form method="post" action="/chat/excluir" style="display:inline; margin-left:6px;">
+                            <input type="hidden" name="conversation_id" value="<?= (int)$conv['id'] ?>">
+                            <input type="hidden" name="redirect" value="/historico">
+                            <button type="submit" title="Excluir chat" onclick="return confirm('Excluir este chat do histórico? Essa ação não pode ser desfeita.');" style="
+                                border:1px solid var(--border-subtle);
+                                background:var(--surface-subtle);
+                                color:#ff6b6b;
+                                width:34px; height:34px;
+                                border-radius:999px;
+                                cursor:pointer;
+                                font-size:14px;
+                                line-height:1;
+                            ">🗑</button>
+                        </form>
                     </div>
                 </div>
             <?php endforeach; ?>

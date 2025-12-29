@@ -284,7 +284,23 @@
                                         <?= $ago !== '' ? 'Última mensagem ' . htmlspecialchars($ago) : '' ?>
                                     </div>
                                 </a>
-                                <a href="/chat?c=<?= (int)($c['id'] ?? 0) ?>" style="flex:0 0 auto; border:1px solid var(--border-subtle); background:var(--surface-subtle); color:var(--text-primary); text-decoration:none; border-radius:999px; padding:8px 12px; font-size:12px; font-weight:650; white-space:nowrap;">Abrir chat</a>
+                                <div style="display:flex; gap:8px; align-items:center; flex:0 0 auto;">
+                                    <a href="/chat?c=<?= (int)($c['id'] ?? 0) ?>" style="flex:0 0 auto; border:1px solid var(--border-subtle); background:var(--surface-subtle); color:var(--text-primary); text-decoration:none; border-radius:999px; padding:8px 12px; font-size:12px; font-weight:650; white-space:nowrap;">Abrir chat</a>
+                                    <form method="post" action="/chat/excluir" style="display:inline; margin:0;">
+                                        <input type="hidden" name="conversation_id" value="<?= (int)($c['id'] ?? 0) ?>">
+                                        <input type="hidden" name="project_id" value="<?= (int)($project['id'] ?? 0) ?>">
+                                        <button type="submit" title="Excluir chat" onclick="return confirm('Excluir este chat do histórico do projeto? Essa ação não pode ser desfeita.');" style="
+                                            border:1px solid var(--border-subtle);
+                                            background:var(--surface-subtle);
+                                            color:#ff6b6b;
+                                            width:34px; height:34px;
+                                            border-radius:999px;
+                                            cursor:pointer;
+                                            font-size:14px;
+                                            line-height:1;
+                                        ">🗑</button>
+                                    </form>
+                                </div>
                             </div>
                         <?php endforeach; ?>
                     </div>

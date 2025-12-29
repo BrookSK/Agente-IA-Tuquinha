@@ -286,4 +286,97 @@ class Conversation
             }
         }
     }
+
+    public static function deleteByIdForUser(int $conversationId, int $userId): bool
+    {
+        if ($conversationId <= 0 || $userId <= 0) {
+            return false;
+        }
+
+        $pdo = Database::getConnection();
+        $pdo->beginTransaction();
+        try {
+            // ownership check
+            $stmt = $pdo->prepare('SELECT id FROM conversations WHERE id = :id AND user_id = :user_id LIMIT 1');
+            $stmt->execute([
+                'id' => $conversationId,
+                'user_id' => $userId,
+            ]);
+            $row = $stmt->fetch(PDO::FETCH_ASSOC);
+            if (!$row) {
+                $pdo->rollBack();
+                return false;
+            }
+
+            $stmt = $pdo->prepare('DELETE FROM conversation_settings WHERE conversation_id = :cid');
+            $stmt->execute(['cid' => $conversationId]);
+
+            $stmt = $pdo->prepare('DELETE FROM attachments WHERE conversation_id = :cid');
+            $stmt->execute(['cid' => $conversationId]);
+
+            $stmt = $pdo->prepare('DELETE FROM messages WHERE conversation_id = :cid');
+            $stmt->execute(['cid' => $conversationId]);
+
+            $stmt = $pdo->prepare('DELETE FROM conversations WHERE id = :cid AND user_id = :user_id LIMIT 1');
+            $stmt->execute([
+                'cid' => $conversationId,
+                'user_id' => $userId,
+            ]);
+
+            $pdo->commit();
+            return ((int)$stmt->rowCount()) > 0;
+        } catch (\Throwable $e) {
+            if ($pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+            return false;
+        }
+    }
+
+    public static function deleteByIdForSession(int $conversationId, string $sessionId): bool
+    {
+        $sessionId = trim($sessionId);
+        if ($conversationId <= 0 || $sessionId === '') {
+            return false;
+        }
+
+        $pdo = Database::getConnection();
+        $pdo->beginTransaction();
+        try {
+            // ownership check
+            $stmt = $pdo->prepare('SELECT id FROM conversations WHERE id = :id AND session_id = :session_id LIMIT 1');
+            $stmt->execute([
+                'id' => $conversationId,
+                'session_id' => $sessionId,
+            ]);
+            $row = $stmt->fetch(PDO::FETCH_ASSOC);
+            if (!$row) {
+                $pdo->rollBack();
+                return false;
+            }
+
+            $stmt = $pdo->prepare('DELETE FROM conversation_settings WHERE conversation_id = :cid');
+            $stmt->execute(['cid' => $conversationId]);
+
+            $stmt = $pdo->prepare('DELETE FROM attachments WHERE conversation_id = :cid');
+            $stmt->execute(['cid' => $conversationId]);
+
+            $stmt = $pdo->prepare('DELETE FROM messages WHERE conversation_id = :cid');
+            $stmt->execute(['cid' => $conversationId]);
+
+            $stmt = $pdo->prepare('DELETE FROM conversations WHERE id = :cid AND session_id = :session_id LIMIT 1');
+            $stmt->execute([
+                'cid' => $conversationId,
+                'session_id' => $sessionId,
+            ]);
+
+            $pdo->commit();
+            return ((int)$stmt->rowCount()) > 0;
+        } catch (\Throwable $e) {
+            if ($pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+            return false;
+        }
+    }
 }

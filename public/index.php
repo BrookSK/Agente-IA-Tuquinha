@@ -298,6 +298,8 @@ $router->post('/chat/audio', 'ChatController@sendAudio');
 
 $router->post('/chat/persona', 'ChatController@changePersona');
 
+$router->post('/chat/excluir', 'ChatController@deleteConversation');
+
 // Configurações por conversa (regras/memórias específicas do chat)
 $router->post('/chat/settings', 'ChatController@saveSettings');
 
