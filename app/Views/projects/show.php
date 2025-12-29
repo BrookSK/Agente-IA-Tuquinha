@@ -62,6 +62,26 @@
             justify-content: flex-end !important;
         }
     }
+
+    #projectPersonaPicker {
+        scrollbar-color: #111 #000;
+        scrollbar-width: thin;
+    }
+    #projectPersonaPicker::-webkit-scrollbar {
+        height: 10px;
+    }
+    #projectPersonaPicker::-webkit-scrollbar-track {
+        background: #000;
+        border-radius: 999px;
+    }
+    #projectPersonaPicker::-webkit-scrollbar-thumb {
+        background: #111;
+        border-radius: 999px;
+        border: 2px solid #000;
+    }
+    #projectPersonaPicker::-webkit-scrollbar-thumb:hover {
+        background: #1a1a1a;
+    }
 </style>
 <div style="max-width: 1100px; margin: 0 auto;">
     <div id="projectHeaderRow" style="display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:14px;">
@@ -206,9 +226,9 @@
                                                 </div>
                                             <?php endif; ?>
                                             <div style="min-width:0;">
-                                                <div style="font-weight:700; font-size:13px; line-height:1.2; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"><?= htmlspecialchars($pname) ?></div>
+                                                <div title="<?= htmlspecialchars($pname) ?>" style="font-weight:700; font-size:13px; line-height:1.2; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"><?= htmlspecialchars($pname) ?></div>
                                                 <?php if ($parea !== ''): ?>
-                                                    <div style="font-size:11px; color:var(--text-secondary); line-height:1.2; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"><?= htmlspecialchars($parea) ?></div>
+                                                    <div title="<?= htmlspecialchars($parea) ?>" style="font-size:11px; color:var(--text-secondary); line-height:1.2; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"><?= htmlspecialchars($parea) ?></div>
                                                 <?php endif; ?>
                                             </div>
                                         </button>
