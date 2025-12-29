@@ -30,6 +30,9 @@ function render_markdown_safe(string $text): string {
     // Agrupa blocos separados por linha em branco em parágrafos
     $escaped = str_replace(["\r\n", "\r"], "\n", $escaped);
 
+    // Remove separadores de linha tipo '---' (deixa apenas espaço em branco)
+    $escaped = preg_replace('/^\s*---+\s*$/m', '', $escaped);
+
     // Se o modelo mandar tudo com 1 quebra de linha, cria respiros automáticos
     // antes de títulos/listas para ficar mais legível (estilo ChatGPT)
     $escaped = preg_replace("/\n(?=(?:\d+\.|•)\s)/u", "\n\n", $escaped);
@@ -806,6 +809,9 @@ if (!empty($currentPlan) && is_array($currentPlan)) {
             // Cria respiros automáticos antes de títulos/listas
             out = out.replace(/\n(?=(?:\d+\.|•)\s)/g, '\n\n');
             out = out.replace(/\n(?=<strong>)/g, '\n\n');
+
+            // Remove separadores tipo '---' (converte em linhas em branco)
+            out = out.replace(/^\s*---+\s*$/gm, '');
 
             // Blocos separados por linha em branco viram parágrafos
             const blocks = out.split(/\n{2,}/g).map((b) => (b || '').trim()).filter(Boolean);

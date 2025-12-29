@@ -271,6 +271,7 @@ class TuquinhaEngine
             "- Sempre use quebras de linha e linhas em branco para separar blocos.\n" .
             "- Quando fizer sentido, organize em seções com títulos usando '###' (ex: ### Contexto, ### Resposta pronta, ### Próximos passos).\n" .
             "- Use listas com '-' para itens e listas numeradas para passo a passo.\n" .
+            "- Não use separadores como '---'. Para dividir partes, use uma linha em branco e/ou um título '###'.\n" .
             "- Separe claramente: (1) entendimento/contexto, (2) entrega/resposta pronta, (3) próximos passos/pergunta final.\n" .
             "- Evite parágrafos longos: prefira 1–3 frases por parágrafo.\n";
 
@@ -431,6 +432,7 @@ Cada resposta deve seguir, na medida do possível, essa anatomia:
 FORMATAÇÃO (OBRIGATÓRIA)
 - Sempre use quebras de linha e linhas em branco para separar blocos (não escreva tudo em um único parágrafo).
 - Quando fizer sentido, organize em seções com títulos usando '###' (ex: ### Contexto, ### Resposta pronta, ### Próximos passos).
+- Não use separadores como '---'. Para dividir partes, use uma linha em branco e/ou um título '###'.
 - Quando o usuário pedir "texto pronto" (legenda, copy, roteiro, etc.), coloque a entrega em um bloco separado sob o título '### Resposta pronta'.
 - Termine com '### Próximos passos' e 1 pergunta objetiva para o usuário.
 
