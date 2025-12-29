@@ -65,37 +65,37 @@
 </style>
 <div style="max-width: 1100px; margin: 0 auto;">
     <div id="projectHeaderRow" style="display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:14px;">
-        <a href="/projetos" style="color:#b0b0b0; font-size:12px; text-decoration:none; display:inline-flex; align-items:center; gap:8px;">
+        <a href="/projetos" style="color:var(--text-secondary); font-size:12px; text-decoration:none; display:inline-flex; align-items:center; gap:8px;">
             <span style="font-size:14px;">←</span>
             <span>Todos os projetos</span>
         </a>
 
-        <a href="/chat?new=1&project_id=<?= (int)($project['id'] ?? 0) ?>" style="display:inline-flex; align-items:center; gap:8px; border:1px solid #272727; border-radius:10px; padding:8px 12px; background:#111118; color:#f5f5f5; font-weight:600; font-size:13px; text-decoration:none; white-space:nowrap;">
-            <span style="display:inline-flex; width:18px; height:18px; align-items:center; justify-content:center; border-radius:6px; border:1px solid #272727; background:#050509;">+</span>
+        <a href="/chat?new=1&project_id=<?= (int)($project['id'] ?? 0) ?>" style="display:inline-flex; align-items:center; gap:8px; border:1px solid var(--border-subtle); border-radius:10px; padding:8px 12px; background:var(--surface-card); color:var(--text-primary); font-weight:600; font-size:13px; text-decoration:none; white-space:nowrap;">
+            <span style="display:inline-flex; width:18px; height:18px; align-items:center; justify-content:center; border-radius:6px; border:1px solid var(--border-subtle); background:var(--surface-subtle);">+</span>
             <span>Novo chat</span>
         </a>
     </div>
 
 <div id="projectMemoryModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.65); align-items:center; justify-content:center; padding:20px; z-index:60;">
-    <div style="width:min(760px, 100%); background:#111118; border:1px solid #272727; border-radius:16px; padding:16px;">
+    <div style="width:min(760px, 100%); background:var(--surface-card); border:1px solid var(--border-subtle); border-radius:16px; padding:16px;">
         <div style="font-weight:700; font-size:15px; margin-bottom:6px;">Editar memória do projeto</div>
-        <div style="color:#b0b0b0; font-size:12px; line-height:1.35; margin-bottom:10px;">
+        <div style="color:var(--text-secondary); font-size:12px; line-height:1.35; margin-bottom:10px;">
             A memória ajuda o Tuquinha a entender o contexto permanente do projeto.
         </div>
-        <textarea id="projectMemoryInput" rows="8" style="width:100%; padding:10px 12px; border-radius:12px; border:1px solid #272727; background:#050509; color:#f5f5f5; font-size:13px; resize:vertical; outline:none;"><?= htmlspecialchars((string)($project['description'] ?? '')) ?></textarea>
+        <textarea id="projectMemoryInput" rows="8" style="width:100%; padding:10px 12px; border-radius:12px; border:1px solid var(--border-subtle); background:var(--surface-subtle); color:var(--text-primary); font-size:13px; resize:vertical; outline:none;"><?= htmlspecialchars((string)($project['description'] ?? '')) ?></textarea>
         <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:12px;">
-            <button type="button" id="cancelProjectMemory" style="border:1px solid #272727; border-radius:10px; padding:8px 12px; background:#0a0a10; color:#f5f5f5; font-weight:600; cursor:pointer;">Cancelar</button>
+            <button type="button" id="cancelProjectMemory" style="border:1px solid var(--border-subtle); border-radius:10px; padding:8px 12px; background:var(--surface-subtle); color:var(--text-primary); font-weight:600; cursor:pointer;">Cancelar</button>
             <button type="button" id="saveProjectMemory" style="border:none; border-radius:10px; padding:8px 12px; background:linear-gradient(135deg,#e53935,#ff6f60); color:#050509; font-weight:700; cursor:pointer;">Salvar</button>
         </div>
     </div>
 </div>
 
 <div id="projectRenameModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.65); align-items:center; justify-content:center; padding:20px; z-index:60;">
-    <div style="width:min(520px, 100%); background:#111118; border:1px solid #272727; border-radius:16px; padding:16px;">
+    <div style="width:min(520px, 100%); background:var(--surface-card); border:1px solid var(--border-subtle); border-radius:16px; padding:16px;">
         <div style="font-weight:700; font-size:15px; margin-bottom:10px;">Renomear projeto</div>
-        <input id="projectRenameInput" type="text" value="<?= htmlspecialchars((string)($project['name'] ?? '')) ?>" style="width:100%; padding:10px 12px; border-radius:12px; border:1px solid #272727; background:#050509; color:#f5f5f5; font-size:13px; outline:none;" />
+        <input id="projectRenameInput" type="text" value="<?= htmlspecialchars((string)($project['name'] ?? '')) ?>" style="width:100%; padding:10px 12px; border-radius:12px; border:1px solid var(--border-subtle); background:var(--surface-subtle); color:var(--text-primary); font-size:13px; outline:none;" />
         <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:12px;">
-            <button type="button" id="cancelProjectRename" style="border:1px solid #272727; border-radius:10px; padding:8px 12px; background:#0a0a10; color:#f5f5f5; font-weight:600; cursor:pointer;">Cancelar</button>
+            <button type="button" id="cancelProjectRename" style="border:1px solid var(--border-subtle); border-radius:10px; padding:8px 12px; background:var(--surface-subtle); color:var(--text-primary); font-weight:600; cursor:pointer;">Cancelar</button>
             <button type="button" id="saveProjectRename" style="border:none; border-radius:10px; padding:8px 12px; background:linear-gradient(135deg,#e53935,#ff6f60); color:#050509; font-weight:700; cursor:pointer;">Salvar</button>
         </div>
     </div>
@@ -106,23 +106,23 @@
             <div>
                 <h1 id="projectTitle" style="font-size: 28px; margin: 0 0 6px 0;"><?= htmlspecialchars((string)($project['name'] ?? '')) ?></h1>
                 <?php if (!empty($project['description'])): ?>
-                    <div style="color:#b0b0b0; font-size:13px; line-height:1.35;">
+                    <div style="color:var(--text-secondary); font-size:13px; line-height:1.35;">
                         <?= nl2br(htmlspecialchars((string)$project['description'])) ?>
                     </div>
                 <?php else: ?>
-                    <div style="color:#8d8d8d; font-size:13px; line-height:1.35;">Sem descrição.</div>
+                    <div style="color:var(--text-secondary); font-size:13px; line-height:1.35;">Sem descrição.</div>
                 <?php endif; ?>
             </div>
 
-            <div id="projectHeaderActions" style="display:flex; gap:10px; align-items:center; color:#8d8d8d;">
+            <div id="projectHeaderActions" style="display:flex; gap:10px; align-items:center; color:var(--text-secondary);">
                 <div style="position:relative;">
-                    <button type="button" id="projectEllipsisBtn" style="border:none; background:transparent; color:#8d8d8d; font-size:18px; line-height:1; cursor:pointer; padding:2px 6px;">⋯</button>
-                    <div id="projectEllipsisMenu" style="display:none; position:absolute; right:0; top:28px; background:#111118; border:1px solid #272727; border-radius:12px; min-width:220px; padding:6px; z-index:20;">
-                        <button type="button" id="projectRenameBtn" style="width:100%; text-align:left; padding:10px 10px; border:none; background:transparent; color:#f5f5f5; cursor:pointer; border-radius:10px;">Renomear</button>
+                    <button type="button" id="projectEllipsisBtn" style="border:none; background:transparent; color:var(--text-secondary); font-size:18px; line-height:1; cursor:pointer; padding:2px 6px;">⋯</button>
+                    <div id="projectEllipsisMenu" style="display:none; position:absolute; right:0; top:28px; background:var(--surface-card); border:1px solid var(--border-subtle); border-radius:12px; min-width:220px; padding:6px; z-index:20;">
+                        <button type="button" id="projectRenameBtn" style="width:100%; text-align:left; padding:10px 10px; border:none; background:transparent; color:var(--text-primary); cursor:pointer; border-radius:10px;">Renomear</button>
                         <button type="button" id="projectDeleteBtn" style="width:100%; text-align:left; padding:10px 10px; border:none; background:transparent; color:#ffbaba; cursor:pointer; border-radius:10px;">Excluir</button>
                     </div>
                 </div>
-                <button type="button" id="projectFavoriteBtn" aria-pressed="<?= !empty($isFavorite) ? 'true' : 'false' ?>" style="border:none; background:transparent; color:#8d8d8d; font-size:18px; line-height:1; cursor:pointer; padding:2px 6px;">
+                <button type="button" id="projectFavoriteBtn" aria-pressed="<?= !empty($isFavorite) ? 'true' : 'false' ?>" style="border:none; background:transparent; color:var(--text-secondary); font-size:18px; line-height:1; cursor:pointer; padding:2px 6px;">
                     <?= !empty($isFavorite) ? '★' : '☆' ?>
                 </button>
             </div>
@@ -131,7 +131,7 @@
 
     <div id="projectPageGrid" style="display:grid; grid-template-columns:minmax(0, 1fr) 360px; gap:14px; align-items:start;">
         <div style="min-width:0;">
-            <div style="background:#111118; border:1px solid #272727; border-radius:14px; padding:14px;">
+            <div style="background:var(--surface-card); border:1px solid var(--border-subtle); border-radius:14px; padding:14px;">
                 <?php
                     $composerModel = (string)($_SESSION['chat_model'] ?? '');
                     if ($composerModel === '') {
@@ -162,11 +162,11 @@
                 ?>
                 <form id="projectComposerForm" action="/projetos/chat/criar" method="post" style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
                     <input type="hidden" name="project_id" value="<?= (int)($project['id'] ?? 0) ?>">
-                    <div style="flex:1; background:#0a0a10; border:1px solid #272727; border-radius:14px; padding:14px; color:#8d8d8d; font-size:13px;">
+                    <div style="flex:1; background:var(--surface-subtle); border:1px solid var(--border-subtle); border-radius:14px; padding:14px; color:var(--text-secondary); font-size:13px;">
                         <?php if (!empty($planAllowsPersonalities) && !empty($personalities) && is_array($personalities)): ?>
                             <div style="display:flex; justify-content:space-between; align-items:center; gap:10px; margin-bottom:10px; flex-wrap:wrap;">
-                                <div style="font-size:12px; color:#8d8d8d; white-space:nowrap;">Tuquinha</div>
-                                <select name="persona_id" style="flex:1; min-width:220px; max-width:100%; padding:10px 10px; border-radius:12px; border:1px solid #272727; background:#050509; color:#f5f5f5; font-size:12px; outline:none;">
+                                <div style="font-size:12px; color:var(--text-secondary); white-space:nowrap;">Tuquinha</div>
+                                <select name="persona_id" style="flex:1; min-width:220px; max-width:100%; padding:10px 10px; border-radius:12px; border:1px solid var(--border-subtle); background:var(--surface-card); color:var(--text-primary); font-size:12px; outline:none;">
                                     <?php
                                         $defaultPersonaId = !empty($_SESSION['default_persona_id']) ? (int)$_SESSION['default_persona_id'] : 0;
                                     ?>
@@ -183,18 +183,18 @@
                                 </select>
                             </div>
                         <?php endif; ?>
-                        <textarea name="message" id="projectComposerMessage" placeholder="Responder..." rows="3" style="width:100%; border:none; outline:none; background:transparent; color:#f5f5f5; font-size:13px; resize:none; min-height:46px;"></textarea>
+                        <textarea name="message" id="projectComposerMessage" placeholder="Responder..." rows="3" style="width:100%; border:none; outline:none; background:transparent; color:var(--text-primary); font-size:13px; resize:none; min-height:46px;"></textarea>
                         <div style="display:flex; justify-content:flex-end; align-items:center; margin-top:10px;">
                             <button type="submit" style="display:inline-flex; align-items:center; justify-content:center; width:34px; height:34px; border-radius:10px; border:1px solid #2e7d32; background:#102312; color:#c8ffd4; text-decoration:none; font-weight:700; cursor:pointer;">↑</button>
                         </div>
-                        <div style="color:#8d8d8d; font-size:12px; white-space:nowrap; margin-top:8px;"><?= htmlspecialchars($composerModel) ?> ✓</div>
+                        <div style="color:var(--text-secondary); font-size:12px; white-space:nowrap; margin-top:8px;"><?= htmlspecialchars($composerModel) ?> ✓</div>
                     </div>
                 </form>
             </div>
 
-            <div style="margin-top:12px; background:#111118; border:1px solid #272727; border-radius:14px; padding:0; overflow:hidden;">
+            <div style="margin-top:12px; background:var(--surface-card); border:1px solid var(--border-subtle); border-radius:14px; padding:0; overflow:hidden;">
                 <?php if (empty($conversations)): ?>
-                    <div style="padding:14px; color:#b0b0b0; font-size:13px;">Nenhuma conversa neste projeto ainda.</div>
+                    <div style="padding:14px; color:var(--text-secondary); font-size:13px;">Nenhuma conversa neste projeto ainda.</div>
                 <?php else: ?>
                     <div style="display:flex; flex-direction:column;">
                         <?php foreach ($conversations as $c): ?>
@@ -205,14 +205,14 @@
                                 }
                                 $lastAt = $c['last_message_at'] ?? ($c['created_at'] ?? null);
                                 $ago = $timeAgo(is_string($lastAt) ? $lastAt : null);
-                                $personaName = trim((string)($c['persona_name'] ?? ''));
+                                $personaName = !empty($planAllowsPersonalities) ? trim((string)($c['persona_name'] ?? '')) : '';
                                 $displayTitle = $personaName !== '' ? ($title . ' — ' . $personaName) : $title;
                             ?>
-                            <a href="/chat?c=<?= (int)($c['id'] ?? 0) ?>" style="display:block; padding:12px 14px; border-top:1px solid #1f1f1f; text-decoration:none; color:#f5f5f5;">
+                            <a href="/chat?c=<?= (int)($c['id'] ?? 0) ?>" style="display:block; padding:12px 14px; border-top:1px solid var(--border-subtle); text-decoration:none; color:var(--text-primary);">
                                 <div style="font-size:13px; font-weight:650; margin-bottom:3px;">
                                     <?= htmlspecialchars($displayTitle) ?>
                                 </div>
-                                <div style="font-size:11px; color:#8d8d8d;">
+                                <div style="font-size:11px; color:var(--text-secondary);">
                                     <?= $ago !== '' ? 'Última mensagem ' . htmlspecialchars($ago) : '' ?>
                                 </div>
                             </a>
@@ -225,26 +225,26 @@
         <div style="min-width:0;">
             <div style="display:flex; flex-direction:column; gap:12px;">
                 <?php if (!empty($members) || !empty($pendingInvites)): ?>
-                <div style="background:#111118; border:1px solid #272727; border-radius:14px; padding:14px;">
+                <div style="background:var(--surface-card); border:1px solid var(--border-subtle); border-radius:14px; padding:14px;">
                     <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:10px;">
                         <div style="font-weight:650;">Compartilhar</div>
-                        <div style="color:#8d8d8d; font-size:12px;">Somente admin</div>
+                        <div style="color:var(--text-secondary); font-size:12px;">Somente admin</div>
                     </div>
 
                     <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
-                        <input id="inviteEmail" type="email" placeholder="Email do colaborador" style="flex:1 1 220px; min-width:180px; max-width:100%; padding:10px 12px; border-radius:12px; border:1px solid #272727; background:#050509; color:#f5f5f5; font-size:13px; outline:none;" />
-                        <select id="inviteRole" style="flex:0 0 auto; min-width:120px; max-width:100%; padding:10px 10px; border-radius:12px; border:1px solid #272727; background:#050509; color:#f5f5f5; font-size:13px; outline:none;">
+                        <input id="inviteEmail" type="email" placeholder="Email do colaborador" style="flex:1 1 220px; min-width:180px; max-width:100%; padding:10px 12px; border-radius:12px; border:1px solid var(--border-subtle); background:var(--surface-subtle); color:var(--text-primary); font-size:13px; outline:none;" />
+                        <select id="inviteRole" style="flex:0 0 auto; min-width:120px; max-width:100%; padding:10px 10px; border-radius:12px; border:1px solid var(--border-subtle); background:var(--surface-subtle); color:var(--text-primary); font-size:13px; outline:none;">
                             <option value="read">Leitura</option>
                             <option value="write">Escrita</option>
                             <option value="admin">Administrador</option>
                         </select>
                         <button type="button" id="sendInviteBtn" style="flex:0 0 auto; max-width:100%; border:none; border-radius:12px; padding:10px 12px; background:linear-gradient(135deg,#e53935,#ff6f60); color:#050509; font-weight:700; cursor:pointer;">Convidar</button>
                     </div>
-                    <div id="inviteFeedback" style="margin-top:8px; color:#8d8d8d; font-size:12px; display:none;"></div>
+                    <div id="inviteFeedback" style="margin-top:8px; color:var(--text-secondary); font-size:12px; display:none;"></div>
 
                     <?php if (!empty($pendingInvites)): ?>
                         <div style="margin-top:12px;">
-                            <div style="font-size:12px; color:#b0b0b0; margin-bottom:6px;">Convites pendentes</div>
+                            <div style="font-size:12px; color:var(--text-secondary); margin-bottom:6px;">Convites pendentes</div>
                             <div style="display:flex; flex-direction:column; gap:8px;">
                                 <?php foreach ($pendingInvites as $inv): ?>
                                     <?php
@@ -253,12 +253,12 @@
                                         if ($rawRole === 'write') { $roleLabel = 'Escrita'; }
                                         if ($rawRole === 'admin') { $roleLabel = 'Administrador'; }
                                     ?>
-                                    <div style="display:flex; justify-content:space-between; align-items:center; gap:10px; border:1px solid #272727; border-radius:12px; padding:10px 12px; background:#0a0a10; flex-wrap:wrap;">
+                                    <div style="display:flex; justify-content:space-between; align-items:center; gap:10px; border:1px solid var(--border-subtle); border-radius:12px; padding:10px 12px; background:var(--surface-subtle); flex-wrap:wrap;">
                                         <div style="min-width:0;">
-                                            <div style="font-size:12px; color:#f5f5f5; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"><?= htmlspecialchars((string)($inv['invited_email'] ?? '')) ?></div>
-                                            <div style="font-size:11px; color:#8d8d8d;">Permissão: <?= htmlspecialchars($roleLabel) ?></div>
+                                            <div style="font-size:12px; color:var(--text-primary); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"><?= htmlspecialchars((string)($inv['invited_email'] ?? '')) ?></div>
+                                            <div style="font-size:11px; color:var(--text-secondary);">Permissão: <?= htmlspecialchars($roleLabel) ?></div>
                                         </div>
-                                        <button type="button" class="revokeInviteBtn" data-invite-id="<?= (int)($inv['id'] ?? 0) ?>" style="border:1px solid #272727; background:#050509; color:#ffbaba; border-radius:10px; padding:8px 10px; cursor:pointer;">Revogar</button>
+                                        <button type="button" class="revokeInviteBtn" data-invite-id="<?= (int)($inv['id'] ?? 0) ?>" style="border:1px solid var(--border-subtle); background:var(--surface-card); color:#ff6b6b; border-radius:10px; padding:8px 10px; cursor:pointer;">Revogar</button>
                                     </div>
                                 <?php endforeach; ?>
                             </div>
@@ -267,7 +267,7 @@
 
                     <?php if (!empty($members)): ?>
                         <div style="margin-top:12px;">
-                            <div style="font-size:12px; color:#b0b0b0; margin-bottom:6px;">Membros</div>
+                            <div style="font-size:12px; color:var(--text-secondary); margin-bottom:6px;">Membros</div>
                             <div style="display:flex; flex-direction:column; gap:8px;">
                                 <?php foreach ($members as $m): ?>
                                     <?php
@@ -277,18 +277,18 @@
                                         $role = (string)($m['role'] ?? 'read');
                                         $uid = (int)($m['user_id'] ?? 0);
                                     ?>
-                                    <div style="display:flex; justify-content:space-between; align-items:center; gap:10px; border:1px solid #272727; border-radius:12px; padding:10px 12px; background:#0a0a10;">
+                                    <div style="display:flex; justify-content:space-between; align-items:center; gap:10px; border:1px solid var(--border-subtle); border-radius:12px; padding:10px 12px; background:var(--surface-subtle);">
                                         <div style="min-width:0;">
-                                            <div style="font-size:12px; color:#f5f5f5; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"><?= htmlspecialchars($label) ?></div>
-                                            <div style="font-size:11px; color:#8d8d8d; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"><?= htmlspecialchars((string)($m['user_email'] ?? '')) ?></div>
+                                            <div style="font-size:12px; color:var(--text-primary); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"><?= htmlspecialchars($label) ?></div>
+                                            <div style="font-size:11px; color:var(--text-secondary); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"><?= htmlspecialchars((string)($m['user_email'] ?? '')) ?></div>
                                         </div>
                                         <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
-                                            <select class="memberRoleSelect" data-user-id="<?= $uid ?>" style="padding:8px 10px; border-radius:10px; border:1px solid #272727; background:#050509; color:#f5f5f5; font-size:12px; outline:none;">
+                                            <select class="memberRoleSelect" data-user-id="<?= $uid ?>" style="padding:8px 10px; border-radius:10px; border:1px solid var(--border-subtle); background:var(--surface-card); color:var(--text-primary); font-size:12px; outline:none;">
                                                 <option value="read" <?= $role === 'read' ? 'selected' : '' ?>>Leitura</option>
                                                 <option value="write" <?= $role === 'write' ? 'selected' : '' ?>>Escrita</option>
                                                 <option value="admin" <?= $role === 'admin' ? 'selected' : '' ?>>Administrador</option>
                                             </select>
-                                            <button type="button" class="removeMemberBtn" data-user-id="<?= $uid ?>" style="border:1px solid #272727; background:#050509; color:#ffbaba; border-radius:10px; padding:8px 10px; cursor:pointer;">Remover</button>
+                                            <button type="button" class="removeMemberBtn" data-user-id="<?= $uid ?>" style="border:1px solid var(--border-subtle); background:var(--surface-card); color:#ff6b6b; border-radius:10px; padding:8px 10px; cursor:pointer;">Remover</button>
                                         </div>
                                     </div>
                                 <?php endforeach; ?>
@@ -300,19 +300,19 @@
                 <?php endif; ?>
 
                 <?php if (!empty($projectMemoryItems)): ?>
-                <div style="background:#111118; border:1px solid #272727; border-radius:14px; padding:14px;">
+                <div style="background:var(--surface-card); border:1px solid var(--border-subtle); border-radius:14px; padding:14px;">
                     <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:10px;">
                         <div style="font-weight:650;">Memórias automáticas</div>
-                        <div style="color:#8d8d8d; font-size:12px;">Somente admin</div>
+                        <div style="color:var(--text-secondary); font-size:12px;">Somente admin</div>
                     </div>
                     <div style="display:flex; flex-direction:column; gap:10px;">
                         <?php foreach ($projectMemoryItems as $it): ?>
                             <?php $iid = (int)($it['id'] ?? 0); ?>
-                            <div style="border:1px solid #272727; border-radius:12px; padding:10px 12px; background:#0a0a10;">
-                                <textarea class="pmiText" data-item-id="<?= $iid ?>" style="width:100%; resize:vertical; min-height:44px; padding:10px 12px; border-radius:10px; border:1px solid #272727; background:#050509; color:#f5f5f5; font-size:12px; outline:none;" spellcheck="false"><?= htmlspecialchars((string)($it['content'] ?? '')) ?></textarea>
+                            <div style="border:1px solid var(--border-subtle); border-radius:12px; padding:10px 12px; background:var(--surface-subtle);">
+                                <textarea class="pmiText" data-item-id="<?= $iid ?>" style="width:100%; resize:vertical; min-height:44px; padding:10px 12px; border-radius:10px; border:1px solid var(--border-subtle); background:var(--surface-card); color:var(--text-primary); font-size:12px; outline:none;" spellcheck="false"><?= htmlspecialchars((string)($it['content'] ?? '')) ?></textarea>
                                 <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:8px;">
-                                    <button type="button" class="pmiSave" data-item-id="<?= $iid ?>" style="border:1px solid #272727; background:#050509; color:#c8ffd4; border-radius:10px; padding:8px 10px; cursor:pointer;">Salvar</button>
-                                    <button type="button" class="pmiDelete" data-item-id="<?= $iid ?>" style="border:1px solid #272727; background:#050509; color:#ffbaba; border-radius:10px; padding:8px 10px; cursor:pointer;">Excluir</button>
+                                    <button type="button" class="pmiSave" data-item-id="<?= $iid ?>" style="border:1px solid var(--border-subtle); background:var(--surface-card); color:#2e7d32; border-radius:10px; padding:8px 10px; cursor:pointer;">Salvar</button>
+                                    <button type="button" class="pmiDelete" data-item-id="<?= $iid ?>" style="border:1px solid var(--border-subtle); background:var(--surface-card); color:#ff6b6b; border-radius:10px; padding:8px 10px; cursor:pointer;">Excluir</button>
                                 </div>
                             </div>
                         <?php endforeach; ?>
@@ -320,26 +320,26 @@
                 </div>
                 <?php endif; ?>
 
-                <div style="background:#111118; border:1px solid #272727; border-radius:14px; padding:14px;">
+                <div style="background:var(--surface-card); border:1px solid var(--border-subtle); border-radius:14px; padding:14px;">
                     <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:6px;">
                         <div style="font-weight:650;">Instruções</div>
-                        <a href="#" id="openProjectInstructions" style="color:#8d8d8d; text-decoration:none;" title="Editar">✎</a>
+                        <a href="#" id="openProjectInstructions" style="color:var(--text-secondary); text-decoration:none;" title="Editar">✎</a>
                     </div>
-                    <div style="color:#b0b0b0; font-size:12px; line-height:1.35;">
+                    <div style="color:var(--text-secondary); font-size:12px; line-height:1.35;">
                         Configure instruções para orientar as respostas do Tuquinha neste projeto.
                     </div>
                 </div>
 
-                <div style="background:#111118; border:1px solid #272727; border-radius:14px; padding:14px;">
+                <div style="background:var(--surface-card); border:1px solid var(--border-subtle); border-radius:14px; padding:14px;">
                     <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:10px;">
                         <div style="font-weight:650;">Arquivos</div>
                         <div style="position:relative;">
-                            <button type="button" id="filesPlusBtn" style="border:none; border-radius:10px; padding:6px 10px; background:#0a0a10; color:#f5f5f5; font-weight:650; cursor:pointer; border:1px solid #272727;">+</button>
-                            <div id="filesPlusMenu" style="display:none; position:absolute; right:0; top:40px; background:#111118; border:1px solid #272727; border-radius:12px; min-width:240px; padding:6px; z-index:10;">
-                                <button type="button" data-action="upload" style="width:100%; text-align:left; padding:10px 10px; border:none; background:transparent; color:#f5f5f5; cursor:pointer; border-radius:10px;">Carregar do aparelho</button>
-                                <button type="button" data-action="text" style="width:100%; text-align:left; padding:10px 10px; border:none; background:transparent; color:#f5f5f5; cursor:pointer; border-radius:10px;">Adicionar conteúdo de texto</button>
-                                <button type="button" style="width:100%; text-align:left; padding:10px 10px; border:none; background:transparent; color:#8d8d8d; cursor:not-allowed; border-radius:10px;" disabled>GitHub</button>
-                                <button type="button" style="width:100%; text-align:left; padding:10px 10px; border:none; background:transparent; color:#8d8d8d; cursor:not-allowed; border-radius:10px;" disabled>Google Drive</button>
+                            <button type="button" id="filesPlusBtn" style="border:none; border-radius:10px; padding:6px 10px; background:var(--surface-subtle); color:var(--text-primary); font-weight:650; cursor:pointer; border:1px solid var(--border-subtle);">+</button>
+                            <div id="filesPlusMenu" style="display:none; position:absolute; right:0; top:40px; background:var(--surface-card); border:1px solid var(--border-subtle); border-radius:12px; min-width:240px; padding:6px; z-index:10;">
+                                <button type="button" data-action="upload" style="width:100%; text-align:left; padding:10px 10px; border:none; background:transparent; color:var(--text-primary); cursor:pointer; border-radius:10px;">Carregar do aparelho</button>
+                                <button type="button" data-action="text" style="width:100%; text-align:left; padding:10px 10px; border:none; background:transparent; color:var(--text-primary); cursor:pointer; border-radius:10px;">Adicionar conteúdo de texto</button>
+                                <button type="button" style="width:100%; text-align:left; padding:10px 10px; border:none; background:transparent; color:var(--text-secondary); cursor:not-allowed; border-radius:10px;" disabled>GitHub</button>
+                                <button type="button" style="width:100%; text-align:left; padding:10px 10px; border:none; background:transparent; color:var(--text-secondary); cursor:not-allowed; border-radius:10px;" disabled>Google Drive</button>
                             </div>
                         </div>
                     </div>
@@ -361,14 +361,14 @@
                 <input type="hidden" name="folder_path" value="/base">
                 <div style="display:flex; gap:8px; align-items:flex-end; flex-wrap:wrap;">
                     <div style="flex:2; min-width:220px;">
-                        <label style="display:block; font-size:12px; color:#b0b0b0; margin-bottom:4px;">Arquivo</label>
-                        <input type="file" name="file" required style="width:100%; padding:7px 9px; border-radius:8px; border:1px solid #272727; background:#050509; color:#f5f5f5; font-size:13px;">
+                        <label style="display:block; font-size:12px; color:var(--text-secondary); margin-bottom:4px;">Arquivo</label>
+                        <input type="file" name="file" required style="width:100%; padding:7px 9px; border-radius:8px; border:1px solid var(--border-subtle); background:var(--surface-subtle); color:var(--text-primary); font-size:13px;">
                     </div>
                     <div>
                         <button type="submit" style="border:none; border-radius:999px; padding:9px 14px; background:linear-gradient(135deg,#e53935,#ff6f60); color:#050509; font-weight:600; font-size:13px; cursor:pointer;">Enviar</button>
                     </div>
                 </div>
-                <div style="background:#0a0a10; border:1px solid #272727; border-radius:12px; padding:10px 12px; font-size:12px; line-height:1.35; color:#b0b0b0;">
+                <div style="background:var(--surface-subtle); border:1px solid var(--border-subtle); border-radius:12px; padding:10px 12px; font-size:12px; line-height:1.35; color:var(--text-secondary);">
                     Arquivos de texto/código (txt, md, json, php, js, etc.) serão usados como contexto automaticamente.
                 </div>
                 <div style="background:#1a0c10; border:1px solid #a33; border-radius:12px; padding:10px 12px; font-size:12px; line-height:1.35; color:#ffbaba;">
@@ -386,16 +386,16 @@
                 </div>
                 <div style="display:flex; gap:8px; flex-wrap:wrap;">
                     <div style="flex:2; min-width:220px;">
-                        <label style="display:block; font-size:12px; color:#b0b0b0; margin-bottom:4px;">Nome do arquivo</label>
-                        <input type="text" name="file_name" placeholder="ex: briefing.md" required style="width:100%; padding:7px 9px; border-radius:8px; border:1px solid #272727; background:#050509; color:#f5f5f5; font-size:13px;">
+                        <label style="display:block; font-size:12px; color:var(--text-secondary); margin-bottom:4px;">Nome do arquivo</label>
+                        <input type="text" name="file_name" placeholder="ex: briefing.md" required style="width:100%; padding:7px 9px; border-radius:8px; border:1px solid var(--border-subtle); background:var(--surface-subtle); color:var(--text-primary); font-size:13px;">
                     </div>
                 </div>
                 <div>
-                    <label style="display:block; font-size:12px; color:#b0b0b0; margin-bottom:4px;">Texto</label>
-                    <textarea name="content" rows="6" required style="width:100%; padding:8px 10px; border-radius:10px; border:1px solid #272727; background:#050509; color:#f5f5f5; font-size:13px; resize:vertical; min-height:120px;"></textarea>
+                    <label style="display:block; font-size:12px; color:var(--text-secondary); margin-bottom:4px;">Texto</label>
+                    <textarea name="content" rows="6" required style="width:100%; padding:8px 10px; border-radius:10px; border:1px solid var(--border-subtle); background:var(--surface-subtle); color:var(--text-primary); font-size:13px; resize:vertical; min-height:120px;"></textarea>
                 </div>
                 <div style="display:flex; justify-content:flex-end;">
-                    <button type="submit" style="border:none; border-radius:999px; padding:9px 14px; background:#111118; color:#f5f5f5; font-weight:500; font-size:13px; cursor:pointer; border:1px solid #272727;">Salvar texto como arquivo base</button>
+                    <button type="submit" style="border:none; border-radius:999px; padding:9px 14px; background:var(--surface-card); color:var(--text-primary); font-weight:500; font-size:13px; cursor:pointer; border:1px solid var(--border-subtle);">Salvar texto como arquivo base</button>
                 </div>
             </form>
 
@@ -405,13 +405,13 @@
                     <?php $ver = $latestByFileId[$fid] ?? null; ?>
                     <?php $storageUrl = is_array($ver) ? (string)($ver['storage_url'] ?? '') : ''; ?>
                     <div
-                        style="border:1px solid #272727; background:#050509; border-radius:12px; padding:10px; min-height:90px; display:flex; flex-direction:column; justify-content:space-between;<?= $storageUrl !== '' ? ' cursor:pointer;' : '' ?>"
+                        style="border:1px solid var(--border-subtle); background:var(--surface-subtle); border-radius:12px; padding:10px; min-height:90px; display:flex; flex-direction:column; justify-content:space-between;<?= $storageUrl !== '' ? ' cursor:pointer;' : '' ?>"
                         <?= $storageUrl !== '' ? 'role="link" tabindex="0" onclick="window.open(\'' . htmlspecialchars($storageUrl, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') . '\', \"_blank\")" onkeydown="if(event.key===\"Enter\"||event.key===\" \" ){event.preventDefault(); window.open(\'' . htmlspecialchars($storageUrl, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') . '\', \"_blank\")}"' : '' ?>
                     >
-                        <div style="font-size:12px; font-weight:650; color:#f5f5f5; overflow:hidden; text-overflow:ellipsis; overflow-wrap:anywhere; word-break:break-word; line-height:1.2;">
+                        <div style="font-size:12px; font-weight:650; color:var(--text-primary); overflow:hidden; text-overflow:ellipsis; overflow-wrap:anywhere; word-break:break-word; line-height:1.2;">
                             <?= htmlspecialchars((string)($bf['name'] ?? '')) ?>
                         </div>
-                        <div style="font-size:11px; color:#8d8d8d; margin-top:6px;">
+                        <div style="font-size:11px; color:var(--text-secondary); margin-top:6px;">
                             v<?= (int)($ver['version'] ?? 0) ?>
                         </div>
                         <?php if (!empty($canAdmin)): ?>
@@ -426,12 +426,12 @@
                         <?php if ($storageUrl !== ''): ?>
                             <div style="display:flex; gap:8px; margin-top:8px;">
                                 <a href="<?= htmlspecialchars($storageUrl) ?>" target="_blank" rel="noopener noreferrer" style="font-size:11px; color:#c8ffd4; text-decoration:none; border:1px solid #2e7d32; background:#102312; padding:4px 8px; border-radius:999px;" onclick="event.stopPropagation();">Abrir</a>
-                                <a href="<?= htmlspecialchars($storageUrl) ?>" download style="font-size:11px; color:#f5f5f5; text-decoration:none; border:1px solid #272727; background:#0a0a10; padding:4px 8px; border-radius:999px;" onclick="event.stopPropagation();">Baixar</a>
+                                <a href="<?= htmlspecialchars($storageUrl) ?>" download style="font-size:11px; color:var(--text-primary); text-decoration:none; border:1px solid var(--border-subtle); background:var(--surface-card); padding:4px 8px; border-radius:999px;" onclick="event.stopPropagation();">Baixar</a>
                             </div>
                         <?php endif; ?>
                         <div style="display:flex; justify-content:space-between; align-items:center; margin-top:8px;">
-                            <div style="font-size:10px; color:#8d8d8d; border:1px solid #272727; background:#0a0a10; border-radius:8px; padding:3px 6px; max-width:190px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"><?= !empty($bf['mime_type']) ? htmlspecialchars((string)$bf['mime_type']) : 'ARQ' ?></div>
-                            <div style="font-size:10px; color:<?= !empty($ver['extracted_text']) ? '#c8ffd4' : '#8d8d8d' ?>;"><?= !empty($ver['extracted_text']) ? 'ok' : '—' ?></div>
+                            <div style="font-size:10px; color:var(--text-secondary); border:1px solid var(--border-subtle); background:var(--surface-card); border-radius:8px; padding:3px 6px; max-width:190px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"><?= !empty($bf['mime_type']) ? htmlspecialchars((string)$bf['mime_type']) : 'ARQ' ?></div>
+                            <div style="font-size:10px; color:<?= !empty($ver['extracted_text']) ? '#2e7d32' : 'var(--text-secondary)' ?>;"><?= !empty($ver['extracted_text']) ? 'ok' : '—' ?></div>
                         </div>
                     </div>
                 <?php endforeach; ?>
@@ -852,15 +852,15 @@
     </div>
 
     <div id="projectInstructionsModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.65); align-items:center; justify-content:center; padding:20px; z-index:50;">
-        <div style="width:min(760px, 100%); background:#111118; border:1px solid #272727; border-radius:16px; padding:16px;">
+        <div style="width:min(760px, 100%); background:var(--surface-card); border:1px solid var(--border-subtle); border-radius:16px; padding:16px;">
             <div style="font-weight:700; font-size:15px; margin-bottom:6px;">Criar instruções para o projeto</div>
-            <div style="color:#b0b0b0; font-size:12px; line-height:1.35; margin-bottom:10px;">
+            <div style="color:var(--text-secondary); font-size:12px; line-height:1.35; margin-bottom:10px;">
                 Dê ao Tuquinha instruções e informações relevantes para as conversas dentro deste projeto.
             </div>
-            <textarea rows="8" style="width:100%; padding:10px 12px; border-radius:12px; border:1px solid #272727; background:#050509; color:#f5f5f5; font-size:13px; resize:vertical; outline:none;"></textarea>
+            <textarea rows="8" style="width:100%; padding:10px 12px; border-radius:12px; border:1px solid var(--border-subtle); background:var(--surface-subtle); color:var(--text-primary); font-size:13px; resize:vertical; outline:none;"></textarea>
             <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:12px;">
-                <button type="button" id="cancelProjectInstructions" style="border:1px solid #272727; border-radius:10px; padding:8px 12px; background:#0a0a10; color:#f5f5f5; font-weight:600; cursor:pointer;">Cancelar</button>
-                <button type="button" id="closeProjectInstructions" style="border:none; border-radius:10px; padding:8px 12px; background:#2a2a2a; color:#b0b0b0; font-weight:650; cursor:not-allowed;" disabled>Salvar instruções</button>
+                <button type="button" id="cancelProjectInstructions" style="border:1px solid var(--border-subtle); border-radius:10px; padding:8px 12px; background:var(--surface-subtle); color:var(--text-primary); font-weight:600; cursor:pointer;">Cancelar</button>
+                <button type="button" id="closeProjectInstructions" style="border:none; border-radius:10px; padding:8px 12px; background:var(--surface-subtle); color:var(--text-secondary); font-weight:650; cursor:not-allowed; border:1px solid var(--border-subtle);" disabled>Salvar instruções</button>
             </div>
         </div>
     </div>

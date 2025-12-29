@@ -136,16 +136,25 @@ if (!empty($currentPlan) && is_array($currentPlan)) {
     <?php if (!empty($conversationId) && $planAllowsPersonalitiesFlag && !empty($personaOptions)): ?>
         <?php $currentPersonaId = isset($currentPersonaData['id']) ? (int)$currentPersonaData['id'] : 0; ?>
         <div style="margin-top:10px; margin-bottom:6px; display:flex; justify-content:flex-start; gap:8px; align-items:center; flex-wrap:wrap;">
-            <div style="font-size:12px; color:#b0b0b0;">
+            <div style="font-size:12px; color:#b0b0b0; display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
                 <?php if ($currentPersonaData): ?>
                     <?php
                         $pName = trim((string)($currentPersonaData['name'] ?? ''));
                         $pArea = trim((string)($currentPersonaData['area'] ?? ''));
+                        $pImage = trim((string)($currentPersonaData['image_path'] ?? ''));
                         $label = $pName;
                         if ($pArea !== '') {
                             $label .= ' · ' . $pArea;
                         }
+                        $initial = $pName !== '' ? mb_strtoupper(mb_substr($pName, 0, 1, 'UTF-8'), 'UTF-8') : 'T';
                     ?>
+                    <span style="width:18px; height:18px; border-radius:50%; overflow:hidden; background:#2a2a35; display:inline-flex; align-items:center; justify-content:center; flex:0 0 18px;">
+                        <?php if ($pImage !== ''): ?>
+                            <img src="<?= htmlspecialchars($pImage) ?>" alt="" style="width:100%; height:100%; object-fit:cover; display:block;">
+                        <?php else: ?>
+                            <span style="font-size:10px; color:#f5f5f5; font-weight:700; line-height:1;"><?= htmlspecialchars($initial) ?></span>
+                        <?php endif; ?>
+                    </span>
                     <span style="font-weight:500;">Personalidade deste chat:</span>
                     <span><?= htmlspecialchars($label) ?></span>
                 <?php else: ?>

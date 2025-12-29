@@ -10,16 +10,16 @@
 
     <form action="/projetos/criar" method="post" style="display:flex; flex-direction:column; gap:10px;">
         <div>
-            <label style="font-size:13px; color:#ddd; display:block; margin-bottom:4px;">Nome*</label>
-            <input type="text" name="name" required style="width:100%; padding:8px 10px; border-radius:8px; border:1px solid #272727; background:#050509; color:#f5f5f5; font-size:14px;">
+            <label style="font-size:13px; color:var(--text-secondary); display:block; margin-bottom:4px;">Nome*</label>
+            <input type="text" name="name" required style="width:100%; padding:8px 10px; border-radius:8px; border:1px solid var(--border-subtle); background:var(--surface-subtle); color:var(--text-primary); font-size:14px;">
         </div>
         <div>
-            <label style="font-size:13px; color:#ddd; display:block; margin-bottom:4px;">Descrição</label>
-            <textarea name="description" rows="4" style="width:100%; padding:8px 10px; border-radius:8px; border:1px solid #272727; background:#050509; color:#f5f5f5; font-size:14px; resize:vertical;"></textarea>
+            <label style="font-size:13px; color:var(--text-secondary); display:block; margin-bottom:4px;">Descrição</label>
+            <textarea name="description" rows="4" style="width:100%; padding:8px 10px; border-radius:8px; border:1px solid var(--border-subtle); background:var(--surface-subtle); color:var(--text-primary); font-size:14px; resize:vertical;"></textarea>
         </div>
 
         <div style="display:flex; justify-content:flex-end; gap:10px;">
-            <a href="/projetos" style="border:1px solid #272727; border-radius:999px; padding:9px 14px; background:#111118; color:#f5f5f5; font-weight:600; font-size:13px; text-decoration:none;">Cancelar</a>
+            <a href="/projetos" style="border:1px solid var(--border-subtle); border-radius:999px; padding:9px 14px; background:var(--surface-card); color:var(--text-primary); font-weight:600; font-size:13px; text-decoration:none;">Cancelar</a>
             <button type="submit" style="border:none; border-radius:999px; padding:9px 14px; background:linear-gradient(135deg,#e53935,#ff6f60); color:#050509; font-weight:600; font-size:13px; cursor:pointer;">Criar projeto</button>
         </div>
     </form>

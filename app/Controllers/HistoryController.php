@@ -23,6 +23,8 @@ class HistoryController extends Controller
             exit;
         }
 
+        $planAllowsPersonalities = !empty($_SESSION['is_admin']) || !empty($currentPlan['allow_personalities']);
+
         $sessionId = session_id();
         $userId = (int)($_SESSION['user_id'] ?? 0);
         $term = trim($_GET['q'] ?? '');
@@ -59,6 +61,7 @@ class HistoryController extends Controller
             'conversations' => $conversations,
             'term' => $term,
             'retentionDays' => $retentionDays,
+            'planAllowsPersonalities' => $planAllowsPersonalities,
         ]);
     }
 

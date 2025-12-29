@@ -32,7 +32,7 @@
                         $title = 'Chat sem título';
                     }
                     $created = $conv['created_at'] ?? null;
-                    $personaName = trim((string)($conv['persona_name'] ?? ''));
+                    $personaName = !empty($planAllowsPersonalities) ? trim((string)($conv['persona_name'] ?? '')) : '';
                     $displayTitle = $personaName !== '' ? ($title . ' — ' . $personaName) : $title;
                 ?>
                 <div style="background:var(--surface-card); border-radius:12px; padding:10px 12px; border:1px solid var(--border-subtle); display:flex; justify-content:space-between; align-items:center; gap:8px;">
