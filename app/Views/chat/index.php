@@ -27,11 +27,28 @@ function render_markdown_safe(string $text): string {
     // "- texto" no começo da linha vira bullet visual
     $escaped = preg_replace('/^\-\s+/m', '• ', $escaped);
 
-    // Quebras de linha para <br>
-    return nl2br($escaped);
+    // Agrupa blocos separados por linha em branco em parágrafos
+    $escaped = str_replace(["\r\n", "\r"], "\n", $escaped);
+    $blocks = preg_split("/\n{2,}/", $escaped);
+    $out = '';
+    foreach ($blocks as $b) {
+        $b = trim((string)$b);
+        if ($b === '') {
+            continue;
+        }
+        $b = nl2br($b);
+        $out .= '<p>' . $b . '</p>';
+    }
+    return '<div class="tuq-chat-md">' . $out . '</div>';
 }
 ?>
 <style>
+.tuq-chat-md { line-height: 1.6; }
+.tuq-chat-md p { margin: 0 0 0.9em 0; }
+.tuq-chat-md p:last-child { margin-bottom: 0; }
+.tuq-chat-md ul, .tuq-chat-md ol { margin: 0 0 0.9em 1.2em; padding: 0; }
+.tuq-chat-md li { margin: 0.15em 0; }
+
 @media (max-width: 640px) {
     #chat-input-bar {
         flex-direction: column;
@@ -778,9 +795,12 @@ if (!empty($currentPlan) && is_array($currentPlan)) {
             out = out.replace(/\*\*([\s\S]+?)\*\*/g, '<strong>$1</strong>');
             // "- " no início da linha -> bullet visual
             out = out.replace(/^\-\s+/gm, '• ');
-            // Quebras de linha
-            out = out.replace(/\n/g, '<br>');
-            return out;
+            out = out.replace(/\r\n|\r/g, '\n');
+
+            // Blocos separados por linha em branco viram parágrafos
+            const blocks = out.split(/\n{2,}/g).map((b) => (b || '').trim()).filter(Boolean);
+            const html = blocks.map((b) => '<p>' + b.replace(/\n/g, '<br>') + '</p>').join('');
+            return '<div class="tuq-chat-md">' + html + '</div>';
         };
 
         const appendMessageToDom = (role, content, attachmentsOrMeta) => {
@@ -869,7 +889,7 @@ if (!empty($currentPlan) && is_array($currentPlan)) {
                 bubble.style.borderRadius = '16px 16px 4px 16px';
                 bubble.style.padding = '9px 12px';
                 bubble.style.fontSize = '14px';
-                bubble.style.whiteSpace = 'pre-wrap';
+                bubble.style.whiteSpace = 'normal';
                 bubble.style.wordWrap = 'break-word';
                 bubble.style.border = '1px solid var(--border-subtle)';
                 bubble.style.color = 'var(--text-primary)';
@@ -946,7 +966,7 @@ if (!empty($currentPlan) && is_array($currentPlan)) {
                 bubble.style.borderRadius = '16px 16px 16px 4px';
                 bubble.style.padding = '9px 12px';
                 bubble.style.fontSize = '14px';
-                bubble.style.whiteSpace = 'pre-wrap';
+                bubble.style.whiteSpace = 'normal';
                 bubble.style.wordWrap = 'break-word';
                 bubble.style.border = '1px solid var(--border-subtle)';
                 bubble.style.color = 'var(--text-primary)';
