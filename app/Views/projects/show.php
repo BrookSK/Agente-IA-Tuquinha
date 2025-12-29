@@ -206,14 +206,14 @@
                                 $lastAt = $c['last_message_at'] ?? ($c['created_at'] ?? null);
                                 $ago = $timeAgo(is_string($lastAt) ? $lastAt : null);
                                 $personaName = trim((string)($c['persona_name'] ?? ''));
+                                $displayTitle = $personaName !== '' ? ($title . ' — ' . $personaName) : $title;
                             ?>
                             <a href="/chat?c=<?= (int)($c['id'] ?? 0) ?>" style="display:block; padding:12px 14px; border-top:1px solid #1f1f1f; text-decoration:none; color:#f5f5f5;">
                                 <div style="font-size:13px; font-weight:650; margin-bottom:3px;">
-                                    <?= htmlspecialchars($title) ?>
+                                    <?= htmlspecialchars($displayTitle) ?>
                                 </div>
                                 <div style="font-size:11px; color:#8d8d8d;">
                                     <?= $ago !== '' ? 'Última mensagem ' . htmlspecialchars($ago) : '' ?>
-                                    <?= $personaName !== '' ? ' • ' . htmlspecialchars($personaName) : '' ?>
                                 </div>
                             </a>
                         <?php endforeach; ?>

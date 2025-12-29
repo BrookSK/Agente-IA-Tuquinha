@@ -103,7 +103,8 @@ class Conversation
     {
         $pdo = Database::getConnection();
         $stmt = $pdo->prepare(
-            'SELECT c.* FROM conversations c
+            'SELECT c.*, p.name AS persona_name FROM conversations c
+             LEFT JOIN personalities p ON p.id = c.persona_id
              WHERE c.session_id = :session_id
                AND EXISTS (
                    SELECT 1 FROM messages m
@@ -119,7 +120,8 @@ class Conversation
     {
         $pdo = Database::getConnection();
         $stmt = $pdo->prepare(
-            'SELECT c.* FROM conversations c
+            'SELECT c.*, p.name AS persona_name FROM conversations c
+             LEFT JOIN personalities p ON p.id = c.persona_id
              WHERE c.user_id = :user_id
                AND EXISTS (
                    SELECT 1 FROM messages m
@@ -164,7 +166,8 @@ class Conversation
 
         $like = '%' . $term . '%';
         $stmt = $pdo->prepare(
-            'SELECT c.* FROM conversations c
+            'SELECT c.*, p.name AS persona_name FROM conversations c
+             LEFT JOIN personalities p ON p.id = c.persona_id
              WHERE c.session_id = :session_id
                AND c.title IS NOT NULL
                AND c.title <> ""
@@ -191,7 +194,8 @@ class Conversation
 
         $like = '%' . $term . '%';
         $stmt = $pdo->prepare(
-            'SELECT c.* FROM conversations c
+            'SELECT c.*, p.name AS persona_name FROM conversations c
+             LEFT JOIN personalities p ON p.id = c.persona_id
              WHERE c.user_id = :user_id
                AND c.title IS NOT NULL
                AND c.title <> ""

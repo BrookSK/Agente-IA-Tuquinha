@@ -32,11 +32,13 @@
                         $title = 'Chat sem título';
                     }
                     $created = $conv['created_at'] ?? null;
+                    $personaName = trim((string)($conv['persona_name'] ?? ''));
+                    $displayTitle = $personaName !== '' ? ($title . ' — ' . $personaName) : $title;
                 ?>
                 <div style="background:var(--surface-card); border-radius:12px; padding:10px 12px; border:1px solid var(--border-subtle); display:flex; justify-content:space-between; align-items:center; gap:8px;">
                     <div>
                         <div style="font-size:14px; font-weight:500; margin-bottom:4px;">
-                            <?= htmlspecialchars($title) ?>
+                            <?= htmlspecialchars($displayTitle) ?>
                         </div>
                         <?php if ($created): ?>
                             <div style="font-size:11px; color:var(--text-secondary); margin-bottom:4px;">
