@@ -164,23 +164,56 @@
                     <input type="hidden" name="project_id" value="<?= (int)($project['id'] ?? 0) ?>">
                     <div style="flex:1; background:var(--surface-subtle); border:1px solid var(--border-subtle); border-radius:14px; padding:14px; color:var(--text-secondary); font-size:13px;">
                         <?php if (!empty($planAllowsPersonalities) && !empty($personalities) && is_array($personalities)): ?>
-                            <div style="display:flex; justify-content:space-between; align-items:center; gap:10px; margin-bottom:10px; flex-wrap:wrap;">
-                                <div style="font-size:12px; color:var(--text-secondary); white-space:nowrap;">Tuquinha</div>
-                                <select name="persona_id" style="flex:1; min-width:220px; max-width:100%; padding:10px 10px; border-radius:12px; border:1px solid var(--border-subtle); background:var(--surface-card); color:var(--text-primary); font-size:12px; outline:none;">
-                                    <?php
-                                        $defaultPersonaId = !empty($_SESSION['default_persona_id']) ? (int)$_SESSION['default_persona_id'] : 0;
-                                    ?>
+                            <?php
+                                $defaultPersonaId = !empty($_SESSION['default_persona_id']) ? (int)$_SESSION['default_persona_id'] : 0;
+                            ?>
+                            <input type="hidden" name="persona_id" id="projectComposerPersonaId" value="<?= $defaultPersonaId > 0 ? (int)$defaultPersonaId : '' ?>">
+                            <div style="margin-bottom:10px;">
+                                <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:8px;">
+                                    <div style="font-size:12px; color:var(--text-secondary); white-space:nowrap;">Tuquinha</div>
+                                    <a href="/personalidades" style="font-size:12px; color:var(--text-secondary); text-decoration:none; border:1px solid var(--border-subtle); background:var(--surface-card); padding:6px 10px; border-radius:999px;">Ver todos</a>
+                                </div>
+                                <div id="projectPersonaPicker" style="display:flex; gap:10px; overflow:auto; padding-bottom:4px; scroll-snap-type:x mandatory;">
                                     <?php foreach ($personalities as $p): ?>
                                         <?php
                                             $pid = (int)($p['id'] ?? 0);
-                                            $pname = (string)($p['name'] ?? '');
+                                            $pname = trim((string)($p['name'] ?? ''));
+                                            $parea = trim((string)($p['area'] ?? ''));
+                                            $pimg = trim((string)($p['image_path'] ?? ''));
                                             if ($pid <= 0 || $pname === '') { continue; }
+                                            $selected = $defaultPersonaId > 0 && $pid === $defaultPersonaId;
                                         ?>
-                                        <option value="<?= $pid ?>" <?= $defaultPersonaId > 0 && $pid === $defaultPersonaId ? 'selected' : '' ?>>
-                                            <?= htmlspecialchars($pname) ?>
-                                        </option>
+                                        <button type="button" class="projectPersonaCard" data-persona-id="<?= $pid ?>" aria-pressed="<?= $selected ? 'true' : 'false' ?>" style="
+                                            flex:0 0 220px;
+                                            max-width: 240px;
+                                            scroll-snap-align:start;
+                                            border:1px solid <?= $selected ? 'var(--border-subtle)' : 'var(--border-subtle)' ?>;
+                                            background: <?= $selected ? 'var(--surface-card)' : 'var(--surface-card)' ?>;
+                                            border-radius:14px;
+                                            padding:10px;
+                                            color:var(--text-primary);
+                                            cursor:pointer;
+                                            text-align:left;
+                                            display:flex;
+                                            gap:10px;
+                                            align-items:center;
+                                        ">
+                                            <?php if ($pimg !== ''): ?>
+                                                <img src="<?= htmlspecialchars($pimg) ?>" alt="<?= htmlspecialchars($pname) ?>" style="width:46px; height:46px; border-radius:12px; object-fit:cover; border:1px solid var(--border-subtle); background:var(--surface-subtle); flex:0 0 auto;" />
+                                            <?php else: ?>
+                                                <div style="width:46px; height:46px; border-radius:12px; border:1px solid var(--border-subtle); background:var(--surface-subtle); display:flex; align-items:center; justify-content:center; flex:0 0 auto;">
+                                                    <span style="font-size:12px; color:var(--text-secondary); font-weight:700; line-height:1;">T</span>
+                                                </div>
+                                            <?php endif; ?>
+                                            <div style="min-width:0;">
+                                                <div style="font-weight:700; font-size:13px; line-height:1.2; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"><?= htmlspecialchars($pname) ?></div>
+                                                <?php if ($parea !== ''): ?>
+                                                    <div style="font-size:11px; color:var(--text-secondary); line-height:1.2; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"><?= htmlspecialchars($parea) ?></div>
+                                                <?php endif; ?>
+                                            </div>
+                                        </button>
                                     <?php endforeach; ?>
-                                </select>
+                                </div>
                             </div>
                         <?php endif; ?>
                         <textarea name="message" id="projectComposerMessage" placeholder="Responder..." rows="3" style="width:100%; border:none; outline:none; background:transparent; color:var(--text-primary); font-size:13px; resize:none; min-height:46px;"></textarea>
@@ -362,6 +395,8 @@
                 <?php endforeach; ?>
             </div>
 
+                </div>
+
                 <?php if (!empty($members) || !empty($pendingInvites)): ?>
                 <div style="background:var(--surface-card); border:1px solid var(--border-subtle); border-radius:14px; padding:14px; margin-top:12px;">
                     <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:10px;">
@@ -517,6 +552,44 @@
                         });
                     }
 
+                    function bindProjectPersonaPicker() {
+                        var hidden = document.getElementById('projectComposerPersonaId');
+                        var wrap = document.getElementById('projectPersonaPicker');
+                        if (!hidden || !wrap || wrap.dataset.bound) return;
+                        wrap.dataset.bound = '1';
+
+                        function setSelected(id) {
+                            hidden.value = id ? String(id) : '';
+                            wrap.querySelectorAll('.projectPersonaCard').forEach(function (btn) {
+                                var pid = parseInt(btn.getAttribute('data-persona-id') || '0', 10);
+                                var on = id > 0 && pid === id;
+                                btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+                                btn.style.borderColor = on ? '#2e7d32' : 'var(--border-subtle)';
+                            });
+                        }
+
+                        var initial = parseInt(hidden.value || '0', 10);
+                        if (initial > 0) {
+                            setSelected(initial);
+                        }
+
+                        wrap.addEventListener('click', function (e) {
+                            var t = e.target;
+                            var btn = null;
+                            while (t && t !== wrap) {
+                                if (t.classList && t.classList.contains('projectPersonaCard')) {
+                                    btn = t;
+                                    break;
+                                }
+                                t = t.parentNode;
+                            }
+                            if (!btn) return;
+                            e.preventDefault();
+                            var id = parseInt(btn.getAttribute('data-persona-id') || '0', 10);
+                            if (id > 0) setSelected(id);
+                        });
+                    }
+
                     function bindProjectInstructionsModal() {
                         var openInstr = document.getElementById('openProjectInstructions');
                         if (openInstr && !openInstr.dataset.bound) {
@@ -548,9 +621,11 @@
                     }
 
                     bindProjectShareToggle();
+                    bindProjectPersonaPicker();
                     bindProjectInstructionsModal();
                     document.addEventListener('DOMContentLoaded', bindProjectInstructionsModal);
                     document.addEventListener('DOMContentLoaded', bindProjectShareToggle);
+                    document.addEventListener('DOMContentLoaded', bindProjectPersonaPicker);
 
                     var ellipsisBtn = document.getElementById('projectEllipsisBtn');
                     var ellipsisMenu = document.getElementById('projectEllipsisMenu');
