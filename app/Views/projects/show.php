@@ -82,6 +82,21 @@
     #projectPersonaPicker::-webkit-scrollbar-thumb:hover {
         background: #1a1a1a;
     }
+
+    body[data-theme="light"] #projectPersonaPicker {
+        scrollbar-color: rgba(15, 23, 42, 0.35) rgba(15, 23, 42, 0.08);
+        scrollbar-width: thin;
+    }
+    body[data-theme="light"] #projectPersonaPicker::-webkit-scrollbar-track {
+        background: rgba(15, 23, 42, 0.08);
+    }
+    body[data-theme="light"] #projectPersonaPicker::-webkit-scrollbar-thumb {
+        background: rgba(15, 23, 42, 0.35);
+        border: 2px solid rgba(15, 23, 42, 0.08);
+    }
+    body[data-theme="light"] #projectPersonaPicker::-webkit-scrollbar-thumb:hover {
+        background: rgba(15, 23, 42, 0.45);
+    }
 </style>
 <div style="max-width: 1100px; margin: 0 auto;">
     <div id="projectHeaderRow" style="display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:14px;">
@@ -191,7 +206,6 @@
                             <div style="margin-bottom:10px;">
                                 <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:8px;">
                                     <div style="font-size:12px; color:var(--text-secondary); white-space:nowrap;">Tuquinha</div>
-                                    <a href="/personalidades" style="font-size:12px; color:var(--text-secondary); text-decoration:none; border:1px solid var(--border-subtle); background:var(--surface-card); padding:6px 10px; border-radius:999px;">Ver todos</a>
                                 </div>
                                 <div id="projectPersonaPicker" style="display:flex; gap:10px; width:100%; box-sizing:border-box; overflow-x:auto; overflow-y:hidden; max-width:100%; min-width:0; padding-bottom:4px; scroll-snap-type:x mandatory;">
                                     <?php foreach ($personalities as $p): ?>
@@ -261,14 +275,17 @@
                                 $personaName = !empty($planAllowsPersonalities) ? trim((string)($c['persona_name'] ?? '')) : '';
                                 $displayTitle = $personaName !== '' ? ($title . ' — ' . $personaName) : $title;
                             ?>
-                            <a href="/chat?c=<?= (int)($c['id'] ?? 0) ?>" style="display:block; padding:12px 14px; border-top:1px solid var(--border-subtle); text-decoration:none; color:var(--text-primary);">
-                                <div style="font-size:13px; font-weight:650; margin-bottom:3px;">
-                                    <?= htmlspecialchars($displayTitle) ?>
-                                </div>
-                                <div style="font-size:11px; color:var(--text-secondary);">
-                                    <?= $ago !== '' ? 'Última mensagem ' . htmlspecialchars($ago) : '' ?>
-                                </div>
-                            </a>
+                            <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; padding:12px 14px; border-top:1px solid var(--border-subtle);">
+                                <a href="/chat?c=<?= (int)($c['id'] ?? 0) ?>" style="display:block; text-decoration:none; color:var(--text-primary); min-width:0; flex:1;">
+                                    <div style="font-size:13px; font-weight:650; margin-bottom:3px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
+                                        <?= htmlspecialchars($displayTitle) ?>
+                                    </div>
+                                    <div style="font-size:11px; color:var(--text-secondary);">
+                                        <?= $ago !== '' ? 'Última mensagem ' . htmlspecialchars($ago) : '' ?>
+                                    </div>
+                                </a>
+                                <a href="/chat?c=<?= (int)($c['id'] ?? 0) ?>" style="flex:0 0 auto; border:1px solid var(--border-subtle); background:var(--surface-subtle); color:var(--text-primary); text-decoration:none; border-radius:999px; padding:8px 12px; font-size:12px; font-weight:650; white-space:nowrap;">Abrir chat</a>
+                            </div>
                         <?php endforeach; ?>
                     </div>
                 <?php endif; ?>
