@@ -33,6 +33,13 @@ function render_markdown_safe(string $text): string {
     // Linha separadora estilo ChatGPT: converte '---' em um token que vira <hr>
     $escaped = preg_replace('/^\s*---+\s*$/m', '[[HR]]', $escaped);
 
+    // Se o modelo mandar o token literal [[HR]], trata como separador também
+    $escaped = preg_replace('/^\s*\[\[HR\]\]\s*$/m', '[[HR]]', $escaped);
+
+    // Garante que [[HR]] fique isolado como um bloco (para virar <hr>)
+    $escaped = preg_replace('/\n\s*\[\[HR\]\]\s*\n/u', "\n\n[[HR]]\n\n", "\n" . $escaped . "\n");
+    $escaped = trim($escaped);
+
     // Se o modelo mandar tudo com 1 quebra de linha, cria respiros automáticos
     // antes de títulos/listas para ficar mais legível (estilo ChatGPT)
     $escaped = preg_replace("/\n(?=(?:\d+\.|•)\s)/u", "\n\n", $escaped);
@@ -813,6 +820,10 @@ if (!empty($currentPlan) && is_array($currentPlan)) {
 
             // Linha separadora estilo ChatGPT
             out = out.replace(/^\s*---+\s*$/gm, '[[HR]]');
+            out = out.replace(/^\s*\[\[HR\]\]\s*$/gm, '[[HR]]');
+
+            // Garante que [[HR]] fique isolado como um bloco (para virar <hr>)
+            out = ('\n' + out + '\n').replace(/\n\s*\[\[HR\]\]\s*\n/g, '\n\n[[HR]]\n\n').trim();
 
             // Cria respiros automáticos antes de títulos/listas
             out = out.replace(/\n(?=(?:\d+\.|•)\s)/g, '\n\n');
