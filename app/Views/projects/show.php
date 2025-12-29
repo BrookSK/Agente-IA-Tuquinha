@@ -162,7 +162,7 @@
                 ?>
                 <form id="projectComposerForm" action="/projetos/chat/criar" method="post" style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
                     <input type="hidden" name="project_id" value="<?= (int)($project['id'] ?? 0) ?>">
-                    <div style="flex:1; background:var(--surface-subtle); border:1px solid var(--border-subtle); border-radius:14px; padding:14px; color:var(--text-secondary); font-size:13px;">
+                    <div style="flex:1; min-width:0; overflow:hidden; background:var(--surface-subtle); border:1px solid var(--border-subtle); border-radius:14px; padding:14px; color:var(--text-secondary); font-size:13px;">
                         <?php if (!empty($planAllowsPersonalities) && !empty($personalities) && is_array($personalities)): ?>
                             <?php
                                 $defaultPersonaId = !empty($_SESSION['default_persona_id']) ? (int)$_SESSION['default_persona_id'] : 0;
@@ -173,7 +173,7 @@
                                     <div style="font-size:12px; color:var(--text-secondary); white-space:nowrap;">Tuquinha</div>
                                     <a href="/personalidades" style="font-size:12px; color:var(--text-secondary); text-decoration:none; border:1px solid var(--border-subtle); background:var(--surface-card); padding:6px 10px; border-radius:999px;">Ver todos</a>
                                 </div>
-                                <div id="projectPersonaPicker" style="display:flex; gap:10px; overflow:auto; padding-bottom:4px; scroll-snap-type:x mandatory;">
+                                <div id="projectPersonaPicker" style="display:flex; gap:10px; overflow:auto; max-width:100%; min-width:0; padding-bottom:4px; scroll-snap-type:x mandatory;">
                                     <?php foreach ($personalities as $p): ?>
                                         <?php
                                             $pid = (int)($p['id'] ?? 0);
