@@ -130,7 +130,7 @@
     </div>
 
     <div id="projectPageGrid" style="display:grid; grid-template-columns:minmax(0, 1fr) 360px; gap:14px; align-items:start;">
-        <div style="min-width:0;">
+        <div style="min-width:0; overflow:hidden;">
             <div style="background:var(--surface-card); border:1px solid var(--border-subtle); border-radius:14px; padding:14px;">
                 <?php
                     $composerModel = (string)($_SESSION['chat_model'] ?? '');
@@ -173,7 +173,7 @@
                                     <div style="font-size:12px; color:var(--text-secondary); white-space:nowrap;">Tuquinha</div>
                                     <a href="/personalidades" style="font-size:12px; color:var(--text-secondary); text-decoration:none; border:1px solid var(--border-subtle); background:var(--surface-card); padding:6px 10px; border-radius:999px;">Ver todos</a>
                                 </div>
-                                <div id="projectPersonaPicker" style="display:flex; gap:10px; overflow:auto; max-width:100%; min-width:0; padding-bottom:4px; scroll-snap-type:x mandatory;">
+                                <div id="projectPersonaPicker" style="display:flex; gap:10px; width:100%; box-sizing:border-box; overflow-x:auto; overflow-y:hidden; max-width:100%; min-width:0; padding-bottom:4px; scroll-snap-type:x mandatory;">
                                     <?php foreach ($personalities as $p): ?>
                                         <?php
                                             $pid = (int)($p['id'] ?? 0);
