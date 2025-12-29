@@ -13,6 +13,7 @@ use App\Models\Conversation;
 use App\Models\Subscription;
 use App\Models\Plan;
 use App\Models\Setting;
+use App\Models\Personality;
 use App\Models\ProjectFavorite;
 use App\Models\ProjectInvitation;
 use App\Models\ProjectMemoryItem;
@@ -313,6 +314,19 @@ class ProjectController extends Controller
             $projectMemoryItems = ProjectMemoryItem::allActiveForProject($projectId, 200);
         }
 
+        $planAllowsPersonalities = false;
+        $personalities = [];
+        if (!empty($_SESSION['is_admin'])) {
+            $planAllowsPersonalities = true;
+        } else {
+            $email = (string)($user['email'] ?? '');
+            $plan = $this->getActivePlanForEmail($email);
+            $planAllowsPersonalities = !empty($plan['allow_personalities']);
+        }
+        if ($planAllowsPersonalities) {
+            $personalities = Personality::allActive();
+        }
+
         $this->view('projects/show', [
             'pageTitle' => ($project['name'] ?? 'Projeto') . ' - Tuquinha',
             'user' => $user,
@@ -325,6 +339,8 @@ class ProjectController extends Controller
             'members' => $members,
             'pendingInvites' => $pendingInvites,
             'projectMemoryItems' => $projectMemoryItems,
+            'planAllowsPersonalities' => $planAllowsPersonalities,
+            'personalities' => $personalities,
             'uploadError' => $_SESSION['project_upload_error'] ?? null,
             'uploadOk' => $_SESSION['project_upload_ok'] ?? null,
         ]);
@@ -728,8 +744,28 @@ class ProjectController extends Controller
             exit;
         }
 
+        $personaId = null;
+        $personaIdRaw = isset($_POST['persona_id']) ? (int)$_POST['persona_id'] : 0;
+        if ($personaIdRaw > 0) {
+            $planAllowsPersonalities = false;
+            if (!empty($_SESSION['is_admin'])) {
+                $planAllowsPersonalities = true;
+            } else {
+                $email = (string)($user['email'] ?? '');
+                $plan = $this->getActivePlanForEmail($email);
+                $planAllowsPersonalities = !empty($plan['allow_personalities']);
+            }
+
+            if ($planAllowsPersonalities) {
+                $p = Personality::findById($personaIdRaw);
+                if ($p && !empty($p['active'])) {
+                    $personaId = (int)$p['id'];
+                }
+            }
+        }
+
         $sessionId = session_id();
-        $conversation = Conversation::createForUser($userId, $sessionId, null, $projectId);
+        $conversation = Conversation::createForUser($userId, $sessionId, $personaId, $projectId);
         $_SESSION['current_conversation_id'] = $conversation->id;
         $_SESSION['draft_message'] = $message;
 

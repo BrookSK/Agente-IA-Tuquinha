@@ -139,9 +139,10 @@ class Conversation
 
         $pdo = Database::getConnection();
         $stmt = $pdo->prepare(
-            'SELECT c.*, MAX(m.created_at) AS last_message_at
+            'SELECT c.*, MAX(m.created_at) AS last_message_at, p.name AS persona_name
              FROM conversations c
              INNER JOIN messages m ON m.conversation_id = c.id
+             LEFT JOIN personalities p ON p.id = c.persona_id
              WHERE c.user_id = :user_id
                AND c.project_id = :project_id
              GROUP BY c.id

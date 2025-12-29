@@ -163,6 +163,26 @@
                 <form id="projectComposerForm" action="/projetos/chat/criar" method="post" style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
                     <input type="hidden" name="project_id" value="<?= (int)($project['id'] ?? 0) ?>">
                     <div style="flex:1; background:#0a0a10; border:1px solid #272727; border-radius:14px; padding:14px; color:#8d8d8d; font-size:13px;">
+                        <?php if (!empty($planAllowsPersonalities) && !empty($personalities) && is_array($personalities)): ?>
+                            <div style="display:flex; justify-content:space-between; align-items:center; gap:10px; margin-bottom:10px; flex-wrap:wrap;">
+                                <div style="font-size:12px; color:#8d8d8d; white-space:nowrap;">Tuquinha</div>
+                                <select name="persona_id" style="flex:1; min-width:220px; max-width:100%; padding:10px 10px; border-radius:12px; border:1px solid #272727; background:#050509; color:#f5f5f5; font-size:12px; outline:none;">
+                                    <?php
+                                        $defaultPersonaId = !empty($_SESSION['default_persona_id']) ? (int)$_SESSION['default_persona_id'] : 0;
+                                    ?>
+                                    <?php foreach ($personalities as $p): ?>
+                                        <?php
+                                            $pid = (int)($p['id'] ?? 0);
+                                            $pname = (string)($p['name'] ?? '');
+                                            if ($pid <= 0 || $pname === '') { continue; }
+                                        ?>
+                                        <option value="<?= $pid ?>" <?= $defaultPersonaId > 0 && $pid === $defaultPersonaId ? 'selected' : '' ?>>
+                                            <?= htmlspecialchars($pname) ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+                        <?php endif; ?>
                         <textarea name="message" id="projectComposerMessage" placeholder="Responder..." rows="3" style="width:100%; border:none; outline:none; background:transparent; color:#f5f5f5; font-size:13px; resize:none; min-height:46px;"></textarea>
                         <div style="display:flex; justify-content:flex-end; align-items:center; margin-top:10px;">
                             <button type="submit" style="display:inline-flex; align-items:center; justify-content:center; width:34px; height:34px; border-radius:10px; border:1px solid #2e7d32; background:#102312; color:#c8ffd4; text-decoration:none; font-weight:700; cursor:pointer;">↑</button>
@@ -185,6 +205,7 @@
                                 }
                                 $lastAt = $c['last_message_at'] ?? ($c['created_at'] ?? null);
                                 $ago = $timeAgo(is_string($lastAt) ? $lastAt : null);
+                                $personaName = trim((string)($c['persona_name'] ?? ''));
                             ?>
                             <a href="/chat?c=<?= (int)($c['id'] ?? 0) ?>" style="display:block; padding:12px 14px; border-top:1px solid #1f1f1f; text-decoration:none; color:#f5f5f5;">
                                 <div style="font-size:13px; font-weight:650; margin-bottom:3px;">
@@ -192,6 +213,7 @@
                                 </div>
                                 <div style="font-size:11px; color:#8d8d8d;">
                                     <?= $ago !== '' ? 'Última mensagem ' . htmlspecialchars($ago) : '' ?>
+                                    <?= $personaName !== '' ? ' • ' . htmlspecialchars($personaName) : '' ?>
                                 </div>
                             </a>
                         <?php endforeach; ?>
