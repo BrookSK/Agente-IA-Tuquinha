@@ -224,81 +224,6 @@
 
         <div style="min-width:0;">
             <div style="display:flex; flex-direction:column; gap:12px;">
-                <?php if (!empty($members) || !empty($pendingInvites)): ?>
-                <div style="background:var(--surface-card); border:1px solid var(--border-subtle); border-radius:14px; padding:14px;">
-                    <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:10px;">
-                        <div style="font-weight:650;">Compartilhar</div>
-                        <div style="color:var(--text-secondary); font-size:12px;">Somente admin</div>
-                    </div>
-
-                    <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
-                        <input id="inviteEmail" type="email" placeholder="Email do colaborador" style="flex:1 1 220px; min-width:180px; max-width:100%; padding:10px 12px; border-radius:12px; border:1px solid var(--border-subtle); background:var(--surface-subtle); color:var(--text-primary); font-size:13px; outline:none;" />
-                        <select id="inviteRole" style="flex:0 0 auto; min-width:120px; max-width:100%; padding:10px 10px; border-radius:12px; border:1px solid var(--border-subtle); background:var(--surface-subtle); color:var(--text-primary); font-size:13px; outline:none;">
-                            <option value="read">Leitura</option>
-                            <option value="write">Escrita</option>
-                            <option value="admin">Administrador</option>
-                        </select>
-                        <button type="button" id="sendInviteBtn" style="flex:0 0 auto; max-width:100%; border:none; border-radius:12px; padding:10px 12px; background:linear-gradient(135deg,#e53935,#ff6f60); color:#050509; font-weight:700; cursor:pointer;">Convidar</button>
-                    </div>
-                    <div id="inviteFeedback" style="margin-top:8px; color:var(--text-secondary); font-size:12px; display:none;"></div>
-
-                    <?php if (!empty($pendingInvites)): ?>
-                        <div style="margin-top:12px;">
-                            <div style="font-size:12px; color:var(--text-secondary); margin-bottom:6px;">Convites pendentes</div>
-                            <div style="display:flex; flex-direction:column; gap:8px;">
-                                <?php foreach ($pendingInvites as $inv): ?>
-                                    <?php
-                                        $roleLabel = 'Leitura';
-                                        $rawRole = (string)($inv['role'] ?? 'read');
-                                        if ($rawRole === 'write') { $roleLabel = 'Escrita'; }
-                                        if ($rawRole === 'admin') { $roleLabel = 'Administrador'; }
-                                    ?>
-                                    <div style="display:flex; justify-content:space-between; align-items:center; gap:10px; border:1px solid var(--border-subtle); border-radius:12px; padding:10px 12px; background:var(--surface-subtle); flex-wrap:wrap;">
-                                        <div style="min-width:0;">
-                                            <div style="font-size:12px; color:var(--text-primary); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"><?= htmlspecialchars((string)($inv['invited_email'] ?? '')) ?></div>
-                                            <div style="font-size:11px; color:var(--text-secondary);">Permissão: <?= htmlspecialchars($roleLabel) ?></div>
-                                        </div>
-                                        <button type="button" class="revokeInviteBtn" data-invite-id="<?= (int)($inv['id'] ?? 0) ?>" style="border:1px solid var(--border-subtle); background:var(--surface-card); color:#ff6b6b; border-radius:10px; padding:8px 10px; cursor:pointer;">Revogar</button>
-                                    </div>
-                                <?php endforeach; ?>
-                            </div>
-                        </div>
-                    <?php endif; ?>
-
-                    <?php if (!empty($members)): ?>
-                        <div style="margin-top:12px;">
-                            <div style="font-size:12px; color:var(--text-secondary); margin-bottom:6px;">Membros</div>
-                            <div style="display:flex; flex-direction:column; gap:8px;">
-                                <?php foreach ($members as $m): ?>
-                                    <?php
-                                        $label = trim((string)($m['user_preferred_name'] ?? ''));
-                                        if ($label === '') { $label = trim((string)($m['user_name'] ?? '')); }
-                                        if ($label === '') { $label = (string)($m['user_email'] ?? ''); }
-                                        $role = (string)($m['role'] ?? 'read');
-                                        $uid = (int)($m['user_id'] ?? 0);
-                                    ?>
-                                    <div style="display:flex; justify-content:space-between; align-items:center; gap:10px; border:1px solid var(--border-subtle); border-radius:12px; padding:10px 12px; background:var(--surface-subtle);">
-                                        <div style="min-width:0;">
-                                            <div style="font-size:12px; color:var(--text-primary); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"><?= htmlspecialchars($label) ?></div>
-                                            <div style="font-size:11px; color:var(--text-secondary); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"><?= htmlspecialchars((string)($m['user_email'] ?? '')) ?></div>
-                                        </div>
-                                        <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
-                                            <select class="memberRoleSelect" data-user-id="<?= $uid ?>" style="padding:8px 10px; border-radius:10px; border:1px solid var(--border-subtle); background:var(--surface-card); color:var(--text-primary); font-size:12px; outline:none;">
-                                                <option value="read" <?= $role === 'read' ? 'selected' : '' ?>>Leitura</option>
-                                                <option value="write" <?= $role === 'write' ? 'selected' : '' ?>>Escrita</option>
-                                                <option value="admin" <?= $role === 'admin' ? 'selected' : '' ?>>Administrador</option>
-                                            </select>
-                                            <button type="button" class="removeMemberBtn" data-user-id="<?= $uid ?>" style="border:1px solid var(--border-subtle); background:var(--surface-card); color:#ff6b6b; border-radius:10px; padding:8px 10px; cursor:pointer;">Remover</button>
-                                        </div>
-                                    </div>
-                                <?php endforeach; ?>
-                            </div>
-                        </div>
-                    <?php endif; ?>
-
-                </div>
-                <?php endif; ?>
-
                 <?php if (!empty($projectMemoryItems)): ?>
                 <div style="background:var(--surface-card); border:1px solid var(--border-subtle); border-radius:14px; padding:14px;">
                     <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:10px;">
@@ -437,6 +362,86 @@
                 <?php endforeach; ?>
             </div>
 
+                <?php if (!empty($members) || !empty($pendingInvites)): ?>
+                <div style="background:var(--surface-card); border:1px solid var(--border-subtle); border-radius:14px; padding:14px; margin-top:12px;">
+                    <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:10px;">
+                        <div style="font-weight:650;">Compartilhar</div>
+                        <div style="display:flex; align-items:center; gap:10px;">
+                            <div style="color:var(--text-secondary); font-size:12px;">Somente admin</div>
+                            <button type="button" id="toggleProjectShare" aria-expanded="false" style="border:none; background:transparent; color:var(--text-secondary); cursor:pointer; font-size:14px; line-height:1; padding:2px 4px;" title="Abrir">✎</button>
+                        </div>
+                    </div>
+
+                    <div id="projectShareBody" style="display:none;">
+                        <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+                            <input id="inviteEmail" type="email" placeholder="Email do colaborador" style="flex:1 1 220px; min-width:180px; max-width:100%; padding:10px 12px; border-radius:12px; border:1px solid var(--border-subtle); background:var(--surface-subtle); color:var(--text-primary); font-size:13px; outline:none;" />
+                            <select id="inviteRole" style="flex:0 0 auto; min-width:120px; max-width:100%; padding:10px 10px; border-radius:12px; border:1px solid var(--border-subtle); background:var(--surface-subtle); color:var(--text-primary); font-size:13px; outline:none;">
+                                <option value="read">Leitura</option>
+                                <option value="write">Escrita</option>
+                                <option value="admin">Administrador</option>
+                            </select>
+                            <button type="button" id="sendInviteBtn" style="flex:0 0 auto; max-width:100%; border:none; border-radius:12px; padding:10px 12px; background:linear-gradient(135deg,#e53935,#ff6f60); color:#050509; font-weight:700; cursor:pointer;">Convidar</button>
+                        </div>
+                        <div id="inviteFeedback" style="margin-top:8px; color:var(--text-secondary); font-size:12px; display:none;"></div>
+
+                        <?php if (!empty($pendingInvites)): ?>
+                            <div style="margin-top:12px;">
+                                <div style="font-size:12px; color:var(--text-secondary); margin-bottom:6px;">Convites pendentes</div>
+                                <div style="display:flex; flex-direction:column; gap:8px;">
+                                    <?php foreach ($pendingInvites as $inv): ?>
+                                        <?php
+                                            $roleLabel = 'Leitura';
+                                            $rawRole = (string)($inv['role'] ?? 'read');
+                                            if ($rawRole === 'write') { $roleLabel = 'Escrita'; }
+                                            if ($rawRole === 'admin') { $roleLabel = 'Administrador'; }
+                                        ?>
+                                        <div style="display:flex; justify-content:space-between; align-items:center; gap:10px; border:1px solid var(--border-subtle); border-radius:12px; padding:10px 12px; background:var(--surface-subtle); flex-wrap:wrap;">
+                                            <div style="min-width:0;">
+                                                <div style="font-size:12px; color:var(--text-primary); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"><?= htmlspecialchars((string)($inv['invited_email'] ?? '')) ?></div>
+                                                <div style="font-size:11px; color:var(--text-secondary);">Permissão: <?= htmlspecialchars($roleLabel) ?></div>
+                                            </div>
+                                            <button type="button" class="revokeInviteBtn" data-invite-id="<?= (int)($inv['id'] ?? 0) ?>" style="border:1px solid var(--border-subtle); background:var(--surface-card); color:#ff6b6b; border-radius:10px; padding:8px 10px; cursor:pointer;">Revogar</button>
+                                        </div>
+                                    <?php endforeach; ?>
+                                </div>
+                            </div>
+                        <?php endif; ?>
+
+                        <?php if (!empty($members)): ?>
+                            <div style="margin-top:12px;">
+                                <div style="font-size:12px; color:var(--text-secondary); margin-bottom:6px;">Membros</div>
+                                <div style="display:flex; flex-direction:column; gap:8px;">
+                                    <?php foreach ($members as $m): ?>
+                                        <?php
+                                            $label = trim((string)($m['user_preferred_name'] ?? ''));
+                                            if ($label === '') { $label = trim((string)($m['user_name'] ?? '')); }
+                                            if ($label === '') { $label = (string)($m['user_email'] ?? ''); }
+                                            $role = (string)($m['role'] ?? 'read');
+                                            $uid = (int)($m['user_id'] ?? 0);
+                                        ?>
+                                        <div style="display:flex; justify-content:space-between; align-items:center; gap:10px; border:1px solid var(--border-subtle); border-radius:12px; padding:10px 12px; background:var(--surface-subtle);">
+                                            <div style="min-width:0;">
+                                                <div style="font-size:12px; color:var(--text-primary); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"><?= htmlspecialchars($label) ?></div>
+                                                <div style="font-size:11px; color:var(--text-secondary); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"><?= htmlspecialchars((string)($m['user_email'] ?? '')) ?></div>
+                                            </div>
+                                            <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+                                                <select class="memberRoleSelect" data-user-id="<?= $uid ?>" style="padding:8px 10px; border-radius:10px; border:1px solid var(--border-subtle); background:var(--surface-card); color:var(--text-primary); font-size:12px; outline:none;">
+                                                    <option value="read" <?= $role === 'read' ? 'selected' : '' ?>>Leitura</option>
+                                                    <option value="write" <?= $role === 'write' ? 'selected' : '' ?>>Escrita</option>
+                                                    <option value="admin" <?= $role === 'admin' ? 'selected' : '' ?>>Administrador</option>
+                                                </select>
+                                                <button type="button" class="removeMemberBtn" data-user-id="<?= $uid ?>" style="border:1px solid var(--border-subtle); background:var(--surface-card); color:#ff6b6b; border-radius:10px; padding:8px 10px; cursor:pointer;">Remover</button>
+                                            </div>
+                                        </div>
+                                    <?php endforeach; ?>
+                                </div>
+                            </div>
+                        <?php endif; ?>
+                    </div>
+
+                </div>
+                <?php endif; ?>
+
             <style>
                 @media (max-width: 720px) {
                     .project-files-grid {
@@ -491,6 +496,27 @@
                         });
                     }
 
+                    function bindProjectShareToggle() {
+                        var toggleBtn = document.getElementById('toggleProjectShare');
+                        var body = document.getElementById('projectShareBody');
+                        if (!toggleBtn || !body || toggleBtn.dataset.bound) return;
+                        toggleBtn.dataset.bound = '1';
+
+                        function setOpen(open) {
+                            body.style.display = open ? 'block' : 'none';
+                            toggleBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+                            toggleBtn.title = open ? 'Fechar' : 'Abrir';
+                        }
+
+                        setOpen(false);
+
+                        toggleBtn.addEventListener('click', function (e) {
+                            e.preventDefault();
+                            var isOpen = toggleBtn.getAttribute('aria-expanded') === 'true';
+                            setOpen(!isOpen);
+                        });
+                    }
+
                     function bindProjectInstructionsModal() {
                         var openInstr = document.getElementById('openProjectInstructions');
                         if (openInstr && !openInstr.dataset.bound) {
@@ -521,8 +547,10 @@
                         }
                     }
 
+                    bindProjectShareToggle();
                     bindProjectInstructionsModal();
                     document.addEventListener('DOMContentLoaded', bindProjectInstructionsModal);
+                    document.addEventListener('DOMContentLoaded', bindProjectShareToggle);
 
                     var ellipsisBtn = document.getElementById('projectEllipsisBtn');
                     var ellipsisMenu = document.getElementById('projectEllipsisMenu');

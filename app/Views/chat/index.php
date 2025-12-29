@@ -15,6 +15,10 @@ $freeChatLimit = (int)\App\Models\Setting::get('free_memory_chat_chars', '400');
 if ($freeChatLimit <= 0) { $freeChatLimit = 400; }
 
 function render_markdown_safe(string $text): string {
+    // Alguns modelos retornam quebras de linha como texto literal "\\n".
+    // Normaliza isso antes de escapar HTML para evitar que "\\n" apareça na UI.
+    $text = str_replace(["\\r\\n", "\\n", "\\r"], "\n", $text);
+
     // Escapa HTML primeiro
     $escaped = htmlspecialchars($text, ENT_QUOTES, 'UTF-8');
 
@@ -44,6 +48,31 @@ function render_markdown_safe(string $text): string {
     // antes de títulos/listas para ficar mais legível (estilo ChatGPT)
     $escaped = preg_replace("/\n(?=(?:\d+\.|•)\s)/u", "\n\n", $escaped);
     $escaped = preg_replace("/\n(?=<strong>)/u", "\n\n", $escaped);
+
+    // Links no formato Markdown: [texto](url)
+    // Segurança: só permite URLs http(s) e links relativos iniciando com '/'
+    $escaped = preg_replace_callback('/\[([^\]\n]+)\]\(([^)\s]+)\)/u', function ($m) {
+        $label = (string)$m[1];
+        $hrefRawEscaped = (string)$m[2];
+
+        $hrefRaw = html_entity_decode($hrefRawEscaped, ENT_QUOTES, 'UTF-8');
+        $hrefRaw = trim($hrefRaw);
+        if ($hrefRaw === '') {
+            return $m[0];
+        }
+
+        $isHttp = (stripos($hrefRaw, 'http://') === 0) || (stripos($hrefRaw, 'https://') === 0);
+        $isRelative = (strpos($hrefRaw, '/') === 0);
+        if (!$isHttp && !$isRelative) {
+            return $m[0];
+        }
+
+        $hrefAttr = htmlspecialchars($hrefRaw, ENT_QUOTES, 'UTF-8');
+        if ($isHttp) {
+            return '<a href="' . $hrefAttr . '" target="_blank" rel="noopener noreferrer">' . $label . '</a>';
+        }
+        return '<a href="' . $hrefAttr . '">' . $label . '</a>';
+    }, $escaped);
 
     $blocks = preg_split("/\n{2,}/", $escaped);
     $out = '';
@@ -162,6 +191,20 @@ if (!empty($currentPlan) && is_array($currentPlan)) {
                     <span>Padrão do Tuquinha / da conta</span>
                 <?php endif; ?>
             </div>
+
+            <a href="/personalidades?conversation_id=<?= (int)$conversationId ?>" style="
+                margin-left:auto;
+                border:1px solid var(--border-subtle);
+                border-radius:999px;
+                padding:6px 10px;
+                background:var(--surface-card);
+                color:var(--text-primary);
+                font-size:12px;
+                font-weight:600;
+                text-decoration:none;
+                cursor:pointer;
+                white-space:nowrap;
+            ">Escolher personalidade</a>
         </div>
     <?php endif; ?>
     <?php if (!empty($conversationId) && $canUseConversationSettings): ?>

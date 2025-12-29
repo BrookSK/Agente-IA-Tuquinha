@@ -1,5 +1,7 @@
 <?php
 /** @var array $personalities */
+/** @var int|null $conversationId */
+$conversationId = isset($conversationId) ? (int)$conversationId : 0;
 ?>
 <style>
     .persona-card {
@@ -143,11 +145,26 @@
                             $imagePath = '/public/favicon.png';
                         }
                     ?>
-                    <a href="/chat?new=1&amp;persona_id=<?= $id ?>" class="persona-card" style="
-                        flex:0 0 280px;
-                        max-width: 300px;
-                        scroll-snap-align:center;
-                    ">
+                    <?php if ($conversationId > 0): ?>
+                        <form action="/chat/persona" method="post" style="margin:0; flex:0 0 280px; max-width:300px; scroll-snap-align:center;">
+                            <input type="hidden" name="conversation_id" value="<?= (int)$conversationId ?>">
+                            <input type="hidden" name="persona_id" value="<?= $id ?>">
+                            <button type="submit" class="persona-card" style="
+                                width:100%;
+                                padding:0;
+                                text-align:left;
+                                cursor:pointer;
+                                flex:0 0 280px;
+                                max-width: 300px;
+                                scroll-snap-align:center;
+                            ">
+                    <?php else: ?>
+                        <a href="/chat?new=1&amp;persona_id=<?= $id ?>" class="persona-card" style="
+                            flex:0 0 280px;
+                            max-width: 300px;
+                            scroll-snap-align:center;
+                        ">
+                    <?php endif; ?>
                         <div class="persona-card-image">
                             <img src="<?= htmlspecialchars($imagePath) ?>" alt="<?= htmlspecialchars($name) ?>" style="width:100%; height:100%; object-fit:cover; display:block;">
                         </div>
@@ -175,7 +192,12 @@
                                 </div>
                             <?php endif; ?>
                         </div>
-                    </a>
+                    <?php if ($conversationId > 0): ?>
+                            </button>
+                        </form>
+                    <?php else: ?>
+                        </a>
+                    <?php endif; ?>
                 <?php endforeach; ?>
             </div>
         </div>
