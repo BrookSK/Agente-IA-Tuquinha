@@ -380,7 +380,7 @@ class TuquinhaEngine
         $input[] = [
             'role' => 'system',
             'content' => [
-                ['type' => 'text', 'text' => $systemText],
+                ['type' => 'input_text', 'text' => $systemText],
             ],
         ];
 
@@ -396,7 +396,7 @@ class TuquinhaEngine
             $input[] = [
                 'role' => $m['role'],
                 'content' => [
-                    ['type' => 'text', 'text' => (string)$m['content']],
+                    ['type' => 'input_text', 'text' => (string)$m['content']],
                 ],
             ];
 
@@ -409,7 +409,7 @@ class TuquinhaEngine
             $input[] = [
                 'role' => 'user',
                 'content' => [
-                    ['type' => 'text', 'text' => 'Arquivos anexados para análise.'],
+                    ['type' => 'input_text', 'text' => 'Arquivos anexados para análise.'],
                 ],
             ];
             $lastUserIndex = count($input) - 1;
