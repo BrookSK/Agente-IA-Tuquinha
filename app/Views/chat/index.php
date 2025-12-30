@@ -866,6 +866,10 @@ if (!empty($currentPlan) && is_array($currentPlan)) {
         }
 
         const renderMarkdownSafeJs = (text) => {
+            // Alguns modelos retornam quebras de linha como texto literal "\\n".
+            // Normaliza isso antes de escapar HTML para evitar que "\\n" apareça na UI.
+            text = (text || '').toString().replace(/\\r\\n|\\n|\\r/g, '\n');
+
             const escapeHtml = (s) => s
                 .replace(/&/g, '&amp;')
                 .replace(/</g, '&lt;')
@@ -878,6 +882,7 @@ if (!empty($currentPlan) && is_array($currentPlan)) {
             out = out.replace(/^#{3,6}\s*(.+)$/gm, '<strong>$1</strong>');
             // **negrito** -> <strong>
             out = out.replace(/\*\*([\s\S]+?)\*\*/g, '<strong>$1</strong>');
+            out = out.replace(/(^|[^*])\*([^*\n][^*]*?)\*(?!\*)/g, '$1<em>$2</em>');
             // "- " no início da linha -> bullet visual
             out = out.replace(/^\-\s+/gm, '• ');
             out = out.replace(/\r\n|\r/g, '\n');
