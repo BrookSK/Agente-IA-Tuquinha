@@ -399,11 +399,13 @@ class TuquinhaEngine
                 continue;
             }
 
+            $blockType = $m['role'] === 'assistant' ? 'output_text' : 'input_text';
+
             $input[] = [
                 'type' => 'message',
                 'role' => $m['role'],
                 'content' => [
-                    ['type' => 'input_text', 'text' => (string)$m['content']],
+                    ['type' => $blockType, 'text' => (string)$m['content']],
                 ],
             ];
 
