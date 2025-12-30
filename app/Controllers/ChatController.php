@@ -407,10 +407,19 @@ class ChatController extends Controller
                     }
 
                     if ($isOpenAIModel) {
-                        $isDocx = ($ext === 'docx') || ($type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
-                        if ($isDocx) {
-                            $friendly = "Este tipo de arquivo (.docx/Word) não é suportado pelo modelo OpenAI neste chat. "
-                                . "Sugestões: (1) converta para PDF ou TXT e envie novamente; (2) selecione um modelo Claude (que aceita documentos via base64).";
+                        $isOfficeUnsupported = in_array($ext, ['doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx'], true)
+                            || in_array($type, [
+                                'application/msword',
+                                'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                                'application/vnd.ms-excel',
+                                'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                                'application/vnd.ms-powerpoint',
+                                'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+                            ], true);
+
+                        if ($isOfficeUnsupported) {
+                            $friendly = "Este tipo de arquivo (Word/Excel/PowerPoint) não é suportado pelo modelo OpenAI neste chat. "
+                                . "Sugestões: (1) converta para PDF, TXT ou CSV e envie novamente; (2) selecione um modelo Claude (que aceita documentos via base64).";
 
                             if ($isAjax) {
                                 header('Content-Type: application/json; charset=utf-8');
@@ -764,6 +773,44 @@ class ChatController extends Controller
                             }
                             if ($name === '') {
                                 $name = 'arquivo';
+                            }
+
+                            // Bloqueio amigável para Office no OpenAI (também vale para arquivos mencionados do projeto)
+                            $modelToUseHere = isset($_SESSION['chat_model']) && is_string($_SESSION['chat_model']) && $_SESSION['chat_model'] !== ''
+                                ? (string)$_SESSION['chat_model']
+                                : '';
+                            $isOpenAIModelHere = !str_starts_with($modelToUseHere, 'claude-');
+
+                            $extHere = '';
+                            if (strpos($name, '.') !== false) {
+                                $extHere = strtolower((string)pathinfo($name, PATHINFO_EXTENSION));
+                            }
+
+                            if ($isOpenAIModelHere) {
+                                $isOfficeUnsupportedHere = in_array($extHere, ['doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx'], true)
+                                    || in_array($mime, [
+                                        'application/msword',
+                                        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                                        'application/vnd.ms-excel',
+                                        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                                        'application/vnd.ms-powerpoint',
+                                        'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+                                    ], true);
+                                if ($isOfficeUnsupportedHere) {
+                                    $friendly = "O arquivo citado ({$name}) é do tipo Word/Excel/PowerPoint e não é suportado pelo modelo OpenAI neste chat. "
+                                        . "Sugestões: (1) converta para PDF, TXT ou CSV; (2) selecione um modelo Claude.";
+                                    if ($isAjax) {
+                                        header('Content-Type: application/json; charset=utf-8');
+                                        echo json_encode([
+                                            'success' => false,
+                                            'error' => $friendly,
+                                        ]);
+                                        exit;
+                                    }
+                                    $_SESSION['chat_error'] = $friendly;
+                                    header('Location: /chat');
+                                    exit;
+                                }
                             }
 
                             $projectFileInputsForModel[] = [
