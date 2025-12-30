@@ -377,6 +377,11 @@ class ChatController extends Controller
             if (!empty($_FILES['attachments']) && is_array($_FILES['attachments']['name'])) {
                 $count = count($_FILES['attachments']['name']);
 
+                $modelToUse = isset($_SESSION['chat_model']) && is_string($_SESSION['chat_model']) && $_SESSION['chat_model'] !== ''
+                    ? (string)$_SESSION['chat_model']
+                    : '';
+                $isOpenAIModel = !str_starts_with($modelToUse, 'claude-');
+
                 for ($i = 0; $i < $count; $i++) {
                     $error = $_FILES['attachments']['error'][$i] ?? UPLOAD_ERR_NO_FILE;
                     if ($error !== UPLOAD_ERR_OK) {
@@ -395,6 +400,32 @@ class ChatController extends Controller
                     $isImage = str_starts_with($type, 'image/');
                     $isPdf = $type === 'application/pdf';
                     $isAudio = str_starts_with($type, 'audio/');
+
+                    $ext = '';
+                    if (is_string($name) && $name !== '' && strpos($name, '.') !== false) {
+                        $ext = strtolower((string)pathinfo($name, PATHINFO_EXTENSION));
+                    }
+
+                    if ($isOpenAIModel) {
+                        $isDocx = ($ext === 'docx') || ($type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
+                        if ($isDocx) {
+                            $friendly = "Este tipo de arquivo (.docx/Word) não é suportado pelo modelo OpenAI neste chat. "
+                                . "Sugestões: (1) converta para PDF ou TXT e envie novamente; (2) selecione um modelo Claude (que aceita documentos via base64).";
+
+                            if ($isAjax) {
+                                header('Content-Type: application/json; charset=utf-8');
+                                echo json_encode([
+                                    'success' => false,
+                                    'error' => $friendly,
+                                ]);
+                                exit;
+                            }
+
+                            $_SESSION['chat_error'] = $friendly;
+                            header('Location: /chat');
+                            exit;
+                        }
+                    }
 
                     if ($isImage && !$allowImages) {
                         continue;
