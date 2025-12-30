@@ -97,6 +97,35 @@
     body[data-theme="light"] #projectPersonaPicker::-webkit-scrollbar-thumb:hover {
         background: rgba(15, 23, 42, 0.45);
     }
+
+    .projectPersonaCard {
+        transition: transform 0.18s ease, opacity 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+        opacity: 0.55;
+        transform: scale(0.96);
+        box-shadow: 0 10px 24px rgba(0,0,0,0.22);
+    }
+    .projectPersonaCard[aria-pressed="true"] {
+        opacity: 1;
+        transform: scale(1);
+        border-color: #2e7d32 !important;
+        box-shadow: 0 18px 36px rgba(0,0,0,0.34);
+    }
+    .projectPersonaNavBtn {
+        position:absolute;
+        top:50%;
+        transform:translateY(-50%);
+        width:32px;
+        height:32px;
+        border-radius:999px;
+        border:1px solid var(--border-subtle);
+        background:rgba(5,5,9,0.9);
+        color:var(--text-primary);
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        cursor:pointer;
+        z-index:2;
+    }
 </style>
 <div style="max-width: 1100px; margin: 0 auto;">
     <div id="projectHeaderRow" style="display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:14px;">
@@ -207,7 +236,10 @@
                                 <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:8px;">
                                     <div style="font-size:12px; color:var(--text-secondary); white-space:nowrap;">Tuquinha</div>
                                 </div>
-                                <div id="projectPersonaPicker" style="display:flex; gap:10px; width:100%; box-sizing:border-box; overflow-x:auto; overflow-y:hidden; max-width:100%; min-width:0; padding-bottom:4px; scroll-snap-type:x mandatory;">
+                                <div style="position:relative;">
+                                    <button type="button" id="projectPersonaPrev" class="projectPersonaNavBtn" style="left:0;" aria-label="Anterior">‹</button>
+                                    <button type="button" id="projectPersonaNext" class="projectPersonaNavBtn" style="right:0;" aria-label="Próximo">›</button>
+                                    <div id="projectPersonaPicker" style="display:flex; gap:12px; width:100%; box-sizing:border-box; overflow-x:auto; overflow-y:hidden; max-width:100%; min-width:0; padding:8px 40px 10px 40px; scroll-snap-type:x mandatory;">
                                     <?php foreach ($personalities as $p): ?>
                                         <?php
                                             $pid = (int)($p['id'] ?? 0);
@@ -220,7 +252,7 @@
                                         <button type="button" class="projectPersonaCard" data-persona-id="<?= $pid ?>" aria-pressed="<?= $selected ? 'true' : 'false' ?>" style="
                                             flex:0 0 220px;
                                             max-width: 240px;
-                                            scroll-snap-align:start;
+                                            scroll-snap-align:center;
                                             border:1px solid <?= $selected ? 'var(--border-subtle)' : 'var(--border-subtle)' ?>;
                                             background: <?= $selected ? 'var(--surface-card)' : 'var(--surface-card)' ?>;
                                             border-radius:14px;
@@ -247,6 +279,7 @@
                                             </div>
                                         </button>
                                     <?php endforeach; ?>
+                                </div>
                                 </div>
                             </div>
                         <?php endif; ?>
@@ -616,6 +649,15 @@
                         if (!hidden || !wrap || wrap.dataset.bound) return;
                         wrap.dataset.bound = '1';
 
+                        var btnPrev = document.getElementById('projectPersonaPrev');
+                        var btnNext = document.getElementById('projectPersonaNext');
+
+                        function scrollByCard(direction) {
+                            var card = wrap.querySelector('.projectPersonaCard');
+                            var delta = card ? (card.offsetWidth + 12) : 240;
+                            wrap.scrollBy({ left: delta * direction, behavior: 'smooth' });
+                        }
+
                         function setSelected(id) {
                             hidden.value = id ? String(id) : '';
                             wrap.querySelectorAll('.projectPersonaCard').forEach(function (btn) {
@@ -624,6 +666,11 @@
                                 btn.setAttribute('aria-pressed', on ? 'true' : 'false');
                                 btn.style.borderColor = on ? '#2e7d32' : 'var(--border-subtle)';
                             });
+
+                            var active = wrap.querySelector('.projectPersonaCard[aria-pressed="true"]');
+                            if (active && active.scrollIntoView) {
+                                try { active.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' }); } catch (e) {}
+                            }
                         }
 
                         var initial = parseInt(hidden.value || '0', 10);
@@ -646,6 +693,21 @@
                             var id = parseInt(btn.getAttribute('data-persona-id') || '0', 10);
                             if (id > 0) setSelected(id);
                         });
+
+                        if (btnPrev && !btnPrev.dataset.bound) {
+                            btnPrev.dataset.bound = '1';
+                            btnPrev.addEventListener('click', function (e) {
+                                e.preventDefault();
+                                scrollByCard(-1);
+                            });
+                        }
+                        if (btnNext && !btnNext.dataset.bound) {
+                            btnNext.dataset.bound = '1';
+                            btnNext.addEventListener('click', function (e) {
+                                e.preventDefault();
+                                scrollByCard(1);
+                            });
+                        }
                     }
 
                     function bindProjectInstructionsModal() {

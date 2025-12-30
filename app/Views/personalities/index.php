@@ -16,11 +16,20 @@ $conversationId = isset($conversationId) ? (int)$conversationId : 0;
         scroll-snap-align: center;
         box-shadow: 0 18px 35px rgba(0,0,0,0.25);
         transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+        opacity: 0.55;
+        transform: scale(0.96);
     }
     .persona-card:hover {
         transform: translateY(-4px);
         box-shadow: 0 22px 40px rgba(15,23,42,0.3);
         border-color: var(--accent-soft);
+        opacity: 0.95;
+    }
+    .persona-card.is-selected {
+        opacity: 1;
+        transform: scale(1);
+        border-color: #2e7d32;
+        box-shadow: 0 22px 46px rgba(0,0,0,0.35);
     }
     .persona-card-image {
         width: 100%;
@@ -38,6 +47,23 @@ $conversationId = isset($conversationId) ? (int)$conversationId : 0;
     .persona-card-muted {
         font-size: 12px;
         color: var(--text-secondary);
+    }
+
+    .persona-nav-btn {
+        position:absolute;
+        top:50%;
+        transform:translateY(-50%);
+        width:32px;
+        height:32px;
+        border-radius:999px;
+        border:1px solid #272727;
+        background:rgba(5,5,9,0.9);
+        color:#f5f5f5;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        cursor:pointer;
+        z-index:2;
     }
 </style>
 <div style="max-width: 1000px; margin: 0 auto;">
@@ -61,40 +87,8 @@ $conversationId = isset($conversationId) ? (int)$conversationId : 0;
         $hasMb = function_exists('mb_substr') && function_exists('mb_strlen');
         ?>
         <div style="position:relative; margin-top:16px;">
-            <button type="button" id="persona-prev" style="
-                position:absolute;
-                left:0;
-                top:50%;
-                transform:translateY(-50%);
-                width:32px;
-                height:32px;
-                border-radius:999px;
-                border:1px solid #272727;
-                background:rgba(5,5,9,0.9);
-                color:#f5f5f5;
-                display:flex;
-                align-items:center;
-                justify-content:center;
-                cursor:pointer;
-                z-index:2;
-            ">‹</button>
-            <button type="button" id="persona-next" style="
-                position:absolute;
-                right:0;
-                top:50%;
-                transform:translateY(-50%);
-                width:32px;
-                height:32px;
-                border-radius:999px;
-                border:1px solid #272727;
-                background:rgba(5,5,9,0.9);
-                color:#f5f5f5;
-                display:flex;
-                align-items:center;
-                justify-content:center;
-                cursor:pointer;
-                z-index:2;
-            ">›</button>
+            <button type="button" id="persona-prev" class="persona-nav-btn" style="left:0;" aria-label="Anterior">‹</button>
+            <button type="button" id="persona-next" class="persona-nav-btn" style="right:0;" aria-label="Próximo">›</button>
 
             <div id="persona-carousel" style="
                 display:flex;

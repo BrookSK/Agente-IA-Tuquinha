@@ -21,10 +21,14 @@ $successMessage = $success ?? null;
         box-shadow: 0 12px 30px rgba(15,23,42,0.25);
         transition: transform 0.16s ease, box-shadow 0.16s ease, border-color 0.16s ease;
         scroll-snap-align: center;
+        opacity: 0.55;
+        transform: scale(0.96);
     }
     .persona-default-card--active {
         border-color: var(--accent-soft);
         box-shadow: 0 0 0 1px rgba(244,114,182,0.4);
+        opacity: 1;
+        transform: scale(1);
     }
     .persona-default-card-image {
         width: 100%;
@@ -36,6 +40,23 @@ $successMessage = $success ?? null;
         font-size: 12px;
         color: var(--text-secondary);
         line-height: 1.4;
+    }
+
+    .persona-nav-btn {
+        position:absolute;
+        top:50%;
+        transform:translateY(-50%);
+        width:32px;
+        height:32px;
+        border-radius:999px;
+        border:1px solid var(--border-subtle);
+        background:rgba(5,5,9,0.9);
+        color:var(--text-primary);
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        cursor:pointer;
+        z-index:2;
     }
 </style>
 <div style="max-width: 900px; margin: 0 auto;">
@@ -62,14 +83,16 @@ $successMessage = $success ?? null;
     <?php else: ?>
         <form action="/conta/personalidade" method="post">
             <input type="hidden" name="default_persona_id" id="default-persona-id" value="<?= $currentDefaultPersonaId ?>">
-            <div id="persona-default-list" style="
-                margin-top:12px;
-                display:flex;
-                gap:18px;
-                overflow-x:auto;
-                padding:8px 2px 12px 2px;
-                scroll-snap-type:x mandatory;
-            ">
+            <div style="position:relative; margin-top:12px;">
+                <button type="button" id="default-persona-prev" class="persona-nav-btn" style="left:0;" aria-label="Anterior">‹</button>
+                <button type="button" id="default-persona-next" class="persona-nav-btn" style="right:0;" aria-label="Próximo">›</button>
+                <div id="persona-default-list" style="
+                    display:flex;
+                    gap:18px;
+                    overflow-x:auto;
+                    padding:8px 40px 12px 40px;
+                    scroll-snap-type:x mandatory;
+                ">
                 <button type="button" class="persona-card-btn persona-default-card<?= $currentDefaultPersonaId === 0 ? ' persona-default-card--active' : '' ?>" data-persona-id="0" style="flex:0 0 280px; max-width:300px; scroll-snap-align:center;">
                     <div class="persona-default-card-image">
                         <img src="/public/favicon.png" alt="Padrão do Tuquinha" style="width:100%; height:100%; object-fit:cover; display:block;">
@@ -112,6 +135,7 @@ $successMessage = $success ?? null;
                         </div>
                     </button>
                 <?php endforeach; ?>
+                </div>
             </div>
 
             <div style="margin-top:10px; display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:wrap;">
