@@ -9,10 +9,12 @@ use App\Models\Attachment;
 class TuquinhaEngine
 {
     private string $systemPrompt;
+    private ?string $lastProviderError;
 
     public function __construct()
     {
         $this->systemPrompt = $this->buildSystemPrompt();
+        $this->lastProviderError = null;
     }
 
     public function generateResponse(array $messages, ?string $model = null): string
@@ -49,6 +51,7 @@ class TuquinhaEngine
         $configuredApiKey = Setting::get('openai_api_key', AI_API_KEY);
 
         if (empty($configuredApiKey)) {
+            $this->lastProviderError = 'openai_api_key_missing';
             return [
                 'content' => $this->fallbackResponse($messages),
                 'total_tokens' => 0,
@@ -99,6 +102,8 @@ class TuquinhaEngine
         $result = curl_exec($ch);
 
         if ($result === false) {
+            $this->lastProviderError = 'openai_chat_completions_curl_error=' . (string)curl_error($ch);
+            error_log('[TuquinhaEngine] OpenAI /v1/chat/completions failed: ' . (string)$this->lastProviderError);
             curl_close($ch);
             return [
                 'content' => $this->fallbackResponse($messages),
@@ -110,6 +115,8 @@ class TuquinhaEngine
         curl_close($ch);
 
         if ($httpCode < 200 || $httpCode >= 300) {
+            $this->lastProviderError = 'openai_chat_completions_http=' . (string)$httpCode . '; body=' . (string)$result;
+            error_log('[TuquinhaEngine] OpenAI /v1/chat/completions http error: ' . (string)$this->lastProviderError);
             return [
                 'content' => $this->fallbackResponse($messages),
                 'total_tokens' => 0,
@@ -137,6 +144,7 @@ class TuquinhaEngine
     {
         $apiKey = Setting::get('anthropic_api_key', ANTHROPIC_API_KEY);
         if (empty($apiKey)) {
+            $this->lastProviderError = 'anthropic_api_key_missing';
             return [
                 'content' => $this->fallbackResponse($messages),
                 'total_tokens' => 0,
@@ -236,6 +244,8 @@ class TuquinhaEngine
 
         $result = curl_exec($ch);
         if ($result === false) {
+            $this->lastProviderError = 'anthropic_messages_curl_error=' . (string)curl_error($ch);
+            error_log('[TuquinhaEngine] Anthropic /v1/messages failed: ' . (string)$this->lastProviderError);
             curl_close($ch);
             return [
                 'content' => $this->fallbackResponse($messages),
@@ -329,6 +339,10 @@ class TuquinhaEngine
                 if ($attachmentId > 0) {
                     Attachment::updateOpenAIFileId($attachmentId, $fid);
                 }
+            } else {
+                $hint = $name !== '' ? $name : ($url !== '' ? $url : $tmpPath);
+                $this->lastProviderError = 'openai_files_upload_failed; hint=' . (string)$hint;
+                error_log('[TuquinhaEngine] OpenAI /v1/files upload failed: ' . (string)$this->lastProviderError);
             }
         }
 
@@ -546,6 +560,8 @@ class TuquinhaEngine
 
         $result = curl_exec($ch);
         if ($result === false) {
+            $this->lastProviderError = 'openai_files_curl_error=' . (string)curl_error($ch);
+            error_log('[TuquinhaEngine] OpenAI /v1/files curl error: ' . (string)$this->lastProviderError);
             curl_close($ch);
             return null;
         }
@@ -553,6 +569,8 @@ class TuquinhaEngine
         curl_close($ch);
 
         if ($httpCode < 200 || $httpCode >= 300) {
+            $this->lastProviderError = 'openai_files_http=' . (string)$httpCode . '; body=' . (string)$result;
+            error_log('[TuquinhaEngine] OpenAI /v1/files http error: ' . (string)$this->lastProviderError);
             return null;
         }
 
@@ -571,12 +589,18 @@ class TuquinhaEngine
             }
         }
 
-        return "Opa! Vou ser sincero com você: eu ainda não estou conectado à IA em produção, então essa aqui é uma resposta de emergência. 💡\n\n" .
-            "Mas já dá pra te guiar num caminho seguro:\n\n" .
-            "1. Me conta em qual fase do projeto de marca você tá (briefing, estratégia, visual, apresentação...).\n" .
-            "2. Qual é a maior dúvida específica que você tem agora?\n" .
-            "3. O que você já tentou fazer até aqui?\n\n" .
-            "Com essas três coisas eu consigo te devolver um passo a passo bem prático. Bora lá?";
+        $msg = "Não consegui acessar a IA agora.\n\n" .
+            "Se quiser, me diga:\n" .
+            "1. Em qual etapa você está (briefing, estratégia, visual, apresentação...).\n" .
+            "2. Qual é a dúvida específica.\n" .
+            "3. O que você já tentou.\n\n" .
+            "Assim eu te guio no passo a passo enquanto normaliza.\n";
+
+        if (is_string($this->lastProviderError) && trim($this->lastProviderError) !== '') {
+            $msg .= "\n[DEBUG] " . $this->lastProviderError;
+        }
+
+        return $msg;
     }
 
     private function buildSystemPrompt(): string

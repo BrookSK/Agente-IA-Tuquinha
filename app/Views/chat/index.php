@@ -99,6 +99,16 @@ function render_markdown_safe(string $text): string {
 .tuq-chat-md li { margin: 0.15em 0; }
 .tuq-chat-md .tuq-chat-hr { border: none; border-top: 1px solid var(--border-subtle); margin: 14px 0; opacity: 0.8; }
 
+ #chat-send-btn {
+     flex: 0 0 auto !important;
+     height: 36px !important;
+     padding: 0 14px !important;
+     font-size: 13px !important;
+     line-height: 1 !important;
+     max-width: 120px !important;
+     white-space: nowrap !important;
+ }
+
 @media (max-width: 640px) {
     #chat-input-bar {
         flex-direction: column;
@@ -554,7 +564,7 @@ if (!empty($currentPlan) && is_array($currentPlan)) {
                 font-size: 14px;
                 max-height: 140px;
             " placeholder="Pergunta pro Tuquinha sobre branding, identidade visual, posicionamento..."><?php if (!empty($draftMessage)) { echo htmlspecialchars($draftMessage); } ?></textarea>
-            <button type="submit" style="
+            <button id="chat-send-btn" type="submit" style="
                 border: none;
                 border-radius: 999px;
                 background: linear-gradient(135deg, #e53935, #ff6f60);
