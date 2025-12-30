@@ -61,7 +61,7 @@ $successMessage = $success ?? null;
         position: relative;
         margin-top: 12px;
         padding: 8px 40px 12px 40px;
-        min-height: 380px;
+        min-height: 440px;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -70,7 +70,7 @@ $successMessage = $success ?? null;
     .persona-stage-items {
         position: relative;
         width: 100%;
-        height: 360px;
+        height: 420px;
         display: flex;
         align-items: center;
         justify-content: center;

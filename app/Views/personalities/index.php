@@ -68,7 +68,7 @@ $conversationId = isset($conversationId) ? (int)$conversationId : 0;
         position: relative;
         margin-top: 16px;
         padding: 8px 40px 10px 40px;
-        min-height: 340px;
+        min-height: 420px;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -77,7 +77,7 @@ $conversationId = isset($conversationId) ? (int)$conversationId : 0;
     #persona-carousel {
         position: relative;
         width: 100%;
-        height: 320px;
+        height: 400px;
         display: flex;
         align-items: center;
         justify-content: center;
