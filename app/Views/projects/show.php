@@ -312,21 +312,26 @@
             <div style="display:flex; flex-direction:column; gap:12px;">
                 <?php if (!empty($projectMemoryItems)): ?>
                 <div style="background:var(--surface-card); border:1px solid var(--border-subtle); border-radius:14px; padding:14px;">
-                    <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:10px;">
-                        <div style="font-weight:650;">Memórias automáticas</div>
+                    <div style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
+                        <button type="button" id="toggleAutoMemories" aria-expanded="false" style="display:flex; align-items:center; gap:8px; border:none; background:transparent; color:var(--text-primary); cursor:pointer; padding:0; font:inherit;">
+                            <span id="autoMemoriesChevron" style="display:inline-block; width:18px; text-align:center; color:var(--text-secondary);">▸</span>
+                            <span style="font-weight:650;">Memórias automáticas</span>
+                        </button>
                         <div style="color:var(--text-secondary); font-size:12px;">Somente admin</div>
                     </div>
-                    <div style="display:flex; flex-direction:column; gap:10px;">
+                    <div id="autoMemoriesBody" style="display:none; margin-top:10px;">
+                        <div style="display:flex; flex-direction:column; gap:8px;">
                         <?php foreach ($projectMemoryItems as $it): ?>
                             <?php $iid = (int)($it['id'] ?? 0); ?>
                             <div style="border:1px solid var(--border-subtle); border-radius:12px; padding:10px 12px; background:var(--surface-subtle);">
-                                <textarea class="pmiText" data-item-id="<?= $iid ?>" style="width:100%; resize:vertical; min-height:44px; padding:10px 12px; border-radius:10px; border:1px solid var(--border-subtle); background:var(--surface-card); color:var(--text-primary); font-size:12px; outline:none;" spellcheck="false"><?= htmlspecialchars((string)($it['content'] ?? '')) ?></textarea>
+                                <textarea class="pmiText" data-item-id="<?= $iid ?>" style="width:100%; resize:vertical; min-height:38px; padding:8px 10px; border-radius:10px; border:1px solid var(--border-subtle); background:var(--surface-card); color:var(--text-primary); font-size:12px; outline:none;" spellcheck="false"><?= htmlspecialchars((string)($it['content'] ?? '')) ?></textarea>
                                 <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:8px;">
-                                    <button type="button" class="pmiSave" data-item-id="<?= $iid ?>" style="border:1px solid var(--border-subtle); background:var(--surface-card); color:#2e7d32; border-radius:10px; padding:8px 10px; cursor:pointer;">Salvar</button>
-                                    <button type="button" class="pmiDelete" data-item-id="<?= $iid ?>" style="border:1px solid var(--border-subtle); background:var(--surface-card); color:#ff6b6b; border-radius:10px; padding:8px 10px; cursor:pointer;">Excluir</button>
+                                    <button type="button" class="pmiSave" data-item-id="<?= $iid ?>" title="Salvar" style="border:1px solid var(--border-subtle); background:var(--surface-card); color:#2e7d32; border-radius:10px; padding:6px 10px; cursor:pointer; font-size:12px;">✓</button>
+                                    <button type="button" class="pmiDelete" data-item-id="<?= $iid ?>" title="Excluir" style="border:1px solid var(--border-subtle); background:var(--surface-card); color:#ff6b6b; border-radius:10px; padding:6px 10px; cursor:pointer; font-size:12px;">✕</button>
                                 </div>
                             </div>
                         <?php endforeach; ?>
+                        </div>
                     </div>
                 </div>
                 <?php endif; ?>
@@ -999,6 +1004,33 @@
                             }
                         });
                     });
+
+                    (function () {
+                        var btn = document.getElementById('toggleAutoMemories');
+                        var body = document.getElementById('autoMemoriesBody');
+                        var chev = document.getElementById('autoMemoriesChevron');
+                        if (!btn || !body || !chev) return;
+                        var key = 'project_auto_memories_open_<?= (int)($project['id'] ?? 0) ?>';
+                        var isOpen = false;
+                        try {
+                            isOpen = window.localStorage.getItem(key) === '1';
+                        } catch (e) {
+                            isOpen = false;
+                        }
+                        function apply(open) {
+                            body.style.display = open ? 'block' : 'none';
+                            btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+                            chev.textContent = open ? '▾' : '▸';
+                        }
+                        apply(isOpen);
+                        btn.addEventListener('click', function () {
+                            isOpen = !isOpen;
+                            apply(isOpen);
+                            try {
+                                window.localStorage.setItem(key, isOpen ? '1' : '0');
+                            } catch (e) {}
+                        });
+                    })();
                 })();
             </script>
 
