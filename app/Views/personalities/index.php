@@ -5,17 +5,15 @@ $conversationId = isset($conversationId) ? (int)$conversationId : 0;
 ?>
 <style>
     .persona-card {
-        flex: 0 0 280px;
-        max-width: 300px;
+        width: 300px;
         background: var(--surface-card);
         border-radius: 20px;
         border: 1px solid var(--border-subtle);
         overflow: hidden;
         color: var(--text-primary);
         text-decoration: none;
-        scroll-snap-align: center;
         box-shadow: 0 18px 35px rgba(0,0,0,0.25);
-        transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+        transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease, opacity 0.18s ease, filter 0.18s ease;
         opacity: 0.55;
         transform: scale(0.96);
     }
@@ -65,6 +63,57 @@ $conversationId = isset($conversationId) ? (int)$conversationId : 0;
         cursor:pointer;
         z-index:2;
     }
+
+    .persona-stage {
+        position: relative;
+        margin-top: 16px;
+        padding: 8px 40px 10px 40px;
+        min-height: 340px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+    }
+    #persona-carousel {
+        position: relative;
+        width: 100%;
+        height: 320px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        pointer-events: none;
+    }
+    #persona-carousel .persona-card {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%) scale(0.96);
+        pointer-events: auto;
+    }
+    #persona-carousel .persona-card.is-center {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1.08);
+        filter: none;
+        z-index: 3;
+    }
+    #persona-carousel .persona-card.is-left {
+        opacity: 0.38;
+        transform: translate(calc(-50% - 260px), -50%) scale(0.9);
+        filter: grayscale(1);
+        z-index: 2;
+    }
+    #persona-carousel .persona-card.is-right {
+        opacity: 0.38;
+        transform: translate(calc(-50% + 260px), -50%) scale(0.9);
+        filter: grayscale(1);
+        z-index: 2;
+    }
+    #persona-carousel .persona-card.is-hidden {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(0.85);
+        pointer-events: none;
+        z-index: 1;
+    }
 </style>
 <div style="max-width: 1000px; margin: 0 auto;">
     <h1 style="font-size: 26px; margin-bottom: 10px; font-weight: 650;">Escolha a personalidade do Tuquinha</h1>
@@ -86,17 +135,12 @@ $conversationId = isset($conversationId) ? (int)$conversationId : 0;
         <?php
         $hasMb = function_exists('mb_substr') && function_exists('mb_strlen');
         ?>
-        <div style="position:relative; margin-top:16px;">
+        <div class="persona-stage">
             <button type="button" id="persona-prev" class="persona-nav-btn" style="left:0;" aria-label="Anterior">‹</button>
             <button type="button" id="persona-next" class="persona-nav-btn" style="right:0;" aria-label="Próximo">›</button>
 
             <div id="persona-carousel" style="
                 display:flex;
-                gap:18px;
-                overflow-x:auto;
-                padding:8px 40px 10px 40px;
-                scroll-snap-type:x mandatory;
-                scrollbar-width:thin;
             ">
                 <?php foreach ($personalities as $persona): ?>
                     <?php
@@ -140,7 +184,7 @@ $conversationId = isset($conversationId) ? (int)$conversationId : 0;
                         }
                     ?>
                     <?php if ($conversationId > 0): ?>
-                        <form action="/chat/persona" method="post" style="margin:0; flex:0 0 280px; max-width:300px; scroll-snap-align:center;">
+                        <form action="/chat/persona" method="post" style="margin:0;">
                             <input type="hidden" name="conversation_id" value="<?= (int)$conversationId ?>">
                             <input type="hidden" name="persona_id" value="<?= $id ?>">
                             <button type="submit" class="persona-card" style="
@@ -148,15 +192,9 @@ $conversationId = isset($conversationId) ? (int)$conversationId : 0;
                                 padding:0;
                                 text-align:left;
                                 cursor:pointer;
-                                flex:0 0 280px;
-                                max-width: 300px;
-                                scroll-snap-align:center;
                             ">
                     <?php else: ?>
                         <a href="/chat?new=1&amp;persona_id=<?= $id ?>" class="persona-card" style="
-                            flex:0 0 280px;
-                            max-width: 300px;
-                            scroll-snap-align:center;
                         ">
                     <?php endif; ?>
                         <div class="persona-card-image">
@@ -205,17 +243,79 @@ document.addEventListener('DOMContentLoaded', function () {
     var btnPrev = document.getElementById('persona-prev');
     var btnNext = document.getElementById('persona-next');
 
-    function scrollByCard(direction) {
-        var card = track.querySelector('.persona-card');
-        var delta = card ? (card.offsetWidth + 18) : 260;
-        track.scrollBy({ left: delta * direction, behavior: 'smooth' });
+    var cards = track.querySelectorAll('.persona-card');
+    if (!cards || cards.length === 0) return;
+
+    var currentIndex = 0;
+
+    function normalizeIndex(i) {
+        var len = cards.length;
+        if (len <= 0) return 0;
+        var x = i % len;
+        if (x < 0) x += len;
+        return x;
+    }
+
+    function applyVisualState() {
+        cards.forEach(function (c) {
+            c.classList.remove('is-left');
+            c.classList.remove('is-center');
+            c.classList.remove('is-right');
+            c.classList.remove('is-hidden');
+        });
+
+        var len = cards.length;
+        if (len <= 0) return;
+
+        var center = cards[currentIndex];
+        var left = cards[normalizeIndex(currentIndex - 1)];
+        var right = cards[normalizeIndex(currentIndex + 1)];
+
+        cards.forEach(function (c) {
+            c.classList.add('is-hidden');
+        });
+        if (left) left.classList.remove('is-hidden');
+        if (right) right.classList.remove('is-hidden');
+        if (center) center.classList.remove('is-hidden');
+
+        if (left) left.classList.add('is-left');
+        if (right) right.classList.add('is-right');
+        if (center) center.classList.add('is-center');
+
+        cards.forEach(function (c) {
+            c.classList.remove('is-selected');
+        });
+        if (center) center.classList.add('is-selected');
+    }
+
+    function selectIndex(i) {
+        currentIndex = normalizeIndex(i);
+        applyVisualState();
     }
 
     if (btnPrev) {
-        btnPrev.addEventListener('click', function () { scrollByCard(-1); });
+        btnPrev.addEventListener('click', function (e) {
+            e.preventDefault();
+            selectIndex(currentIndex - 1);
+        });
     }
     if (btnNext) {
-        btnNext.addEventListener('click', function () { scrollByCard(1); });
+        btnNext.addEventListener('click', function (e) {
+            e.preventDefault();
+            selectIndex(currentIndex + 1);
+        });
     }
+
+    cards.forEach(function (card) {
+        card.addEventListener('click', function () {
+            var idx = 0;
+            cards.forEach(function (c, i) {
+                if (c === card) idx = i;
+            });
+            selectIndex(idx);
+        });
+    });
+
+    selectIndex(currentIndex);
 });
 </script>

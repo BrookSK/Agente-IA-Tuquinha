@@ -8,8 +8,7 @@ $successMessage = $success ?? null;
 ?>
 <style>
     .persona-default-card {
-        flex: 0 0 280px;
-        max-width: 300px;
+        width: 300px;
         background: var(--surface-card);
         border-radius: 20px;
         border: 1px solid var(--border-subtle);
@@ -19,8 +18,7 @@ $successMessage = $success ?? null;
         text-align: left;
         cursor: pointer;
         box-shadow: 0 12px 30px rgba(15,23,42,0.25);
-        transition: transform 0.16s ease, box-shadow 0.16s ease, border-color 0.16s ease;
-        scroll-snap-align: center;
+        transition: transform 0.16s ease, box-shadow 0.16s ease, border-color 0.16s ease, opacity 0.16s ease, filter 0.16s ease;
         opacity: 0.55;
         transform: scale(0.96);
     }
@@ -58,6 +56,57 @@ $successMessage = $success ?? null;
         cursor:pointer;
         z-index:2;
     }
+
+    .persona-stage {
+        position: relative;
+        margin-top: 12px;
+        padding: 8px 40px 12px 40px;
+        min-height: 380px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+    }
+    .persona-stage-items {
+        position: relative;
+        width: 100%;
+        height: 360px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        pointer-events: none;
+    }
+    .persona-stage-items .persona-default-card {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%) scale(0.96);
+        pointer-events: auto;
+    }
+    .persona-default-card.is-center {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1.08);
+        filter: none;
+        z-index: 3;
+    }
+    .persona-default-card.is-left {
+        opacity: 0.38;
+        transform: translate(calc(-50% - 260px), -50%) scale(0.9);
+        filter: grayscale(1);
+        z-index: 2;
+    }
+    .persona-default-card.is-right {
+        opacity: 0.38;
+        transform: translate(calc(-50% + 260px), -50%) scale(0.9);
+        filter: grayscale(1);
+        z-index: 2;
+    }
+    .persona-default-card.is-hidden {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(0.85);
+        pointer-events: none;
+        z-index: 1;
+    }
 </style>
 <div style="max-width: 900px; margin: 0 auto;">
     <h1 style="font-size: 22px; margin-bottom: 6px; font-weight: 650;">Escolha sua personalidade padrão</h1>
@@ -83,17 +132,11 @@ $successMessage = $success ?? null;
     <?php else: ?>
         <form action="/conta/personalidade" method="post">
             <input type="hidden" name="default_persona_id" id="default-persona-id" value="<?= $currentDefaultPersonaId ?>">
-            <div style="position:relative; margin-top:12px;">
+            <div class="persona-stage">
                 <button type="button" id="default-persona-prev" class="persona-nav-btn" style="left:0;" aria-label="Anterior">‹</button>
                 <button type="button" id="default-persona-next" class="persona-nav-btn" style="right:0;" aria-label="Próximo">›</button>
-                <div id="persona-default-list" style="
-                    display:flex;
-                    gap:18px;
-                    overflow-x:auto;
-                    padding:8px 40px 12px 40px;
-                    scroll-snap-type:x mandatory;
-                ">
-                <button type="button" class="persona-card-btn persona-default-card<?= $currentDefaultPersonaId === 0 ? ' persona-default-card--active' : '' ?>" data-persona-id="0" style="flex:0 0 280px; max-width:300px; scroll-snap-align:center;">
+                <div id="persona-default-list" class="persona-stage-items">
+                <button type="button" class="persona-card-btn persona-default-card<?= $currentDefaultPersonaId === 0 ? ' persona-default-card--active' : '' ?>" data-persona-id="0">
                     <div class="persona-default-card-image">
                         <img src="/public/favicon.png" alt="Padrão do Tuquinha" style="width:100%; height:100%; object-fit:cover; display:block;">
                     </div>
@@ -114,7 +157,7 @@ $successMessage = $success ?? null;
                             $imagePath = '/public/favicon.png';
                         }
                     ?>
-                    <button type="button" class="persona-card-btn persona-default-card<?= $currentDefaultPersonaId === $pid ? ' persona-default-card--active' : '' ?>" data-persona-id="<?= $pid ?>" style="flex:0 0 280px; max-width:300px; scroll-snap-align:center;">
+                    <button type="button" class="persona-card-btn persona-default-card<?= $currentDefaultPersonaId === $pid ? ' persona-default-card--active' : '' ?>" data-persona-id="<?= $pid ?>">
                         <div class="persona-default-card-image">
                             <img src="<?= htmlspecialchars($imagePath) ?>" alt="<?= htmlspecialchars($pname) ?>" style="width:100%; height:100%; object-fit:cover; display:block;">
                         </div>
@@ -157,19 +200,93 @@ document.addEventListener('DOMContentLoaded', function () {
     var personaList = document.getElementById('persona-default-list');
     var hiddenPersonaInput = document.getElementById('default-persona-id');
     if (personaList && hiddenPersonaInput) {
+        var btnPrev = document.getElementById('default-persona-prev');
+        var btnNext = document.getElementById('default-persona-next');
         var buttons = personaList.querySelectorAll('.persona-card-btn');
+
+        if (!buttons || buttons.length === 0) return;
+
+        var currentIndex = 0;
+        buttons.forEach(function (btn, idx) {
+            if (btn.classList.contains('persona-default-card--active')) {
+                currentIndex = idx;
+            }
+        });
+
+        function normalizeIndex(i) {
+            var len = buttons.length;
+            if (len <= 0) return 0;
+            var x = i % len;
+            if (x < 0) x += len;
+            return x;
+        }
+
+        function applyVisualState() {
+            buttons.forEach(function (btn) {
+                btn.classList.remove('is-left');
+                btn.classList.remove('is-center');
+                btn.classList.remove('is-right');
+                btn.classList.remove('is-hidden');
+            });
+
+            var len = buttons.length;
+            if (len <= 0) return;
+
+            var center = buttons[currentIndex];
+            var left = buttons[normalizeIndex(currentIndex - 1)];
+            var right = buttons[normalizeIndex(currentIndex + 1)];
+
+            buttons.forEach(function (btn) {
+                btn.classList.add('is-hidden');
+            });
+            if (left) left.classList.remove('is-hidden');
+            if (right) right.classList.remove('is-hidden');
+            if (center) center.classList.remove('is-hidden');
+
+            if (left) left.classList.add('is-left');
+            if (right) right.classList.add('is-right');
+            if (center) center.classList.add('is-center');
+        }
+
+        function selectIndex(i) {
+            currentIndex = normalizeIndex(i);
+            var btn = buttons[currentIndex];
+            if (!btn) return;
+
+            var id = btn.getAttribute('data-persona-id') || '0';
+            hiddenPersonaInput.value = id;
+
+            buttons.forEach(function (b) {
+                b.classList.remove('persona-default-card--active');
+            });
+            btn.classList.add('persona-default-card--active');
+            applyVisualState();
+        }
+
+        if (btnPrev) {
+            btnPrev.addEventListener('click', function (e) {
+                e.preventDefault();
+                selectIndex(currentIndex - 1);
+            });
+        }
+        if (btnNext) {
+            btnNext.addEventListener('click', function (e) {
+                e.preventDefault();
+                selectIndex(currentIndex + 1);
+            });
+        }
+
         buttons.forEach(function (btn) {
             btn.addEventListener('click', function () {
-                var id = btn.getAttribute('data-persona-id') || '0';
-                hiddenPersonaInput.value = id;
-
-                buttons.forEach(function (b) {
-                    b.classList.remove('persona-default-card--active');
+                var idx = 0;
+                buttons.forEach(function (b, i) {
+                    if (b === btn) idx = i;
                 });
-
-                btn.classList.add('persona-default-card--active');
+                selectIndex(idx);
             });
         });
+
+        selectIndex(currentIndex);
     }
 });
 </script>
