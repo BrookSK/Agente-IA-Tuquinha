@@ -654,6 +654,18 @@ class ChatController extends Controller
                 $baseFilesByPath = [];
                 $baseFilesByNameLower = [];
                 $baseNameToPaths = [];
+
+                $normalizeForFileMatch = static function (string $s): string {
+                    $s = mb_strtolower($s, 'UTF-8');
+                    // remove tudo que não for letra/número e normaliza espaços (isso ignora emojis e pontuação)
+                    $s = preg_replace('/[^\p{L}\p{N}]+/u', ' ', $s);
+                    $s = trim(preg_replace('/\s+/u', ' ', (string)$s));
+                    return (string)$s;
+                };
+
+                $msgLowerForFiles = mb_strtolower((string)$message, 'UTF-8');
+                $msgNormForFiles = $normalizeForFileMatch((string)$message);
+
                 foreach ($baseFiles as $bfMeta) {
                     $p = trim((string)($bfMeta['path'] ?? ''));
                     $n = trim((string)($bfMeta['name'] ?? ''));
@@ -680,8 +692,6 @@ class ChatController extends Controller
 
                 $mentionedPaths = [];
 
-                $msgLowerForFiles = mb_strtolower((string)$message, 'UTF-8');
-
                 // 0) Match simples por substring do nome completo (funciona com espaços)
                 // Ex: "Briefing Lumiclinic.pdf" ou "briefing lumiclinic"
                 foreach ($baseFilesByNameLower as $nameLower => $bfMeta) {
@@ -693,6 +703,16 @@ class ChatController extends Controller
                         continue;
                     }
                     if (strpos($msgLowerForFiles, $nameLower) !== false) {
+                        $p = (string)($bfMeta['path'] ?? '');
+                        if ($p !== '') {
+                            $mentionedPaths[] = $p;
+                        }
+                        continue;
+                    }
+
+                    // fallback por nome normalizado (ignora emoji/pontuação)
+                    $nameNorm = $normalizeForFileMatch((string)$nameLower);
+                    if ($nameNorm !== '' && mb_strlen($nameNorm, 'UTF-8') >= 3 && $msgNormForFiles !== '' && strpos($msgNormForFiles, $nameNorm) !== false) {
                         $p = (string)($bfMeta['path'] ?? '');
                         if ($p !== '') {
                             $mentionedPaths[] = $p;
@@ -759,6 +779,13 @@ class ChatController extends Controller
                     if ($base === '') continue;
                     // Usa substring no lower para suportar nomes com espaços e evitar regex frágil
                     if (mb_strlen($base, 'UTF-8') >= 3 && strpos($msgLowerForFiles, $base) !== false) {
+                        $mentionedPaths[] = (string)$pathsForBase[0];
+                        continue;
+                    }
+
+                    // fallback por nome normalizado (ignora emoji/pontuação)
+                    $baseNorm = $normalizeForFileMatch((string)$base);
+                    if ($baseNorm !== '' && mb_strlen($baseNorm, 'UTF-8') >= 3 && $msgNormForFiles !== '' && strpos($msgNormForFiles, $baseNorm) !== false) {
                         $mentionedPaths[] = (string)$pathsForBase[0];
                     }
                 }

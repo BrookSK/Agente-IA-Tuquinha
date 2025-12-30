@@ -9,7 +9,7 @@ use App\Models\ProjectFileVersion;
 
 class TuquinhaEngine
 {
-    private const BUILD_ID = '2025-12-30-a';
+    private const BUILD_ID = '2025-12-30-b';
 
     private string $systemPrompt;
     private ?string $lastProviderError;
