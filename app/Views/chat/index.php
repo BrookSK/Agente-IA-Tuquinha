@@ -28,6 +28,8 @@ function render_markdown_safe(string $text): string {
     // **negrito** -> <strong>negrito</strong>
     $escaped = preg_replace('/\*\*(.+?)\*\*/s', '<strong>$1</strong>', $escaped);
 
+    $escaped = preg_replace('/(?<!\*)\*(?!\*)(.+?)(?<!\*)\*(?!\*)/s', '<em>$1</em>', $escaped);
+
     // "- texto" no começo da linha vira bullet visual
     $escaped = preg_replace('/^\-\s+/m', '• ', $escaped);
 
