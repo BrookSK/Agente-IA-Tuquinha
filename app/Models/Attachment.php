@@ -7,15 +7,28 @@ use PDO;
 
 class Attachment
 {
-    public static function create(array $data): void
+    public static function create(array $data): int
     {
         $pdo = Database::getConnection();
-        $stmt = $pdo->prepare('INSERT INTO attachments (
-            conversation_id, message_id, type, path, original_name, mime_type, size
-        ) VALUES (
-            :conversation_id, :message_id, :type, :path, :original_name, :mime_type, :size
-        )');
+
+        $hasOpenAiFileId = array_key_exists('openai_file_id', $data);
+
+        if ($hasOpenAiFileId) {
+            $stmt = $pdo->prepare('INSERT INTO attachments (
+                conversation_id, message_id, type, path, original_name, mime_type, size, openai_file_id
+            ) VALUES (
+                :conversation_id, :message_id, :type, :path, :original_name, :mime_type, :size, :openai_file_id
+            )');
+        } else {
+            $stmt = $pdo->prepare('INSERT INTO attachments (
+                conversation_id, message_id, type, path, original_name, mime_type, size
+            ) VALUES (
+                :conversation_id, :message_id, :type, :path, :original_name, :mime_type, :size
+            )');
+        }
+
         $stmt->execute($data);
+        return (int)$pdo->lastInsertId();
     }
 
     public static function allByConversation(int $conversationId): array
@@ -24,6 +37,19 @@ class Attachment
         $stmt = $pdo->prepare('SELECT * FROM attachments WHERE conversation_id = :cid ORDER BY id ASC');
         $stmt->execute(['cid' => $conversationId]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public static function updateOpenAIFileId(int $attachmentId, string $openaiFileId): void
+    {
+        if ($attachmentId <= 0 || trim($openaiFileId) === '') {
+            return;
+        }
+        $pdo = Database::getConnection();
+        $stmt = $pdo->prepare('UPDATE attachments SET openai_file_id = :fid WHERE id = :id');
+        $stmt->execute([
+            'fid' => $openaiFileId,
+            'id' => $attachmentId,
+        ]);
     }
 
     public static function search(?string $type, ?string $beforeDate, int $limit, int $offset): array

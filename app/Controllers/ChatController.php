@@ -372,7 +372,7 @@ class ChatController extends Controller
 
             $attachmentSummaries = [];
             $attachmentMeta = [];
-            $attachmentCsvPreviews = [];
+            $fileInputsForModel = [];
 
             if (!empty($_FILES['attachments']) && is_array($_FILES['attachments']['name'])) {
                 $count = count($_FILES['attachments']['name']);
@@ -394,7 +394,7 @@ class ChatController extends Controller
 
                     $isImage = str_starts_with($type, 'image/');
                     $isPdf = $type === 'application/pdf';
-                    $isCsv = $type === 'text/csv' || $type === 'application/vnd.ms-excel';
+                    $isAudio = str_starts_with($type, 'audio/');
 
                     if ($isImage && !$allowImages) {
                         continue;
@@ -410,28 +410,8 @@ class ChatController extends Controller
                     // Envia o arquivo para o servidor de mídia externo
                     $remoteUrl = MediaStorageService::uploadFile($tmp, (string)$name, (string)$type);
 
-                    // Monta um resumo amigável para o Tuquinha usar
-                    if ($isCsv) {
-                        $previewLines = [];
-                        if (is_readable($tmp)) {
-                            if (($fh = fopen($tmp, 'r')) !== false) {
-                                $lineCount = 0;
-                                while (($row = fgetcsv($fh)) !== false && $lineCount < 30) {
-                                    $previewLines[] = implode(',', $row);
-                                    $lineCount++;
-                                }
-                                fclose($fh);
-                            }
-                        }
-                        if ($previewLines) {
-                            $attachmentSummaries[] = "Arquivo CSV '" . $name . "' (até 30 linhas iniciais)";
-                            $attachmentCsvPreviews[] = "ARQUIVO CSV: '" . $name . "' - ATÉ 30 LINHAS INICIAIS (USE ESTES DADOS, NÃO PEÇA PRO USUÁRIO COPIAR):\n" . implode("\n", $previewLines);
-                        } else {
-                            $attachmentSummaries[] = "Arquivo CSV '" . $name . "' foi enviado.";
-                        }
-                    } else {
-                        $attachmentSummaries[] = "Arquivo '" . $name . "' foi enviado.";
-                    }
+                    // Monta um resumo amigável para exibir no histórico
+                    $attachmentSummaries[] = "Arquivo '" . $name . "' foi enviado.";
 
                     if ($remoteUrl === null) {
                         // Não registra anexo se não tiver URL pública
@@ -440,7 +420,7 @@ class ChatController extends Controller
 
                     $attType = $isImage ? 'image' : 'file';
 
-                    Attachment::create([
+                    $attachmentId = Attachment::create([
                         'conversation_id' => $conversation->id,
                         'message_id' => null,
                         'type' => $attType,
@@ -449,6 +429,16 @@ class ChatController extends Controller
                         'mime_type' => $type,
                         'size' => $size,
                     ]);
+
+                    if (!$isAudio) {
+                        $fileInputsForModel[] = [
+                            'attachment_id' => (int)$attachmentId,
+                            'tmp_path' => (string)$tmp,
+                            'name' => (string)$name,
+                            'mime_type' => (string)$type,
+                            'url' => (string)$remoteUrl,
+                        ];
+                    }
 
                     // metadados para o frontend montar os cards
                     $humanSize = null;
@@ -463,9 +453,7 @@ class ChatController extends Controller
                     }
 
                     $label = 'Arquivo';
-                    if ($isCsv) {
-                        $label = 'CSV';
-                    } elseif ($isPdf) {
+                    if ($isPdf) {
                         $label = 'PDF';
                     } elseif ($isImage) {
                         $label = 'Imagem';
@@ -476,7 +464,6 @@ class ChatController extends Controller
                         'mime_type' => $type,
                         'size' => $size,
                         'size_human' => $humanSize,
-                        'is_csv' => $isCsv,
                         'is_pdf' => $isPdf,
                         'is_image' => $isImage,
                         'label' => $label,
@@ -487,12 +474,8 @@ class ChatController extends Controller
             $attachmentsMessage = null;
             if (!empty($attachmentSummaries)) {
                 $parts = [];
-                $parts[] = "O usuário enviou os seguintes arquivos nesta mensagem. Você, Tuquinha, TEM acesso às prévias abaixo e deve usar esses dados diretamente nas suas respostas, sem pedir para o usuário abrir ou copiar o conteúdo do arquivo.";
+                $parts[] = "O usuário enviou os seguintes arquivos nesta mensagem.";
                 $parts[] = implode("\n", $attachmentSummaries);
-
-                if (!empty($attachmentCsvPreviews)) {
-                    $parts[] = implode("\n\n", $attachmentCsvPreviews);
-                }
 
                 $attachmentsMessage = implode("\n\n", $parts);
 
@@ -909,12 +892,40 @@ class ChatController extends Controller
                 ]);
             }
 
+            $existingAttachments = Attachment::allByConversation((int)$conversation->id);
+            $persistentInputsById = [];
+            foreach ($existingAttachments as $a) {
+                $type = (string)($a['type'] ?? '');
+                if ($type === 'audio') {
+                    continue;
+                }
+                $aid = (int)($a['id'] ?? 0);
+                if ($aid <= 0) {
+                    continue;
+                }
+                $persistentInputsById[$aid] = [
+                    'attachment_id' => $aid,
+                    'openai_file_id' => (string)($a['openai_file_id'] ?? ''),
+                    'name' => (string)($a['original_name'] ?? ''),
+                    'mime_type' => (string)($a['mime_type'] ?? ''),
+                    'url' => (string)($a['path'] ?? ''),
+                ];
+            }
+            foreach ($fileInputsForModel as $fi) {
+                $aid = isset($fi['attachment_id']) ? (int)$fi['attachment_id'] : 0;
+                if ($aid > 0) {
+                    $persistentInputsById[$aid] = array_merge($persistentInputsById[$aid] ?? [], $fi);
+                }
+            }
+            $persistentFileInputs = array_values($persistentInputsById);
+
             $result = $engine->generateResponseWithContext(
                 $historyForEngine,
                 $_SESSION['chat_model'] ?? null,
                 $userData,
                 $conversationSettings,
-                $personaData
+                $personaData,
+                !empty($persistentFileInputs) ? $persistentFileInputs : null
             );
 
             $assistantReply = is_array($result) ? (string)($result['content'] ?? '') : (string)$result;

@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Models\Setting;
 use App\Models\Personality;
+use App\Models\Attachment;
 
 class TuquinhaEngine
 {
@@ -25,17 +26,17 @@ class TuquinhaEngine
         return is_string($result) ? $result : '';
     }
 
-    public function generateResponseWithContext(array $messages, ?string $model = null, ?array $user = null, ?array $conversationSettings = null, ?array $persona = null): array
+    public function generateResponseWithContext(array $messages, ?string $model = null, ?array $user = null, ?array $conversationSettings = null, ?array $persona = null, ?array $fileInputs = null): array
     {
         $configuredModel = Setting::get('openai_default_model', AI_MODEL);
         $modelToUse = $model ?: $configuredModel;
 
         // Decide provedor com base no nome do modelo
         if ($this->isClaudeModel($modelToUse)) {
-            return $this->callAnthropicClaude($messages, $modelToUse, $user, $conversationSettings, $persona);
+            return $this->callAnthropicClaude($messages, $modelToUse, $user, $conversationSettings, $persona, $fileInputs);
         }
 
-        return $this->callOpenAI($messages, $modelToUse, $user, $conversationSettings, $persona);
+        return $this->callOpenAI($messages, $modelToUse, $user, $conversationSettings, $persona, $fileInputs);
     }
 
     private function isClaudeModel(string $model): bool
@@ -43,7 +44,7 @@ class TuquinhaEngine
         return str_starts_with($model, 'claude-');
     }
 
-    private function callOpenAI(array $messages, string $model, ?array $user, ?array $conversationSettings, ?array $persona): array
+    private function callOpenAI(array $messages, string $model, ?array $user, ?array $conversationSettings, ?array $persona, ?array $fileInputs): array
     {
         $configuredApiKey = Setting::get('openai_api_key', AI_API_KEY);
 
@@ -52,6 +53,10 @@ class TuquinhaEngine
                 'content' => $this->fallbackResponse($messages),
                 'total_tokens' => 0,
             ];
+        }
+
+        if (!empty($fileInputs) && is_array($fileInputs)) {
+            return $this->callOpenAIResponsesWithFiles($messages, $model, $configuredApiKey, $user, $conversationSettings, $persona, $fileInputs);
         }
 
         $payloadMessages = [];
@@ -128,7 +133,7 @@ class TuquinhaEngine
         ];
     }
 
-    private function callAnthropicClaude(array $messages, string $model, ?array $user, ?array $conversationSettings, ?array $persona): array
+    private function callAnthropicClaude(array $messages, string $model, ?array $user, ?array $conversationSettings, ?array $persona, ?array $fileInputs): array
     {
         $apiKey = Setting::get('anthropic_api_key', ANTHROPIC_API_KEY);
         if (empty($apiKey)) {
@@ -141,6 +146,7 @@ class TuquinhaEngine
         $systemPrompt = $this->buildSystemPromptWithContext($user, $conversationSettings, $persona);
 
         $claudeMessages = [];
+        $lastUserIndex = null;
         foreach ($messages as $m) {
             if (!isset($m['role'], $m['content'])) {
                 continue;
@@ -158,6 +164,53 @@ class TuquinhaEngine
                     ],
                 ],
             ];
+            if ($role === 'user') {
+                $lastUserIndex = count($claudeMessages) - 1;
+            }
+        }
+
+        if (!empty($fileInputs) && is_array($fileInputs) && $lastUserIndex !== null) {
+            foreach ($fileInputs as $fi) {
+                $tmpPath = isset($fi['tmp_path']) ? (string)$fi['tmp_path'] : '';
+                $mime = isset($fi['mime_type']) ? (string)$fi['mime_type'] : '';
+                $url = isset($fi['url']) ? (string)$fi['url'] : '';
+                $bin = null;
+
+                if ($tmpPath !== '' && is_file($tmpPath) && is_readable($tmpPath)) {
+                    $bin = @file_get_contents($tmpPath);
+                } elseif ($url !== '') {
+                    $bin = $this->fetchBinaryFromUrl($url);
+                }
+
+                if (!is_string($bin) || $bin === '') {
+                    continue;
+                }
+
+                $b64 = base64_encode($bin);
+
+                if ($mime !== '' && str_starts_with($mime, 'image/')) {
+                    $claudeMessages[$lastUserIndex]['content'][] = [
+                        'type' => 'image',
+                        'source' => [
+                            'type' => 'base64',
+                            'media_type' => $mime,
+                            'data' => $b64,
+                        ],
+                    ];
+                } else {
+                    if ($mime === '') {
+                        $mime = 'application/octet-stream';
+                    }
+                    $claudeMessages[$lastUserIndex]['content'][] = [
+                        'type' => 'document',
+                        'source' => [
+                            'type' => 'base64',
+                            'media_type' => $mime,
+                            'data' => $b64,
+                        ],
+                    ];
+                }
+            }
         }
 
         $body = json_encode([
@@ -222,6 +275,290 @@ class TuquinhaEngine
             'content' => $content,
             'total_tokens' => $usageTotal,
         ];
+    }
+
+    private function callOpenAIResponsesWithFiles(array $messages, string $model, string $apiKey, ?array $user, ?array $conversationSettings, ?array $persona, array $fileInputs): array
+    {
+        $fileIds = [];
+        foreach ($fileInputs as $fi) {
+            $existingFid = isset($fi['openai_file_id']) ? trim((string)$fi['openai_file_id']) : '';
+            if ($existingFid !== '') {
+                $fileIds[] = $existingFid;
+                continue;
+            }
+
+            $tmpPath = isset($fi['tmp_path']) ? (string)$fi['tmp_path'] : '';
+            $name = isset($fi['name']) ? (string)$fi['name'] : '';
+            $mime = isset($fi['mime_type']) ? (string)$fi['mime_type'] : '';
+            $url = isset($fi['url']) ? (string)$fi['url'] : '';
+            $attachmentId = isset($fi['attachment_id']) ? (int)$fi['attachment_id'] : 0;
+
+            $localPathForUpload = '';
+            $tmpToDelete = '';
+
+            if ($tmpPath !== '' && is_file($tmpPath) && is_readable($tmpPath)) {
+                $localPathForUpload = $tmpPath;
+            } elseif ($url !== '') {
+                $downloaded = $this->downloadToTempFile($url, $name !== '' ? $name : 'upload.bin');
+                if (is_string($downloaded) && $downloaded !== '') {
+                    $localPathForUpload = $downloaded;
+                    $tmpToDelete = $downloaded;
+                }
+            }
+
+            if ($localPathForUpload === '' || !is_file($localPathForUpload) || !is_readable($localPathForUpload)) {
+                if ($tmpToDelete !== '' && is_file($tmpToDelete)) {
+                    @unlink($tmpToDelete);
+                }
+                continue;
+            }
+
+            $fid = $this->openaiUploadFile(
+                $apiKey,
+                $localPathForUpload,
+                $name !== '' ? $name : basename($localPathForUpload),
+                $mime
+            );
+
+            if ($tmpToDelete !== '' && is_file($tmpToDelete)) {
+                @unlink($tmpToDelete);
+            }
+
+            if (is_string($fid) && $fid !== '') {
+                $fileIds[] = $fid;
+                if ($attachmentId > 0) {
+                    Attachment::updateOpenAIFileId($attachmentId, $fid);
+                }
+            }
+        }
+
+        if (!$fileIds) {
+            return [
+                'content' => $this->fallbackResponse($messages),
+                'total_tokens' => 0,
+            ];
+        }
+
+        $systemText = $this->buildSystemPromptWithContext($user, $conversationSettings, $persona);
+
+        $input = [];
+        $input[] = [
+            'role' => 'system',
+            'content' => [
+                ['type' => 'text', 'text' => $systemText],
+            ],
+        ];
+
+        $lastUserIndex = null;
+        foreach ($messages as $m) {
+            if (!isset($m['role'], $m['content'])) {
+                continue;
+            }
+            if ($m['role'] !== 'user' && $m['role'] !== 'assistant') {
+                continue;
+            }
+
+            $input[] = [
+                'role' => $m['role'],
+                'content' => [
+                    ['type' => 'text', 'text' => (string)$m['content']],
+                ],
+            ];
+
+            if ($m['role'] === 'user') {
+                $lastUserIndex = count($input) - 1;
+            }
+        }
+
+        if ($lastUserIndex === null) {
+            $input[] = [
+                'role' => 'user',
+                'content' => [
+                    ['type' => 'text', 'text' => 'Arquivos anexados para análise.'],
+                ],
+            ];
+            $lastUserIndex = count($input) - 1;
+        }
+
+        foreach ($fileIds as $fid) {
+            $input[$lastUserIndex]['content'][] = [
+                'type' => 'input_file',
+                'file_id' => $fid,
+            ];
+        }
+
+        $body = json_encode([
+            'model' => $model,
+            'input' => $input,
+            'temperature' => 0.7,
+        ]);
+
+        $ch = curl_init('https://api.openai.com/v1/responses');
+        curl_setopt_array($ch, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_POST => true,
+            CURLOPT_HTTPHEADER => [
+                'Content-Type: application/json',
+                'Authorization: Bearer ' . $apiKey,
+            ],
+            CURLOPT_POSTFIELDS => $body,
+            CURLOPT_TIMEOUT => 60,
+        ]);
+
+        $result = curl_exec($ch);
+        if ($result === false) {
+            curl_close($ch);
+            return [
+                'content' => $this->fallbackResponse($messages),
+                'total_tokens' => 0,
+            ];
+        }
+
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+
+        if ($httpCode < 200 || $httpCode >= 300) {
+            return [
+                'content' => $this->fallbackResponse($messages),
+                'total_tokens' => 0,
+            ];
+        }
+
+        $data = json_decode($result, true);
+
+        $content = null;
+        if (is_array($data)) {
+            if (!empty($data['output_text']) && is_string($data['output_text'])) {
+                $content = $data['output_text'];
+            } elseif (!empty($data['output']) && is_array($data['output'])) {
+                foreach ($data['output'] as $outItem) {
+                    if (!is_array($outItem)) {
+                        continue;
+                    }
+                    $outContent = $outItem['content'] ?? null;
+                    if (!is_array($outContent)) {
+                        continue;
+                    }
+                    foreach ($outContent as $c) {
+                        if (!is_array($c)) {
+                            continue;
+                        }
+                        $t = (string)($c['type'] ?? '');
+                        if (($t === 'output_text' || $t === 'text') && isset($c['text']) && is_string($c['text'])) {
+                            $content = $c['text'];
+                            break 2;
+                        }
+                    }
+                }
+            }
+        }
+
+        $usageTotal = 0;
+        if (is_array($data) && isset($data['usage']) && is_array($data['usage'])) {
+            if (isset($data['usage']['total_tokens'])) {
+                $usageTotal = (int)$data['usage']['total_tokens'];
+            } elseif (isset($data['usage']['input_tokens']) || isset($data['usage']['output_tokens'])) {
+                $usageTotal = (int)($data['usage']['input_tokens'] ?? 0) + (int)($data['usage']['output_tokens'] ?? 0);
+            }
+        }
+
+        if (!is_string($content) || trim($content) === '') {
+            return [
+                'content' => $this->fallbackResponse($messages),
+                'total_tokens' => 0,
+            ];
+        }
+
+        return [
+            'content' => $content,
+            'total_tokens' => $usageTotal,
+        ];
+    }
+
+    private function fetchBinaryFromUrl(string $url): ?string
+    {
+        $url = trim($url);
+        if ($url === '') {
+            return null;
+        }
+
+        $ch = curl_init($url);
+        curl_setopt_array($ch, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_FOLLOWLOCATION => true,
+            CURLOPT_TIMEOUT => 60,
+        ]);
+        $bin = curl_exec($ch);
+        if ($bin === false) {
+            curl_close($ch);
+            return null;
+        }
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+
+        if ($httpCode < 200 || $httpCode >= 300) {
+            return null;
+        }
+
+        return is_string($bin) ? $bin : null;
+    }
+
+    private function downloadToTempFile(string $url, string $filenameHint): ?string
+    {
+        $bin = $this->fetchBinaryFromUrl($url);
+        if (!is_string($bin) || $bin === '') {
+            return null;
+        }
+
+        $base = basename($filenameHint);
+        if ($base === '' || $base === '.' || $base === '..') {
+            $base = 'upload.bin';
+        }
+        $tmpPath = rtrim((string)sys_get_temp_dir(), '/\\') . DIRECTORY_SEPARATOR . uniqid('tuq_upload_', true) . '_' . $base;
+
+        $ok = @file_put_contents($tmpPath, $bin);
+        if ($ok === false) {
+            return null;
+        }
+
+        return $tmpPath;
+    }
+
+    private function openaiUploadFile(string $apiKey, string $localPath, string $filename, string $mimeType = ''): ?string
+    {
+        $purpose = 'assistants';
+        $mime = $mimeType !== '' ? $mimeType : 'application/octet-stream';
+
+        $ch = curl_init('https://api.openai.com/v1/files');
+        $file = new \CURLFile($localPath, $mime, $filename);
+        curl_setopt_array($ch, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_POST => true,
+            CURLOPT_HTTPHEADER => [
+                'Authorization: Bearer ' . $apiKey,
+            ],
+            CURLOPT_POSTFIELDS => [
+                'purpose' => $purpose,
+                'file' => $file,
+            ],
+            CURLOPT_TIMEOUT => 60,
+        ]);
+
+        $result = curl_exec($ch);
+        if ($result === false) {
+            curl_close($ch);
+            return null;
+        }
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+
+        if ($httpCode < 200 || $httpCode >= 300) {
+            return null;
+        }
+
+        $data = json_decode($result, true);
+        $fid = is_array($data) ? ($data['id'] ?? null) : null;
+        return is_string($fid) ? $fid : null;
     }
 
     private function fallbackResponse(array $messages): string
