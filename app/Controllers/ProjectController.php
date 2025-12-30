@@ -888,11 +888,11 @@ class ProjectController extends Controller
         }
 
         $ext = strtolower(pathinfo($originalName, PATHINFO_EXTENSION));
-        $needsExtractor = in_array($ext, ['pdf', 'doc', 'docx', 'ppt', 'pptx', 'xls', 'xlsx'], true);
+        $needsExtractor = in_array($ext, ['doc', 'docx', 'ppt', 'pptx', 'xls', 'xlsx'], true);
         if ($needsExtractor) {
             $endpoint = trim((string)Setting::get('text_extraction_endpoint', ''));
             if ($endpoint === '') {
-                $_SESSION['project_upload_error'] = 'Para usar PDF/Word/Office como conteúdo base, copie o texto do arquivo e cole no campo de texto ("Salvar texto como arquivo base").';
+                $_SESSION['project_upload_error'] = 'Para usar Word/Excel/PowerPoint como conteúdo base, converta para PDF/TXT/CSV ou copie o texto e cole no campo de texto ("Salvar texto como arquivo base").';
                 header('Location: /projetos/ver?id=' . $projectId);
                 exit;
             }

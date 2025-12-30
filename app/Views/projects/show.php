@@ -383,8 +383,8 @@
                     Arquivos de texto/código (txt, md, json, php, js, etc.) serão usados como contexto automaticamente.
                 </div>
                 <div style="background:#1a0c10; border:1px solid #a33; border-radius:12px; padding:10px 12px; font-size:12px; line-height:1.35; color:#ffbaba;">
-                    <div style="font-weight:700; margin-bottom:4px;">Atenção (PDF/Word)</div>
-                    Se você tem um PDF/Word e quer usar o conteúdo como base, copie o texto do arquivo e depois clique no botão <strong>+</strong> acima e selecione <strong>Adicionar conteúdo de texto</strong>. Aí cole o conteúdo no campo <strong>Texto</strong>.
+                    <div style="font-weight:700; margin-bottom:4px;">Atenção (Word/Excel/PowerPoint)</div>
+                    Se você tem um arquivo Office (Word/Excel/PowerPoint) e quer usar o conteúdo como base, converta para <strong>PDF</strong> ou copie o texto do arquivo e depois clique no botão <strong>+</strong> acima e selecione <strong>Adicionar conteúdo de texto</strong>. Aí cole o conteúdo no campo <strong>Texto</strong>.
                 </div>
             </form>
 
