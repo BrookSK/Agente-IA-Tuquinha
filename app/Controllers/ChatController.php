@@ -945,7 +945,8 @@ class ChatController extends Controller
                             . "(2) faça um resumo fiel e estruture em perguntas curtas; "
                             . "(3) em cada resposta, use apenas informações presentes no PDF; "
                             . "(4) se faltar contexto, marque como 'não informado no documento'. "
-                            . "Formatação: coloque cada pergunta em itálico e a resposta logo abaixo.\n\n"
+                            . "Formatação: coloque cada pergunta em itálico e a resposta logo abaixo. "
+                            . "Separe cada bloco de pergunta/resposta com uma linha contendo apenas: ---\n\n"
                             . "PEDIDO ORIGINAL DO USUÁRIO (para intenção):\n" . (string)$message;
                         break;
                     }
