@@ -130,6 +130,9 @@ class TuquinhaEngine
         $usageTotal = isset($data['usage']['total_tokens']) ? (int)$data['usage']['total_tokens'] : 0;
 
         if (!is_string($content) || $content === '') {
+            $snippet = substr((string)$result, 0, 800);
+            $this->lastProviderError = 'openai_chat_completions_no_text; body=' . $snippet;
+            error_log('[TuquinhaEngine] OpenAI /v1/chat/completions no text: ' . (string)$this->lastProviderError);
             return [
                 'content' => $this->fallbackResponse($messages),
                 'total_tokens' => 0,
@@ -259,6 +262,9 @@ class TuquinhaEngine
         curl_close($ch);
 
         if ($httpCode < 200 || $httpCode >= 300) {
+            $snippet = substr((string)$result, 0, 800);
+            $this->lastProviderError = 'anthropic_messages_http=' . (string)$httpCode . '; body=' . $snippet;
+            error_log('[TuquinhaEngine] Anthropic /v1/messages http error: ' . (string)$this->lastProviderError);
             return [
                 'content' => $this->fallbackResponse($messages),
                 'total_tokens' => 0,
@@ -277,6 +283,9 @@ class TuquinhaEngine
         }
 
         if (!is_string($content) || $content === '') {
+            $snippet = substr((string)$result, 0, 800);
+            $this->lastProviderError = 'anthropic_messages_no_text; body=' . $snippet;
+            error_log('[TuquinhaEngine] Anthropic /v1/messages no text: ' . (string)$this->lastProviderError);
             return [
                 'content' => $this->fallbackResponse($messages),
                 'total_tokens' => 0,
@@ -489,6 +498,9 @@ class TuquinhaEngine
         }
 
         if (!is_string($content) || trim($content) === '') {
+            $snippet = substr((string)$result, 0, 800);
+            $this->lastProviderError = 'openai_responses_no_text; body=' . $snippet;
+            error_log('[TuquinhaEngine] OpenAI /v1/responses no text: ' . (string)$this->lastProviderError);
             return [
                 'content' => $this->fallbackResponse($messages),
                 'total_tokens' => 0,
