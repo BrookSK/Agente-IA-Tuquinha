@@ -383,6 +383,7 @@ class TuquinhaEngine
 
         $input = [];
         $input[] = [
+            'type' => 'message',
             'role' => 'system',
             'content' => [
                 ['type' => 'input_text', 'text' => $systemText],
@@ -399,6 +400,7 @@ class TuquinhaEngine
             }
 
             $input[] = [
+                'type' => 'message',
                 'role' => $m['role'],
                 'content' => [
                     ['type' => 'input_text', 'text' => (string)$m['content']],
@@ -412,6 +414,7 @@ class TuquinhaEngine
 
         if ($lastUserIndex === null) {
             $input[] = [
+                'type' => 'message',
                 'role' => 'user',
                 'content' => [
                     ['type' => 'input_text', 'text' => 'Arquivos anexados para análise.'],
