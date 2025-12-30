@@ -8,6 +8,8 @@ use App\Models\Attachment;
 
 class TuquinhaEngine
 {
+    private const BUILD_ID = '2025-12-30-a';
+
     private string $systemPrompt;
     private ?string $lastProviderError;
 
@@ -621,9 +623,11 @@ class TuquinhaEngine
             "3. O que você já tentou.\n\n" .
             "Assim eu te guio no passo a passo enquanto normaliza.\n";
 
-        if (is_string($this->lastProviderError) && trim($this->lastProviderError) !== '') {
-            $msg .= "\n[DEBUG] " . $this->lastProviderError;
+        $dbg = is_string($this->lastProviderError) ? trim($this->lastProviderError) : '';
+        if ($dbg === '') {
+            $dbg = 'none';
         }
+        $msg .= "\n[DEBUG] build=" . self::BUILD_ID . "; err=" . $dbg;
 
         return $msg;
     }
