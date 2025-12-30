@@ -680,6 +680,26 @@ class ChatController extends Controller
 
                 $mentionedPaths = [];
 
+                $msgLowerForFiles = mb_strtolower((string)$message, 'UTF-8');
+
+                // 0) Match simples por substring do nome completo (funciona com espaços)
+                // Ex: "Briefing Lumiclinic.pdf" ou "briefing lumiclinic"
+                foreach ($baseFilesByNameLower as $nameLower => $bfMeta) {
+                    $nameLower = trim((string)$nameLower);
+                    if ($nameLower === '') {
+                        continue;
+                    }
+                    if (mb_strlen($nameLower, 'UTF-8') < 3) {
+                        continue;
+                    }
+                    if (strpos($msgLowerForFiles, $nameLower) !== false) {
+                        $p = (string)($bfMeta['path'] ?? '');
+                        if ($p !== '') {
+                            $mentionedPaths[] = $p;
+                        }
+                    }
+                }
+
                 // 1) Detecta menções tipo "arquivo.ext" no texto
                 if (preg_match_all('/\b([A-Za-z0-9_\-]{1,120}\.[A-Za-z0-9]{1,8})\b/u', $message, $mmNames)) {
                     $fileNames = array_values(array_unique(array_map('trim', $mmNames[1] ?? [])));
@@ -737,13 +757,57 @@ class ChatController extends Controller
                     }
                     $base = (string)$baseLower;
                     if ($base === '') continue;
-                    $pattern = '/(?<![A-Za-z0-9_\-])' . preg_quote($base, '/') . '(?![A-Za-z0-9_\-])/iu';
-                    if (preg_match($pattern, $message)) {
+                    // Usa substring no lower para suportar nomes com espaços e evitar regex frágil
+                    if (mb_strlen($base, 'UTF-8') >= 3 && strpos($msgLowerForFiles, $base) !== false) {
                         $mentionedPaths[] = (string)$pathsForBase[0];
                     }
                 }
 
                 $mentionedPaths = array_values(array_unique(array_filter(array_map('trim', $mentionedPaths))));
+
+                // Se a mensagem parece citar um arquivo, mas não foi encontrado nenhum match, retorna feedback amigável
+                // (isso reduz casos onde o modelo diz "não tenho acesso ao arquivo" por falta de anexo)
+                if (empty($mentionedPaths)) {
+                    $maybeMentioned = false;
+                    if (preg_match('/\b(pdf|docx?|xlsx?|pptx?)\b/i', (string)$message)) {
+                        $maybeMentioned = true;
+                    } elseif (strpos($msgLowerForFiles, 'arquivo') !== false || strpos($msgLowerForFiles, 'anexo') !== false) {
+                        $maybeMentioned = true;
+                    }
+
+                    if ($maybeMentioned && !empty($baseFiles)) {
+                        $names = [];
+                        foreach ($baseFiles as $bfMeta) {
+                            $nm = trim((string)($bfMeta['name'] ?? ''));
+                            if ($nm !== '') {
+                                $names[] = $nm;
+                            }
+                        }
+                        $names = array_values(array_unique(array_filter($names)));
+                        if (!empty($names)) {
+                            $assistantReply = "Não consegui localizar qual arquivo do projeto você está mencionando.\n\n"
+                                . "Tente mencionar o nome exatamente como aparece em *Arquivos* (incluindo a extensão). Exemplos disponíveis:\n- "
+                                . implode("\n- ", array_slice($names, 0, 12));
+
+                            Message::create($conversation->id, 'assistant', $assistantReply, null);
+                            if ($isAjax) {
+                                header('Content-Type: application/json; charset=utf-8');
+                                $nowLabel = date('d/m/Y H:i');
+                                echo json_encode([
+                                    'success' => true,
+                                    'messages' => [
+                                        ['role' => 'user', 'content' => $message, 'created_label' => $nowLabel],
+                                        ['role' => 'assistant', 'content' => $assistantReply, 'tokens_used' => 0, 'created_label' => $nowLabel],
+                                    ],
+                                    'total_tokens_used' => 0,
+                                ]);
+                                exit;
+                            }
+                            header('Location: /chat');
+                            exit;
+                        }
+                    }
+                }
 
                 foreach ($mentionedPaths as $path) {
                     $file = $baseFilesByPath[$path] ?? ProjectFile::findByPath($projectId, $path);
