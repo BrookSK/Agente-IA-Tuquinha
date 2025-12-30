@@ -44,8 +44,8 @@ $successMessage = $success ?? null;
         position:absolute;
         top:50%;
         transform:translateY(-50%);
-        width:32px;
-        height:32px;
+        width:44px;
+        height:44px;
         border-radius:999px;
         border:1px solid var(--border-subtle);
         background:rgba(5,5,9,0.9);
@@ -66,6 +66,7 @@ $successMessage = $success ?? null;
         align-items: center;
         justify-content: center;
         overflow: hidden;
+        touch-action: pan-y;
     }
     .persona-stage-items {
         position: relative;
@@ -106,6 +107,29 @@ $successMessage = $success ?? null;
         transform: translate(-50%, -50%) scale(0.85);
         pointer-events: none;
         z-index: 1;
+    }
+
+    @media (max-width: 640px) {
+        .persona-stage {
+            padding: 8px 10px 12px 10px;
+            min-height: 430px;
+        }
+        .persona-nav-btn {
+            width: 52px;
+            height: 52px;
+            background: rgba(5,5,9,0.82);
+        }
+        .persona-default-card.is-left {
+            opacity: 0.22;
+            transform: translate(calc(-50% - 170px), -50%) scale(0.86);
+        }
+        .persona-default-card.is-right {
+            opacity: 0.22;
+            transform: translate(calc(-50% + 170px), -50%) scale(0.86);
+        }
+        .persona-default-card.is-center {
+            transform: translate(-50%, -50%) scale(1.03);
+        }
     }
 </style>
 <div style="max-width: 900px; margin: 0 auto;">
@@ -200,6 +224,7 @@ document.addEventListener('DOMContentLoaded', function () {
     var personaList = document.getElementById('persona-default-list');
     var hiddenPersonaInput = document.getElementById('default-persona-id');
     if (personaList && hiddenPersonaInput) {
+        var stage = personaList.parentElement;
         var btnPrev = document.getElementById('default-persona-prev');
         var btnNext = document.getElementById('default-persona-next');
         var buttons = personaList.querySelectorAll('.persona-card-btn');
@@ -274,6 +299,38 @@ document.addEventListener('DOMContentLoaded', function () {
                 e.preventDefault();
                 selectIndex(currentIndex + 1);
             });
+        }
+
+        if (stage) {
+            var startX = 0;
+            var startY = 0;
+            var tracking = false;
+
+            stage.addEventListener('touchstart', function (e) {
+                if (!e.touches || e.touches.length !== 1) return;
+                tracking = true;
+                startX = e.touches[0].clientX;
+                startY = e.touches[0].clientY;
+            }, { passive: true });
+
+            stage.addEventListener('touchend', function (e) {
+                if (!tracking) return;
+                tracking = false;
+                if (!e.changedTouches || e.changedTouches.length !== 1) return;
+                var endX = e.changedTouches[0].clientX;
+                var endY = e.changedTouches[0].clientY;
+                var dx = endX - startX;
+                var dy = endY - startY;
+
+                if (Math.abs(dx) < 35) return;
+                if (Math.abs(dx) < Math.abs(dy)) return;
+
+                if (dx < 0) {
+                    selectIndex(currentIndex + 1);
+                } else {
+                    selectIndex(currentIndex - 1);
+                }
+            }, { passive: true });
         }
 
         buttons.forEach(function (btn) {

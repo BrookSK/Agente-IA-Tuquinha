@@ -51,8 +51,8 @@ $conversationId = isset($conversationId) ? (int)$conversationId : 0;
         position:absolute;
         top:50%;
         transform:translateY(-50%);
-        width:32px;
-        height:32px;
+        width:44px;
+        height:44px;
         border-radius:999px;
         border:1px solid #272727;
         background:rgba(5,5,9,0.9);
@@ -73,6 +73,7 @@ $conversationId = isset($conversationId) ? (int)$conversationId : 0;
         align-items: center;
         justify-content: center;
         overflow: hidden;
+        touch-action: pan-y;
     }
     #persona-carousel {
         position: relative;
@@ -113,6 +114,29 @@ $conversationId = isset($conversationId) ? (int)$conversationId : 0;
         transform: translate(-50%, -50%) scale(0.85);
         pointer-events: none;
         z-index: 1;
+    }
+
+    @media (max-width: 640px) {
+        .persona-stage {
+            padding: 8px 10px 10px 10px;
+            min-height: 410px;
+        }
+        .persona-nav-btn {
+            width: 52px;
+            height: 52px;
+            background: rgba(5,5,9,0.82);
+        }
+        #persona-carousel .persona-card.is-left {
+            opacity: 0.22;
+            transform: translate(calc(-50% - 170px), -50%) scale(0.86);
+        }
+        #persona-carousel .persona-card.is-right {
+            opacity: 0.22;
+            transform: translate(calc(-50% + 170px), -50%) scale(0.86);
+        }
+        #persona-carousel .persona-card.is-center {
+            transform: translate(-50%, -50%) scale(1.03);
+        }
     }
 </style>
 <div style="max-width: 1000px; margin: 0 auto;">
@@ -240,6 +264,8 @@ document.addEventListener('DOMContentLoaded', function () {
     var track = document.getElementById('persona-carousel');
     if (!track) return;
 
+    var stage = track.parentElement;
+
     var btnPrev = document.getElementById('persona-prev');
     var btnNext = document.getElementById('persona-next');
 
@@ -315,6 +341,38 @@ document.addEventListener('DOMContentLoaded', function () {
             selectIndex(idx);
         });
     });
+
+    if (stage) {
+        var startX = 0;
+        var startY = 0;
+        var tracking = false;
+
+        stage.addEventListener('touchstart', function (e) {
+            if (!e.touches || e.touches.length !== 1) return;
+            tracking = true;
+            startX = e.touches[0].clientX;
+            startY = e.touches[0].clientY;
+        }, { passive: true });
+
+        stage.addEventListener('touchend', function (e) {
+            if (!tracking) return;
+            tracking = false;
+            if (!e.changedTouches || e.changedTouches.length !== 1) return;
+            var endX = e.changedTouches[0].clientX;
+            var endY = e.changedTouches[0].clientY;
+            var dx = endX - startX;
+            var dy = endY - startY;
+
+            if (Math.abs(dx) < 35) return;
+            if (Math.abs(dx) < Math.abs(dy)) return;
+
+            if (dx < 0) {
+                selectIndex(currentIndex + 1);
+            } else {
+                selectIndex(currentIndex - 1);
+            }
+        }, { passive: true });
+    }
 
     selectIndex(currentIndex);
 });
