@@ -1218,6 +1218,24 @@ if (!empty($currentPlan) && is_array($currentPlan)) {
             feedbackEl.style.display = 'none';
             feedbackEl.textContent = '';
             commentEl.value = '';
+
+            // Reseta estado do fluxo de reporte (caso já tenha sido enviado antes)
+            try {
+                const errorActions = document.getElementById('chat-error-actions');
+                const btnOpenReport = document.getElementById('btn-open-error-report');
+                const btnSendReport = document.getElementById('btn-send-error-report');
+                if (errorActions) {
+                    errorActions.style.display = '';
+                }
+                if (btnOpenReport) {
+                    btnOpenReport.disabled = false;
+                }
+                if (btnSendReport) {
+                    btnSendReport.disabled = false;
+                    btnSendReport.textContent = 'Enviar relato';
+                    delete btnSendReport.dataset.sentOnce;
+                }
+            } catch (e) {}
         };
 
         const sendViaAjax = () => {
@@ -1414,6 +1432,15 @@ if (!empty($currentPlan) && is_array($currentPlan)) {
                 feedbackEl.style.display = 'none';
                 feedbackEl.textContent = '';
                 commentEl.value = '';
+
+                // Restaura ações para o próximo erro
+                try {
+                    errorActions.style.display = '';
+                    btnOpenReport.disabled = false;
+                    btnSendReport.disabled = false;
+                    btnSendReport.textContent = 'Enviar relato';
+                    delete btnSendReport.dataset.sentOnce;
+                } catch (e) {}
             };
 
             btnCloseReport.addEventListener('click', closeBox);
@@ -1452,6 +1479,11 @@ if (!empty($currentPlan) && is_array($currentPlan)) {
                             btnSendReport.disabled = true;
                             btnOpenReport.disabled = true;
                             btnSendReport.dataset.sentOnce = '1';
+
+                            // Após confirmar, fecha automaticamente para não ficar "preso" na tela
+                            window.setTimeout(() => {
+                                try { closeBox(); } catch (e) {}
+                            }, 2200);
                         }
                     })
                     .catch(() => {
