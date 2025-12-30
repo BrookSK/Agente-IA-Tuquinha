@@ -478,8 +478,6 @@ class ChatController extends Controller
                 $parts[] = implode("\n", $attachmentSummaries);
 
                 $attachmentsMessage = implode("\n\n", $parts);
-
-                Message::create($conversation->id, 'user', $attachmentsMessage, null);
             }
 
             $history = Message::allByConversation($conversation->id);
@@ -918,6 +916,41 @@ class ChatController extends Controller
                 }
             }
             $persistentFileInputs = array_values($persistentInputsById);
+
+            $hasPdf = false;
+            foreach ($persistentFileInputs as $fi) {
+                $mt = isset($fi['mime_type']) ? (string)$fi['mime_type'] : '';
+                if ($mt === 'application/pdf') {
+                    $hasPdf = true;
+                    break;
+                }
+            }
+
+            $needsRewrite = false;
+            if ($hasPdf) {
+                $msgLower = mb_strtolower((string)$message, 'UTF-8');
+                if (
+                    (strpos($msgLower, 'transcrev') !== false || strpos($msgLower, 'transcrib') !== false || strpos($msgLower, 'transcri') !== false)
+                    && (strpos($msgLower, 'todo') !== false || strpos($msgLower, 'inteiro') !== false || strpos($msgLower, 'completo') !== false)
+                ) {
+                    $needsRewrite = true;
+                }
+            }
+
+            if ($needsRewrite) {
+                for ($i = count($historyForEngine) - 1; $i >= 0; $i--) {
+                    if (($historyForEngine[$i]['role'] ?? '') === 'user') {
+                        $historyForEngine[$i]['content'] = "Analise o PDF anexado e transforme o conteúdo em PERGUNTAS E RESPOSTAS (Q&A) com linguagem clara. "
+                            . "Regras: (1) NÃO transcreva o documento inteiro nem reproduza trechos longos literalmente; "
+                            . "(2) faça um resumo fiel e estruture em perguntas curtas; "
+                            . "(3) em cada resposta, use apenas informações presentes no PDF; "
+                            . "(4) se faltar contexto, marque como 'não informado no documento'. "
+                            . "Formatação: coloque cada pergunta em itálico e a resposta logo abaixo.\n\n"
+                            . "PEDIDO ORIGINAL DO USUÁRIO (para intenção):\n" . (string)$message;
+                        break;
+                    }
+                }
+            }
 
             $result = $engine->generateResponseWithContext(
                 $historyForEngine,
