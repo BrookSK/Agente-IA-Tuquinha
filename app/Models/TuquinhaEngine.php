@@ -442,6 +442,8 @@ class TuquinhaEngine
 
         $result = curl_exec($ch);
         if ($result === false) {
+            $this->lastProviderError = 'openai_responses_curl_error=' . (string)curl_error($ch);
+            error_log('[TuquinhaEngine] OpenAI /v1/responses curl error: ' . (string)$this->lastProviderError);
             curl_close($ch);
             return [
                 'content' => $this->fallbackResponse($messages),
@@ -453,6 +455,9 @@ class TuquinhaEngine
         curl_close($ch);
 
         if ($httpCode < 200 || $httpCode >= 300) {
+            $snippet = substr((string)$result, 0, 800);
+            $this->lastProviderError = 'openai_responses_http=' . (string)$httpCode . '; body=' . $snippet;
+            error_log('[TuquinhaEngine] OpenAI /v1/responses http error: ' . (string)$this->lastProviderError);
             return [
                 'content' => $this->fallbackResponse($messages),
                 'total_tokens' => 0,
