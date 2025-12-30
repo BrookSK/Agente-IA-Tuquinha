@@ -290,12 +290,15 @@ class TuquinhaEngine
     private function callOpenAIResponsesWithFiles(array $messages, string $model, string $apiKey, ?array $user, ?array $conversationSettings, ?array $persona, array $fileInputs): array
     {
         $fileIds = [];
+        $attempted = 0;
         foreach ($fileInputs as $fi) {
             $existingFid = isset($fi['openai_file_id']) ? trim((string)$fi['openai_file_id']) : '';
             if ($existingFid !== '') {
                 $fileIds[] = $existingFid;
                 continue;
             }
+
+            $attempted++;
 
             $tmpPath = isset($fi['tmp_path']) ? (string)$fi['tmp_path'] : '';
             $name = isset($fi['name']) ? (string)$fi['name'] : '';
@@ -317,6 +320,9 @@ class TuquinhaEngine
             }
 
             if ($localPathForUpload === '' || !is_file($localPathForUpload) || !is_readable($localPathForUpload)) {
+                $hint = $name !== '' ? $name : ($url !== '' ? $url : $tmpPath);
+                $this->lastProviderError = 'openai_files_no_local_file; hint=' . (string)$hint;
+                error_log('[TuquinhaEngine] OpenAI file missing/unreadable for upload: ' . (string)$this->lastProviderError);
                 if ($tmpToDelete !== '' && is_file($tmpToDelete)) {
                     @unlink($tmpToDelete);
                 }
@@ -347,6 +353,10 @@ class TuquinhaEngine
         }
 
         if (!$fileIds) {
+            if (!is_string($this->lastProviderError) || trim($this->lastProviderError) === '') {
+                $this->lastProviderError = 'openai_files_no_file_ids; attempted=' . (string)$attempted . '; inputs=' . (string)count($fileInputs);
+                error_log('[TuquinhaEngine] OpenAI no file_ids produced: ' . (string)$this->lastProviderError);
+            }
             return [
                 'content' => $this->fallbackResponse($messages),
                 'total_tokens' => 0,
@@ -504,6 +514,8 @@ class TuquinhaEngine
         ]);
         $bin = curl_exec($ch);
         if ($bin === false) {
+            $this->lastProviderError = 'fetch_url_curl_error=' . (string)curl_error($ch) . '; url=' . $url;
+            error_log('[TuquinhaEngine] Fetch URL failed: ' . (string)$this->lastProviderError);
             curl_close($ch);
             return null;
         }
@@ -511,6 +523,8 @@ class TuquinhaEngine
         curl_close($ch);
 
         if ($httpCode < 200 || $httpCode >= 300) {
+            $this->lastProviderError = 'fetch_url_http=' . (string)$httpCode . '; url=' . $url;
+            error_log('[TuquinhaEngine] Fetch URL http error: ' . (string)$this->lastProviderError);
             return null;
         }
 
@@ -521,6 +535,10 @@ class TuquinhaEngine
     {
         $bin = $this->fetchBinaryFromUrl($url);
         if (!is_string($bin) || $bin === '') {
+            if (!is_string($this->lastProviderError) || trim($this->lastProviderError) === '') {
+                $this->lastProviderError = 'download_temp_failed; url=' . trim($url);
+                error_log('[TuquinhaEngine] Download to temp failed: ' . (string)$this->lastProviderError);
+            }
             return null;
         }
 
@@ -532,6 +550,8 @@ class TuquinhaEngine
 
         $ok = @file_put_contents($tmpPath, $bin);
         if ($ok === false) {
+            $this->lastProviderError = 'download_temp_write_failed; path=' . (string)$tmpPath;
+            error_log('[TuquinhaEngine] Temp file write failed: ' . (string)$this->lastProviderError);
             return null;
         }
 
@@ -576,7 +596,12 @@ class TuquinhaEngine
 
         $data = json_decode($result, true);
         $fid = is_array($data) ? ($data['id'] ?? null) : null;
-        return is_string($fid) ? $fid : null;
+        if (!is_string($fid) || trim($fid) === '') {
+            $this->lastProviderError = 'openai_files_no_id_in_response; body=' . (string)$result;
+            error_log('[TuquinhaEngine] OpenAI /v1/files missing id: ' . (string)$this->lastProviderError);
+            return null;
+        }
+        return $fid;
     }
 
     private function fallbackResponse(array $messages): string
