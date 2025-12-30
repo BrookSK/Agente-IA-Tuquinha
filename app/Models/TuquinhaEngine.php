@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Models\Setting;
 use App\Models\Personality;
 use App\Models\Attachment;
+use App\Models\ProjectFileVersion;
 
 class TuquinhaEngine
 {
@@ -316,6 +317,7 @@ class TuquinhaEngine
             $mime = isset($fi['mime_type']) ? (string)$fi['mime_type'] : '';
             $url = isset($fi['url']) ? (string)$fi['url'] : '';
             $attachmentId = isset($fi['attachment_id']) ? (int)$fi['attachment_id'] : 0;
+            $projectFileVersionId = isset($fi['project_file_version_id']) ? (int)$fi['project_file_version_id'] : 0;
 
             $localPathForUpload = '';
             $tmpToDelete = '';
@@ -355,6 +357,9 @@ class TuquinhaEngine
                 $fileIds[] = $fid;
                 if ($attachmentId > 0) {
                     Attachment::updateOpenAIFileId($attachmentId, $fid);
+                }
+                if ($projectFileVersionId > 0) {
+                    ProjectFileVersion::updateOpenAIFileId($projectFileVersionId, $fid);
                 }
             } else {
                 $hint = $name !== '' ? $name : ($url !== '' ? $url : $tmpPath);

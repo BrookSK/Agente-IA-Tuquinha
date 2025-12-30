@@ -515,6 +515,7 @@ class ChatController extends Controller
 
             $projectContextFilesUsed = [];
             $projectContextMessage = null;
+            $projectFileInputsForModel = [];
 
             if (!empty($conversation->project_id) && $userId > 0) {
                 $projectId = (int)$conversation->project_id;
@@ -627,22 +628,16 @@ class ChatController extends Controller
                 foreach ($baseFiles as $bf) {
                     $fid = (int)($bf['id'] ?? 0);
                     $ver = $latestByFileId[$fid] ?? null;
-                    $text = is_array($ver) ? (string)($ver['extracted_text'] ?? '') : '';
                     $path = (string)($bf['path'] ?? '');
                     $displayName = (string)($bf['name'] ?? '');
                     if ($path === '') {
                         continue;
                     }
                     $projectContextFilesUsed[] = $path;
-                    if (trim($text) !== '') {
+                    $url = is_array($ver) ? (string)($ver['storage_url'] ?? '') : '';
+                    if ($url !== '') {
                         $label = trim($displayName) !== '' ? $displayName : $path;
-                        $parts[] = "ARQUIVO BASE DO PROJETO: {$label}\n" . $text;
-                    } else {
-                        $url = is_array($ver) ? (string)($ver['storage_url'] ?? '') : '';
-                        if ($url !== '') {
-                            $label = trim($displayName) !== '' ? $displayName : $path;
-                            $parts[] = "ARQUIVO BASE DO PROJETO: {$label}\nURL: {$url}";
-                        }
+                        $parts[] = "ARQUIVO BASE DO PROJETO: {$label}\nURL: {$url}";
                     }
                 }
 
@@ -749,20 +744,35 @@ class ChatController extends Controller
 
                     $fid = (int)($file['id'] ?? 0);
                     $ver = $fid > 0 ? ProjectFileVersion::latestForFile($fid) : null;
-                    $text = is_array($ver) ? (string)($ver['extracted_text'] ?? '') : '';
                     $display = trim((string)($file['name'] ?? ''));
                     if ($display === '') {
                         $display = (string)($file['path'] ?? '');
                     }
                     if ($path !== '') {
                         $projectContextFilesUsed[] = $path;
-                        if (trim($text) !== '') {
-                            $parts[] = "ARQUIVO CITADO PELO USUÁRIO: {$display}\n" . $text;
-                        } else {
-                            $url = is_array($ver) ? (string)($ver['storage_url'] ?? '') : '';
-                            if ($url !== '') {
-                                $parts[] = "ARQUIVO CITADO PELO USUÁRIO: {$display}\nURL: {$url}";
+
+                        $url = is_array($ver) ? (string)($ver['storage_url'] ?? '') : '';
+                        if ($url !== '') {
+                            $parts[] = "ARQUIVO CITADO PELO USUÁRIO: {$display}\nURL: {$url}";
+
+                            $openAIFileId = is_array($ver) ? (string)($ver['openai_file_id'] ?? '') : '';
+                            $versionId = is_array($ver) ? (int)($ver['id'] ?? 0) : 0;
+                            $mime = trim((string)($file['mime_type'] ?? ''));
+                            $name = trim((string)($file['name'] ?? ''));
+                            if ($name === '') {
+                                $name = trim((string)($file['path'] ?? ''));
                             }
+                            if ($name === '') {
+                                $name = 'arquivo';
+                            }
+
+                            $projectFileInputsForModel[] = [
+                                'project_file_version_id' => $versionId,
+                                'openai_file_id' => $openAIFileId,
+                                'name' => $name,
+                                'mime_type' => $mime,
+                                'url' => $url,
+                            ];
                         }
                     }
                 }
@@ -946,7 +956,19 @@ class ChatController extends Controller
                     $persistentInputsById[$aid] = array_merge($persistentInputsById[$aid] ?? [], $fi);
                 }
             }
+
+            $persistentProjectInputsByVersionId = [];
+            foreach ($projectFileInputsForModel as $fi) {
+                $vid = isset($fi['project_file_version_id']) ? (int)$fi['project_file_version_id'] : 0;
+                if ($vid > 0) {
+                    $persistentProjectInputsByVersionId[$vid] = $fi;
+                }
+            }
+
             $persistentFileInputs = array_values($persistentInputsById);
+            if (!empty($persistentProjectInputsByVersionId)) {
+                $persistentFileInputs = array_merge($persistentFileInputs, array_values($persistentProjectInputsByVersionId));
+            }
 
             $hasPdf = false;
             foreach ($persistentFileInputs as $fi) {

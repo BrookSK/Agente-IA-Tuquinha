@@ -1247,12 +1247,65 @@ if (!empty($currentPlan) && is_array($currentPlan)) {
                 return;
             }
 
+            // Captura anexos selecionados para renderizar imediatamente na UI
+            const selectedFiles = (window.fileInput && window.fileInput.files)
+                ? Array.from(window.fileInput.files)
+                : [];
+
+            const sizeHuman = (bytes) => {
+                const b = Number(bytes || 0);
+                if (!b || b <= 0) return '';
+                if (b < 1024) return b + ' B';
+                const kb = b / 1024;
+                if (kb < 1024) return kb.toFixed(1) + ' KB';
+                const mb = kb / 1024;
+                if (mb < 1024) return mb.toFixed(1) + ' MB';
+                const gb = mb / 1024;
+                return gb.toFixed(1) + ' GB';
+            };
+
+            const optimisticAttachments = selectedFiles.map((f) => {
+                const name = (f && f.name) ? String(f.name) : 'arquivo';
+                const type = (f && f.type) ? String(f.type) : '';
+                const lower = name.toLowerCase();
+                const isPdf = (type === 'application/pdf') || lower.endsWith('.pdf');
+                const isCsv = (type === 'text/csv') || lower.endsWith('.csv');
+                const isImage = (type.indexOf('image/') === 0) || /\.(png|jpe?g|webp|gif|bmp)$/i.test(lower);
+                let label = '';
+                if (isImage) label = 'Imagem';
+                else if (isPdf) label = 'PDF';
+                else if (isCsv) label = 'CSV';
+                else label = 'Arquivo';
+                return {
+                    name,
+                    label,
+                    size_human: sizeHuman(f && f.size ? f.size : 0),
+                    is_image: isImage,
+                    is_pdf: isPdf,
+                    is_csv: isCsv,
+                };
+            });
+
             const formData = new FormData(chatForm);
+
+            // Limpa imediatamente os arquivos selecionados (o FormData já capturou o estado atual)
+            if (window.fileInput && window.fileList) {
+                try {
+                    window.fileInput.value = '';
+                } catch (e) {}
+                window.fileList.innerHTML = '';
+            }
 
             isSending = true;
             activeAbortController = new AbortController();
 
             appendMessageToDom('user', text, { created_label: '' });
+
+            // Mostra os anexos logo após a mensagem do usuário, enquanto aguarda a resposta
+            const hasOptimisticAttachments = Array.isArray(optimisticAttachments) && optimisticAttachments.length > 0;
+            if (hasOptimisticAttachments) {
+                appendMessageToDom('attachment_summary', '', optimisticAttachments);
+            }
             activeTypingEl = appendTypingIndicator();
 
             // limpa o input imediatamente (a mensagem já foi adicionada no chat)
@@ -1321,6 +1374,9 @@ if (!empty($currentPlan) && is_array($currentPlan)) {
                         data.messages.forEach((m) => {
                             if (!skippedUserOnce && m.role === 'user' && (m.content || '').toString().trim() === text) {
                                 skippedUserOnce = true;
+                                return;
+                            }
+                            if (hasOptimisticAttachments && m.role === 'attachment_summary') {
                                 return;
                             }
                             const thirdArg = m.role === 'attachment_summary'

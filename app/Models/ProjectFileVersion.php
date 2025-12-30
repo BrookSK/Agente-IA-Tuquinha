@@ -20,18 +20,19 @@ class ProjectFileVersion
         return $row ?: null;
     }
 
-    public static function createNewVersion(int $projectFileId, string $storageUrl, ?int $sizeBytes, ?string $sha256, ?string $extractedText, ?int $createdByUserId): int
+    public static function createNewVersion(int $projectFileId, string $storageUrl, ?int $sizeBytes, ?string $sha256, ?string $extractedText, ?int $createdByUserId, ?string $openAIFileId = null): int
     {
         $pdo = Database::getConnection();
 
         $latest = self::latestForFile($projectFileId);
         $nextVersion = $latest ? ((int)$latest['version'] + 1) : 1;
 
-        $stmt = $pdo->prepare('INSERT INTO project_file_versions (project_file_id, version, storage_url, size_bytes, sha256, extracted_text, created_by_user_id) VALUES (:project_file_id, :version, :storage_url, :size_bytes, :sha256, :extracted_text, :created_by_user_id)');
+        $stmt = $pdo->prepare('INSERT INTO project_file_versions (project_file_id, version, storage_url, openai_file_id, size_bytes, sha256, extracted_text, created_by_user_id) VALUES (:project_file_id, :version, :storage_url, :openai_file_id, :size_bytes, :sha256, :extracted_text, :created_by_user_id)');
         $stmt->execute([
             'project_file_id' => $projectFileId,
             'version' => $nextVersion,
             'storage_url' => $storageUrl,
+            'openai_file_id' => $openAIFileId,
             'size_bytes' => $sizeBytes,
             'sha256' => $sha256,
             'extracted_text' => $extractedText,
@@ -39,6 +40,24 @@ class ProjectFileVersion
         ]);
 
         return (int)$pdo->lastInsertId();
+    }
+
+    public static function updateOpenAIFileId(int $versionId, string $openAIFileId): void
+    {
+        if ($versionId <= 0) {
+            return;
+        }
+        $openAIFileId = trim($openAIFileId);
+        if ($openAIFileId === '') {
+            return;
+        }
+
+        $pdo = Database::getConnection();
+        $stmt = $pdo->prepare('UPDATE project_file_versions SET openai_file_id = :fid WHERE id = :id LIMIT 1');
+        $stmt->execute([
+            'fid' => $openAIFileId,
+            'id' => $versionId,
+        ]);
     }
 
     public static function latestForFiles(array $projectFileIds): array
