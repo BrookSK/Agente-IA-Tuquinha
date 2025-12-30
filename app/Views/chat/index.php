@@ -203,20 +203,6 @@ if (!empty($currentPlan) && is_array($currentPlan)) {
                     <span>Padrão do Tuquinha / da conta</span>
                 <?php endif; ?>
             </div>
-
-            <a href="/personalidades?conversation_id=<?= (int)$conversationId ?>" style="
-                margin-left:auto;
-                border:1px solid var(--border-subtle);
-                border-radius:999px;
-                padding:6px 10px;
-                background:var(--surface-card);
-                color:var(--text-primary);
-                font-size:12px;
-                font-weight:600;
-                text-decoration:none;
-                cursor:pointer;
-                white-space:nowrap;
-            ">Escolher personalidade</a>
         </div>
     <?php endif; ?>
     <?php if (!empty($conversationId) && $canUseConversationSettings): ?>
