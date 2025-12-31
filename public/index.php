@@ -101,6 +101,7 @@ $router->get('/projetos/novo', 'ProjectController@createForm');
 $router->post('/projetos/criar', 'ProjectController@create');
 $router->get('/projetos/ver', 'ProjectController@show');
 $router->post('/projetos/memoria/salvar', 'ProjectController@saveMemory');
+$router->post('/projetos/instrucoes/salvar', 'ProjectController@saveInstructions');
 $router->post('/projetos/chat/criar', 'ProjectController@createChat');
 $router->post('/projetos/favoritar', 'ProjectController@toggleFavorite');
 $router->post('/projetos/renomear', 'ProjectController@rename');

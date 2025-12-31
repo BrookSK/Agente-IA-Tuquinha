@@ -1,10 +1,13 @@
 <?php /** @var array $project */ ?>
-<?php /** @var array $folders */ ?>
-<?php /** @var array $baseFiles */ ?>
-<?php /** @var array $latestByFileId */ ?>
-<?php /** @var array $conversations */ ?>
-<?php /** @var bool $isFavorite */ ?>
-<?php /** @var array $members */ ?>
+<?php
+/** @var array $project */
+/** @var array $baseFiles */
+/** @var array $latestByFileId */
+/** @var array $conversations */
+/** @var bool $isFavorite */
+/** @var bool $canAdmin */
+/** @var string $projectInstructions */
+?>
 <?php /** @var array $pendingInvites */ ?>
 <?php /** @var array $projectMemoryItems */ ?>
 <?php /** @var string|null $uploadError */ ?>
@@ -518,7 +521,9 @@
                         <a href="#" id="openProjectInstructions" style="color:var(--text-secondary); text-decoration:none;" title="Editar">✎</a>
                     </div>
                     <div style="color:var(--text-secondary); font-size:12px; line-height:1.35;">
-                        Configure instruções para orientar as respostas do Tuquinha neste projeto.
+                        <?= trim((string)($projectInstructions ?? '')) !== ''
+                            ? htmlspecialchars(mb_strimwidth(trim((string)$projectInstructions), 0, 160, '…', 'UTF-8'))
+                            : 'Configure instruções para orientar as respostas do Tuquinha neste projeto.' ?>
                     </div>
                 </div>
 
@@ -560,12 +565,12 @@
                         <button type="submit" style="border:none; border-radius:999px; padding:9px 14px; background:linear-gradient(135deg,#e53935,#ff6f60); color:#050509; font-weight:600; font-size:13px; cursor:pointer;">Enviar</button>
                     </div>
                 </div>
-                <div style="background:var(--surface-subtle); border:1px solid var(--border-subtle); border-radius:12px; padding:10px 12px; font-size:12px; line-height:1.35; color:var(--text-secondary);">
+                <div style="background:rgba(255, 111, 96, 0.06); border:1px solid rgba(255, 111, 96, 0.35); border-radius:12px; padding:10px 12px; font-size:12px; line-height:1.35; color:#ff6f60;">
                     Arquivos de texto/código (txt, md, json, php, js, etc.) serão usados como contexto automaticamente.
                 </div>
                 <div style="background:#1a0c10; border:1px solid #a33; border-radius:12px; padding:10px 12px; font-size:12px; line-height:1.35; color:#ffbaba;">
                     <div style="font-weight:700; margin-bottom:4px;">Atenção (Word/Excel/PowerPoint)</div>
-                    Se você tem um arquivo Office (Word/Excel/PowerPoint) e quer usar o conteúdo como base, converta para <strong>PDF</strong> ou copie o texto do arquivo e depois clique no botão <strong>+</strong> acima e selecione <strong>Adicionar conteúdo de texto</strong>. Aí cole o conteúdo no campo <strong>Texto</strong>.
+                    Se tiver um arquivo do Office (Word, Excel ou PowerPoint), converta para <strong>PDF</strong>.
                 </div>
             </form>
 
@@ -584,7 +589,7 @@
                 </div>
                 <div>
                     <label style="display:block; font-size:12px; color:var(--text-secondary); margin-bottom:4px;">Texto</label>
-                    <textarea name="content" rows="6" required style="width:100%; padding:8px 10px; border-radius:10px; border:1px solid var(--border-subtle); background:var(--surface-subtle); color:var(--text-primary); font-size:13px; resize:vertical; min-height:120px;"></textarea>
+                    <textarea class="tuqAutoGrow" name="content" rows="6" required style="width:100%; padding:8px 10px; border-radius:10px; border:1px solid var(--border-subtle); background:var(--surface-subtle); color:var(--text-primary); font-size:13px; resize:vertical; min-height:120px;"></textarea>
                 </div>
                 <div style="display:flex; justify-content:flex-end;">
                     <button type="submit" style="border:none; border-radius:999px; padding:9px 14px; background:var(--surface-card); color:var(--text-primary); font-weight:500; font-size:13px; cursor:pointer; border:1px solid var(--border-subtle);">Salvar texto como arquivo base</button>
@@ -861,15 +866,15 @@
                                 e.preventDefault();
                                 var m = document.getElementById('projectInstructionsModal');
                                 if (m) m.style.display = 'flex';
-                            });
-                        }
-                        var closeInstr = document.getElementById('closeProjectInstructions');
-                        if (closeInstr && !closeInstr.dataset.bound) {
-                            closeInstr.dataset.bound = '1';
-                            closeInstr.addEventListener('click', function (e) {
-                                e.preventDefault();
-                                var m = document.getElementById('projectInstructionsModal');
-                                if (m) m.style.display = 'none';
+
+                                try {
+                                    var ta = document.getElementById('projectInstructionsTextarea');
+                                    if (ta) {
+                                        ta.style.height = 'auto';
+                                        ta.style.height = (ta.scrollHeight) + 'px';
+                                        ta.focus();
+                                    }
+                                } catch (e2) {}
                             });
                         }
                         var cancelInstr = document.getElementById('cancelProjectInstructions');
@@ -881,12 +886,29 @@
                                 if (m) m.style.display = 'none';
                             });
                         }
+
+                        var modal = document.getElementById('projectInstructionsModal');
+                        if (modal && !modal.dataset.bound) {
+                            modal.dataset.bound = '1';
+                            modal.addEventListener('click', function (e) {
+                                if (e.target === modal) {
+                                    modal.style.display = 'none';
+                                }
+                            });
+                            document.addEventListener('keydown', function (e) {
+                                if (e.key === 'Escape') {
+                                    modal.style.display = 'none';
+                                }
+                            });
+                        }
                     }
 
                     bindProjectShareToggle();
                     bindProjectPersonaPicker();
                     bindProjectInstructionsModal();
+                    bindAutoGrowTextareas();
                     document.addEventListener('DOMContentLoaded', bindProjectInstructionsModal);
+                    document.addEventListener('DOMContentLoaded', bindAutoGrowTextareas);
                     document.addEventListener('DOMContentLoaded', bindProjectShareToggle);
                     document.addEventListener('DOMContentLoaded', bindProjectPersonaPicker);
 
@@ -1245,16 +1267,17 @@
     </div>
 
     <div id="projectInstructionsModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.65); align-items:center; justify-content:center; padding:20px; z-index:50;">
-        <div style="width:min(760px, 100%); background:var(--surface-card); border:1px solid var(--border-subtle); border-radius:16px; padding:16px;">
+        <form action="/projetos/instrucoes/salvar" method="post" style="width:min(760px, 100%); background:var(--surface-card); border:1px solid var(--border-subtle); border-radius:16px; padding:16px;">
+            <input type="hidden" name="project_id" value="<?= (int)($project['id'] ?? 0) ?>">
             <div style="font-weight:700; font-size:15px; margin-bottom:6px;">Criar instruções para o projeto</div>
             <div style="color:var(--text-secondary); font-size:12px; line-height:1.35; margin-bottom:10px;">
                 Dê ao Tuquinha instruções e informações relevantes para as conversas dentro deste projeto.
             </div>
-            <textarea rows="8" style="width:100%; padding:10px 12px; border-radius:12px; border:1px solid var(--border-subtle); background:var(--surface-subtle); color:var(--text-primary); font-size:13px; resize:vertical; outline:none;"></textarea>
+            <textarea id="projectInstructionsTextarea" class="tuqAutoGrow" name="instructions" rows="8" style="width:100%; padding:10px 12px; border-radius:12px; border:1px solid var(--border-subtle); background:var(--surface-subtle); color:var(--text-primary); font-size:13px; resize:vertical; outline:none;" spellcheck="false"><?= htmlspecialchars((string)($projectInstructions ?? '')) ?></textarea>
             <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:12px;">
                 <button type="button" id="cancelProjectInstructions" style="border:1px solid var(--border-subtle); border-radius:10px; padding:8px 12px; background:var(--surface-subtle); color:var(--text-primary); font-weight:600; cursor:pointer;">Cancelar</button>
-                <button type="button" id="closeProjectInstructions" style="border:none; border-radius:10px; padding:8px 12px; background:var(--surface-subtle); color:var(--text-secondary); font-weight:650; cursor:not-allowed; border:1px solid var(--border-subtle);" disabled>Salvar instruções</button>
+                <button type="submit" id="saveProjectInstructions" style="border:none; border-radius:10px; padding:8px 12px; background:linear-gradient(135deg,#e53935,#ff6f60); color:#050509; font-weight:750; cursor:pointer;">Salvar instruções</button>
             </div>
-        </div>
+        </form>
     </div>
 </div>

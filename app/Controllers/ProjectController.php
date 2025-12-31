@@ -341,11 +341,36 @@ class ProjectController extends Controller
             'projectMemoryItems' => $projectMemoryItems,
             'planAllowsPersonalities' => $planAllowsPersonalities,
             'personalities' => $personalities,
+            'projectInstructions' => (string)($project['instructions'] ?? ''),
             'uploadError' => $_SESSION['project_upload_error'] ?? null,
             'uploadOk' => $_SESSION['project_upload_ok'] ?? null,
         ]);
 
         unset($_SESSION['project_upload_error'], $_SESSION['project_upload_ok']);
+    }
+
+    public function saveInstructions(): void
+    {
+        $user = $this->requireLogin();
+        $this->requireProjectPermission($user, 'edit');
+        $userId = (int)($user['id'] ?? 0);
+
+        $projectId = isset($_POST['project_id']) ? (int)$_POST['project_id'] : 0;
+        $instructions = (string)($_POST['instructions'] ?? '');
+
+        if ($projectId <= 0 || !ProjectMember::canAdmin($projectId, $userId)) {
+            header('Location: /projetos');
+            exit;
+        }
+
+        $instructions = trim(str_replace(["\r\n", "\r"], "\n", $instructions));
+        if ($instructions === '') {
+            $instructions = null;
+        }
+
+        Project::updateInstructions($projectId, $instructions);
+        header('Location: /projetos/ver?id=' . $projectId);
+        exit;
     }
 
     public function removeBaseFile(): void

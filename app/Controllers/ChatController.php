@@ -995,6 +995,7 @@ class ChatController extends Controller
                         $projectContextFilesUsed[] = $path;
 
                         $url = is_array($ver) ? (string)($ver['storage_url'] ?? '') : '';
+                        $extractedText = is_array($ver) ? (string)($ver['extracted_text'] ?? '') : '';
                         if ($url !== '') {
                             $parts[] = "ARQUIVO CITADO PELO USUÁRIO: {$display}\nURL: {$url}";
 
@@ -1009,16 +1010,40 @@ class ChatController extends Controller
                                 $name = 'arquivo';
                             }
 
+                            $extHere = '';
+                            if (strpos($name, '.') !== false) {
+                                $extHere = strtolower((string)pathinfo($name, PATHINFO_EXTENSION));
+                            }
+
+                            $isTextLike = false;
+                            if ($mime !== '' && stripos($mime, 'text/') === 0) {
+                                $isTextLike = true;
+                            }
+                            if (!$isTextLike && $mime !== '' && in_array(strtolower($mime), ['application/json', 'application/xml', 'application/x-yaml'], true)) {
+                                $isTextLike = true;
+                            }
+                            if (!$isTextLike && $extHere !== '') {
+                                $isTextLike = in_array($extHere, ['txt','md','markdown','json','csv','tsv','log','yml','yaml','xml','html','htm','css','js','ts','php','py','java','c','cpp','h','hpp','go','rs','rb','sql'], true);
+                            }
+
+                            // Para arquivos de texto, não anexamos como arquivo (OpenAI pode recusar). Usamos o texto extraído direto no contexto.
+                            if ($isTextLike) {
+                                $txt = trim($extractedText);
+                                if ($txt !== '') {
+                                    $maxChars = 18000;
+                                    if (mb_strlen($txt, 'UTF-8') > $maxChars) {
+                                        $txt = mb_substr($txt, 0, $maxChars, 'UTF-8') . "\n\n[...texto truncado...]";
+                                    }
+                                    $parts[] = "CONTEÚDO DO ARQUIVO (texto extraído): {$display}\n\n" . $txt;
+                                }
+                                continue;
+                            }
+
                             // Bloqueio amigável para Office no OpenAI (também vale para arquivos mencionados do projeto)
                             $modelToUseHere = isset($_SESSION['chat_model']) && is_string($_SESSION['chat_model']) && $_SESSION['chat_model'] !== ''
                                 ? (string)$_SESSION['chat_model']
                                 : '';
                             $isOpenAIModelHere = !str_starts_with($modelToUseHere, 'claude-');
-
-                            $extHere = '';
-                            if (strpos($name, '.') !== false) {
-                                $extHere = strtolower((string)pathinfo($name, PATHINFO_EXTENSION));
-                            }
 
                             if ($isOpenAIModelHere) {
                                 $isOfficeUnsupportedHere = in_array($extHere, ['doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx'], true)
