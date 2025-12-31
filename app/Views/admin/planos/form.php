@@ -54,7 +54,7 @@ if ($slugForCycle !== '') {
 
         <div>
             <label style="font-size:13px; color:var(--text-primary); display:block; margin-bottom:4px;">Ciclo de cobrança</label>
-            <select name="billing_cycle" style="
+            <select name="billing_cycle" id="plan-billing-cycle" style="
                 width:100%; padding:8px 10px; border-radius:8px; border:1px solid var(--border-subtle);
                 background:var(--surface-subtle); color:var(--text-primary); font-size:13px;">
                 <option value="monthly" <?= $billingCycle === 'monthly' ? 'selected' : '' ?>>Mensal</option>
@@ -66,11 +66,12 @@ if ($slugForCycle !== '') {
 
         <div>
             <label style="font-size:13px; color:var(--text-primary); display:block; margin-bottom:4px;">Slug (técnico)</label>
-            <input type="text" name="slug" required value="<?= htmlspecialchars($plan['slug'] ?? '') ?>" style="
+            <?php $planSlugExisting = (string)($plan['slug'] ?? ''); ?>
+            <input type="text" id="plan-slug" value="<?= htmlspecialchars($planSlugExisting) ?>" readonly style="
                 width:100%; padding:8px 10px; border-radius:8px; border:1px solid var(--border-subtle);
                 background:var(--surface-subtle); color:var(--text-primary); font-size:14px;">
             <div style="font-size:11px; color:#777; margin-top:3px;">
-                Usado nas URLs e integrações (ex: free, pro). O sistema pode adicionar um sufixo automático (<code>-mensal</code>, <code>-semestral</code>, <code>-anual</code>) conforme o ciclo escolhido.
+                Gerado automaticamente a partir do nome + ciclo (<code>-mensal</code>, <code>-semestral</code>, <code>-anual</code>).
             </div>
         </div>
 
@@ -248,3 +249,44 @@ if ($slugForCycle !== '') {
         </div>
     </form>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    var nameInput = document.querySelector('input[name="name"]');
+    var cycleInput = document.getElementById('plan-billing-cycle');
+    var slugInput = document.getElementById('plan-slug');
+    if (!nameInput || !cycleInput || !slugInput) return;
+
+    var isFree = (slugInput.value || '').trim() === 'free';
+    if (isFree) {
+        slugInput.value = 'free';
+        return;
+    }
+
+    function slugify(text) {
+        text = (text || '').trim();
+        if (!text) return '';
+        try {
+            text = text.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+        } catch (e) {}
+        text = text.toLowerCase();
+        text = text.replace(/[^a-z0-9]+/g, '-');
+        text = text.replace(/^-+|-+$/g, '');
+        return text;
+    }
+
+    function computeSlug() {
+        var base = slugify(nameInput.value);
+        if (!base) base = 'plano';
+        var cycle = cycleInput.value || 'monthly';
+        var suffix = '-mensal';
+        if (cycle === 'semiannual') suffix = '-semestral';
+        else if (cycle === 'annual') suffix = '-anual';
+        slugInput.value = base + suffix;
+    }
+
+    nameInput.addEventListener('input', computeSlug);
+    cycleInput.addEventListener('change', computeSlug);
+    computeSlug();
+});
+</script>

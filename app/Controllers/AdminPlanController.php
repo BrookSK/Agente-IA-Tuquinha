@@ -7,6 +7,26 @@ use App\Models\Plan;
 
 class AdminPlanController extends Controller
 {
+    private function slugify(string $text): string
+    {
+        $text = trim($text);
+        if ($text === '') {
+            return '';
+        }
+
+        if (function_exists('iconv')) {
+            $converted = @iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $text);
+            if (is_string($converted) && $converted !== '') {
+                $text = $converted;
+            }
+        }
+
+        $text = strtolower($text);
+        $text = preg_replace('/[^a-z0-9]+/i', '-', $text);
+        $text = trim((string)$text, '-');
+        return (string)$text;
+    }
+
     private function ensureAdmin(): void
     {
         if (empty($_SESSION['is_admin'])) {
@@ -47,7 +67,7 @@ class AdminPlanController extends Controller
 
         $id = isset($_POST['id']) ? (int)$_POST['id'] : 0;
         $name = trim($_POST['name'] ?? '');
-        $slug = trim($_POST['slug'] ?? '');
+        $slug = '';
         $price = trim($_POST['price'] ?? '0');
         $description = trim($_POST['description'] ?? '');
         $benefits = trim($_POST['benefits'] ?? '');
@@ -110,18 +130,20 @@ class AdminPlanController extends Controller
             $referralFreeDays = max(0, (int)$referralFreeDaysRaw);
         }
 
-        // Normaliza slug base removendo possíveis sufixos anteriores de ciclo
-        $baseSlug = $slug;
-        if ($baseSlug !== '' && $baseSlug !== 'free') {
-            if (substr($baseSlug, -11) === '-semestral') {
-                $baseSlug = substr($baseSlug, 0, -11);
-            } elseif (substr($baseSlug, -6) === '-anual') {
-                $baseSlug = substr($baseSlug, 0, -6);
-            } elseif (substr($baseSlug, -7) === '-mensal') {
-                $baseSlug = substr($baseSlug, 0, -7);
+        // Slug é sempre gerado automaticamente a partir do nome + ciclo
+        $existing = null;
+        if ($id > 0) {
+            $existing = Plan::findById($id);
+        }
+
+        if ($existing && (string)($existing['slug'] ?? '') === 'free') {
+            $slug = 'free';
+        } else {
+            $baseSlug = $this->slugify($name);
+            if ($baseSlug === '') {
+                $baseSlug = 'plano';
             }
 
-            // Aplica sufixo conforme ciclo escolhido
             if ($billingCycle === 'semiannual') {
                 $slug = $baseSlug . '-semestral';
             } elseif ($billingCycle === 'annual') {
