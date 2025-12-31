@@ -3,6 +3,68 @@
 /** @var string $term */
 /** @var int $retentionDays */
 ?>
+<style>
+    .tuqPersonaBadge {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 6px 10px;
+        border-radius: 999px;
+        border: 1px solid var(--border-subtle);
+        background: var(--surface-subtle);
+        color: var(--text-primary);
+        max-width: 100%;
+        min-width: 0;
+    }
+    .tuqPersonaBadgeAvatar {
+        width: 24px;
+        height: 24px;
+        border-radius: 8px;
+        overflow: hidden;
+        border: 1px solid var(--border-subtle);
+        background: var(--surface-card);
+        flex: 0 0 auto;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .tuqPersonaBadgeAvatar img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+    }
+    .tuqPersonaBadgeText {
+        display: flex;
+        flex-direction: column;
+        line-height: 1.15;
+        min-width: 0;
+    }
+    .tuqPersonaBadgeName {
+        font-size: 12px;
+        font-weight: 700;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .tuqPersonaBadgeArea {
+        font-size: 11px;
+        color: var(--text-secondary);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    @media (max-width: 640px) {
+        .tuqPersonaBadge {
+            padding: 5px 8px;
+        }
+        .tuqPersonaBadgeAvatar {
+            width: 22px;
+            height: 22px;
+            border-radius: 7px;
+        }
+    }
+</style>
 <div style="max-width: 880px; margin: 0 auto;">
     <h1 style="font-size: 24px; margin-bottom: 10px; font-weight: 650;">Histórico de conversas</h1>
     <p style="color:var(--text-secondary); font-size: 14px; margin-bottom: 4px;">
@@ -33,13 +95,45 @@
                     }
                     $created = $conv['created_at'] ?? null;
                     $personaName = !empty($planAllowsPersonalities) ? trim((string)($conv['persona_name'] ?? '')) : '';
-                    $displayTitle = $personaName !== '' ? ($title . ' — ' . $personaName) : $title;
+                    $personaArea = !empty($planAllowsPersonalities) ? trim((string)($conv['persona_area'] ?? '')) : '';
+                    $personaImg = !empty($planAllowsPersonalities) ? trim((string)($conv['persona_image_path'] ?? '')) : '';
                 ?>
                 <div style="background:var(--surface-card); border-radius:12px; padding:10px 12px; border:1px solid var(--border-subtle); display:flex; justify-content:space-between; align-items:center; gap:8px;">
                     <div>
                         <div style="font-size:14px; font-weight:500; margin-bottom:4px;">
-                            <?= htmlspecialchars($displayTitle) ?>
+                            <?= htmlspecialchars($title) ?>
                         </div>
+                        <?php if ($personaName !== ''): ?>
+                            <div style="margin-bottom:6px;">
+                                <span class="tuqPersonaBadge" title="<?= htmlspecialchars($personaName . ($personaArea !== '' ? ' · ' . $personaArea : '')) ?>">
+                                    <span class="tuqPersonaBadgeAvatar">
+                                        <?php if ($personaImg !== ''): ?>
+                                            <img src="<?= htmlspecialchars($personaImg) ?>" alt="">
+                                        <?php else: ?>
+                                            <span style="font-size:11px; color:var(--text-secondary); font-weight:800; line-height:1;">T</span>
+                                        <?php endif; ?>
+                                    </span>
+                                    <span class="tuqPersonaBadgeText">
+                                        <span class="tuqPersonaBadgeName"><?= htmlspecialchars($personaName) ?></span>
+                                        <?php if ($personaArea !== ''): ?>
+                                            <span class="tuqPersonaBadgeArea"><?= htmlspecialchars($personaArea) ?></span>
+                                        <?php endif; ?>
+                                    </span>
+                                </span>
+                            </div>
+                        <?php else: ?>
+                            <div style="margin-bottom:6px;">
+                                <span class="tuqPersonaBadge" title="Padrão do Tuquinha / da conta">
+                                    <span class="tuqPersonaBadgeAvatar">
+                                        <img src="/public/favicon.png" alt="">
+                                    </span>
+                                    <span class="tuqPersonaBadgeText">
+                                        <span class="tuqPersonaBadgeName">Padrão do Tuquinha</span>
+                                        <span class="tuqPersonaBadgeArea">da conta</span>
+                                    </span>
+                                </span>
+                            </div>
+                        <?php endif; ?>
                         <?php if ($created): ?>
                             <div style="font-size:11px; color:var(--text-secondary); margin-bottom:4px;">
                                 Iniciado em <?= htmlspecialchars(date('d/m/Y H:i', strtotime($created))) ?>

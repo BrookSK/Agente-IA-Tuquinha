@@ -98,6 +98,67 @@
         background: rgba(15, 23, 42, 0.45);
     }
 
+    .tuqPersonaBadge {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 6px 10px;
+        border-radius: 999px;
+        border: 1px solid var(--border-subtle);
+        background: var(--surface-subtle);
+        color: var(--text-primary);
+        max-width: 100%;
+        min-width: 0;
+    }
+    .tuqPersonaBadgeAvatar {
+        width: 24px;
+        height: 24px;
+        border-radius: 8px;
+        overflow: hidden;
+        border: 1px solid var(--border-subtle);
+        background: var(--surface-card);
+        flex: 0 0 auto;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .tuqPersonaBadgeAvatar img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+    }
+    .tuqPersonaBadgeText {
+        display: flex;
+        flex-direction: column;
+        line-height: 1.15;
+        min-width: 0;
+    }
+    .tuqPersonaBadgeName {
+        font-size: 12px;
+        font-weight: 700;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .tuqPersonaBadgeArea {
+        font-size: 11px;
+        color: var(--text-secondary);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    @media (max-width: 640px) {
+        .tuqPersonaBadge {
+            padding: 5px 8px;
+        }
+        .tuqPersonaBadgeAvatar {
+            width: 22px;
+            height: 22px;
+            border-radius: 7px;
+        }
+    }
+
     .projectPersonaCard {
         transition: transform 0.18s ease, opacity 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
         opacity: 0.55;
@@ -306,13 +367,45 @@
                                 $lastAt = $c['last_message_at'] ?? ($c['created_at'] ?? null);
                                 $ago = $timeAgo(is_string($lastAt) ? $lastAt : null);
                                 $personaName = !empty($planAllowsPersonalities) ? trim((string)($c['persona_name'] ?? '')) : '';
-                                $displayTitle = $personaName !== '' ? ($title . ' — ' . $personaName) : $title;
+                                $personaArea = !empty($planAllowsPersonalities) ? trim((string)($c['persona_area'] ?? '')) : '';
+                                $personaImg = !empty($planAllowsPersonalities) ? trim((string)($c['persona_image_path'] ?? '')) : '';
                             ?>
                             <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; padding:12px 14px; border-top:1px solid var(--border-subtle);">
                                 <a href="/chat?c=<?= (int)($c['id'] ?? 0) ?>" style="display:block; text-decoration:none; color:var(--text-primary); min-width:0; flex:1;">
                                     <div style="font-size:13px; font-weight:650; margin-bottom:3px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
-                                        <?= htmlspecialchars($displayTitle) ?>
+                                        <?= htmlspecialchars($title) ?>
                                     </div>
+                                    <?php if ($personaName !== ''): ?>
+                                        <div style="margin-bottom:6px;">
+                                            <span class="tuqPersonaBadge" title="<?= htmlspecialchars($personaName . ($personaArea !== '' ? ' · ' . $personaArea : '')) ?>">
+                                                <span class="tuqPersonaBadgeAvatar">
+                                                    <?php if ($personaImg !== ''): ?>
+                                                        <img src="<?= htmlspecialchars($personaImg) ?>" alt="">
+                                                    <?php else: ?>
+                                                        <span style="font-size:11px; color:var(--text-secondary); font-weight:800; line-height:1;">T</span>
+                                                    <?php endif; ?>
+                                                </span>
+                                                <span class="tuqPersonaBadgeText">
+                                                    <span class="tuqPersonaBadgeName"><?= htmlspecialchars($personaName) ?></span>
+                                                    <?php if ($personaArea !== ''): ?>
+                                                        <span class="tuqPersonaBadgeArea"><?= htmlspecialchars($personaArea) ?></span>
+                                                    <?php endif; ?>
+                                                </span>
+                                            </span>
+                                        </div>
+                                    <?php else: ?>
+                                        <div style="margin-bottom:6px;">
+                                            <span class="tuqPersonaBadge" title="Padrão do Tuquinha / da conta">
+                                                <span class="tuqPersonaBadgeAvatar">
+                                                    <img src="/public/favicon.png" alt="">
+                                                </span>
+                                                <span class="tuqPersonaBadgeText">
+                                                    <span class="tuqPersonaBadgeName">Padrão do Tuquinha</span>
+                                                    <span class="tuqPersonaBadgeArea">da conta</span>
+                                                </span>
+                                            </span>
+                                        </div>
+                                    <?php endif; ?>
                                     <div style="font-size:11px; color:var(--text-secondary);">
                                         <?= $ago !== '' ? 'Última mensagem ' . htmlspecialchars($ago) : '' ?>
                                     </div>

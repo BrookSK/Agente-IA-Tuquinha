@@ -103,7 +103,7 @@ class Conversation
     {
         $pdo = Database::getConnection();
         $stmt = $pdo->prepare(
-            'SELECT c.*, p.name AS persona_name FROM conversations c
+            'SELECT c.*, p.name AS persona_name, p.area AS persona_area, p.image_path AS persona_image_path FROM conversations c
              LEFT JOIN personalities p ON p.id = c.persona_id
              WHERE c.session_id = :session_id
                AND EXISTS (
@@ -120,7 +120,7 @@ class Conversation
     {
         $pdo = Database::getConnection();
         $stmt = $pdo->prepare(
-            'SELECT c.*, p.name AS persona_name FROM conversations c
+            'SELECT c.*, p.name AS persona_name, p.area AS persona_area, p.image_path AS persona_image_path FROM conversations c
              LEFT JOIN personalities p ON p.id = c.persona_id
              WHERE c.user_id = :user_id
                AND EXISTS (
@@ -141,7 +141,7 @@ class Conversation
 
         $pdo = Database::getConnection();
         $stmt = $pdo->prepare(
-            'SELECT c.*, MAX(m.created_at) AS last_message_at, p.name AS persona_name
+            'SELECT c.*, MAX(m.created_at) AS last_message_at, p.name AS persona_name, p.area AS persona_area, p.image_path AS persona_image_path
              FROM conversations c
              INNER JOIN messages m ON m.conversation_id = c.id
              LEFT JOIN personalities p ON p.id = c.persona_id
@@ -166,7 +166,7 @@ class Conversation
 
         $like = '%' . $term . '%';
         $stmt = $pdo->prepare(
-            'SELECT c.*, p.name AS persona_name FROM conversations c
+            'SELECT c.*, p.name AS persona_name, p.area AS persona_area, p.image_path AS persona_image_path FROM conversations c
              LEFT JOIN personalities p ON p.id = c.persona_id
              WHERE c.session_id = :session_id
                AND c.title IS NOT NULL
@@ -194,7 +194,7 @@ class Conversation
 
         $like = '%' . $term . '%';
         $stmt = $pdo->prepare(
-            'SELECT c.*, p.name AS persona_name FROM conversations c
+            'SELECT c.*, p.name AS persona_name, p.area AS persona_area, p.image_path AS persona_image_path FROM conversations c
              LEFT JOIN personalities p ON p.id = c.persona_id
              WHERE c.user_id = :user_id
                AND c.title IS NOT NULL
