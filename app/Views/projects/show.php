@@ -905,6 +905,24 @@
                         }
                     }
 
+                    function bindAutoGrowTextareas() {
+                        var list = document.querySelectorAll('textarea.tuqAutoGrow');
+                        if (!list || !list.length) return;
+
+                        function applyGrow(el) {
+                            if (!el) return;
+                            el.style.height = 'auto';
+                            el.style.height = (el.scrollHeight) + 'px';
+                        }
+
+                        list.forEach(function (ta) {
+                            if (!ta || ta.dataset.autogrowBound) return;
+                            ta.dataset.autogrowBound = '1';
+                            applyGrow(ta);
+                            ta.addEventListener('input', function () { applyGrow(ta); });
+                        });
+                    }
+
                     bindProjectShareToggle();
                     bindProjectPersonaPicker();
                     bindProjectInstructionsModal();
