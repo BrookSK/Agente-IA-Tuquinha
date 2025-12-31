@@ -42,6 +42,7 @@ class CheckoutController extends Controller
         $this->view('checkout/step1', [
             'pageTitle' => 'Checkout - ' . $plan['name'],
             'plan' => $plan,
+            'checkoutPlan' => $plan,
             'error' => null,
             'currentUser' => $currentUser,
             'savedCustomer' => $savedCustomer,
@@ -101,6 +102,7 @@ class CheckoutController extends Controller
                 if (empty($_POST[$field])) {
                     $this->view('checkout/step1', [
                         'pageTitle' => 'Checkout - ' . $plan['name'],
+                        'checkoutPlan' => $plan,
                         'plan' => $plan,
                         'error' => 'Por favor, preencha todos os campos obrigatórios.',
                     ]);
@@ -146,6 +148,7 @@ class CheckoutController extends Controller
             $this->view('checkout/show', [
                 'pageTitle' => 'Checkout - ' . $plan['name'],
                 'plan' => $plan,
+                'checkoutPlan' => $plan,
                 'customer' => $customerForSession,
                 'birthdate' => $customerForSession['birthdate'],
                 'requiresCardNow' => $requiresCardNow,
@@ -657,6 +660,7 @@ HTML;
             $this->view('checkout/show', [
                 'pageTitle' => 'Checkout - ' . $plan['name'],
                 'plan' => $plan,
+                'checkoutPlan' => $plan,
                 'customer' => $sessionCustomer ?: [],
                 'birthdate' => $sessionCustomer['birthdate'] ?? '',
                 'requiresCardNow' => $requiresCardNow,

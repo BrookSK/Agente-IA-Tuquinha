@@ -1,17 +1,19 @@
 <?php
 /** @var array $plan */
+/** @var array|null $checkoutPlan */
 /** @var array $customer */
 /** @var string $birthdate */
 /** @var string|null $error */
 /** @var bool|null $requiresCardNow */
-$price = number_format($plan['price_cents'] / 100, 2, ',', '.');
+$checkoutPlan = $checkoutPlan ?? $plan;
+$price = number_format($checkoutPlan['price_cents'] / 100, 2, ',', '.');
 
 $hasReferral = !empty($_SESSION['pending_referral'])
     && !empty($_SESSION['pending_plan_slug'])
-    && (string)$_SESSION['pending_plan_slug'] === (string)($plan['slug'] ?? '');
+    && (string)$_SESSION['pending_plan_slug'] === (string)($checkoutPlan['slug'] ?? '');
 
 // Define rótulo do período (mês / semestre / ano) com base no sufixo do slug
-$slug = (string)($plan['slug'] ?? '');
+$slug = (string)($checkoutPlan['slug'] ?? '');
 $periodLabel = 'mês';
 if (substr($slug, -11) === '-semestral') {
     $periodLabel = 'semestre';
@@ -28,9 +30,9 @@ if (substr($slug, -11) === '-semestral') {
         </p>
         <p style="color: #b0b0b0; margin-bottom: 18px; font-size: 14px;">
             <?php if ($hasReferral): ?>
-                Você está finalizando o checkout do plano <strong><?= htmlspecialchars($plan['name']) ?></strong> por <strong>R$ <?= $price ?>/<?= htmlspecialchars($periodLabel) ?></strong>, com cobrança recorrente no cartão via Asaas.
+                Você está finalizando o checkout do plano <strong><?= htmlspecialchars($checkoutPlan['name']) ?></strong> por <strong>R$ <?= $price ?>/<?= htmlspecialchars($periodLabel) ?></strong>, com cobrança recorrente no cartão via Asaas.
             <?php else: ?>
-                Você está assinando o plano <strong><?= htmlspecialchars($plan['name']) ?></strong> por <strong>R$ <?= $price ?>/<?= htmlspecialchars($periodLabel) ?></strong>, com cobrança recorrente no cartão via Asaas.
+                Você está assinando o plano <strong><?= htmlspecialchars($checkoutPlan['name']) ?></strong> por <strong>R$ <?= $price ?>/<?= htmlspecialchars($periodLabel) ?></strong>, com cobrança recorrente no cartão via Asaas.
             <?php endif; ?>
         </p>
     <?php else: ?>
@@ -38,7 +40,7 @@ if (substr($slug, -11) === '-semestral') {
             Passo 2 de 2 &mdash; Confirme seus dados para ativar o período grátis.
         </p>
         <p style="color: #b0b0b0; margin-bottom: 18px; font-size: 14px;">
-            Você está ativando o plano <strong><?= htmlspecialchars($plan['name']) ?></strong> com um período de teste gratuito. Durante esses dias grátis não haverá cobrança imediata. Quando o teste terminar, vamos gerar a cobrança normalmente, usando os dados cadastrados depois disso.
+            Você está ativando o plano <strong><?= htmlspecialchars($checkoutPlan['name']) ?></strong> com um período de teste gratuito. Durante esses dias grátis não haverá cobrança imediata. Quando o teste terminar, vamos gerar a cobrança normalmente, usando os dados cadastrados depois disso.
         </p>
     <?php endif; ?>
 
@@ -50,7 +52,7 @@ if (substr($slug, -11) === '-semestral') {
     <?php endif; ?>
 
     <form action="/checkout" method="post" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px;">
-        <input type="hidden" name="plan_slug" value="<?= htmlspecialchars($plan['slug']) ?>">
+        <input type="hidden" name="plan_slug" value="<?= htmlspecialchars($checkoutPlan['slug']) ?>">
         <input type="hidden" name="step" value="2">
 
         <div style="grid-column: 1 / -1; font-size: 12px; text-transform: uppercase; letter-spacing: 0.12em; color: #b0b0b0;">Confere se está tudo certo com seus dados</div>

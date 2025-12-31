@@ -1,16 +1,18 @@
 <?php
 /** @var array $plan */
+/** @var array|null $checkoutPlan */
 /** @var string|null $error */
 /** @var array|null $currentUser */
 /** @var array|null $savedCustomer */
-$price = number_format($plan['price_cents'] / 100, 2, ',', '.');
+$checkoutPlan = $checkoutPlan ?? $plan;
+$price = number_format($checkoutPlan['price_cents'] / 100, 2, ',', '.');
 
 $hasReferral = !empty($_SESSION['pending_referral'])
     && !empty($_SESSION['pending_plan_slug'])
-    && (string)$_SESSION['pending_plan_slug'] === (string)($plan['slug'] ?? '');
+    && (string)$_SESSION['pending_plan_slug'] === (string)($checkoutPlan['slug'] ?? '');
 
 // Define rótulo do período (mês / semestre / ano) com base no sufixo do slug
-$slug = (string)($plan['slug'] ?? '');
+$slug = (string)($checkoutPlan['slug'] ?? '');
 $periodLabel = 'mês';
 if (substr($slug, -11) === '-semestral') {
     $periodLabel = 'semestre';
@@ -37,9 +39,9 @@ $prefillState = $savedCustomer['state'] ?? ($currentUser['billing_state'] ?? '')
     <p style="color: #b0b0b0; margin-bottom: 18px; font-size: 14px;">
         Passo 1 de 2 &mdash; Dados pessoais. Depois vamos pedir os dados do cartão.<br>
         <?php if ($hasReferral): ?>
-            Você está iniciando o checkout do plano <strong><?= htmlspecialchars($plan['name']) ?></strong> por <strong>R$ <?= $price ?>/<?= htmlspecialchars($periodLabel) ?></strong>.
+            Você está iniciando o checkout do plano <strong><?= htmlspecialchars($checkoutPlan['name']) ?></strong> por <strong>R$ <?= $price ?>/<?= htmlspecialchars($periodLabel) ?></strong>.
         <?php else: ?>
-            Você está assinando o plano <strong><?= htmlspecialchars($plan['name']) ?></strong> por <strong>R$ <?= $price ?>/<?= htmlspecialchars($periodLabel) ?></strong>.
+            Você está assinando o plano <strong><?= htmlspecialchars($checkoutPlan['name']) ?></strong> por <strong>R$ <?= $price ?>/<?= htmlspecialchars($periodLabel) ?></strong>.
         <?php endif; ?>
     </p>
 
@@ -50,7 +52,7 @@ $prefillState = $savedCustomer['state'] ?? ($currentUser['billing_state'] ?? '')
     <?php endif; ?>
 
     <form action="/checkout" method="post" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px;">
-        <input type="hidden" name="plan_slug" value="<?= htmlspecialchars($plan['slug']) ?>">
+        <input type="hidden" name="plan_slug" value="<?= htmlspecialchars($checkoutPlan['slug']) ?>">
         <input type="hidden" name="step" value="1">
 
         <div style="grid-column: 1 / -1; font-size: 12px; text-transform: uppercase; letter-spacing: 0.12em; color: #b0b0b0;">Dados pessoais</div>
