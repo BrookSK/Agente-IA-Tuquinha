@@ -118,7 +118,7 @@
         min-width: 0;
     }
     .tuqChatTitleRowTitle {
-        flex: 1;
+        flex: 0 1 auto;
         min-width: 0;
         overflow: hidden;
         text-overflow: ellipsis;
