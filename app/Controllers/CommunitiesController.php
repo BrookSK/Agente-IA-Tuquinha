@@ -110,7 +110,7 @@ class CommunitiesController extends Controller
         return false;
     }
 
-    private function ensureCommunityModerator(array $community, array $user): void
+    private function ensureCommunityModerator(array $community, array $user, bool $allowAdmin = true): void
     {
         $userId = (int)($user['id'] ?? 0);
         if ($userId <= 0) {
@@ -118,7 +118,7 @@ class CommunitiesController extends Controller
             exit;
         }
 
-        if (!empty($_SESSION['is_admin'])) {
+        if ($allowAdmin && !empty($_SESSION['is_admin'])) {
             return;
         }
 
@@ -181,17 +181,22 @@ class CommunitiesController extends Controller
 
         $category = isset($_GET['category']) ? trim((string)$_GET['category']) : '';
 
+        $scope = isset($_GET['scope']) ? trim((string)$_GET['scope']) : 'all';
+        if (!in_array($scope, ['all', 'owner', 'moderator', 'member'], true)) {
+            $scope = 'all';
+        }
+
         $q = isset($_GET['q']) ? trim((string)$_GET['q']) : '';
         $q = preg_replace('/\s+/', ' ', (string)$q);
 
-        $communities = Community::allActive($category !== '' ? $category : null, $q !== '' ? $q : null);
+        $communities = Community::allActiveWithUserFilter($userId, $category !== '' ? $category : null, $q !== '' ? $q : null, $scope);
         $memberships = [];
         foreach ($communities as $c) {
             $cid = (int)($c['id'] ?? 0);
             if ($cid <= 0) {
                 continue;
             }
-            $memberships[$cid] = CommunityMember::isMember($cid, $userId);
+            $memberships[$cid] = !empty($c['member_role']) || ((int)($c['owner_user_id'] ?? 0) === $userId);
         }
 
         $success = $_SESSION['communities_success'] ?? null;
@@ -207,6 +212,7 @@ class CommunitiesController extends Controller
             'memberships' => $memberships,
             'categories' => $categories,
             'selectedCategory' => $category,
+            'selectedScope' => $scope,
             'q' => $q,
             'success' => $success,
             'error' => $error,
@@ -372,7 +378,7 @@ class CommunitiesController extends Controller
             exit;
         }
 
-        $this->ensureCommunityModerator($community, $user);
+        $this->ensureCommunityModerator($community, $user, false);
 
         $categories = CommunityCategory::allActiveNames();
 
@@ -423,7 +429,7 @@ class CommunitiesController extends Controller
             exit;
         }
 
-        $this->ensureCommunityModerator($community, $user);
+        $this->ensureCommunityModerator($community, $user, false);
 
         $name = trim((string)($_POST['name'] ?? ''));
         $description = trim((string)($_POST['description'] ?? ''));
@@ -526,17 +532,16 @@ class CommunitiesController extends Controller
         $members = CommunityMember::allMembersWithUser($communityId);
         $topics = CommunityTopic::allByCommunity($communityId, 50);
 
-        $canModerate = !empty($_SESSION['is_admin']);
-        if (!$canModerate) {
-            $ownerId = (int)($community['owner_user_id'] ?? 0);
-            if ($ownerId === $userId) {
+        // Permissão de edição: apenas dono ou moderador da comunidade
+        $canModerate = false;
+        $ownerId = (int)($community['owner_user_id'] ?? 0);
+        if ($ownerId === $userId) {
+            $canModerate = true;
+        } else {
+            $member = CommunityMember::findMember($communityId, $userId);
+            $role = (string)($member['role'] ?? 'member');
+            if ($role === 'moderator') {
                 $canModerate = true;
-            } else {
-                $member = CommunityMember::findMember($communityId, $userId);
-                $role = (string)($member['role'] ?? 'member');
-                if ($role === 'moderator') {
-                    $canModerate = true;
-                }
             }
         }
 

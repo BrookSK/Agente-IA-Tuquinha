@@ -33,6 +33,54 @@ class Community
         return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
     }
 
+    public static function allActiveWithUserFilter(int $userId, ?string $category = null, ?string $q = null, string $filter = 'all'): array
+    {
+        $pdo = Database::getConnection();
+
+        $category = $category !== null ? trim($category) : '';
+        $q = $q !== null ? trim($q) : '';
+        $filter = trim($filter);
+        if ($filter === '') {
+            $filter = 'all';
+        }
+
+        $where = 'c.is_active = 1';
+        $params = [
+            'uid' => $userId,
+        ];
+
+        if ($category !== '') {
+            $where .= ' AND c.category = :category';
+            $params['category'] = $category;
+        }
+
+        if ($q !== '') {
+            $where .= ' AND (c.name LIKE :q OR c.description LIKE :q)';
+            $params['q'] = '%' . $q . '%';
+        }
+
+        if ($filter === 'owner') {
+            $where .= ' AND c.owner_user_id = :uid';
+        } elseif ($filter === 'moderator') {
+            $where .= ' AND m.role = "moderator"';
+        } elseif ($filter === 'member') {
+            $where .= ' AND m.community_id IS NOT NULL';
+        }
+
+        $stmt = $pdo->prepare(
+            'SELECT c.*, m.role AS member_role
+             FROM communities c
+             LEFT JOIN community_members m
+               ON m.community_id = c.id
+              AND m.user_id = :uid
+              AND m.left_at IS NULL
+             WHERE ' . $where . '
+             ORDER BY c.name ASC'
+        );
+        $stmt->execute($params);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+    }
+
     public static function findById(int $id): ?array
     {
         if ($id <= 0) {

@@ -27,9 +27,10 @@ class CommunityTopicPost
         }
 
         $pdo = Database::getConnection();
-        $stmt = $pdo->prepare('SELECT p.*, u.name AS user_name
+        $stmt = $pdo->prepare('SELECT p.*, u.name AS user_name, usp.avatar_path AS user_avatar_path
             FROM community_topic_posts p
             JOIN users u ON u.id = p.user_id
+            LEFT JOIN user_social_profiles usp ON usp.user_id = u.id
             WHERE p.topic_id = :tid AND p.deleted_at IS NULL
             ORDER BY p.created_at ASC, p.id ASC');
         $stmt->execute(['tid' => $topicId]);

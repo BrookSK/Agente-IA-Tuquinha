@@ -37,7 +37,25 @@ $slug = (string)($community['slug'] ?? '');
             <?= htmlspecialchars($topicTitle, ENT_QUOTES, 'UTF-8') ?>
         </h1>
         <div style="font-size:12px; color:#b0b0b0;">
-            por <?= htmlspecialchars((string)($topic['user_name'] ?? 'Usuário'), ENT_QUOTES, 'UTF-8') ?>
+            <?php
+                $topicAuthorName = (string)($topic['user_name'] ?? 'Usuário');
+                $topicAuthorAvatar = trim((string)($topic['user_avatar_path'] ?? ''));
+                $topicAuthorInitial = 'U';
+                $tmpName = trim($topicAuthorName);
+                if ($tmpName !== '') {
+                    $topicAuthorInitial = mb_strtoupper(mb_substr($tmpName, 0, 1, 'UTF-8'), 'UTF-8');
+                }
+            ?>
+            <span style="display:inline-flex; align-items:center; gap:6px;">
+                <span style="width:18px; height:18px; border-radius:50%; overflow:hidden; background:radial-gradient(circle at 30% 20%, #fff 0, #ff8a65 25%, #e53935 65%, #050509 100%); display:inline-flex; align-items:center; justify-content:center; font-size:11px; font-weight:800; color:#050509; flex:0 0 18px;">
+                    <?php if ($topicAuthorAvatar !== ''): ?>
+                        <img src="<?= htmlspecialchars($topicAuthorAvatar, ENT_QUOTES, 'UTF-8') ?>" alt="" style="width:100%; height:100%; object-fit:cover; display:block;">
+                    <?php else: ?>
+                        <?= htmlspecialchars($topicAuthorInitial, ENT_QUOTES, 'UTF-8') ?>
+                    <?php endif; ?>
+                </span>
+                <span>por <?= htmlspecialchars($topicAuthorName, ENT_QUOTES, 'UTF-8') ?></span>
+            </span>
             <?php if (!empty($topic['created_at'])): ?>
                 · <?= htmlspecialchars(date('d/m/Y H:i', strtotime((string)$topic['created_at'])), ENT_QUOTES, 'UTF-8') ?>
             <?php endif; ?>
@@ -73,7 +91,25 @@ $slug = (string)($community['slug'] ?? '');
                     <div style="background:#050509; border-radius:12px; border:1px solid #272727; padding:8px 10px;">
                         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:3px;">
                             <div style="font-size:13px; color:#f5f5f5; font-weight:500;">
-                                <?= htmlspecialchars((string)($p['user_name'] ?? 'Usuário'), ENT_QUOTES, 'UTF-8') ?>
+                                <?php
+                                    $postAuthorName = (string)($p['user_name'] ?? 'Usuário');
+                                    $postAuthorAvatar = trim((string)($p['user_avatar_path'] ?? ''));
+                                    $postAuthorInitial = 'U';
+                                    $tmpName2 = trim($postAuthorName);
+                                    if ($tmpName2 !== '') {
+                                        $postAuthorInitial = mb_strtoupper(mb_substr($tmpName2, 0, 1, 'UTF-8'), 'UTF-8');
+                                    }
+                                ?>
+                                <span style="display:inline-flex; align-items:center; gap:8px;">
+                                    <span style="width:24px; height:24px; border-radius:50%; overflow:hidden; background:radial-gradient(circle at 30% 20%, #fff 0, #ff8a65 25%, #e53935 65%, #050509 100%); display:inline-flex; align-items:center; justify-content:center; font-size:12px; font-weight:800; color:#050509; flex:0 0 24px;">
+                                        <?php if ($postAuthorAvatar !== ''): ?>
+                                            <img src="<?= htmlspecialchars($postAuthorAvatar, ENT_QUOTES, 'UTF-8') ?>" alt="" style="width:100%; height:100%; object-fit:cover; display:block;">
+                                        <?php else: ?>
+                                            <?= htmlspecialchars($postAuthorInitial, ENT_QUOTES, 'UTF-8') ?>
+                                        <?php endif; ?>
+                                    </span>
+                                    <span><?= htmlspecialchars($postAuthorName, ENT_QUOTES, 'UTF-8') ?></span>
+                                </span>
                             </div>
                             <?php if (!empty($p['created_at'])): ?>
                                 <div style="font-size:11px; color:#b0b0b0;">

@@ -27,9 +27,10 @@ class CommunityTopic
             return null;
         }
         $pdo = Database::getConnection();
-        $stmt = $pdo->prepare('SELECT t.*, u.name AS user_name
+        $stmt = $pdo->prepare('SELECT t.*, u.name AS user_name, usp.avatar_path AS user_avatar_path
             FROM community_topics t
             JOIN users u ON u.id = t.user_id
+            LEFT JOIN user_social_profiles usp ON usp.user_id = u.id
             WHERE t.id = :id AND t.deleted_at IS NULL
             LIMIT 1');
         $stmt->execute(['id' => $id]);

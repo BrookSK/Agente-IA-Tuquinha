@@ -74,12 +74,17 @@ $slug = (string)($community['slug'] ?? '');
                     $name = (string)($m['user_name'] ?? 'Usuário');
                     $role = (string)($m['role'] ?? 'member');
                     $initial = mb_strtoupper(mb_substr($name, 0, 1, 'UTF-8'), 'UTF-8');
+                    $avatar = trim((string)($m['user_avatar_path'] ?? ''));
                     $isBlocked = !empty($m['is_blocked'] ?? 0);
                     ?>
                     <div style="display:flex; align-items:center; justify-content:space-between; gap:8px; padding:6px 8px; border-radius:10px; border:1px solid var(--border-subtle); background:var(--surface-subtle);">
                         <a href="/perfil?user_id=<?= $memberId ?>" style="flex:1 1 auto; display:flex; align-items:center; gap:8px; text-decoration:none;">
-                            <div style="width:28px; height:28px; border-radius:50%; background:radial-gradient(circle at 30% 20%, #fff 0, #ff8a65 25%, #e53935 65%, #050509 100%); display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:700; color:#050509;">
-                                <?= htmlspecialchars($initial, ENT_QUOTES, 'UTF-8') ?>
+                            <div style="width:28px; height:28px; border-radius:50%; overflow:hidden; background:radial-gradient(circle at 30% 20%, #fff 0, #ff8a65 25%, #e53935 65%, #050509 100%); display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:700; color:#050509; flex:0 0 28px;">
+                                <?php if ($avatar !== ''): ?>
+                                    <img src="<?= htmlspecialchars($avatar, ENT_QUOTES, 'UTF-8') ?>" alt="" style="width:100%; height:100%; object-fit:cover; display:block;">
+                                <?php else: ?>
+                                    <?= htmlspecialchars($initial, ENT_QUOTES, 'UTF-8') ?>
+                                <?php endif; ?>
                             </div>
                             <div style="display:flex; flex-direction:column;">
                                 <span style="font-size:13px; color:var(--text-primary);">
