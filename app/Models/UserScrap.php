@@ -27,9 +27,10 @@ class UserScrap
         }
 
         $pdo = Database::getConnection();
-        $stmt = $pdo->prepare('SELECT s.*, u.name AS from_user_name
+        $stmt = $pdo->prepare('SELECT s.*, u.name AS from_user_name, usp.avatar_path AS from_user_avatar_path
             FROM user_scraps s
             JOIN users u ON u.id = s.from_user_id
+            LEFT JOIN user_social_profiles usp ON usp.user_id = u.id
             WHERE s.to_user_id = :uid AND s.is_deleted = 0
             ORDER BY s.created_at DESC, s.id DESC
             LIMIT :lim');
@@ -46,9 +47,10 @@ class UserScrap
         }
 
         $pdo = Database::getConnection();
-        $stmt = $pdo->prepare('SELECT s.*, u.name AS from_user_name
+        $stmt = $pdo->prepare('SELECT s.*, u.name AS from_user_name, usp.avatar_path AS from_user_avatar_path
             FROM user_scraps s
             JOIN users u ON u.id = s.from_user_id
+            LEFT JOIN user_social_profiles usp ON usp.user_id = u.id
             WHERE s.to_user_id = :uid AND s.is_deleted = 0 AND COALESCE(s.is_hidden, 0) = 0
             ORDER BY s.created_at DESC, s.id DESC
             LIMIT :lim');

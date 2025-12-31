@@ -597,6 +597,13 @@ $profileId = (int)($profileUser['id'] ?? 0);
                             $scrapId = (int)($s['id'] ?? 0);
                             $scrapFromId = (int)($s['from_user_id'] ?? 0);
                             $scrapToId = (int)($s['to_user_id'] ?? 0);
+                            $scrapFromAvatar = trim((string)($s['from_user_avatar_path'] ?? ''));
+                            $scrapFromName = (string)($s['from_user_name'] ?? 'Usuário');
+                            $scrapFromInitial = 'U';
+                            $tmpName = trim($scrapFromName);
+                            if ($tmpName !== '') {
+                                $scrapFromInitial = mb_strtoupper(mb_substr($tmpName, 0, 1, 'UTF-8'), 'UTF-8');
+                            }
                             $isHidden = !empty($s['is_hidden']);
                             $canEdit = $scrapFromId === $currentId;
                             $canModerate = $isOwnProfile && $scrapToId === $currentId;
@@ -605,8 +612,15 @@ $profileId = (int)($profileUser['id'] ?? 0);
                             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px; font-size:12px; color:var(--text-secondary);">
                                 <div>
                                     <strong>
-                                        <a href="/perfil?user_id=<?= (int)($s['from_user_id'] ?? 0) ?>" style="color:#ff6f60; text-decoration:none;">
-                                            <?= htmlspecialchars((string)($s['from_user_name'] ?? 'Usuário'), ENT_QUOTES, 'UTF-8') ?>
+                                        <a href="/perfil?user_id=<?= (int)($s['from_user_id'] ?? 0) ?>" style="color:#ff6f60; text-decoration:none; display:inline-flex; align-items:center; gap:6px;">
+                                            <span style="width:18px; height:18px; border-radius:50%; overflow:hidden; background:var(--surface-card); border:1px solid var(--border-subtle); display:inline-flex; align-items:center; justify-content:center; flex:0 0 18px;">
+                                                <?php if ($scrapFromAvatar !== ''): ?>
+                                                    <img src="<?= htmlspecialchars($scrapFromAvatar, ENT_QUOTES, 'UTF-8') ?>" alt="" style="width:100%; height:100%; object-fit:cover; display:block;">
+                                                <?php else: ?>
+                                                    <span style="font-size:11px; color:var(--text-secondary); font-weight:800; line-height:1;"><?= htmlspecialchars($scrapFromInitial, ENT_QUOTES, 'UTF-8') ?></span>
+                                                <?php endif; ?>
+                                            </span>
+                                            <span><?= htmlspecialchars($scrapFromName, ENT_QUOTES, 'UTF-8') ?></span>
                                         </a>
                                     </strong>
                                     <?php if ($isHidden): ?>
@@ -668,9 +682,27 @@ $profileId = (int)($profileUser['id'] ?? 0);
             <?php else: ?>
                 <div style="display:flex; flex-direction:column; gap:6px;">
                     <?php foreach ($publicTestimonials as $t): ?>
+                        <?php
+                            $tAvatar = trim((string)($t['from_user_avatar_path'] ?? ''));
+                            $tName = (string)($t['from_user_name'] ?? 'Usuário');
+                            $tInitial = 'U';
+                            $tNameTmp = trim($tName);
+                            if ($tNameTmp !== '') {
+                                $tInitial = mb_strtoupper(mb_substr($tNameTmp, 0, 1, 'UTF-8'), 'UTF-8');
+                            }
+                        ?>
                         <div style="border-radius:10px; border:1px solid var(--border-subtle); background:var(--surface-subtle); padding:6px 8px;">
                             <div style="font-size:12px; color:var(--text-secondary); margin-bottom:3px;">
-                                <strong><?= htmlspecialchars((string)($t['from_user_name'] ?? 'Usuário'), ENT_QUOTES, 'UTF-8') ?></strong>
+                                <strong style="display:inline-flex; align-items:center; gap:6px;">
+                                    <span style="width:18px; height:18px; border-radius:50%; overflow:hidden; background:var(--surface-card); border:1px solid var(--border-subtle); display:inline-flex; align-items:center; justify-content:center; flex:0 0 18px;">
+                                        <?php if ($tAvatar !== ''): ?>
+                                            <img src="<?= htmlspecialchars($tAvatar, ENT_QUOTES, 'UTF-8') ?>" alt="" style="width:100%; height:100%; object-fit:cover; display:block;">
+                                        <?php else: ?>
+                                            <span style="font-size:11px; color:var(--text-secondary); font-weight:800; line-height:1;"><?= htmlspecialchars($tInitial, ENT_QUOTES, 'UTF-8') ?></span>
+                                        <?php endif; ?>
+                                    </span>
+                                    <span><?= htmlspecialchars($tName, ENT_QUOTES, 'UTF-8') ?></span>
+                                </strong>
                                 <?php if (!empty($t['created_at'])): ?>
                                     <span style="margin-left:4px;">· <?= htmlspecialchars(date('d/m/Y', strtotime((string)$t['created_at'])), ENT_QUOTES, 'UTF-8') ?></span>
                                 <?php endif; ?>
@@ -704,9 +736,27 @@ $profileId = (int)($profileUser['id'] ?? 0);
                 <h3 style="font-size:14px; margin-bottom:6px; color:var(--text-primary);">Depoimentos pendentes</h3>
                 <div style="display:flex; flex-direction:column; gap:6px;">
                     <?php foreach ($pendingTestimonials as $t): ?>
+                        <?php
+                            $ptAvatar = trim((string)($t['from_user_avatar_path'] ?? ''));
+                            $ptName = (string)($t['from_user_name'] ?? 'Usuário');
+                            $ptInitial = 'U';
+                            $ptNameTmp = trim($ptName);
+                            if ($ptNameTmp !== '') {
+                                $ptInitial = mb_strtoupper(mb_substr($ptNameTmp, 0, 1, 'UTF-8'), 'UTF-8');
+                            }
+                        ?>
                         <div style="border-radius:10px; border:1px solid var(--border-subtle); background:var(--surface-subtle); padding:6px 8px; font-size:12px; color:var(--text-secondary);">
                             <div style="margin-bottom:3px;">
-                                <strong><?= htmlspecialchars((string)($t['from_user_name'] ?? 'Usuário'), ENT_QUOTES, 'UTF-8') ?></strong>
+                                <strong style="display:inline-flex; align-items:center; gap:6px;">
+                                    <span style="width:18px; height:18px; border-radius:50%; overflow:hidden; background:var(--surface-card); border:1px solid var(--border-subtle); display:inline-flex; align-items:center; justify-content:center; flex:0 0 18px;">
+                                        <?php if ($ptAvatar !== ''): ?>
+                                            <img src="<?= htmlspecialchars($ptAvatar, ENT_QUOTES, 'UTF-8') ?>" alt="" style="width:100%; height:100%; object-fit:cover; display:block;">
+                                        <?php else: ?>
+                                            <span style="font-size:11px; color:var(--text-secondary); font-weight:800; line-height:1;"><?= htmlspecialchars($ptInitial, ENT_QUOTES, 'UTF-8') ?></span>
+                                        <?php endif; ?>
+                                    </span>
+                                    <span><?= htmlspecialchars($ptName, ENT_QUOTES, 'UTF-8') ?></span>
+                                </strong>
                             </div>
                             <div style="font-size:12px; color:var(--text-primary); margin-bottom:4px;">
                                 <?= nl2br(htmlspecialchars((string)($t['body'] ?? ''), ENT_QUOTES, 'UTF-8')) ?>

@@ -29,9 +29,10 @@ class UserTestimonial
         }
 
         $pdo = Database::getConnection();
-        $stmt = $pdo->prepare('SELECT t.*, u.name AS from_user_name
+        $stmt = $pdo->prepare('SELECT t.*, u.name AS from_user_name, usp.avatar_path AS from_user_avatar_path
             FROM user_testimonials t
             JOIN users u ON u.id = t.from_user_id
+            LEFT JOIN user_social_profiles usp ON usp.user_id = u.id
             WHERE t.to_user_id = :uid AND t.status = "accepted" AND t.is_public = 1
             ORDER BY t.created_at DESC, t.id DESC');
         $stmt->execute(['uid' => $userId]);
@@ -45,9 +46,10 @@ class UserTestimonial
         }
 
         $pdo = Database::getConnection();
-        $stmt = $pdo->prepare('SELECT t.*, u.name AS from_user_name
+        $stmt = $pdo->prepare('SELECT t.*, u.name AS from_user_name, usp.avatar_path AS from_user_avatar_path
             FROM user_testimonials t
             JOIN users u ON u.id = t.from_user_id
+            LEFT JOIN user_social_profiles usp ON usp.user_id = u.id
             WHERE t.to_user_id = :uid AND t.status = "pending"
             ORDER BY t.created_at ASC, t.id ASC');
         $stmt->execute(['uid' => $userId]);
