@@ -147,7 +147,7 @@ class CommunityMember
         }
 
         $pdo = Database::getConnection();
-        $stmt = $pdo->prepare('SELECT m.*, c.name, c.slug, c.image_path
+        $stmt = $pdo->prepare('SELECT m.*, c.name, c.slug, c.image_path, c.cover_image_path
             FROM community_members m
             JOIN communities c ON c.id = m.community_id
             WHERE m.user_id = :uid AND m.left_at IS NULL AND c.is_active = 1
