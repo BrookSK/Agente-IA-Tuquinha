@@ -601,9 +601,11 @@
                     <?php $fid = (int)($bf['id'] ?? 0); ?>
                     <?php $ver = $latestByFileId[$fid] ?? null; ?>
                     <?php $storageUrl = is_array($ver) ? (string)($ver['storage_url'] ?? '') : ''; ?>
+                    <?php $hasExtractedText = is_array($ver) && !empty($ver['extracted_text']); ?>
+                    <?php $openUrl = $hasExtractedText ? ('/projetos/arquivo-base/abrir?project_id=' . (int)($project['id'] ?? 0) . '&file_id=' . $fid) : $storageUrl; ?>
                     <div
                         style="border:1px solid var(--border-subtle); background:var(--surface-subtle); border-radius:12px; padding:10px; min-height:90px; display:flex; flex-direction:column; justify-content:space-between;<?= $storageUrl !== '' ? ' cursor:pointer;' : '' ?>"
-                        <?= $storageUrl !== '' ? 'role="link" tabindex="0" onclick="window.open(\'' . htmlspecialchars($storageUrl, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') . '\', \"_blank\")" onkeydown="if(event.key===\"Enter\"||event.key===\" \" ){event.preventDefault(); window.open(\'' . htmlspecialchars($storageUrl, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') . '\', \"_blank\")}"' : '' ?>
+                        <?= $openUrl !== '' ? 'role="link" tabindex="0" onclick="window.open(\'' . htmlspecialchars($openUrl, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') . '\', \"_blank\")" onkeydown="if(event.key===\"Enter\"||event.key===\" \" ){event.preventDefault(); window.open(\'' . htmlspecialchars($openUrl, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') . '\', \"_blank\")}"' : '' ?>
                     >
                         <div style="font-size:12px; font-weight:650; color:var(--text-primary); overflow:hidden; text-overflow:ellipsis; overflow-wrap:anywhere; word-break:break-word; line-height:1.2;">
                             <?= htmlspecialchars((string)($bf['name'] ?? '')) ?>
@@ -622,7 +624,7 @@
                         <?php endif; ?>
                         <?php if ($storageUrl !== ''): ?>
                             <div style="display:flex; gap:8px; margin-top:8px;">
-                                <a href="<?= htmlspecialchars($storageUrl) ?>" target="_blank" rel="noopener noreferrer" style="font-size:11px; color:#c8ffd4; text-decoration:none; border:1px solid #2e7d32; background:#102312; padding:4px 8px; border-radius:999px;" onclick="event.stopPropagation();">Abrir</a>
+                                <a href="<?= htmlspecialchars($openUrl) ?>" target="_blank" rel="noopener noreferrer" style="font-size:11px; color:#c8ffd4; text-decoration:none; border:1px solid #2e7d32; background:#102312; padding:4px 8px; border-radius:999px;" onclick="event.stopPropagation();">Abrir</a>
                                 <a href="<?= htmlspecialchars($storageUrl) ?>" download style="font-size:11px; color:var(--text-primary); text-decoration:none; border:1px solid var(--border-subtle); background:var(--surface-card); padding:4px 8px; border-radius:999px;" onclick="event.stopPropagation();">Baixar</a>
                             </div>
                         <?php endif; ?>

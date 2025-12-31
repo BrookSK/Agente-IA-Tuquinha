@@ -408,6 +408,66 @@ class ProjectController extends Controller
         exit;
     }
 
+    public function openBaseFile(): void
+    {
+        $user = $this->requireLogin();
+        $this->requireProjectPermission($user, 'access');
+        $userId = (int)($user['id'] ?? 0);
+
+        $projectId = isset($_GET['project_id']) ? (int)$_GET['project_id'] : 0;
+        $fileId = isset($_GET['file_id']) ? (int)$_GET['file_id'] : 0;
+
+        if ($projectId <= 0 || $fileId <= 0 || !ProjectMember::canRead($projectId, $userId)) {
+            http_response_code(404);
+            header('Content-Type: text/plain; charset=utf-8');
+            echo "Arquivo não encontrado.";
+            return;
+        }
+
+        $file = ProjectFile::findById($fileId);
+        if (!$file || (int)($file['project_id'] ?? 0) !== $projectId || empty($file['is_base'])) {
+            http_response_code(404);
+            header('Content-Type: text/plain; charset=utf-8');
+            echo "Arquivo não encontrado.";
+            return;
+        }
+
+        $ver = ProjectFileVersion::latestForFile($fileId);
+        $raw = is_array($ver) ? (string)($ver['extracted_text'] ?? '') : '';
+        $raw = str_replace(["\r\n", "\r"], "\n", $raw);
+
+        $name = trim((string)($file['name'] ?? ''));
+        if ($name === '') {
+            $name = trim((string)($file['path'] ?? ''));
+        }
+        if ($name === '') {
+            $name = 'arquivo.txt';
+        }
+
+        // Garante UTF-8 (muitos .txt sobem como Windows-1252/ISO-8859-1)
+        $content = $raw;
+        if ($content !== '') {
+            $looksUtf8 = function_exists('mb_check_encoding') ? mb_check_encoding($content, 'UTF-8') : true;
+            if (!$looksUtf8) {
+                $converted = null;
+                if (function_exists('mb_convert_encoding')) {
+                    $converted = @mb_convert_encoding($content, 'UTF-8', 'Windows-1252');
+                    if (!is_string($converted) || $converted === '' || (function_exists('mb_check_encoding') && !mb_check_encoding($converted, 'UTF-8'))) {
+                        $converted = @mb_convert_encoding($content, 'UTF-8', 'ISO-8859-1');
+                    }
+                }
+                if (is_string($converted) && $converted !== '') {
+                    $content = $converted;
+                }
+            }
+        }
+
+        header('Content-Type: text/plain; charset=utf-8');
+        header('X-Content-Type-Options: nosniff');
+        header('Content-Disposition: inline; filename="' . str_replace('"', '', basename($name)) . '"');
+        echo $content !== '' ? $content : "(Sem texto extraído para este arquivo.)";
+    }
+
     public function updateMemoryItem(): void
     {
         $user = $this->requireLogin();
