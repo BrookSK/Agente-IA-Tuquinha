@@ -13,9 +13,22 @@
         border: 1px solid var(--border-subtle);
         background: var(--surface-subtle);
         color: var(--text-primary);
-        width: 240px;
-        max-width: 240px;
-        min-width: 240px;
+        width: 180px;
+        max-width: 180px;
+        min-width: 180px;
+    }
+    .tuqChatTitleRow {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        min-width: 0;
+    }
+    .tuqChatTitleRowTitle {
+        flex: 1;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
     }
     .tuqPersonaBadgeAvatar {
         width: 24px;
@@ -58,9 +71,17 @@
     @media (max-width: 640px) {
         .tuqPersonaBadge {
             padding: 5px 8px;
-            width: 200px;
-            max-width: 200px;
-            min-width: 200px;
+            width: 100%;
+            max-width: 100%;
+            min-width: 0;
+        }
+        .tuqChatTitleRow {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 6px;
+        }
+        .tuqChatTitleRowTitle {
+            width: 100%;
         }
         .tuqPersonaBadgeAvatar {
             width: 22px;
@@ -104,8 +125,8 @@
                 ?>
                 <div style="background:var(--surface-card); border-radius:12px; padding:10px 12px; border:1px solid var(--border-subtle); display:flex; justify-content:space-between; align-items:center; gap:8px;">
                     <div>
-                        <div style="display:flex; align-items:center; gap:10px; min-width:0;">
-                            <div style="font-size:14px; font-weight:500; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; min-width:0; flex:1;">
+                        <div class="tuqChatTitleRow">
+                            <div class="tuqChatTitleRowTitle" style="font-size:14px; font-weight:500;">
                                 <?= htmlspecialchars($title) ?>
                             </div>
                             <?php if ($personaName !== ''): ?>
