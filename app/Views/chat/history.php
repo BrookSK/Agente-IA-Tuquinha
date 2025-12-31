@@ -2,6 +2,7 @@
 /** @var array $conversations */
 /** @var string $term */
 /** @var int $retentionDays */
+/** @var bool $favoritesOnly */
 ?>
 <style>
     .tuqPersonaBadge {
@@ -128,9 +129,16 @@
         Os históricos são mantidos por <strong><?= htmlspecialchars((string)$days) ?> dias</strong>. Conversas mais antigas que isso são apagadas automaticamente.
     </p>
 
-    <form method="get" action="/historico" style="margin-bottom: 14px; display:flex; gap:8px;">
+    <form method="get" action="/historico" style="margin-bottom: 14px; display:flex; gap:8px; flex-wrap:wrap;">
         <input type="text" name="q" value="<?= htmlspecialchars($term) ?>" placeholder="Buscar pelo título do chat" style="
-            flex:1; padding:8px 10px; border-radius:999px; border:1px solid var(--border-subtle); background:var(--surface-subtle); color:var(--text-primary); font-size:13px;">
+            flex:1; min-width:220px; padding:8px 10px; border-radius:999px; border:1px solid var(--border-subtle); background:var(--surface-subtle); color:var(--text-primary); font-size:13px;">
+
+        <select name="fav" style="
+            padding:8px 10px; border-radius:999px; border:1px solid var(--border-subtle); background:var(--surface-subtle); color:var(--text-primary); font-size:13px;">
+            <option value="0" <?= empty($favoritesOnly) ? 'selected' : '' ?>>Todos</option>
+            <option value="1" <?= !empty($favoritesOnly) ? 'selected' : '' ?>>Favoritos</option>
+        </select>
+
         <button type="submit" style="border:none; border-radius:999px; padding:8px 14px; background:linear-gradient(135deg,#e53935,#ff6f60); color:#050509; font-weight:600; font-size:13px; cursor:pointer;">
             Buscar
         </button>

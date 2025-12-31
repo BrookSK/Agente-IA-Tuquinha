@@ -234,6 +234,50 @@ class Conversation
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
+    public static function searchByUserWithFavoriteFilter(int $userId, string $term, bool $onlyFavorites): array
+    {
+        $pdo = Database::getConnection();
+
+        $favoriteSql = $onlyFavorites ? ' AND c.is_favorite = 1' : '';
+
+        if ($term === '') {
+            $stmt = $pdo->prepare(
+                'SELECT c.*, p.name AS persona_name, p.area AS persona_area, p.image_path AS persona_image_path FROM conversations c
+                 LEFT JOIN personalities p ON p.id = c.persona_id
+                 WHERE c.user_id = :user_id'
+                . $favoriteSql .
+                ' AND EXISTS (
+                       SELECT 1 FROM messages m
+                       WHERE m.conversation_id = c.id
+                   )
+                 ORDER BY c.created_at DESC'
+            );
+            $stmt->execute(['user_id' => $userId]);
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        }
+
+        $like = '%' . $term . '%';
+        $stmt = $pdo->prepare(
+            'SELECT c.*, p.name AS persona_name, p.area AS persona_area, p.image_path AS persona_image_path FROM conversations c
+             LEFT JOIN personalities p ON p.id = c.persona_id
+             WHERE c.user_id = :user_id'
+            . $favoriteSql .
+            ' AND c.title IS NOT NULL
+               AND c.title <> ""
+               AND c.title LIKE :term
+               AND EXISTS (
+                   SELECT 1 FROM messages m
+                   WHERE m.conversation_id = c.id
+               )
+             ORDER BY c.created_at DESC'
+        );
+        $stmt->execute([
+            'user_id' => $userId,
+            'term' => $like,
+        ]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
     public static function findByIdAndSession(int $id, string $sessionId): ?array
     {
         $pdo = Database::getConnection();

@@ -345,6 +345,14 @@ class ChatController extends Controller
             exit;
         }
 
+        if (empty($_SESSION['is_admin'])) {
+            $currentPlan = Plan::findBySessionSlug($_SESSION['plan_slug'] ?? null);
+            if (!$currentPlan || empty($currentPlan['allow_projects_access'])) {
+                header('Location: /planos');
+                exit;
+            }
+        }
+
         if ($projectId > 0) {
             if (!ProjectMember::canRead($projectId, $userId)) {
                 header('Location: /projetos');

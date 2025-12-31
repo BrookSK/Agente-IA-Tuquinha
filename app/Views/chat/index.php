@@ -236,6 +236,11 @@ $conversationProjectIdValue = isset($conversationProjectId) ? (int)$conversation
 $conversationIsFavoriteValue = !empty($conversationIsFavorite);
 $userProjectsList = is_array($userProjects ?? null) ? $userProjects : [];
 
+$planAllowsProjectsAccess = !empty($_SESSION['is_admin']);
+if (!$planAllowsProjectsAccess && !empty($currentPlan) && is_array($currentPlan)) {
+    $planAllowsProjectsAccess = !empty($currentPlan['allow_projects_access']);
+}
+
 // Determina se o usuário está em um plano pago (não free) para exibir CTA de compra de tokens
 $canShowBuyTokensCta = false;
 $isAdmin = !empty($_SESSION['is_admin']);
@@ -288,7 +293,7 @@ if (!empty($currentPlan) && is_array($currentPlan)) {
 
                     <div class="tuqChatMenuDivider"></div>
 
-                    <?php if (!empty($_SESSION['user_id'])): ?>
+                    <?php if (!empty($_SESSION['user_id']) && !empty($planAllowsProjectsAccess)): ?>
                         <form method="post" action="/chat/projeto" style="margin:0; display:flex; flex-direction:column; gap:6px; padding:6px 6px 2px 6px;">
                             <input type="hidden" name="conversation_id" value="<?= (int)$conversationId ?>">
                             <input type="hidden" name="redirect" value="/chat?c=<?= (int)$conversationId ?>">

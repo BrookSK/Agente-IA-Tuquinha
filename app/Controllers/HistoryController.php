@@ -28,6 +28,7 @@ class HistoryController extends Controller
         $sessionId = session_id();
         $userId = (int)($_SESSION['user_id'] ?? 0);
         $term = trim($_GET['q'] ?? '');
+        $favoritesOnly = isset($_GET['fav']) && (string)$_GET['fav'] === '1';
 
         // Dias de retenção configuráveis: por plano, com fallback para valor global
         $defaultRetention = (int)Setting::get('chat_history_retention_days', '90');
@@ -51,7 +52,7 @@ class HistoryController extends Controller
         $stmt->execute();
 
         if ($userId > 0) {
-            $conversations = Conversation::searchByUser($userId, $term);
+            $conversations = Conversation::searchByUserWithFavoriteFilter($userId, $term, $favoritesOnly);
         } else {
             $conversations = Conversation::searchBySession($sessionId, $term);
         }
@@ -62,6 +63,7 @@ class HistoryController extends Controller
             'term' => $term,
             'retentionDays' => $retentionDays,
             'planAllowsPersonalities' => $planAllowsPersonalities,
+            'favoritesOnly' => $favoritesOnly,
         ]);
     }
 
