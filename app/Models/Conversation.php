@@ -13,6 +13,7 @@ class Conversation
     public ?int $persona_id = null;
     public ?string $title = null;
     public ?int $project_id = null;
+    public ?int $is_favorite = null;
 
     public static function findOrCreateBySession(string $sessionId, ?int $personaId = null, ?int $projectId = null): self
     {
@@ -96,6 +97,26 @@ class Conversation
         $stmt->execute([
             'title' => $title,
             'id' => $id,
+        ]);
+    }
+
+    public static function updateProjectId(int $id, ?int $projectId): void
+    {
+        $pdo = Database::getConnection();
+        $stmt = $pdo->prepare('UPDATE conversations SET project_id = :project_id WHERE id = :id LIMIT 1');
+        $stmt->execute([
+            'id' => $id,
+            'project_id' => ($projectId !== null && $projectId > 0) ? $projectId : null,
+        ]);
+    }
+
+    public static function updateIsFavorite(int $id, bool $isFavorite): void
+    {
+        $pdo = Database::getConnection();
+        $stmt = $pdo->prepare('UPDATE conversations SET is_favorite = :is_favorite WHERE id = :id LIMIT 1');
+        $stmt->execute([
+            'id' => $id,
+            'is_favorite' => $isFavorite ? 1 : 0,
         ]);
     }
 

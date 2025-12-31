@@ -190,14 +190,6 @@
                                 Iniciado em <?= htmlspecialchars(date('d/m/Y H:i', strtotime($created))) ?>
                             </div>
                         <?php endif; ?>
-                        <form method="post" action="/historico/renomear" style="display:flex; gap:4px; align-items:center; font-size:11px; margin-top:2px;">
-                            <input type="hidden" name="id" value="<?= (int)$conv['id'] ?>">
-                            <input type="text" name="title" value="<?= htmlspecialchars($title) ?>" style="
-                                flex:1; min-width:0;
-                                background:var(--surface-subtle); border-radius:999px; border:1px solid var(--border-subtle);
-                                padding:3px 7px; color:var(--text-primary); font-size:11px;">
-                            <button type="submit" style="border:none; border-radius:999px; padding:3px 8px; background:var(--surface-subtle); color:var(--text-secondary); font-size:10px; cursor:pointer; border:1px solid var(--border-subtle);">Salvar</button>
-                        </form>
                     </div>
                     <div class="tuqChatListItemActions">
                         <a href="/chat?c=<?= (int)$conv['id'] ?>" style="

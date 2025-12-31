@@ -110,6 +110,24 @@ class ChatController extends Controller
             $conversation = Conversation::findOrCreateBySession($sessionId, null, $projectId > 0 ? $projectId : null);
         }
 
+        $conversationTitle = $conversation->title ?? null;
+        $conversationProjectId = $conversation->project_id ?? null;
+        $conversationIsFavorite = false;
+        try {
+            $row = null;
+            if ($userId > 0) {
+                $row = Conversation::findByIdForUser($conversation->id, $userId);
+            } else {
+                $row = Conversation::findByIdAndSession($conversation->id, $sessionId);
+            }
+            if ($row) {
+                $conversationTitle = $row['title'] ?? $conversationTitle;
+                $conversationProjectId = isset($row['project_id']) ? (int)$row['project_id'] : $conversationProjectId;
+                $conversationIsFavorite = !empty($row['is_favorite']);
+            }
+        } catch (\Throwable $e) {
+        }
+
         $_SESSION['current_conversation_id'] = $conversation->id;
 
         $history = Message::allByConversation($conversation->id);
@@ -208,6 +226,15 @@ class ChatController extends Controller
             }
         }
 
+        $userProjects = [];
+        if ($userId > 0) {
+            try {
+                $userProjects = Project::allForUser($userId);
+            } catch (\Throwable $e) {
+                $userProjects = [];
+            }
+        }
+
         $this->view('chat/index', [
             'pageTitle' => 'Chat - Tuquinha',
             'chatHistory' => $history,
@@ -225,7 +252,115 @@ class ChatController extends Controller
             'personalities' => $personalities,
             'planAllowsPersonalities' => $planAllowsPersonalities,
             'projectContext' => $projectContext,
+            'conversationTitle' => $conversationTitle,
+            'conversationProjectId' => $conversationProjectId,
+            'conversationIsFavorite' => $conversationIsFavorite,
+            'userProjects' => $userProjects,
         ]);
+    }
+
+    public function renameConversation(): void
+    {
+        $sessionId = session_id();
+        $userId = !empty($_SESSION['user_id']) ? (int)$_SESSION['user_id'] : 0;
+        $conversationId = isset($_POST['conversation_id']) ? (int)$_POST['conversation_id'] : 0;
+        $title = trim((string)($_POST['title'] ?? ''));
+        $redirect = trim((string)($_POST['redirect'] ?? ''));
+
+        if ($conversationId <= 0) {
+            header('Location: /chat');
+            exit;
+        }
+
+        $convRow = null;
+        if ($userId > 0) {
+            $convRow = Conversation::findByIdForUser($conversationId, $userId);
+        } else {
+            $convRow = Conversation::findByIdAndSession($conversationId, $sessionId);
+        }
+
+        if (!$convRow) {
+            header('Location: /chat');
+            exit;
+        }
+
+        if ($title === '') {
+            $title = 'Chat com o Tuquinha';
+        }
+        Conversation::updateTitle($conversationId, $title);
+
+        if ($redirect !== '') {
+            header('Location: ' . $redirect);
+            exit;
+        }
+        header('Location: /chat?c=' . $conversationId);
+        exit;
+    }
+
+    public function toggleFavoriteConversation(): void
+    {
+        $sessionId = session_id();
+        $userId = !empty($_SESSION['user_id']) ? (int)$_SESSION['user_id'] : 0;
+        $conversationId = isset($_POST['conversation_id']) ? (int)$_POST['conversation_id'] : 0;
+        $redirect = trim((string)($_POST['redirect'] ?? ''));
+
+        if ($conversationId <= 0 || $userId <= 0) {
+            header('Location: /chat');
+            exit;
+        }
+
+        $convRow = Conversation::findByIdForUser($conversationId, $userId);
+        if (!$convRow) {
+            header('Location: /chat');
+            exit;
+        }
+
+        $next = empty($convRow['is_favorite']);
+        Conversation::updateIsFavorite($conversationId, $next);
+
+        if ($redirect !== '') {
+            header('Location: ' . $redirect);
+            exit;
+        }
+        header('Location: /chat?c=' . $conversationId);
+        exit;
+    }
+
+    public function setConversationProject(): void
+    {
+        $sessionId = session_id();
+        $userId = !empty($_SESSION['user_id']) ? (int)$_SESSION['user_id'] : 0;
+        $conversationId = isset($_POST['conversation_id']) ? (int)$_POST['conversation_id'] : 0;
+        $projectId = isset($_POST['project_id']) ? (int)$_POST['project_id'] : 0;
+        $redirect = trim((string)($_POST['redirect'] ?? ''));
+
+        if ($conversationId <= 0 || $userId <= 0) {
+            header('Location: /chat');
+            exit;
+        }
+
+        $convRow = Conversation::findByIdForUser($conversationId, $userId);
+        if (!$convRow) {
+            header('Location: /chat');
+            exit;
+        }
+
+        if ($projectId > 0) {
+            if (!ProjectMember::canRead($projectId, $userId)) {
+                header('Location: /projetos');
+                exit;
+            }
+            Conversation::updateProjectId($conversationId, $projectId);
+        } else {
+            Conversation::updateProjectId($conversationId, null);
+        }
+
+        if ($redirect !== '') {
+            header('Location: ' . $redirect);
+            exit;
+        }
+        header('Location: /chat?c=' . $conversationId);
+        exit;
     }
 
     public function deleteConversation(): void

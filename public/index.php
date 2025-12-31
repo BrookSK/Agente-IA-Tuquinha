@@ -298,6 +298,10 @@ $router->post('/chat/audio', 'ChatController@sendAudio');
 
 $router->post('/chat/persona', 'ChatController@changePersona');
 
+$router->post('/chat/renomear', 'ChatController@renameConversation');
+$router->post('/chat/favoritar', 'ChatController@toggleFavoriteConversation');
+$router->post('/chat/projeto', 'ChatController@setConversationProject');
+
 $router->post('/chat/excluir', 'ChatController@deleteConversation');
 
 // Configurações por conversa (regras/memórias específicas do chat)

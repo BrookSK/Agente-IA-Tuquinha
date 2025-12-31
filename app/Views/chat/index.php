@@ -130,6 +130,92 @@ function render_markdown_safe(string $text): string {
     50% { transform: translateY(-5px); opacity: 1; }
     100% { transform: translateY(0); opacity: 0.5; }
 }
+
+ .tuqChatTopbar {
+     display:flex;
+     align-items:center;
+     justify-content:space-between;
+     gap:10px;
+     margin-top:10px;
+     margin-bottom:6px;
+ }
+ .tuqChatTitleWrap {
+     display:flex;
+     align-items:center;
+     gap:10px;
+     min-width:0;
+ }
+ .tuqChatTitleText {
+     font-size:16px;
+     font-weight:750;
+     min-width:0;
+     overflow:hidden;
+     text-overflow:ellipsis;
+     white-space:nowrap;
+ }
+ .tuqChatMenuWrap {
+     position:relative;
+     flex:0 0 auto;
+ }
+ .tuqChatMenuBtn {
+     border:1px solid var(--border-subtle);
+     background:var(--surface-subtle);
+     color:var(--text-primary);
+     border-radius:999px;
+     padding:6px 10px;
+     font-size:12px;
+     cursor:pointer;
+     display:inline-flex;
+     align-items:center;
+     gap:8px;
+ }
+ .tuqChatMenuPanel {
+     position:absolute;
+     right:0;
+     top: calc(100% + 8px);
+     z-index: 50;
+     width: 260px;
+     background: var(--surface-card);
+     border:1px solid var(--border-subtle);
+     border-radius:12px;
+     padding:8px;
+     box-shadow: 0 16px 40px rgba(0,0,0,0.35);
+     display:none;
+ }
+ .tuqChatMenuPanel.is-open { display:block; }
+ .tuqChatMenuItem {
+     width:100%;
+     display:flex;
+     justify-content:flex-start;
+     align-items:center;
+     gap:10px;
+     border:none;
+     background:transparent;
+     color:var(--text-primary);
+     padding:10px 10px;
+     border-radius:10px;
+     cursor:pointer;
+     text-align:left;
+     font-size:13px;
+ }
+ .tuqChatMenuItem:hover { background: var(--surface-subtle); }
+ .tuqChatMenuItemDanger { color:#ff6b6b; }
+ .tuqChatMenuDivider { height:1px; background:var(--border-subtle); margin:6px 0; }
+ .tuqChatMenuSelect {
+     width:100%;
+     padding:8px 10px;
+     border-radius:10px;
+     border:1px solid var(--border-subtle);
+     background:var(--surface-subtle);
+     color:var(--text-primary);
+     font-size:12px;
+     outline:none;
+ }
+ .tuqChatMenuHint {
+     font-size:11px;
+     color:var(--text-secondary);
+     padding:6px 10px 0 10px;
+ }
 </style>
 <?php
 $convSettings = $conversationSettings ?? null;
@@ -140,6 +226,15 @@ $canUseConversationSettings = !empty($canUseConversationSettings);
 $currentPersonaData = $currentPersona ?? null;
 $personaOptions = $personalities ?? [];
 $planAllowsPersonalitiesFlag = !empty($planAllowsPersonalities);
+
+$conversationTitleText = trim((string)($conversationTitle ?? ''));
+if ($conversationTitleText === '') {
+    $conversationTitleText = 'Chat sem título';
+}
+
+$conversationProjectIdValue = isset($conversationProjectId) ? (int)$conversationProjectId : 0;
+$conversationIsFavoriteValue = !empty($conversationIsFavorite);
+$userProjectsList = is_array($userProjects ?? null) ? $userProjects : [];
 
 // Determina se o usuário está em um plano pago (não free) para exibir CTA de compra de tokens
 $canShowBuyTokensCta = false;
@@ -152,6 +247,85 @@ if (!empty($currentPlan) && is_array($currentPlan)) {
 }
 ?>
 <div style="max-width: 900px; width: 100%; margin: 0 auto; padding: 0 8px; display: flex; flex-direction: column; min-height: calc(100vh - 56px - 80px); box-sizing: border-box;">
+    <?php if (!empty($conversationId)): ?>
+        <div class="tuqChatTopbar">
+            <div class="tuqChatTitleWrap">
+                <div class="tuqChatTitleText" title="<?= htmlspecialchars($conversationTitleText) ?>">
+                    <?= htmlspecialchars($conversationTitleText) ?>
+                </div>
+                <?php if (!empty($conversationIsFavoriteValue)): ?>
+                    <span title="Favorito" style="color:#ffcc80; font-size:14px; line-height:1;">★</span>
+                <?php endif; ?>
+            </div>
+            <div class="tuqChatMenuWrap">
+                <button type="button" id="tuqChatMenuBtn" class="tuqChatMenuBtn" aria-haspopup="menu" aria-expanded="false">
+                    <span>Opções</span>
+                    <span style="font-size:14px; line-height:1;">▾</span>
+                </button>
+                <div id="tuqChatMenuPanel" class="tuqChatMenuPanel" role="menu" aria-label="Opções do chat">
+                    <?php if (!empty($_SESSION['user_id'])): ?>
+                        <form method="post" action="/chat/favoritar" style="margin:0;">
+                            <input type="hidden" name="conversation_id" value="<?= (int)$conversationId ?>">
+                            <input type="hidden" name="redirect" value="/chat?c=<?= (int)$conversationId ?>">
+                            <button type="submit" class="tuqChatMenuItem" role="menuitem">
+                                <span style="width:18px; text-align:center;">★</span>
+                                <span><?= !empty($conversationIsFavoriteValue) ? 'Desfavoritar' : 'Favoritar' ?></span>
+                            </button>
+                        </form>
+                    <?php else: ?>
+                        <div class="tuqChatMenuHint">Entre na sua conta para favoritar e adicionar ao projeto.</div>
+                    <?php endif; ?>
+
+                    <button type="button" id="tuqChatRenameBtn" class="tuqChatMenuItem" role="menuitem">
+                        <span style="width:18px; text-align:center;">✎</span>
+                        <span>Mudar nome</span>
+                    </button>
+                    <form id="tuqChatRenameForm" method="post" action="/chat/renomear" style="margin:0; display:none;">
+                        <input type="hidden" name="conversation_id" value="<?= (int)$conversationId ?>">
+                        <input type="hidden" name="redirect" value="/chat?c=<?= (int)$conversationId ?>">
+                        <input type="hidden" name="title" id="tuqChatRenameTitle" value="">
+                    </form>
+
+                    <div class="tuqChatMenuDivider"></div>
+
+                    <?php if (!empty($_SESSION['user_id'])): ?>
+                        <form method="post" action="/chat/projeto" style="margin:0; display:flex; flex-direction:column; gap:6px; padding:6px 6px 2px 6px;">
+                            <input type="hidden" name="conversation_id" value="<?= (int)$conversationId ?>">
+                            <input type="hidden" name="redirect" value="/chat?c=<?= (int)$conversationId ?>">
+                            <div style="font-size:11px; color:var(--text-secondary); padding:0 4px;">Adicionar ao projeto</div>
+                            <select name="project_id" class="tuqChatMenuSelect">
+                                <option value="0" <?= $conversationProjectIdValue <= 0 ? 'selected' : '' ?>>Nenhum</option>
+                                <?php foreach ($userProjectsList as $p): ?>
+                                    <?php
+                                        $pid = (int)($p['id'] ?? 0);
+                                        $pname = trim((string)($p['name'] ?? ''));
+                                        if ($pid <= 0 || $pname === '') { continue; }
+                                    ?>
+                                    <option value="<?= $pid ?>" <?= $conversationProjectIdValue === $pid ? 'selected' : '' ?>>
+                                        <?= htmlspecialchars($pname) ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                            <button type="submit" class="tuqChatMenuItem" role="menuitem" style="justify-content:center;">
+                                Salvar
+                            </button>
+                        </form>
+                    <?php endif; ?>
+
+                    <div class="tuqChatMenuDivider"></div>
+
+                    <form method="post" action="/chat/excluir" style="margin:0;">
+                        <input type="hidden" name="conversation_id" value="<?= (int)$conversationId ?>">
+                        <input type="hidden" name="redirect" value="/historico">
+                        <button type="submit" class="tuqChatMenuItem tuqChatMenuItemDanger" role="menuitem" onclick="return confirm('Excluir este chat? Essa ação não pode ser desfeita.');">
+                            <span style="width:18px; text-align:center;">🗑</span>
+                            <span>Apagar</span>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    <?php endif; ?>
     <?php if (!empty($projectContext) && !empty($projectContext['project']) && !empty($conversationId)): ?>
         <?php
             $p = $projectContext['project'];
@@ -573,6 +747,59 @@ if (!empty($currentPlan) && is_array($currentPlan)) {
 </div>
 <script>
     const CURRENT_CONVERSATION_ID = <?= isset($conversationId) ? (int)$conversationId : 0 ?>;
+
+    (function () {
+        const btn = document.getElementById('tuqChatMenuBtn');
+        const panel = document.getElementById('tuqChatMenuPanel');
+        const renameBtn = document.getElementById('tuqChatRenameBtn');
+        const renameForm = document.getElementById('tuqChatRenameForm');
+        const renameTitle = document.getElementById('tuqChatRenameTitle');
+
+        if (!btn || !panel) {
+            return;
+        }
+
+        const closeMenu = () => {
+            panel.classList.remove('is-open');
+            btn.setAttribute('aria-expanded', 'false');
+        };
+
+        btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            const isOpen = panel.classList.contains('is-open');
+            if (isOpen) {
+                closeMenu();
+            } else {
+                panel.classList.add('is-open');
+                btn.setAttribute('aria-expanded', 'true');
+            }
+        });
+
+        document.addEventListener('click', (e) => {
+            const t = e.target;
+            if (!t) return;
+            if (panel.contains(t) || btn.contains(t)) return;
+            closeMenu();
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closeMenu();
+            }
+        });
+
+        if (renameBtn && renameForm && renameTitle) {
+            renameBtn.addEventListener('click', () => {
+                const current = <?= json_encode($conversationTitleText, JSON_UNESCAPED_UNICODE) ?>;
+                const next = window.prompt('Novo nome do chat:', current);
+                if (next === null) {
+                    return;
+                }
+                renameTitle.value = String(next).trim();
+                renameForm.submit();
+            });
+        }
+    })();
 
     const chatWindow = document.getElementById('chat-window');
     if (chatWindow) {
