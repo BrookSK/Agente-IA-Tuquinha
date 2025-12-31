@@ -392,7 +392,7 @@
                                                 <span class="tuqPersonaBadgeText">
                                                     <span class="tuqPersonaBadgeName"><?= htmlspecialchars($personaName) ?></span>
                                                     <?php if ($personaArea !== ''): ?>
-                                                        <span class="tuqPersonaBadgeArea"><?= htmlspecialchars('Especialista em ' . $personaArea) ?></span>
+                                                        <span class="tuqPersonaBadgeArea"><?= htmlspecialchars($personaArea) ?></span>
                                                     <?php endif; ?>
                                                 </span>
                                             </span>
