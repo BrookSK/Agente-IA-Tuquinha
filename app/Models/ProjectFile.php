@@ -50,6 +50,39 @@ class ProjectFile
         return $row ?: null;
     }
 
+    public static function findByPathIncludingDeleted(int $projectId, string $path): ?array
+    {
+        if ($projectId <= 0 || $path === '') {
+            return null;
+        }
+        $pdo = Database::getConnection();
+        $stmt = $pdo->prepare('SELECT * FROM project_files WHERE project_id = :pid AND path = :path LIMIT 1');
+        $stmt->execute([
+            'pid' => $projectId,
+            'path' => $path,
+        ]);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $row ?: null;
+    }
+
+    public static function restore(int $id, ?int $folderId, string $name, ?string $mimeType, bool $isBase, ?int $createdByUserId): void
+    {
+        if ($id <= 0) {
+            return;
+        }
+
+        $pdo = Database::getConnection();
+        $stmt = $pdo->prepare('UPDATE project_files SET deleted_at = NULL, folder_id = :folder_id, name = :name, mime_type = :mime_type, is_base = :is_base, created_by_user_id = :created_by_user_id WHERE id = :id LIMIT 1');
+        $stmt->execute([
+            'folder_id' => $folderId,
+            'name' => $name,
+            'mime_type' => $mimeType,
+            'is_base' => $isBase ? 1 : 0,
+            'created_by_user_id' => $createdByUserId,
+            'id' => $id,
+        ]);
+    }
+
     public static function allBaseFiles(int $projectId): array
     {
         if ($projectId <= 0) {

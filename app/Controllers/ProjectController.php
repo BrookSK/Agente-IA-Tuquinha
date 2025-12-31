@@ -1010,9 +1010,19 @@ class ProjectController extends Controller
             $extractedText = TextExtractionService::extractFromFile($tmp, $safeFileName, $mime);
         }
 
-        $existing = ProjectFile::findByPath($projectId, $fullPath);
+        $existing = ProjectFile::findByPathIncludingDeleted($projectId, $fullPath);
         if ($existing) {
             $projectFileId = (int)$existing['id'];
+            if (!empty($existing['deleted_at'])) {
+                ProjectFile::restore(
+                    $projectFileId,
+                    isset($folder['id']) ? (int)$folder['id'] : null,
+                    $safeFileName,
+                    $mime !== '' ? $mime : null,
+                    true,
+                    $userId > 0 ? $userId : null
+                );
+            }
         } else {
             $projectFileId = ProjectFile::create(
                 $projectId,
@@ -1117,9 +1127,19 @@ class ProjectController extends Controller
             $fullPath = '/' . $fileName;
         }
 
-        $existing = ProjectFile::findByPath($projectId, $fullPath);
+        $existing = ProjectFile::findByPathIncludingDeleted($projectId, $fullPath);
         if ($existing) {
             $projectFileId = (int)$existing['id'];
+            if (!empty($existing['deleted_at'])) {
+                ProjectFile::restore(
+                    $projectFileId,
+                    isset($folder['id']) ? (int)$folder['id'] : null,
+                    $fileName,
+                    $mime,
+                    true,
+                    $userId > 0 ? $userId : null
+                );
+            }
         } else {
             $projectFileId = ProjectFile::create(
                 $projectId,
