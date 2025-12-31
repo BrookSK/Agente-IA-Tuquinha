@@ -230,8 +230,8 @@
         position:absolute;
         top:50%;
         transform:translateY(-50%);
-        width:32px;
-        height:32px;
+        width:44px;
+        height:44px;
         border-radius:999px;
         border:1px solid var(--border-subtle);
         background:rgba(5,5,9,0.9);
@@ -241,6 +241,27 @@
         justify-content:center;
         cursor:pointer;
         z-index:2;
+        font-size:22px;
+        line-height:1;
+    }
+
+    #projectPersonaPicker {
+        scrollbar-color: rgba(245,245,245,0.28) transparent;
+        scrollbar-width: thin;
+    }
+    #projectPersonaPicker::-webkit-scrollbar {
+        height: 10px;
+    }
+    #projectPersonaPicker::-webkit-scrollbar-track {
+        background: transparent;
+    }
+    #projectPersonaPicker::-webkit-scrollbar-thumb {
+        background: rgba(245,245,245,0.22);
+        border: 1px solid rgba(0,0,0,0.35);
+        border-radius: 999px;
+    }
+    #projectPersonaPicker::-webkit-scrollbar-thumb:hover {
+        background: rgba(245,245,245,0.32);
     }
 </style>
 <div style="max-width: 1100px; margin: 0 auto;">

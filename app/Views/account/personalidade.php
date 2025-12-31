@@ -44,8 +44,8 @@ $successMessage = $success ?? null;
         position:absolute;
         top:50%;
         transform:translateY(-50%);
-        width:44px;
-        height:44px;
+        width:56px;
+        height:56px;
         border-radius:999px;
         border:1px solid var(--border-subtle);
         background:rgba(5,5,9,0.9);
@@ -55,6 +55,8 @@ $successMessage = $success ?? null;
         justify-content:center;
         cursor:pointer;
         z-index:2;
+        font-size:26px;
+        line-height:1;
     }
 
     .persona-stage {
@@ -115,9 +117,10 @@ $successMessage = $success ?? null;
             min-height: 430px;
         }
         .persona-nav-btn {
-            width: 52px;
-            height: 52px;
+            width: 60px;
+            height: 60px;
             background: rgba(5,5,9,0.82);
+            font-size:28px;
         }
         .persona-default-card.is-left {
             opacity: 0.22;

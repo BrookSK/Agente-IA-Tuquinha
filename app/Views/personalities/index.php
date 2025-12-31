@@ -51,8 +51,8 @@ $conversationId = isset($conversationId) ? (int)$conversationId : 0;
         position:absolute;
         top:50%;
         transform:translateY(-50%);
-        width:44px;
-        height:44px;
+        width:56px;
+        height:56px;
         border-radius:999px;
         border:1px solid #272727;
         background:rgba(5,5,9,0.9);
@@ -62,6 +62,8 @@ $conversationId = isset($conversationId) ? (int)$conversationId : 0;
         justify-content:center;
         cursor:pointer;
         z-index:2;
+        font-size:26px;
+        line-height:1;
     }
 
     .persona-stage {
@@ -122,9 +124,10 @@ $conversationId = isset($conversationId) ? (int)$conversationId : 0;
             min-height: 410px;
         }
         .persona-nav-btn {
-            width: 52px;
-            height: 52px;
+            width: 60px;
+            height: 60px;
             background: rgba(5,5,9,0.82);
+            font-size:28px;
         }
         #persona-carousel .persona-card.is-left {
             opacity: 0.22;
