@@ -377,6 +377,9 @@
                             <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; padding:12px 14px; border-top:1px solid var(--border-subtle);">
                                 <a href="/chat?c=<?= (int)($c['id'] ?? 0) ?>" style="display:block; text-decoration:none; color:var(--text-primary); min-width:0; flex:1;">
                                     <div style="display:flex; align-items:center; gap:10px; min-width:0; margin-bottom:3px;">
+                                        <div style="font-size:13px; font-weight:650; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; min-width:0; flex:1;">
+                                            <?= htmlspecialchars($title) ?>
+                                        </div>
                                         <?php if ($personaName !== ''): ?>
                                             <span class="tuqPersonaBadge" title="<?= htmlspecialchars($personaName . ($personaArea !== '' ? ' · ' . $personaArea : '')) ?>">
                                                 <span class="tuqPersonaBadgeAvatar">
@@ -389,7 +392,7 @@
                                                 <span class="tuqPersonaBadgeText">
                                                     <span class="tuqPersonaBadgeName"><?= htmlspecialchars($personaName) ?></span>
                                                     <?php if ($personaArea !== ''): ?>
-                                                        <span class="tuqPersonaBadgeArea"><?= htmlspecialchars($personaArea) ?></span>
+                                                        <span class="tuqPersonaBadgeArea"><?= htmlspecialchars('Especialista em ' . $personaArea) ?></span>
                                                     <?php endif; ?>
                                                 </span>
                                             </span>
@@ -400,13 +403,10 @@
                                                 </span>
                                                 <span class="tuqPersonaBadgeText">
                                                     <span class="tuqPersonaBadgeName">Padrão do Tuquinha</span>
-                                                    <span class="tuqPersonaBadgeArea">da conta</span>
+                                                    <span class="tuqPersonaBadgeArea">Padrão da conta</span>
                                                 </span>
                                             </span>
                                         <?php endif; ?>
-                                        <div style="font-size:13px; font-weight:650; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; min-width:0;">
-                                            <?= htmlspecialchars($title) ?>
-                                        </div>
                                     </div>
                                     <div style="font-size:11px; color:var(--text-secondary);">
                                         <?= $ago !== '' ? 'Última mensagem ' . htmlspecialchars($ago) : '' ?>
