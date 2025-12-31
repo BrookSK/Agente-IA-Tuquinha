@@ -162,6 +162,25 @@
         overflow: hidden;
         text-overflow: ellipsis;
     }
+    .tuqChatListItem {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        min-width: 0;
+    }
+    .tuqChatListItemMain {
+        min-width: 0;
+        flex: 1;
+    }
+    .tuqChatListItemActions {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        flex: 0 0 auto;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+    }
     @media (max-width: 640px) {
         .tuqPersonaBadge {
             padding: 5px 8px;
@@ -181,6 +200,14 @@
             width: 22px;
             height: 22px;
             border-radius: 7px;
+        }
+        .tuqChatListItem {
+            flex-direction: column;
+            align-items: stretch;
+        }
+        .tuqChatListItemActions {
+            width: 100%;
+            justify-content: flex-end;
         }
     }
 
@@ -395,8 +422,8 @@
                                 $personaArea = !empty($planAllowsPersonalities) ? trim((string)($c['persona_area'] ?? '')) : '';
                                 $personaImg = !empty($planAllowsPersonalities) ? trim((string)($c['persona_image_path'] ?? '')) : '';
                             ?>
-                            <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; padding:12px 14px; border-top:1px solid var(--border-subtle);">
-                                <a href="/chat?c=<?= (int)($c['id'] ?? 0) ?>" style="display:block; text-decoration:none; color:var(--text-primary); min-width:0; flex:1;">
+                            <div style="padding:12px 14px; border-top:1px solid var(--border-subtle);" class="tuqChatListItem">
+                                <a href="/chat?c=<?= (int)($c['id'] ?? 0) ?>" style="display:block; text-decoration:none; color:var(--text-primary);" class="tuqChatListItemMain">
                                     <div class="tuqChatTitleRow" style="margin-bottom:3px;">
                                         <div class="tuqChatTitleRowTitle" style="font-size:13px; font-weight:650;">
                                             <?= htmlspecialchars($title) ?>
@@ -433,7 +460,7 @@
                                         <?= $ago !== '' ? 'Última mensagem ' . htmlspecialchars($ago) : '' ?>
                                     </div>
                                 </a>
-                                <div style="display:flex; gap:8px; align-items:center; flex:0 0 auto;">
+                                <div class="tuqChatListItemActions">
                                     <a href="/chat?c=<?= (int)($c['id'] ?? 0) ?>" style="flex:0 0 auto; border:1px solid var(--border-subtle); background:var(--surface-subtle); color:var(--text-primary); text-decoration:none; border-radius:999px; padding:8px 12px; font-size:12px; font-weight:650; white-space:nowrap;">Abrir chat</a>
                                     <form method="post" action="/chat/excluir" style="display:inline; margin:0;">
                                         <input type="hidden" name="conversation_id" value="<?= (int)($c['id'] ?? 0) ?>">

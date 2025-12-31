@@ -68,6 +68,25 @@
         overflow: hidden;
         text-overflow: ellipsis;
     }
+    .tuqChatListItem {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 8px;
+        min-width: 0;
+    }
+    .tuqChatListItemMain {
+        min-width: 0;
+        flex: 1;
+    }
+    .tuqChatListItemActions {
+        flex: 0 0 auto;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+    }
     @media (max-width: 640px) {
         .tuqPersonaBadge {
             padding: 5px 8px;
@@ -87,6 +106,15 @@
             width: 22px;
             height: 22px;
             border-radius: 7px;
+        }
+        .tuqChatListItem {
+            flex-direction: column;
+            align-items: stretch;
+        }
+        .tuqChatListItemActions {
+            width: 100%;
+            justify-content: flex-end;
+            gap: 8px;
         }
     }
 </style>
@@ -123,8 +151,8 @@
                     $personaArea = !empty($planAllowsPersonalities) ? trim((string)($conv['persona_area'] ?? '')) : '';
                     $personaImg = !empty($planAllowsPersonalities) ? trim((string)($conv['persona_image_path'] ?? '')) : '';
                 ?>
-                <div style="background:var(--surface-card); border-radius:12px; padding:10px 12px; border:1px solid var(--border-subtle); display:flex; justify-content:space-between; align-items:center; gap:8px;">
-                    <div>
+                <div style="background:var(--surface-card); border-radius:12px; padding:10px 12px; border:1px solid var(--border-subtle);" class="tuqChatListItem">
+                    <div class="tuqChatListItemMain">
                         <div class="tuqChatTitleRow">
                             <div class="tuqChatTitleRowTitle" style="font-size:14px; font-weight:500;">
                                 <?= htmlspecialchars($title) ?>
@@ -171,7 +199,7 @@
                             <button type="submit" style="border:none; border-radius:999px; padding:3px 8px; background:var(--surface-subtle); color:var(--text-secondary); font-size:10px; cursor:pointer; border:1px solid var(--border-subtle);">Salvar</button>
                         </form>
                     </div>
-                    <div>
+                    <div class="tuqChatListItemActions">
                         <a href="/chat?c=<?= (int)$conv['id'] ?>" style="
                             display:inline-flex; align-items:center; gap:6px;
                             border-radius:999px; padding:6px 12px;
