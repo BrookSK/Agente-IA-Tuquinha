@@ -46,9 +46,10 @@ class CommunityMember
         }
 
         $pdo = Database::getConnection();
-        $stmt = $pdo->prepare('SELECT m.*, u.name AS user_name
+        $stmt = $pdo->prepare('SELECT m.*, u.name AS user_name, usp.avatar_path AS user_avatar_path
             FROM community_members m
             JOIN users u ON u.id = m.user_id
+            LEFT JOIN user_social_profiles usp ON usp.user_id = u.id
             WHERE m.community_id = :cid AND m.left_at IS NULL
             ORDER BY u.name ASC');
         $stmt->execute(['cid' => $communityId]);

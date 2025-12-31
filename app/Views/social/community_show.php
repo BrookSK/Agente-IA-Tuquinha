@@ -228,11 +228,16 @@ $canModerate = !empty($canModerate);
                         $memberId = (int)($m['user_id'] ?? 0);
                         $name = (string)($m['user_name'] ?? 'Usuário');
                         $initial = mb_strtoupper(mb_substr($name, 0, 1, 'UTF-8'), 'UTF-8');
+                        $avatar = trim((string)($m['user_avatar_path'] ?? ''));
                         ?>
                         <a href="/perfil?user_id=<?= $memberId ?>" style="text-decoration:none;">
                             <div style="display:flex; align-items:center; gap:8px; padding:4px 6px; border-radius:10px; border:1px solid var(--border-subtle); background:var(--surface-subtle);">
-                                <div style="width:24px; height:24px; border-radius:50%; background:radial-gradient(circle at 30% 20%, #fff 0, #ff8a65 25%, #e53935 65%, #050509 100%); display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:700; color:#050509;">
-                                    <?= htmlspecialchars($initial, ENT_QUOTES, 'UTF-8') ?>
+                                <div style="width:24px; height:24px; border-radius:50%; overflow:hidden; background:radial-gradient(circle at 30% 20%, #fff 0, #ff8a65 25%, #e53935 65%, #050509 100%); display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:700; color:#050509;">
+                                    <?php if ($avatar !== ''): ?>
+                                        <img src="<?= htmlspecialchars($avatar, ENT_QUOTES, 'UTF-8') ?>" alt="" style="width:100%; height:100%; object-fit:cover; display:block;">
+                                    <?php else: ?>
+                                        <?= htmlspecialchars($initial, ENT_QUOTES, 'UTF-8') ?>
+                                    <?php endif; ?>
                                 </div>
                                 <span style="font-size:12px; color:var(--text-primary);">
                                     <?= htmlspecialchars($name, ENT_QUOTES, 'UTF-8') ?>
