@@ -263,18 +263,6 @@
     #projectPersonaPicker::-webkit-scrollbar-thumb:hover {
         background: rgba(245,245,245,0.32);
     }
-
-    /* Safari/macOS pode renderizar scrollbar overlay branca e ignorar customização.
-       Escondemos a barra mantendo o scroll funcional. */
-    #projectPersonaPicker {
-        -ms-overflow-style: none;
-        scrollbar-width: none;
-    }
-    #projectPersonaPicker::-webkit-scrollbar {
-        display: none;
-        width: 0;
-        height: 0;
-    }
 </style>
 <div style="max-width: 1100px; margin: 0 auto;">
     <div id="projectHeaderRow" style="display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:14px;">
