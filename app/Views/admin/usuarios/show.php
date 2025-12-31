@@ -15,6 +15,17 @@
 
     <a href="/admin/usuarios" style="font-size:12px; color:#ff6f60; text-decoration:none;">⟵ Voltar para lista</a>
 
+    <?php if (!empty($error)): ?>
+        <div style="margin-top:12px; background:#311; border:1px solid #a33; color:#ffbaba; padding:8px 10px; border-radius:10px; font-size:13px;">
+            <?= htmlspecialchars((string)$error, ENT_QUOTES, 'UTF-8') ?>
+        </div>
+    <?php endif; ?>
+    <?php if (!empty($success)): ?>
+        <div style="margin-top:12px; background:#10330f; border:1px solid #3aa857; color:#c8ffd4; padding:8px 10px; border-radius:10px; font-size:13px;">
+            <?= htmlspecialchars((string)$success, ENT_QUOTES, 'UTF-8') ?>
+        </div>
+    <?php endif; ?>
+
     <?php $isProfessor = !empty($coursePartner); ?>
 
     <div style="margin-top:16px; padding:14px 16px; border-radius:12px; background:#111118; border:1px solid #272727;">
@@ -54,6 +65,33 @@
                 <?= $isProfessor ? 'Remover tag de professor/parceiro' : 'Marcar como professor/parceiro' ?>
             </button>
         </form>
+    </div>
+
+    <div style="margin-top:18px; padding:14px 16px; border-radius:12px; background:#111118; border:1px solid #272727;">
+        <h2 style="font-size:16px; margin-bottom:10px;">Tokens</h2>
+        <?php $tokenBalance = isset($tokenBalance) ? (int)$tokenBalance : (int)($user['token_balance'] ?? 0); ?>
+        <p style="font-size:13px; margin-bottom:10px;"><strong>Saldo atual:</strong> <?= (int)$tokenBalance ?> token(s)</p>
+
+        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(240px, 1fr)); gap:10px;">
+            <div style="border:1px solid #272727; border-radius:12px; padding:10px 12px; background:#050509;">
+                <h3 style="font-size:14px; margin:0 0 8px 0;">Dar tokens</h3>
+                <form method="post" action="/admin/usuarios/tokens/adicionar" style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+                    <input type="hidden" name="user_id" value="<?= (int)($user['id'] ?? 0) ?>">
+                    <input type="number" name="amount" min="1" step="1" placeholder="Quantidade" required style="flex:1; min-width:140px; padding:6px 10px; border-radius:999px; border:1px solid #272727; background:#111118; color:#f5f5f5; font-size:13px;">
+                    <button type="submit" style="border:none; border-radius:999px; padding:6px 12px; background:linear-gradient(135deg,#2e7d32,#66bb6a); color:#050509; font-size:13px; font-weight:600; cursor:pointer;">Dar</button>
+                </form>
+            </div>
+
+            <div style="border:1px solid #272727; border-radius:12px; padding:10px 12px; background:#050509;">
+                <h3 style="font-size:14px; margin:0 0 8px 0;">Remover tokens</h3>
+                <div style="font-size:12px; color:#b0b0b0; margin-bottom:8px;">Você só pode remover até o saldo atual (<?= (int)$tokenBalance ?>).</div>
+                <form method="post" action="/admin/usuarios/tokens/remover" style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+                    <input type="hidden" name="user_id" value="<?= (int)($user['id'] ?? 0) ?>">
+                    <input type="number" name="amount" min="1" max="<?= (int)$tokenBalance ?>" step="1" placeholder="Quantidade" required style="flex:1; min-width:140px; padding:6px 10px; border-radius:999px; border:1px solid #272727; background:#111118; color:#f5f5f5; font-size:13px;">
+                    <button type="submit" style="border:none; border-radius:999px; padding:6px 12px; background:#311; color:#ef9a9a; border:1px solid #b71c1c; font-size:13px; font-weight:600; cursor:pointer;">Remover</button>
+                </form>
+            </div>
+        </div>
     </div>
 
     <div style="margin-top:18px; padding:14px 16px; border-radius:12px; background:#111118; border:1px solid #272727;">
@@ -205,8 +243,17 @@
                                 <?php
                                     $amount = (int)($raw['amount'] ?? 0);
                                     $reason = (string)($raw['reason'] ?? '');
+                                    $label = 'Movimentação de tokens';
+                                    if (in_array($reason, ['referral_friend_bonus', 'referral_referrer_bonus'], true)) {
+                                        $label = 'Bônus de tokens (indicação)';
+                                    } elseif ($reason === 'admin_grant') {
+                                        $label = 'Tokens adicionados pelo admin';
+                                    } elseif ($reason === 'admin_revoke') {
+                                        $label = 'Tokens removidos pelo admin';
+                                    }
                                 ?>
                                 <div style="font-size:12px; color:#cccccc;">
+                                    <div><strong>Tipo:</strong> <?= htmlspecialchars($label, ENT_QUOTES, 'UTF-8') ?></div>
                                     <div><strong>Tokens:</strong> <?= htmlspecialchars((string)$amount) ?></div>
                                     <div><strong>Motivo:</strong> <?= htmlspecialchars($reason) ?></div>
                                 </div>

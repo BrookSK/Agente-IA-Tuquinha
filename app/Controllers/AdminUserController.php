@@ -11,6 +11,7 @@ use App\Models\CoursePartner;
 use App\Models\UserReferral;
 use App\Models\TokenTransaction;
 use App\Services\AsaasClient;
+use App\Services\MailService;
 
 class AdminUserController extends Controller
 {
@@ -20,6 +21,136 @@ class AdminUserController extends Controller
             header('Location: /admin/login');
             exit;
         }
+    }
+
+    private function sendTokenChangeEmail(array $user, int $amount, string $type): void
+    {
+        $email = (string)($user['email'] ?? '');
+        if ($email === '') {
+            return;
+        }
+
+        $name = (string)($user['preferred_name'] ?? $user['name'] ?? '');
+        $name = trim($name) !== '' ? $name : 'tudo bem';
+
+        $amount = abs($amount);
+        if ($amount <= 0) {
+            return;
+        }
+
+        $tokenBalance = (int)($user['token_balance'] ?? 0);
+
+        $verb = $type === 'removed' ? 'removemos' : 'adicionamos';
+        $subject = $type === 'removed'
+            ? 'Atualização de tokens na sua conta'
+            : 'Atualização de tokens na sua conta';
+
+        $contentHtml = '';
+        $contentHtml .= '<p style="font-size:13px; margin:0 0 10px 0; color:#f5f5f5;">'
+            . 'Nós ' . $verb . ' <strong>' . (int)$amount . ' token(s)</strong> na sua conta.'
+            . '</p>';
+        $contentHtml .= '<div style="font-size:13px; color:#b0b0b0; margin:0;">'
+            . '<strong style="color:#f5f5f5;">Saldo atual:</strong> ' . (int)$tokenBalance . ' token(s)'
+            . '</div>';
+
+        $body = MailService::buildDefaultTemplate($name, $contentHtml);
+        try {
+            MailService::send($email, (string)($user['name'] ?? ''), $subject, $body);
+        } catch (\Throwable $e) {
+        }
+    }
+
+    public function addTokens(): void
+    {
+        $this->ensureAdmin();
+
+        $userId = isset($_POST['user_id']) ? (int)$_POST['user_id'] : 0;
+        $amount = isset($_POST['amount']) ? (int)$_POST['amount'] : 0;
+
+        if ($userId <= 0) {
+            header('Location: /admin/usuarios');
+            exit;
+        }
+
+        $user = User::findById($userId);
+        if (!$user) {
+            $_SESSION['admin_users_error'] = 'Usuário não encontrado.';
+            header('Location: /admin/usuarios');
+            exit;
+        }
+
+        if ($amount <= 0) {
+            $_SESSION['admin_users_error'] = 'Informe uma quantidade válida de tokens para adicionar.';
+            header('Location: /admin/usuarios/ver?id=' . $userId);
+            exit;
+        }
+
+        $meta = [
+            'admin_user_id' => (int)($_SESSION['user_id'] ?? 0),
+            'admin_email' => (string)($_SESSION['user_email'] ?? ''),
+        ];
+
+        User::creditTokens($userId, $amount, 'admin_grant', $meta);
+
+        $freshUser = User::findById($userId);
+        if ($freshUser) {
+            $this->sendTokenChangeEmail($freshUser, $amount, 'added');
+        }
+
+        $_SESSION['admin_users_success'] = 'Tokens adicionados com sucesso.';
+        header('Location: /admin/usuarios/ver?id=' . $userId);
+        exit;
+    }
+
+    public function removeTokens(): void
+    {
+        $this->ensureAdmin();
+
+        $userId = isset($_POST['user_id']) ? (int)$_POST['user_id'] : 0;
+        $amount = isset($_POST['amount']) ? (int)$_POST['amount'] : 0;
+
+        if ($userId <= 0) {
+            header('Location: /admin/usuarios');
+            exit;
+        }
+
+        $user = User::findById($userId);
+        if (!$user) {
+            $_SESSION['admin_users_error'] = 'Usuário não encontrado.';
+            header('Location: /admin/usuarios');
+            exit;
+        }
+
+        $balance = (int)($user['token_balance'] ?? 0);
+
+        if ($amount <= 0) {
+            $_SESSION['admin_users_error'] = 'Informe uma quantidade válida de tokens para remover.';
+            header('Location: /admin/usuarios/ver?id=' . $userId);
+            exit;
+        }
+
+        if ($amount > $balance) {
+            $_SESSION['admin_users_error'] = 'Não é possível remover mais tokens do que o saldo atual do usuário.';
+            header('Location: /admin/usuarios/ver?id=' . $userId);
+            exit;
+        }
+
+        $meta = [
+            'admin_user_id' => (int)($_SESSION['user_id'] ?? 0),
+            'admin_email' => (string)($_SESSION['user_email'] ?? ''),
+            'previous_balance' => $balance,
+        ];
+
+        User::debitTokens($userId, $amount, 'admin_revoke', $meta);
+
+        $freshUser = User::findById($userId);
+        if ($freshUser) {
+            $this->sendTokenChangeEmail($freshUser, $amount, 'removed');
+        }
+
+        $_SESSION['admin_users_success'] = 'Tokens removidos com sucesso.';
+        header('Location: /admin/usuarios/ver?id=' . $userId);
+        exit;
     }
 
     public function index(): void
@@ -114,6 +245,10 @@ class AdminUserController extends Controller
 
         $referral = UserReferral::findLastForReferredUserOrEmail((int)$user['id'], (string)($user['email'] ?? ''));
 
+        $successMsg = $_SESSION['admin_users_success'] ?? null;
+        $errorMsg = $_SESSION['admin_users_error'] ?? null;
+        unset($_SESSION['admin_users_success'], $_SESSION['admin_users_error']);
+
         // Histórico completo de planos (assinaturas) e créditos de tokens avulsos
         $subscriptionsHistory = Subscription::allByEmailWithPlan($user['email']);
         $topups = TokenTopup::allByUserId((int)$user['id']);
@@ -142,7 +277,7 @@ class AdminUserController extends Controller
         // Bônus de tokens por indicação (e outros créditos/débitos) registrados no ledger
         foreach ($tokenTx as $tx) {
             $reason = (string)($tx['reason'] ?? '');
-            if (!in_array($reason, ['referral_friend_bonus', 'referral_referrer_bonus'], true)) {
+            if (!in_array($reason, ['referral_friend_bonus', 'referral_referrer_bonus', 'admin_grant', 'admin_revoke'], true)) {
                 continue;
             }
             $timeline[] = [
@@ -180,6 +315,7 @@ class AdminUserController extends Controller
         $this->view('admin/usuarios/show', [
             'pageTitle' => 'Detalhes do usuário',
             'user' => $user,
+            'tokenBalance' => (int)($user['token_balance'] ?? 0),
             'subscription' => $lastSub,
             'plan' => $plan,
             'asaasSub' => $asaasSub,
@@ -190,6 +326,8 @@ class AdminUserController extends Controller
             'referral' => $referral,
             'timeline' => $timeline,
             'coursePartner' => $coursePartner,
+            'success' => $successMsg,
+            'error' => $errorMsg,
         ]);
     }
 
