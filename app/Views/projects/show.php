@@ -263,6 +263,38 @@
     #projectPersonaPicker::-webkit-scrollbar-thumb:hover {
         background: rgba(245,245,245,0.32);
     }
+
+    /* Scrollbar custom preta (Safari/macOS não estiliza a scrollbar nativa de forma confiável) */
+    #projectPersonaPicker {
+        scrollbar-width: none;
+    }
+    #projectPersonaPicker::-webkit-scrollbar {
+        width: 0;
+        height: 0;
+    }
+    #projectPersonaScrollbar {
+        height: 10px;
+        margin-top: 8px;
+        border-radius: 999px;
+        background: rgba(0,0,0,0.55);
+        border: 1px solid rgba(255,255,255,0.10);
+        position: relative;
+        overflow: hidden;
+    }
+    #projectPersonaScrollbarThumb {
+        position: absolute;
+        top: 0;
+        left: 0;
+        height: 100%;
+        border-radius: 999px;
+        background: rgba(0,0,0,0.92);
+        border: 1px solid rgba(255,255,255,0.18);
+        box-shadow: 0 1px 8px rgba(0,0,0,0.35);
+        cursor: grab;
+    }
+    #projectPersonaScrollbarThumb:active {
+        cursor: grabbing;
+    }
 </style>
 <div style="max-width: 1100px; margin: 0 auto;">
     <div id="projectHeaderRow" style="display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:14px;">
@@ -416,7 +448,10 @@
                                             </div>
                                         </button>
                                     <?php endforeach; ?>
-                                </div>
+                                    </div>
+                                    <div id="projectPersonaScrollbar" aria-hidden="true">
+                                        <div id="projectPersonaScrollbarThumb"></div>
+                                    </div>
                                 </div>
                             </div>
                         <?php endif; ?>
@@ -820,6 +855,9 @@
                         if (!hidden || !wrap || wrap.dataset.bound) return;
                         wrap.dataset.bound = '1';
 
+                        var sbTrack = document.getElementById('projectPersonaScrollbar');
+                        var sbThumb = document.getElementById('projectPersonaScrollbarThumb');
+
                         var btnPrev = document.getElementById('projectPersonaPrev');
                         var btnNext = document.getElementById('projectPersonaNext');
 
@@ -879,6 +917,116 @@
                                 scrollByCard(1);
                             });
                         }
+
+                        function updateCustomScrollbar() {
+                            if (!sbTrack || !sbThumb) return;
+                            var maxScroll = wrap.scrollWidth - wrap.clientWidth;
+                            if (!isFinite(maxScroll) || maxScroll <= 0) {
+                                sbThumb.style.width = '100%';
+                                sbThumb.style.left = '0px';
+                                return;
+                            }
+
+                            var trackW = sbTrack.clientWidth;
+                            if (!trackW || trackW <= 0) return;
+
+                            var ratio = wrap.clientWidth / wrap.scrollWidth;
+                            var thumbW = Math.max(34, Math.floor(trackW * ratio));
+                            var usable = trackW - thumbW;
+                            var left = usable > 0 ? Math.round((wrap.scrollLeft / maxScroll) * usable) : 0;
+                            sbThumb.style.width = thumbW + 'px';
+                            sbThumb.style.left = left + 'px';
+                        }
+
+                        // Sync scroll -> thumb
+                        wrap.addEventListener('scroll', function () {
+                            updateCustomScrollbar();
+                        }, { passive: true });
+                        window.addEventListener('resize', function () {
+                            updateCustomScrollbar();
+                        });
+
+                        // Click on track to jump
+                        if (sbTrack && !sbTrack.dataset.bound) {
+                            sbTrack.dataset.bound = '1';
+                            sbTrack.addEventListener('mousedown', function (e) {
+                                if (!sbThumb) return;
+                                if (e.target === sbThumb) return;
+                                var rect = sbTrack.getBoundingClientRect();
+                                var x = e.clientX - rect.left;
+                                var thumbRect = sbThumb.getBoundingClientRect();
+                                var thumbW = thumbRect.width || 0;
+                                var targetLeft = x - (thumbW / 2);
+                                var maxScroll = wrap.scrollWidth - wrap.clientWidth;
+                                var usable = sbTrack.clientWidth - thumbW;
+                                if (usable <= 0) return;
+                                var clamped = Math.max(0, Math.min(usable, targetLeft));
+                                wrap.scrollLeft = (clamped / usable) * maxScroll;
+                            });
+                        }
+
+                        // Drag thumb
+                        if (sbThumb && !sbThumb.dataset.bound) {
+                            sbThumb.dataset.bound = '1';
+                            sbThumb.addEventListener('mousedown', function (e) {
+                                e.preventDefault();
+                                var startX = e.clientX;
+                                var startLeft = parseInt(sbThumb.style.left || '0', 10) || 0;
+                                var thumbW = sbThumb.getBoundingClientRect().width || 0;
+
+                                function onMove(ev) {
+                                    var dx = ev.clientX - startX;
+                                    var trackW = sbTrack ? sbTrack.clientWidth : 0;
+                                    var usable = trackW - thumbW;
+                                    var maxScroll = wrap.scrollWidth - wrap.clientWidth;
+                                    if (usable <= 0 || maxScroll <= 0) return;
+                                    var newLeft = Math.max(0, Math.min(usable, startLeft + dx));
+                                    wrap.scrollLeft = (newLeft / usable) * maxScroll;
+                                }
+
+                                function onUp() {
+                                    document.removeEventListener('mousemove', onMove);
+                                    document.removeEventListener('mouseup', onUp);
+                                }
+
+                                document.addEventListener('mousemove', onMove);
+                                document.addEventListener('mouseup', onUp);
+                            });
+                        }
+
+                        // Touch drag thumb (mobile)
+                        if (sbThumb && !sbThumb.dataset.touchBound) {
+                            sbThumb.dataset.touchBound = '1';
+                            sbThumb.addEventListener('touchstart', function (e) {
+                                if (!e.touches || e.touches.length !== 1) return;
+                                var startX = e.touches[0].clientX;
+                                var startLeft = parseInt(sbThumb.style.left || '0', 10) || 0;
+                                var thumbW = sbThumb.getBoundingClientRect().width || 0;
+
+                                function onMove(ev) {
+                                    if (!ev.touches || ev.touches.length !== 1) return;
+                                    var dx = ev.touches[0].clientX - startX;
+                                    var trackW = sbTrack ? sbTrack.clientWidth : 0;
+                                    var usable = trackW - thumbW;
+                                    var maxScroll = wrap.scrollWidth - wrap.clientWidth;
+                                    if (usable <= 0 || maxScroll <= 0) return;
+                                    var newLeft = Math.max(0, Math.min(usable, startLeft + dx));
+                                    wrap.scrollLeft = (newLeft / usable) * maxScroll;
+                                }
+
+                                function onEnd() {
+                                    document.removeEventListener('touchmove', onMove);
+                                    document.removeEventListener('touchend', onEnd);
+                                    document.removeEventListener('touchcancel', onEnd);
+                                }
+
+                                document.addEventListener('touchmove', onMove, { passive: true });
+                                document.addEventListener('touchend', onEnd);
+                                document.addEventListener('touchcancel', onEnd);
+                            }, { passive: true });
+                        }
+
+                        updateCustomScrollbar();
                     }
 
                     function bindProjectInstructionsModal() {
