@@ -13,8 +13,9 @@
         border: 1px solid var(--border-subtle);
         background: var(--surface-subtle);
         color: var(--text-primary);
-        max-width: 100%;
-        min-width: 0;
+        width: 240px;
+        max-width: 240px;
+        min-width: 240px;
     }
     .tuqPersonaBadgeAvatar {
         width: 24px;
@@ -57,6 +58,9 @@
     @media (max-width: 640px) {
         .tuqPersonaBadge {
             padding: 5px 8px;
+            width: 200px;
+            max-width: 200px;
+            min-width: 200px;
         }
         .tuqPersonaBadgeAvatar {
             width: 22px;
@@ -100,11 +104,8 @@
                 ?>
                 <div style="background:var(--surface-card); border-radius:12px; padding:10px 12px; border:1px solid var(--border-subtle); display:flex; justify-content:space-between; align-items:center; gap:8px;">
                     <div>
-                        <div style="font-size:14px; font-weight:500; margin-bottom:4px;">
-                            <?= htmlspecialchars($title) ?>
-                        </div>
-                        <?php if ($personaName !== ''): ?>
-                            <div style="margin-bottom:6px;">
+                        <div style="display:flex; align-items:center; gap:10px; min-width:0;">
+                            <?php if ($personaName !== ''): ?>
                                 <span class="tuqPersonaBadge" title="<?= htmlspecialchars($personaName . ($personaArea !== '' ? ' · ' . $personaArea : '')) ?>">
                                     <span class="tuqPersonaBadgeAvatar">
                                         <?php if ($personaImg !== ''): ?>
@@ -120,9 +121,7 @@
                                         <?php endif; ?>
                                     </span>
                                 </span>
-                            </div>
-                        <?php else: ?>
-                            <div style="margin-bottom:6px;">
+                            <?php else: ?>
                                 <span class="tuqPersonaBadge" title="Padrão do Tuquinha / da conta">
                                     <span class="tuqPersonaBadgeAvatar">
                                         <img src="/public/favicon.png" alt="">
@@ -132,8 +131,11 @@
                                         <span class="tuqPersonaBadgeArea">da conta</span>
                                     </span>
                                 </span>
+                            <?php endif; ?>
+                            <div style="font-size:14px; font-weight:500; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; min-width:0;">
+                                <?= htmlspecialchars($title) ?>
                             </div>
-                        <?php endif; ?>
+                        </div>
                         <?php if ($created): ?>
                             <div style="font-size:11px; color:var(--text-secondary); margin-bottom:4px;">
                                 Iniciado em <?= htmlspecialchars(date('d/m/Y H:i', strtotime($created))) ?>
