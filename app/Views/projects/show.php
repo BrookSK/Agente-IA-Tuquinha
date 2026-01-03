@@ -101,6 +101,41 @@
         background: rgba(15, 23, 42, 0.45);
     }
 
+    #projectComposerMessage {
+        scrollbar-width: thin;
+        scrollbar-color: #111 #000;
+    }
+    #projectComposerMessage::-webkit-scrollbar {
+        width: 10px;
+    }
+    #projectComposerMessage::-webkit-scrollbar-track {
+        background: #000;
+        border-radius: 999px;
+    }
+    #projectComposerMessage::-webkit-scrollbar-thumb {
+        background: #111;
+        border-radius: 999px;
+        border: 2px solid #000;
+    }
+    #projectComposerMessage::-webkit-scrollbar-thumb:hover {
+        background: #1a1a1a;
+    }
+
+    body[data-theme="light"] #projectComposerMessage {
+        scrollbar-width: thin;
+        scrollbar-color: #ffffff #f3f4f6;
+    }
+    body[data-theme="light"] #projectComposerMessage::-webkit-scrollbar-track {
+        background: #f3f4f6;
+    }
+    body[data-theme="light"] #projectComposerMessage::-webkit-scrollbar-thumb {
+        background: #ffffff;
+        border: 2px solid #f3f4f6;
+    }
+    body[data-theme="light"] #projectComposerMessage::-webkit-scrollbar-thumb:hover {
+        background: #f9fafb;
+    }
+
     .tuqPersonaBadge {
         display: inline-flex;
         align-items: center;
