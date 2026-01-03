@@ -516,6 +516,7 @@ class ChatController extends Controller
             $attachmentSummaries = [];
             $attachmentMeta = [];
             $fileInputsForModel = [];
+            $attachmentInlineTextBlocks = [];
 
             if (!empty($_FILES['attachments']) && is_array($_FILES['attachments']['name'])) {
                 $count = count($_FILES['attachments']['name']);
@@ -544,9 +545,21 @@ class ChatController extends Controller
                     $isPdf = $type === 'application/pdf';
                     $isAudio = str_starts_with($type, 'audio/');
 
+                    $isTextLike = false;
+                    if ($type !== '' && stripos($type, 'text/') === 0) {
+                        $isTextLike = true;
+                    }
+                    if (!$isTextLike && $type !== '' && in_array(strtolower($type), ['application/json', 'application/xml', 'application/x-yaml'], true)) {
+                        $isTextLike = true;
+                    }
+
                     $ext = '';
                     if (is_string($name) && $name !== '' && strpos($name, '.') !== false) {
                         $ext = strtolower((string)pathinfo($name, PATHINFO_EXTENSION));
+                    }
+
+                    if (!$isTextLike && $ext !== '') {
+                        $isTextLike = in_array($ext, ['txt','md','markdown','json','csv','tsv','log','yml','yaml','xml','html','htm','css','js','ts','php','py','java','c','cpp','h','hpp','go','rs','rb','sql'], true);
                     }
 
                     if ($isOpenAIModel) {
@@ -588,6 +601,27 @@ class ChatController extends Controller
 
                     if (!is_string($tmp) || $tmp === '' || !is_file($tmp)) {
                         continue;
+                    }
+
+                    // Para arquivos de texto, adiciona o conteúdo diretamente ao contexto do chat
+                    // (o objetivo é o modelo usar o texto, não apenas saber que um arquivo foi enviado)
+                    if ($isTextLike) {
+                        $rawText = @file_get_contents($tmp);
+                        if (is_string($rawText)) {
+                            $rawText = str_replace("\0", '', $rawText);
+                            $rawText = str_replace(["\r\n", "\r"], "\n", $rawText);
+                            $rawText = trim($rawText);
+                            if ($rawText !== '') {
+                                if (!mb_check_encoding($rawText, 'UTF-8')) {
+                                    $rawText = mb_convert_encoding($rawText, 'UTF-8', 'UTF-8, ISO-8859-1, Windows-1252');
+                                }
+                                $maxChars = 18000;
+                                if (mb_strlen($rawText, 'UTF-8') > $maxChars) {
+                                    $rawText = mb_substr($rawText, 0, $maxChars, 'UTF-8') . "\n\n[...texto truncado...]";
+                                }
+                                $attachmentInlineTextBlocks[] = "CONTEÚDO DO ARQUIVO (enviado nesta mensagem): {$name}\n\n" . $rawText;
+                            }
+                        }
                     }
 
                     // Envia o arquivo para o servidor de mídia externo
@@ -655,10 +689,15 @@ class ChatController extends Controller
             }
 
             $attachmentsMessage = null;
-            if (!empty($attachmentSummaries)) {
+            if (!empty($attachmentSummaries) || !empty($attachmentInlineTextBlocks)) {
                 $parts = [];
                 $parts[] = "O usuário enviou os seguintes arquivos nesta mensagem.";
-                $parts[] = implode("\n", $attachmentSummaries);
+                if (!empty($attachmentSummaries)) {
+                    $parts[] = implode("\n", $attachmentSummaries);
+                }
+                if (!empty($attachmentInlineTextBlocks)) {
+                    $parts[] = implode("\n\n---\n\n", $attachmentInlineTextBlocks);
+                }
 
                 $attachmentsMessage = implode("\n\n", $parts);
             }
@@ -1230,6 +1269,12 @@ class ChatController extends Controller
 
             $engine = new TuquinhaEngine();
             $historyForEngine = $history;
+            if (is_string($attachmentsMessage) && $attachmentsMessage !== '') {
+                array_unshift($historyForEngine, [
+                    'role' => 'user',
+                    'content' => $attachmentsMessage,
+                ]);
+            }
             if (is_string($projectContextMessage) && $projectContextMessage !== '') {
                 array_unshift($historyForEngine, [
                     'role' => 'user',

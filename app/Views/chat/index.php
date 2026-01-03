@@ -714,7 +714,7 @@ if (!empty($currentPlan) && is_array($currentPlan)) {
                             font-size: 16px;
                         " title="Enviar arquivo/imagem">
                             📎
-                            <input id="file-input" type="file" name="attachments[]" multiple style="display:none;" accept="image/jpeg,image/png,image/webp,application/pdf,text/csv">
+                            <input id="file-input" type="file" name="attachments[]" multiple style="display:none;" accept="image/jpeg,image/png,image/webp,application/pdf,text/plain,text/markdown,text/csv">
                         </label>
                     <?php endif; ?>
                 </div>
@@ -730,6 +730,10 @@ if (!empty($currentPlan) && is_array($currentPlan)) {
                 background: transparent;
                 color: var(--text-primary);
                 font-size: 14px;
+                line-height: 1.35;
+                padding: 8px 10px;
+                box-sizing: border-box;
+                overflow-y: hidden;
                 max-height: 140px;
             " placeholder="Pergunta pro Tuquinha sobre branding, identidade visual, posicionamento..."><?php if (!empty($draftMessage)) { echo htmlspecialchars($draftMessage); } ?></textarea>
             <button id="chat-send-btn" type="submit" style="
@@ -1055,10 +1059,12 @@ if (!empty($currentPlan) && is_array($currentPlan)) {
         <?php endif; ?>
 
         const autoResize = () => {
-            messageInput.style.height = 'auto';
             const maxHeight = 140; // mesmo valor do max-height
-            const newHeight = Math.min(messageInput.scrollHeight, maxHeight);
+            messageInput.style.height = '0px';
+            const scrollH = messageInput.scrollHeight || 0;
+            const newHeight = Math.min(scrollH, maxHeight);
             messageInput.style.height = newHeight + 'px';
+            messageInput.style.overflowY = scrollH > maxHeight ? 'auto' : 'hidden';
         };
 
         autoResize();
