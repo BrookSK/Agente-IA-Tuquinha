@@ -455,7 +455,7 @@
                                 </div>
                             </div>
                         <?php endif; ?>
-                        <textarea name="message" id="projectComposerMessage" placeholder="Responder..." rows="3" style="width:100%; border:none; outline:none; background:transparent; color:var(--text-primary); font-size:13px; resize:none; min-height:46px;"></textarea>
+                        <textarea name="message" id="projectComposerMessage" placeholder="Responder..." rows="3" style="width:100%; border:none; outline:none; background:transparent; color:var(--text-primary); font-size:13px; resize:none; min-height:46px; line-height:1.35; padding:8px 10px; box-sizing:border-box; overflow-y:hidden; max-height:140px;"></textarea>
                         <div style="display:flex; justify-content:flex-end; align-items:center; margin-top:10px;">
                             <button type="submit" style="display:inline-flex; align-items:center; justify-content:center; width:34px; height:34px; border-radius:10px; border:1px solid #2e7d32; background:#102312; color:#c8ffd4; text-decoration:none; font-weight:700; cursor:pointer;">↑</button>
                         </div>
@@ -1092,12 +1092,33 @@
                         });
                     }
 
+                    function bindProjectComposerAutoGrow() {
+                        var ta = document.getElementById('projectComposerMessage');
+                        if (!ta) return;
+                        if (ta.dataset.autogrowBound) return;
+                        ta.dataset.autogrowBound = '1';
+
+                        function autoResize() {
+                            var maxHeight = 140;
+                            ta.style.height = '0px';
+                            var scrollH = ta.scrollHeight || 0;
+                            var newHeight = Math.min(scrollH, maxHeight);
+                            ta.style.height = String(newHeight) + 'px';
+                            ta.style.overflowY = scrollH > maxHeight ? 'auto' : 'hidden';
+                        }
+
+                        autoResize();
+                        ta.addEventListener('input', autoResize);
+                    }
+
                     bindProjectShareToggle();
                     bindProjectPersonaPicker();
                     bindProjectInstructionsModal();
                     bindAutoGrowTextareas();
+                    bindProjectComposerAutoGrow();
                     document.addEventListener('DOMContentLoaded', bindProjectInstructionsModal);
                     document.addEventListener('DOMContentLoaded', bindAutoGrowTextareas);
+                    document.addEventListener('DOMContentLoaded', bindProjectComposerAutoGrow);
                     document.addEventListener('DOMContentLoaded', bindProjectShareToggle);
                     document.addEventListener('DOMContentLoaded', bindProjectPersonaPicker);
 
