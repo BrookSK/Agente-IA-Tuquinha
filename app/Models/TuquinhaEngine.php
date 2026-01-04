@@ -49,6 +49,26 @@ class TuquinhaEngine
         return str_starts_with($model, 'claude-');
     }
 
+    private function openAiModelSupportsVision(string $model): bool
+    {
+        $m = strtolower(trim($model));
+        if ($m === '') {
+            return false;
+        }
+
+        if (strpos($m, 'gpt-4o') !== false) {
+            return true;
+        }
+        if (strpos($m, 'gpt-4.1') !== false) {
+            return true;
+        }
+        if (strpos($m, 'gpt-4') !== false) {
+            return true;
+        }
+
+        return false;
+    }
+
     private function callOpenAI(array $messages, string $model, ?array $user, ?array $conversationSettings, ?array $persona, ?array $fileInputs): array
     {
         $configuredApiKey = Setting::get('openai_api_key', AI_API_KEY);
@@ -301,9 +321,37 @@ class TuquinhaEngine
 
     private function callOpenAIResponsesWithFiles(array $messages, string $model, string $apiKey, ?array $user, ?array $conversationSettings, ?array $persona, array $fileInputs): array
     {
+        $imageInputs = [];
         $fileIds = [];
         $attempted = 0;
         foreach ($fileInputs as $fi) {
+            $mimePre = isset($fi['mime_type']) ? (string)$fi['mime_type'] : '';
+            $urlPre = isset($fi['url']) ? (string)$fi['url'] : '';
+            $tmpPre = isset($fi['tmp_path']) ? (string)$fi['tmp_path'] : '';
+
+            // Imagens: envia como input_image (vision). Não usa /v1/files.
+            if ($mimePre !== '' && str_starts_with($mimePre, 'image/')) {
+                if ($urlPre !== '') {
+                    $imageInputs[] = [
+                        'type' => 'input_image',
+                        'image_url' => $urlPre,
+                    ];
+                    continue;
+                }
+
+                if ($tmpPre !== '' && is_file($tmpPre) && is_readable($tmpPre)) {
+                    $bin = @file_get_contents($tmpPre);
+                    if (is_string($bin) && $bin !== '') {
+                        $b64 = base64_encode($bin);
+                        $imageInputs[] = [
+                            'type' => 'input_image',
+                            'image_url' => 'data:' . ($mimePre !== '' ? $mimePre : 'image/png') . ';base64,' . $b64,
+                        ];
+                        continue;
+                    }
+                }
+            }
+
             $existingFid = isset($fi['openai_file_id']) ? trim((string)$fi['openai_file_id']) : '';
             if ($existingFid !== '') {
                 $fileIds[] = $existingFid;
@@ -368,13 +416,21 @@ class TuquinhaEngine
             }
         }
 
-        if (!$fileIds) {
+        if (!$fileIds && !$imageInputs) {
             if (!is_string($this->lastProviderError) || trim($this->lastProviderError) === '') {
                 $this->lastProviderError = 'openai_files_no_file_ids; attempted=' . (string)$attempted . '; inputs=' . (string)count($fileInputs);
                 error_log('[TuquinhaEngine] OpenAI no file_ids produced: ' . (string)$this->lastProviderError);
             }
             return [
                 'content' => $this->fallbackResponse($messages),
+                'total_tokens' => 0,
+            ];
+        }
+
+        if ($imageInputs && !$this->openAiModelSupportsVision($model)) {
+            $this->lastProviderError = 'openai_model_no_vision; model=' . $model;
+            return [
+                'content' => "Para eu analisar imagens neste chat, selecione um modelo com visão (ex: gpt-4o-mini) e envie a imagem novamente.",
                 'total_tokens' => 0,
             ];
         }
@@ -425,11 +481,19 @@ class TuquinhaEngine
             $lastUserIndex = count($input) - 1;
         }
 
-        foreach ($fileIds as $fid) {
-            $input[$lastUserIndex]['content'][] = [
-                'type' => 'input_file',
-                'file_id' => $fid,
-            ];
+        if ($imageInputs) {
+            foreach ($imageInputs as $img) {
+                $input[$lastUserIndex]['content'][] = $img;
+            }
+        }
+
+        if ($fileIds) {
+            foreach ($fileIds as $fid) {
+                $input[$lastUserIndex]['content'][] = [
+                    'type' => 'input_file',
+                    'file_id' => $fid,
+                ];
+            }
         }
 
         $body = json_encode([

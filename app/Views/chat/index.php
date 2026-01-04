@@ -912,6 +912,72 @@ if (!empty($currentPlan) && is_array($currentPlan)) {
         fileInput.addEventListener('change', renderFiles);
     }
 
+    // Colar/arrastar imagens para anexar automaticamente
+    (function () {
+        const messageInputEl = document.getElementById('chat-message');
+        const inputBarEl = document.getElementById('chat-input-bar');
+        if (!fileInput || !fileList || !messageInputEl) {
+            return;
+        }
+
+        const addFilesToInput = (newFiles) => {
+            if (!newFiles || !newFiles.length) return;
+            const dt = new DataTransfer();
+            const existing = Array.from(fileInput.files || []);
+            existing.forEach((f) => dt.items.add(f));
+            newFiles.forEach((f) => dt.items.add(f));
+            fileInput.files = dt.files;
+            try {
+                fileInput.dispatchEvent(new Event('change'));
+            } catch (e) {
+                // fallback
+                try { fileList && fileList.innerHTML !== undefined; } catch (e2) {}
+            }
+        };
+
+        messageInputEl.addEventListener('paste', (e) => {
+            try {
+                const items = (e.clipboardData && e.clipboardData.items) ? Array.from(e.clipboardData.items) : [];
+                const files = [];
+                items.forEach((it) => {
+                    if (!it) return;
+                    if (it.kind === 'file') {
+                        const f = it.getAsFile ? it.getAsFile() : null;
+                        if (f) files.push(f);
+                    }
+                });
+                if (files.length) {
+                    addFilesToInput(files);
+                }
+            } catch (err) {}
+        });
+
+        const handleDropFiles = (fileListLike) => {
+            const dropped = Array.from(fileListLike || []);
+            if (!dropped.length) return;
+            addFilesToInput(dropped);
+        };
+
+        const bindDropZone = (el) => {
+            if (!el) return;
+            if (el.dataset.dropBound) return;
+            el.dataset.dropBound = '1';
+            el.addEventListener('dragover', (e) => {
+                e.preventDefault();
+            });
+            el.addEventListener('drop', (e) => {
+                e.preventDefault();
+                try {
+                    const files = e.dataTransfer ? e.dataTransfer.files : null;
+                    if (files) handleDropFiles(files);
+                } catch (err) {}
+            });
+        };
+
+        bindDropZone(messageInputEl);
+        bindDropZone(inputBarEl);
+    })();
+
     let mediaRecorder = null;
     let audioChunks = [];
     let isRecordingAudio = false;
