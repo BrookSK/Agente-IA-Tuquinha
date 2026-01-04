@@ -467,7 +467,7 @@ class ChatController extends Controller
             $existingMessages = Message::allByConversation($conversation->id);
 
             // Salva mensagem de texto do usuário
-            Message::create($conversation->id, 'user', $message, null);
+            $userMessageId = Message::create($conversation->id, 'user', $message, null);
 
             // Se for a primeira mensagem, gera um título automático curto usando a IA
             if (empty($existingMessages)) {
@@ -541,9 +541,33 @@ class ChatController extends Controller
                         continue;
                     }
 
-                    $isImage = str_starts_with($type, 'image/');
+                    $ext = '';
+                    if (is_string($name) && $name !== '' && strpos($name, '.') !== false) {
+                        $ext = strtolower((string)pathinfo($name, PATHINFO_EXTENSION));
+                    }
+
+                    if (!is_string($tmp) || $tmp === '' || !is_file($tmp)) {
+                        continue;
+                    }
+
+                    if (!is_string($type)) {
+                        $type = '';
+                    }
+                    $type = trim($type);
+                    if ($type === '' && is_file($tmp)) {
+                        try {
+                            $finfo = new \finfo(FILEINFO_MIME_TYPE);
+                            $detected = $finfo->file($tmp);
+                            if (is_string($detected) && $detected !== '') {
+                                $type = $detected;
+                            }
+                        } catch (\Throwable $e) {
+                        }
+                    }
+
+                    $isImage = $type !== '' && str_starts_with($type, 'image/');
                     $isPdf = $type === 'application/pdf';
-                    $isAudio = str_starts_with($type, 'audio/');
+                    $isAudio = $type !== '' && str_starts_with($type, 'audio/');
 
                     $isTextLike = false;
                     if ($type !== '' && stripos($type, 'text/') === 0) {
@@ -551,11 +575,6 @@ class ChatController extends Controller
                     }
                     if (!$isTextLike && $type !== '' && in_array(strtolower($type), ['application/json', 'application/xml', 'application/x-yaml'], true)) {
                         $isTextLike = true;
-                    }
-
-                    $ext = '';
-                    if (is_string($name) && $name !== '' && strpos($name, '.') !== false) {
-                        $ext = strtolower((string)pathinfo($name, PATHINFO_EXTENSION));
                     }
 
                     if (!$isTextLike && $ext !== '') {
@@ -599,10 +618,6 @@ class ChatController extends Controller
                         continue;
                     }
 
-                    if (!is_string($tmp) || $tmp === '' || !is_file($tmp)) {
-                        continue;
-                    }
-
                     // Para arquivos de texto, adiciona o conteúdo diretamente ao contexto do chat
                     // (o objetivo é o modelo usar o texto, não apenas saber que um arquivo foi enviado)
                     if ($isTextLike) {
@@ -639,7 +654,7 @@ class ChatController extends Controller
 
                     $attachmentId = Attachment::create([
                         'conversation_id' => $conversation->id,
-                        'message_id' => null,
+                        'message_id' => $userMessageId > 0 ? $userMessageId : null,
                         'type' => $attType,
                         'path' => $remoteUrl,
                         'original_name' => $name,
@@ -684,6 +699,7 @@ class ChatController extends Controller
                         'is_pdf' => $isPdf,
                         'is_image' => $isImage,
                         'label' => $label,
+                        'path' => $remoteUrl,
                     ];
                 }
             }

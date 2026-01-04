@@ -443,13 +443,33 @@ if (!empty($currentPlan) && is_array($currentPlan)) {
     <?php endif; ?>
 
     <div id="chat-window" style="flex: 1; overflow-y: auto; padding: 12px 4px 12px 0;">
+        <?php
+        $attachmentsByMessageId = [];
+        $legacyAttachments = [];
+        if (!empty($attachments) && is_array($attachments)) {
+            foreach ($attachments as $attRow) {
+                if (($attRow['type'] ?? '') === 'audio') {
+                    continue;
+                }
+                $mid = isset($attRow['message_id']) ? (int)$attRow['message_id'] : 0;
+                if ($mid > 0) {
+                    if (!isset($attachmentsByMessageId[$mid])) {
+                        $attachmentsByMessageId[$mid] = [];
+                    }
+                    $attachmentsByMessageId[$mid][] = $attRow;
+                } else {
+                    $legacyAttachments[] = $attRow;
+                }
+            }
+        }
+        ?>
         <?php if (empty($chatHistory)): ?>
             <div id="chat-empty-state" style="text-align: center; margin-top: 40px; color: #b0b0b0; font-size: 14px;">
                 <div style="font-size: 18px; margin-bottom: 6px;">Bora começar esse papo? ✨</div>
                 <div>Me conta rapidinho: em que fase você tá com seus projetos de marca?</div>
             </div>
         <?php else: ?>
-            <?php if (!empty($attachments)): ?>
+            <?php if (!empty($legacyAttachments)): ?>
                 <div style="margin-bottom:8px; display:flex; justify-content:flex-end;">
                     <div style="
                         max-width: 80%;
@@ -457,12 +477,8 @@ if (!empty($currentPlan) && is_array($currentPlan)) {
                         flex-wrap: wrap;
                         gap: 6px;
                     ">
-                        <?php foreach ($attachments as $att): ?>
+                        <?php foreach ($legacyAttachments as $att): ?>
                             <?php
-                            // não exibe anexos de áudio no histórico (já foram transcritos)
-                            if (($att['type'] ?? '') === 'audio') {
-                                continue;
-                            }
                             $isImage = str_starts_with((string)($att['mime_type'] ?? ''), 'image/');
                             $isCsv = in_array(($att['mime_type'] ?? ''), ['text/csv', 'application/vnd.ms-excel'], true);
                             $isPdf = ($att['mime_type'] ?? '') === 'application/pdf';
@@ -527,6 +543,7 @@ if (!empty($currentPlan) && is_array($currentPlan)) {
                 $createdAt = isset($message['created_at']) ? strtotime((string)$message['created_at']) : null;
                 $createdLabel = $createdAt ? date('d/m/Y H:i', $createdAt) : '';
                 $tokensUsed = isset($message['tokens_used']) ? (int)$message['tokens_used'] : 0;
+                $messageId = isset($message['id']) ? (int)$message['id'] : 0;
                 ?>
                 <?php if (($message['role'] ?? '') === 'user'): ?>
                     <?php
@@ -559,6 +576,60 @@ if (!empty($currentPlan) && is_array($currentPlan)) {
                             ">Copiar</button>
                         </div>
                     </div>
+                    <?php if ($messageId > 0 && !empty($attachmentsByMessageId[$messageId])): ?>
+                        <div style="margin: -2px 0 10px 0; display:flex; justify-content:flex-end;">
+                            <div style="max-width: 80%; display:flex; flex-wrap:wrap; gap:6px;">
+                                <?php foreach ($attachmentsByMessageId[$messageId] as $att): ?>
+                                    <?php
+                                    $isImage = str_starts_with((string)($att['mime_type'] ?? ''), 'image/');
+                                    $isCsv = in_array(($att['mime_type'] ?? ''), ['text/csv', 'application/vnd.ms-excel'], true);
+                                    $isPdf = ($att['mime_type'] ?? '') === 'application/pdf';
+                                    $size = (int)($att['size'] ?? 0);
+                                    $humanSize = '';
+                                    if ($size > 0) {
+                                        if ($size >= 1024 * 1024) {
+                                            $humanSize = number_format($size / (1024 * 1024), 2, ',', '.') . ' MB';
+                                        } elseif ($size >= 1024) {
+                                            $humanSize = number_format($size / 1024, 2, ',', '.') . ' KB';
+                                        } else {
+                                            $humanSize = $size . ' B';
+                                        }
+                                    }
+                                    $label = 'Arquivo';
+                                    if ($isCsv) { $label = 'CSV'; }
+                                    elseif ($isPdf) { $label = 'PDF'; }
+                                    elseif ($isImage) { $label = 'Imagem'; }
+                                    $path = trim((string)($att['path'] ?? ''));
+                                    ?>
+                                    <div style="display:flex; flex-direction:column; padding:6px 10px; border-radius:12px; background: var(--surface-subtle); border:1px solid var(--border-subtle); min-width:160px; max-width:220px;">
+                                        <?php if ($isImage && $path !== ''): ?>
+                                            <a href="<?= htmlspecialchars($path, ENT_QUOTES, 'UTF-8') ?>" target="_blank" rel="noopener noreferrer" style="display:block; margin-bottom:4px; border-radius:8px; overflow:hidden; border:1px solid #272727;">
+                                                <img src="<?= htmlspecialchars($path, ENT_QUOTES, 'UTF-8') ?>" alt="Imagem enviada" style="display:block; width:100%; max-height:140px; object-fit:cover;">
+                                            </a>
+                                        <?php endif; ?>
+                                        <div style="display:flex; align-items:center; gap:6px; margin-bottom:2px;">
+                                            <span style="font-size:14px;">
+                                                <?= $isImage ? '🖼️' : ($isCsv ? '📊' : ($isPdf ? '📄' : '📎')) ?>
+                                            </span>
+                                            <span style="font-size:12px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                                                <?= htmlspecialchars((string)($att['original_name'] ?? 'arquivo')) ?>
+                                            </span>
+                                        </div>
+                                        <div style="font-size:11px; color:#b0b0b0; margin-bottom:2px;">
+                                            <?= htmlspecialchars(trim($label . ($humanSize ? ' · ' . $humanSize : ''))) ?>
+                                        </div>
+                                        <?php if ($path !== ''): ?>
+                                            <div style="margin-top:2px; font-size:11px;">
+                                                <a href="<?= htmlspecialchars($path, ENT_QUOTES, 'UTF-8') ?>" target="_blank" rel="noopener noreferrer" style="color:#ffcc80; text-decoration:none;">
+                                                    Abrir <?= $isImage ? 'imagem' : 'arquivo' ?>
+                                                </a>
+                                            </div>
+                                        <?php endif; ?>
+                                    </div>
+                                <?php endforeach; ?>
+                            </div>
+                        </div>
+                    <?php endif; ?>
                 <?php else: ?>
                     <div style="display: flex; flex-direction: row; align-items: flex-start; gap: 8px; margin-bottom: 10px;">
                         <div style="
