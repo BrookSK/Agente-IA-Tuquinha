@@ -331,17 +331,17 @@ class TuquinhaEngine
 
             // Imagens: envia como input_image (vision). Não usa /v1/files.
             if ($mimePre !== '' && str_starts_with($mimePre, 'image/')) {
-                if ($urlPre !== '') {
-                    $imageInputs[] = [
-                        'type' => 'input_image',
-                        'image_url' => $urlPre,
-                    ];
-                    continue;
-                }
-
+                $bin = null;
                 if ($tmpPre !== '' && is_file($tmpPre) && is_readable($tmpPre)) {
                     $bin = @file_get_contents($tmpPre);
-                    if (is_string($bin) && $bin !== '') {
+                } elseif ($urlPre !== '') {
+                    // Baixa pelo servidor (mesmo se a URL não for acessível publicamente pela OpenAI)
+                    $bin = $this->fetchBinaryFromUrl($urlPre);
+                }
+
+                if (is_string($bin) && $bin !== '') {
+                    // Evita payloads gigantes (imagens muito grandes)
+                    if (strlen($bin) <= (5 * 1024 * 1024)) {
                         $b64 = base64_encode($bin);
                         $imageInputs[] = [
                             'type' => 'input_image',
@@ -349,6 +349,15 @@ class TuquinhaEngine
                         ];
                         continue;
                     }
+                }
+
+                // Fallback: usa URL direta (pode falhar se não for publicamente acessível)
+                if ($urlPre !== '') {
+                    $imageInputs[] = [
+                        'type' => 'input_image',
+                        'image_url' => $urlPre,
+                    ];
+                    continue;
                 }
             }
 
