@@ -436,6 +436,8 @@ class TuquinhaEngine
             ];
         }
 
+        error_log('[TuquinhaEngine] OpenAI prepared inputs: images=' . (string)count($imageInputs) . '; files=' . (string)count($fileIds) . '; model=' . (string)$model);
+
         if ($imageInputs && !$this->openAiModelSupportsVision($model)) {
             $this->lastProviderError = 'openai_model_no_vision; model=' . $model;
             return [
@@ -445,6 +447,9 @@ class TuquinhaEngine
         }
 
         $systemText = $this->buildSystemPromptWithContext($user, $conversationSettings, $persona);
+        if ($imageInputs) {
+            $systemText = "IMPORTANTE: Você PODE analisar imagens quando elas forem fornecidas como input_image neste chat.\n" . $systemText;
+        }
 
         $input = [];
         $input[] = [

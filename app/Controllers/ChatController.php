@@ -565,6 +565,20 @@ class ChatController extends Controller
                         }
                     }
 
+                    if ($type === '' && $ext !== '') {
+                        if (in_array($ext, ['jpg', 'jpeg'], true)) {
+                            $type = 'image/jpeg';
+                        } elseif ($ext === 'png') {
+                            $type = 'image/png';
+                        } elseif ($ext === 'webp') {
+                            $type = 'image/webp';
+                        } elseif ($ext === 'gif') {
+                            $type = 'image/gif';
+                        } elseif ($ext === 'pdf') {
+                            $type = 'application/pdf';
+                        }
+                    }
+
                     $isImage = $type !== '' && str_starts_with($type, 'image/');
                     $isPdf = $type === 'application/pdf';
                     $isAudio = $type !== '' && str_starts_with($type, 'audio/');
@@ -612,10 +626,32 @@ class ChatController extends Controller
                     }
 
                     if ($isImage && !$allowImages) {
-                        continue;
+                        $friendly = 'Seu plano atual não permite envio de imagens neste chat.';
+                        if ($isAjax) {
+                            header('Content-Type: application/json; charset=utf-8');
+                            echo json_encode([
+                                'success' => false,
+                                'error' => $friendly,
+                            ]);
+                            exit;
+                        }
+                        $_SESSION['chat_error'] = $friendly;
+                        header('Location: /chat');
+                        exit;
                     }
                     if (!$isImage && !$allowFiles) {
-                        continue;
+                        $friendly = 'Seu plano atual não permite envio de arquivos neste chat.';
+                        if ($isAjax) {
+                            header('Content-Type: application/json; charset=utf-8');
+                            echo json_encode([
+                                'success' => false,
+                                'error' => $friendly,
+                            ]);
+                            exit;
+                        }
+                        $_SESSION['chat_error'] = $friendly;
+                        header('Location: /chat');
+                        exit;
                     }
 
                     // Para arquivos de texto, adiciona o conteúdo diretamente ao contexto do chat
