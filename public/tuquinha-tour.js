@@ -48,7 +48,64 @@
     }
   }
 
-  var ONBOARDING_FLOW = ['/personalidades', '/chat', '/projetos', '/conta'];
+  function readJson(ls, key) {
+    try {
+      if (!ls) return null;
+      var raw = ls.getItem(key);
+      if (!raw) return null;
+      return JSON.parse(raw);
+    } catch (e) {
+      return null;
+    }
+  }
+
+  function writeJson(ls, key, val) {
+    try {
+      if (!ls) return;
+      ls.setItem(key, JSON.stringify(val));
+    } catch (e) {}
+  }
+
+  function buildOnboardingFlowFromDom() {
+    // Sempre começa na Home
+    var flow = ['/'];
+
+    // Ordem sugerida: Home -> Novo chat (personalidades ou chat) -> Projetos -> Histórico -> Planos -> Cursos -> Minha conta
+    var newChat = qs('[data-tour="nav-new-chat"]');
+    if (newChat && newChat.getAttribute('href')) {
+      var href = String(newChat.getAttribute('href') || '');
+      if (href.indexOf('/personalidades') === 0) {
+        flow.push('/personalidades');
+        flow.push('/chat');
+      } else {
+        flow.push('/chat');
+      }
+    } else {
+      flow.push('/chat');
+    }
+
+    if (qs('[data-tour="nav-projects"]')) flow.push('/projetos');
+    if (qs('[data-tour="nav-history"]')) flow.push('/historico');
+    if (qs('[data-tour="nav-plans"]')) flow.push('/planos');
+    if (qs('[data-tour="nav-courses"]')) flow.push('/cursos');
+    if (qs('[data-tour="nav-account"]')) flow.push('/conta');
+
+    // Remove duplicados mantendo ordem
+    var out = [];
+    for (var i = 0; i < flow.length; i++) {
+      if (out.indexOf(flow[i]) === -1) out.push(flow[i]);
+    }
+    return out;
+  }
+
+  function getOnboardingFlow() {
+    var ls = safeLocalStorage();
+    var stored = readJson(ls, 'tuq_onboarding_flow');
+    if (stored && stored.length) return stored;
+    var flow = buildOnboardingFlowFromDom();
+    writeJson(ls, 'tuq_onboarding_flow', flow);
+    return flow;
+  }
 
   function onboardingState() {
     var ls = safeLocalStorage();
@@ -69,10 +126,32 @@
     }
     ls.removeItem('tuq_onboarding_active');
     ls.removeItem('tuq_onboarding_idx');
+    ls.removeItem('tuq_onboarding_flow');
   }
 
   // Tours por página
   var TOURS = {
+    '/': {
+      id: 'home_v1',
+      title: 'Tour: Início',
+      steps: [
+        {
+          selector: '[data-tour="home-about"]',
+          title: 'Quem é o Tuquinha',
+          text: 'Aqui você entende o que é o Tuquinha e como ele te ajuda no dia a dia com branding.'
+        },
+        {
+          selector: '[data-tour="home-guides"]',
+          title: 'Guias rápidos',
+          text: 'Aqui ficam guias práticos para você aplicar a metodologia nos seus projetos.'
+        },
+        {
+          selector: '[data-tour="home-cta-chat"]',
+          title: 'Começar um chat',
+          text: 'Clique aqui quando quiser iniciar um papo com o Tuquinha.'
+        }
+      ]
+    },
     '/personalidades': {
       id: 'personalidades_v1',
       title: 'Tour: Personalidades',
@@ -141,6 +220,59 @@
         }
       ]
     },
+    '/historico': {
+      id: 'historico_v1',
+      title: 'Tour: Histórico',
+      steps: [
+        {
+          selector: 'h1',
+          title: 'Histórico de conversas',
+          text: 'Aqui ficam seus chats recentes. Você pode abrir, buscar e excluir conversas.'
+        },
+        {
+          selector: 'form[action="/historico"]',
+          title: 'Buscar e filtrar',
+          text: 'Use a busca e o filtro de favoritos para achar conversas rapidamente.'
+        },
+        {
+          selector: 'a[href^="/chat?c="]',
+          title: 'Abrir um chat',
+          text: 'Clique em “Abrir chat” para voltar para a conversa.'
+        }
+      ]
+    },
+    '/planos': {
+      id: 'planos_v1',
+      title: 'Tour: Planos',
+      steps: [
+        {
+          selector: 'h1',
+          title: 'Planos e limites',
+          text: 'Aqui você compara planos e entende seus limites (tokens, acesso a recursos etc.).'
+        },
+        {
+          selector: '#plans-paid-wrapper',
+          title: 'Opções de plano',
+          text: 'Aqui ficam as opções de plano disponíveis. Você pode alternar por ciclo e escolher o melhor pra você.'
+        }
+      ]
+    },
+    '/cursos': {
+      id: 'cursos_v1',
+      title: 'Tour: Cursos',
+      steps: [
+        {
+          selector: 'h1',
+          title: 'Cursos do Tuquinha',
+          text: 'Aqui você encontra cursos disponíveis pelo seu plano ou para compra avulsa.'
+        },
+        {
+          selector: '.course-card',
+          title: 'Cards de cursos',
+          text: 'Clique em um curso para ver detalhes e assistir/acompanhar o conteúdo.'
+        }
+      ]
+    },
     '/conta': {
       id: 'conta_v1',
       title: 'Tour: Minha conta',
@@ -190,6 +322,7 @@
     this.hole = null;
     this.tooltip = null;
     this.titleEl = null;
+    this.counterEl = null;
     this.textEl = null;
     this.btnPrev = null;
     this.btnNext = null;
@@ -230,10 +363,24 @@
     tooltip.style.color = '#f5f5f5';
     tooltip.style.fontFamily = 'system-ui, -apple-system, Segoe UI, sans-serif';
 
+    var header = createEl('div', { 'data-tuquinha-tour': 'header' });
+    header.style.display = 'flex';
+    header.style.alignItems = 'baseline';
+    header.style.justifyContent = 'space-between';
+    header.style.gap = '10px';
+    header.style.marginBottom = '6px';
+
     var title = createEl('div', { 'data-tuquinha-tour': 'title' });
     title.style.fontSize = '14px';
     title.style.fontWeight = '750';
-    title.style.marginBottom = '6px';
+
+    var counter = createEl('div', { 'data-tuquinha-tour': 'counter' });
+    counter.style.fontSize = '11px';
+    counter.style.color = 'rgba(245,245,245,0.65)';
+    counter.style.whiteSpace = 'nowrap';
+
+    header.appendChild(title);
+    header.appendChild(counter);
 
     var text = createEl('div', { 'data-tuquinha-tour': 'text' });
     text.style.fontSize = '12.5px';
@@ -290,7 +437,7 @@
     actions.appendChild(left);
     actions.appendChild(right);
 
-    tooltip.appendChild(title);
+    tooltip.appendChild(header);
     tooltip.appendChild(text);
     tooltip.appendChild(actions);
 
@@ -303,6 +450,7 @@
     this.hole = hole;
     this.tooltip = tooltip;
     this.titleEl = title;
+    this.counterEl = counter;
     this.textEl = text;
     this.btnPrev = btnPrev;
     this.btnNext = btnNext;
@@ -392,12 +540,26 @@
     this.titleEl.textContent = String(step.title || this.tour.title || 'Tour');
     this.textEl.textContent = String(step.text || '');
 
+    if (this.counterEl) {
+      var total = (this.tour && this.tour.steps) ? this.tour.steps.length : 0;
+      this.counterEl.textContent = total > 0 ? ('Passo ' + String(this.idx + 1) + '/' + String(total)) : '';
+    }
+
     this.btnPrev.disabled = this.idx <= 0;
     this.btnPrev.style.opacity = this.btnPrev.disabled ? '0.55' : '1';
     this.btnPrev.style.cursor = this.btnPrev.disabled ? 'not-allowed' : 'pointer';
 
     var isLast = this.idx >= (this.tour.steps.length - 1);
-    this.btnNext.textContent = isLast ? 'Finalizar' : 'Próximo';
+    var cfg = getConfig();
+    var st = onboardingState();
+    var flow = (st.active || cfg.onboarding || cfg.force) ? getOnboardingFlow() : null;
+    var pageIdx = st.idx || 0;
+
+    if (isLast && flow && flow.length && pageIdx < flow.length - 1) {
+      this.btnNext.textContent = 'Próxima página';
+    } else {
+      this.btnNext.textContent = isLast ? 'Finalizar' : 'Próximo';
+    }
 
     this._position();
   };
@@ -465,6 +627,20 @@
 
     var isLast = this.idx >= (this.tour.steps.length - 1);
     if (isLast) {
+      var cfg = getConfig();
+      var st = onboardingState();
+      var flow = (st.active || cfg.onboarding || cfg.force) ? getOnboardingFlow() : null;
+      var pageIdx = st.idx || 0;
+
+      // No onboarding, no último passo a ação é ir para a próxima página (se existir)
+      if (flow && flow.length && pageIdx < flow.length - 1) {
+        var nextPath = flow[pageIdx + 1];
+        setOnboarding(true, pageIdx + 1);
+        window.location.href = nextPath;
+        this.cancel();
+        return;
+      }
+
       this.finish(true);
       return;
     }
@@ -505,33 +681,14 @@
       this._boundReposition = null;
     }
 
-    // Onboarding multi-página
+    // Se o tour foi fechado/pulado, encerra onboarding
     try {
-      var cfg = getConfig();
-      var st = onboardingState();
-
-      // Se o tour foi fechado/pulado, encerra onboarding
       if (!markDone) {
+        var cfg = getConfig();
+        var st = onboardingState();
         if (st.active || cfg.onboarding || cfg.force) {
           setOnboarding(false, 0);
         }
-        return;
-      }
-
-      if (st.active || cfg.onboarding || cfg.force) {
-        var idx = st.idx || 0;
-        if (!st.active) {
-          setOnboarding(true, idx);
-        }
-
-        var nextIdx = (idx || 0) + 1;
-        if (nextIdx >= ONBOARDING_FLOW.length) {
-          setOnboarding(false, 0);
-          return;
-        }
-
-        setOnboarding(true, nextIdx);
-        window.location.href = ONBOARDING_FLOW[nextIdx];
       }
     } catch (e) {}
   };
@@ -568,17 +725,17 @@
     var cfg = getConfig();
 
     // Onboarding: ativa fluxo multi-página apenas quando sinalizado pelo backend
-    if (cfg.onboarding) {
+    if (cfg.onboarding || cfg.force) {
       setOnboarding(true, 0);
-    }
-    if (cfg.force) {
-      setOnboarding(true, 0);
+      // garante que o fluxo seja calculado no contexto do DOM atual (sidebar)
+      getOnboardingFlow();
     }
 
     var st = onboardingState();
     var currentPath = normalizePath(window.location.pathname);
     if (st.active) {
-      var expected = ONBOARDING_FLOW[st.idx] || ONBOARDING_FLOW[0];
+      var flow = getOnboardingFlow();
+      var expected = flow[st.idx] || flow[0] || '/';
       if (currentPath !== expected) {
         // Se estiver fora da página esperada, redireciona para manter o fluxo
         window.location.href = expected;

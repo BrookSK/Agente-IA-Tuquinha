@@ -1,5 +1,5 @@
-<div>
-    <h1 style="font-size: 28px; margin-bottom: 12px; font-weight: 650;">Bem-vindo ao Resenha 2.0 - Tuquinha</h1>
+<div data-tour="home-root">
+    <h1 data-tour="home-title" style="font-size: 28px; margin-bottom: 12px; font-weight: 650;">Bem-vindo ao Resenha 2.0 - Tuquinha</h1>
     <p style="color: var(--text-secondary); margin-bottom: 20px; font-size: 14px;">
         Seu mentor inteligente em branding e identidade visual, focado em designers que querem criar
         marcas com alma, estratégia e personalidade de verdade.
@@ -20,7 +20,7 @@
         </div>
     </div>
 
-    <div style="
+    <div data-tour="home-about" style="
         background: var(--surface-card);
         border-radius: 16px;
         border: 1px solid var(--border-subtle);
@@ -74,8 +74,8 @@
         </div>
     </div>
 
-    <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; margin-bottom: 18px;">
-        <div style="background: var(--surface-card); border-radius: 16px; padding: 16px; border: 1px solid var(--border-subtle);">
+    <div data-tour="home-guides" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; margin-bottom: 18px;">
+        <div data-tour="home-guide-project" style="background: var(--surface-card); border-radius: 16px; padding: 16px; border: 1px solid var(--border-subtle);">
             <div style="font-size: 16px; font-weight: 700; margin-bottom: 6px;">Guia de Projetos</div>
             <div style="color: var(--text-secondary); font-size: 13px; line-height: 1.6; margin-bottom: 12px;">
                 Um guia prático para entregar projetos de branding que impressionam e convertem.
@@ -99,7 +99,7 @@
             </a>
         </div>
 
-        <div style="background: var(--surface-card); border-radius: 16px; padding: 16px; border: 1px solid var(--border-subtle);">
+        <div data-tour="home-guide-method" style="background: var(--surface-card); border-radius: 16px; padding: 16px; border: 1px solid var(--border-subtle);">
             <div style="font-size: 16px; font-weight: 700; margin-bottom: 6px;">Metodologia</div>
             <div style="color: var(--text-secondary); font-size: 13px; line-height: 1.6; margin-bottom: 12px;">
                 Um guia prático com a metodologia do Tuquinha e como aplicar no seu processo.
@@ -140,7 +140,7 @@
         </div>
     </div>
 
-    <form action="/chat" method="get">
+    <form data-tour="home-cta-chat" action="/chat" method="get">
         <input type="hidden" name="new" value="1">
         <button type="submit" style="
             display: inline-flex;

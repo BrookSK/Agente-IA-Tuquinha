@@ -530,7 +530,7 @@ if (!empty($_SESSION['user_id'])) {
                         $newChatHref = '/personalidades';
                     }
                 ?>
-                <a href="<?= htmlspecialchars($newChatHref) ?>" class="sidebar-button primary" style="margin-bottom: 8px;">
+                <a href="<?= htmlspecialchars($newChatHref) ?>" class="sidebar-button primary" data-tour="nav-new-chat" style="margin-bottom: 8px;">
                     <span class="icon">+</span>
                     <span>Novo chat com o Tuquinha</span>
                 </a>
@@ -558,21 +558,21 @@ if (!empty($_SESSION['user_id'])) {
                     }
                 ?>
                 <?php if ($canUseProjects): ?>
-                    <a href="/projetos" class="sidebar-button">
+                    <a href="/projetos" class="sidebar-button" data-tour="nav-projects">
                         <span class="icon" aria-hidden="true"><?php echo $renderMenuIcon('projects_list', '📁'); ?></span>
                         <span>Meus projetos</span>
                     </a>
                 <?php endif; ?>
 
                 <?php if ($canSeeHistory): ?>
-                    <a href="/historico" class="sidebar-button">
+                    <a href="/historico" class="sidebar-button" data-tour="nav-history">
                         <span class="icon" aria-hidden="true"><?php echo $renderMenuIcon('chat_history', '�'); ?></span>
                         <span>Histórico de chats</span>
                     </a>
                 <?php endif; ?>
 
                 <div class="sidebar-section-title" style="margin-top: 10px;">Guias rápidos</div>
-                <a href="/" class="sidebar-button">
+                <a href="/" class="sidebar-button" data-tour="nav-home">
                     <span class="icon" aria-hidden="true"><?php
                         echo $renderMenuIcon('quick_home', '<svg class="tuquinha-home-icon tuquinha-home-icon--dark" width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="display:inline-block;">
                             <path d="M3 10.5L12 3l9 7.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
@@ -587,11 +587,11 @@ if (!empty($_SESSION['user_id'])) {
                     ?></span>
                     <span>Quem é o Tuquinha</span>
                 </a>
-                <a href="/planos" class="sidebar-button">
+                <a href="/planos" class="sidebar-button" data-tour="nav-plans">
                     <span class="icon" aria-hidden="true"><?php echo $renderMenuIcon('quick_plans', '💳'); ?></span>
                     <span>Planos e limites</span>
                 </a>
-                <a href="/cursos" class="sidebar-button">
+                <a href="/cursos" class="sidebar-button" data-tour="nav-courses">
                     <span class="icon" aria-hidden="true"><?php echo $renderMenuIcon('quick_courses', '🎓'); ?></span>
                     <span>Cursos</span>
                 </a>
@@ -648,7 +648,7 @@ if (!empty($_SESSION['user_id'])) {
                             $hasCompletedCoursesForMenu = false;
                         }
                     ?>
-                    <a href="/conta" class="sidebar-button">
+                    <a href="/conta" class="sidebar-button" data-tour="nav-account">
                         <span class="icon" aria-hidden="true"><?php echo $renderMenuIcon('account_home', '👤'); ?></span>
                         <span>Minha conta</span>
                     </a>
