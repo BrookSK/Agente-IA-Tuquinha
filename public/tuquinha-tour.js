@@ -707,36 +707,15 @@
     } catch (e) {}
   };
 
-  function mountFloatingButton(runner) {
-    var existing = qs('[data-tuquinha-tour="fab"]');
-    if (existing) return;
-
-    var btn = createEl('button', { type: 'button', 'data-tuquinha-tour': 'fab' });
-    btn.textContent = 'Tour';
-    btn.style.position = 'fixed';
-    btn.style.right = '14px';
-    btn.style.bottom = '14px';
-    btn.style.zIndex = '9999';
-    btn.style.border = 'none';
-    btn.style.borderRadius = '999px';
-    btn.style.padding = '10px 14px';
-    btn.style.background = 'linear-gradient(135deg, #e53935, #ff6f60)';
-    btn.style.color = '#050509';
-    btn.style.fontWeight = '800';
-    btn.style.cursor = 'pointer';
-    btn.style.boxShadow = '0 12px 30px rgba(0,0,0,0.35)';
-
-    btn.onclick = function () {
-      runner._clearDone();
-      runner.start(true);
-    };
-
-    document.body.appendChild(btn);
-  }
-
   function bootstrap() {
     var tour = getTourForCurrentPage();
     var cfg = getConfig();
+
+    // Remove botão antigo (caso tenha ficado de uma versão anterior)
+    try {
+      var oldFab = qs('[data-tuquinha-tour="fab"]');
+      if (oldFab && oldFab.parentNode) oldFab.parentNode.removeChild(oldFab);
+    } catch (e) {}
 
     // Onboarding: ativa fluxo multi-página apenas quando sinalizado pelo backend
     if (cfg.onboarding || cfg.force) {
@@ -762,11 +741,6 @@
       // Sem onboarding: não inicia automaticamente
       if (!cfg.force && !cfg.onboarding) {
         if (!tour || !tour.steps || !tour.steps.length) return;
-
-        if (cfg.allowFab) {
-          var runnerA = new TourRunner(tour);
-          mountFloatingButton(runnerA);
-        }
         return;
       }
     }
@@ -775,14 +749,12 @@
 
     var runner = new TourRunner(tour);
 
-    if (cfg.allowFab) {
-      mountFloatingButton(runner);
-    }
-
-    // Auto start apenas no onboarding (ou force)
-    setTimeout(function () {
-      runner.start(true);
-    }, 450);
+    // Auto start apenas no onboarding (ou force) - com tentativas extras
+    var start = function () {
+      try { runner.start(true); } catch (e) {}
+    };
+    setTimeout(start, 50);
+    setTimeout(start, 450);
   }
 
   if (document.readyState === 'loading') {
