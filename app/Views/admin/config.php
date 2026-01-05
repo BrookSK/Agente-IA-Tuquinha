@@ -26,6 +26,7 @@
 /** @var string $googleCalendarId */
 /** @var string $mediaEndpoint */
 /** @var string $textExtractionEndpoint */
+/** @var string $tuquinhaAboutVideoUrl */
 /** @var string $certificateIssuerName */
 /** @var string $certificateSignatureImagePath */
 /** @var int $coursePartnerMinPayoutCents */
@@ -107,6 +108,15 @@ $knownModels = [
                 background: #050509; color: #f5f5f5; font-size: 13px;
             " placeholder="https://media.seusite.com/video.php">
             <small style="color:#777; font-size:11px;">Se deixar em branco, o sistema usa o endpoint geral acima ou o padrão configurado em código.</small>
+        </div>
+
+        <div>
+            <label style="font-size: 12px; color: #b0b0b0;">Link do vídeo (Quem é o Tuquinha)</label>
+            <input name="tuquinha_about_video_url" value="<?= htmlspecialchars($tuquinhaAboutVideoUrl ?? '') ?>" style="
+                width: 100%; padding: 8px 10px; border-radius: 8px; border: 1px solid #272727;
+                background: #050509; color: #f5f5f5; font-size: 13px;
+            " placeholder="https://www.youtube.com/watch?v=...">
+            <small style="color:#777; font-size:11px;">Cole aqui o link do YouTube/Vimeo. Se estiver vazio, aparece “Vídeo em breve” na Home.</small>
         </div>
 
         <div style="margin-top: 8px; padding:10px 12px; border-radius:10px; border:1px solid #272727; background:#0a0a10;">

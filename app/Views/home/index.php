@@ -20,6 +20,99 @@
         </div>
     </div>
 
+    <div style="
+        background: var(--surface-card);
+        border-radius: 16px;
+        border: 1px solid var(--border-subtle);
+        padding: 14px;
+        margin-bottom: 18px;
+    ">
+        <div style="font-size: 12px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--text-secondary); margin-bottom: 10px;">Quem é o Tuquinha</div>
+        <div style="display:grid; grid-template-columns: minmax(240px, 1fr) minmax(260px, 1fr); gap: 14px; align-items: start;">
+            <div style="
+                border: 1px solid var(--border-subtle);
+                border-radius: 14px;
+                overflow: hidden;
+                background: var(--surface-subtle);
+                min-height: 200px;
+                display:flex;
+                align-items:center;
+                justify-content:center;
+                color: var(--text-secondary);
+                font-size: 13px;
+            ">
+                <?php if (!empty($tuquinhaAboutVideoUrl)): ?>
+                    <iframe
+                        src="<?= htmlspecialchars($tuquinhaAboutVideoUrl) ?>"
+                        title="Vídeo: Quem é o Tuquinha"
+                        style="width:100%; height:100%; min-height:220px; border:0; display:block;"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                        allowfullscreen
+                    ></iframe>
+                <?php else: ?>
+                    Vídeo em breve
+                <?php endif; ?>
+            </div>
+            <div>
+                <div style="font-size: 16px; font-weight: 650; margin-bottom: 8px;">Sobre o Tuquinha</div>
+                <div style="color: var(--text-secondary); font-size: 13px; line-height: 1.6;">
+                    O Tuquinha é seu mentor inteligente em branding e identidade visual — pensado para designers que querem criar marcas com alma, estratégia e personalidade de verdade.
+                    Aqui você também encontra guias práticos para aplicar o método no dia a dia.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; margin-bottom: 18px;">
+        <div style="background: var(--surface-card); border-radius: 16px; padding: 16px; border: 1px solid var(--border-subtle);">
+            <div style="font-size: 16px; font-weight: 700; margin-bottom: 6px;">Guia de Projetos</div>
+            <div style="color: var(--text-secondary); font-size: 13px; line-height: 1.6; margin-bottom: 12px;">
+                Um guia prático para entregar projetos de branding que impressionam e convertem.
+            </div>
+            <a href="/guias/guia-projeto-de-marca.html" target="_blank" rel="noopener" style="
+                display:inline-flex;
+                align-items:center;
+                justify-content:center;
+                gap:8px;
+                padding: 10px 14px;
+                border-radius: 999px;
+                border: none;
+                background: linear-gradient(135deg, #e53935, #ff6f60);
+                color: #050509;
+                font-weight: 650;
+                font-size: 13px;
+                text-decoration:none;
+            ">
+                <span>Acessar</span>
+                <span>➜</span>
+            </a>
+        </div>
+
+        <div style="background: var(--surface-card); border-radius: 16px; padding: 16px; border: 1px solid var(--border-subtle);">
+            <div style="font-size: 16px; font-weight: 700; margin-bottom: 6px;">Metodologia</div>
+            <div style="color: var(--text-secondary); font-size: 13px; line-height: 1.6; margin-bottom: 12px;">
+                Um guia prático com a metodologia do Tuquinha e como aplicar no seu processo.
+            </div>
+            <a href="/guias/metodologia.html" target="_blank" rel="noopener" style="
+                display:inline-flex;
+                align-items:center;
+                justify-content:center;
+                gap:8px;
+                padding: 10px 14px;
+                border-radius: 999px;
+                border: none;
+                background: linear-gradient(135deg, #e53935, #ff6f60);
+                color: #050509;
+                font-weight: 650;
+                font-size: 13px;
+                text-decoration:none;
+            ">
+                <span>Acessar</span>
+                <span>➜</span>
+            </a>
+        </div>
+    </div>
+
     <!-- CTA para instalar o app (PWA) - exibido apenas em mobile via JS -->
     <div id="pwa-install-banner" style="display:none; margin-bottom: 18px;">
         <div style="background:var(--surface-card); border-radius:14px; border:1px solid var(--border-subtle); padding:12px 14px; display:flex; align-items:center; gap:10px;">

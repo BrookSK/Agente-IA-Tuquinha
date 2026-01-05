@@ -1,0 +1,2376 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Metodologia Branding Vivo | Agência Tuca</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Poppins:wght@600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            /* Cores principais */
+            --primary-red: #ff3b3b;
+            --dark-red: #d63031;
+            --light-red: #ff6b6b;
+            --pale-red: #ffe5e5;
+            
+            /* Cores para didática */
+            --alma-orange: #FF9800;
+            --light-orange: #FFF3E0;
+            
+            --voz-blue: #2196F3;
+            --light-blue: #E3F2FD;
+            
+            --corpo-green: #4CAF50;
+            --light-green: #E8F5E9;
+            
+            --vida-red: #ff3b3b;
+            --light-vida-red: #ffe5e5;
+            
+            /* Cores neutras */
+            --dark-bg: #1a1a1a;
+            --medium-bg: #2c2c2c;
+            --light-bg: #f8f8f8;
+            
+            --text-dark: #2c2c2c;
+            --text-medium: #666;
+            --text-light: #999;
+            
+            --shadow-sm: 0 2px 8px rgba(0,0,0,0.08);
+            --shadow-md: 0 4px 16px rgba(0,0,0,0.12);
+            --shadow-lg: 0 8px 32px rgba(0,0,0,0.16);
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #d03242 0%, #a9232e 100%);
+            min-height: 100vh;
+            color: var(--text-dark);
+            overflow-x: hidden;
+        }
+
+        /* Loading Screen */
+        #loading {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #d03242 0%, #a9232e 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            transition: opacity 0.5s, visibility 0.5s;
+        }
+
+        #loading.hide {
+            opacity: 0;
+            visibility: hidden;
+        }
+
+        .loader {
+            width: 60px;
+            height: 60px;
+            border: 4px solid rgba(255,255,255,0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Header */
+        header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(10px);
+            box-shadow: var(--shadow-md);
+            z-index: 1000;
+            transition: transform 0.3s ease;
+        }
+
+        header.hidden {
+            transform: translateY(-100%);
+        }
+
+        nav {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 1rem 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 2rem;
+        }
+
+        .logo {
+            font-family: 'Poppins', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--primary-red);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            text-decoration: none;
+        }
+
+        .logo-icon {
+            font-size: 2rem;
+        }
+
+        .nav-menu {
+            display: flex;
+            gap: 0.5rem;
+            list-style: none;
+            flex-wrap: wrap;
+            flex: 1;
+            justify-content: center;
+        }
+
+        .nav-menu button {
+            background: none;
+            border: none;
+            padding: 0.75rem 1rem;
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: var(--text-medium);
+            cursor: pointer;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+
+        .nav-menu button:hover {
+            background: var(--light-bg);
+            color: var(--text-dark);
+        }
+
+        .nav-menu button.active {
+            background: var(--primary-red);
+            color: white;
+        }
+
+        .progress-bar {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            height: 3px;
+            background: var(--primary-red);
+            transition: width 0.3s ease;
+        }
+
+        .menu-toggle {
+            display: none;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 0.5rem;
+        }
+
+        /* Main Container */
+        .app-container {
+            margin-top: 80px;
+            max-width: 1200px;
+            margin-left: auto;
+            margin-right: auto;
+            padding: 2rem;
+            min-height: calc(100vh - 80px);
+        }
+
+        /* Section Wrapper */
+        .section-wrapper {
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .section-wrapper.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Card */
+        .card {
+            background: white;
+            border-radius: 20px;
+            padding: 2.5rem;
+            margin-bottom: 2rem;
+            box-shadow: var(--shadow-lg);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 40px rgba(0,0,0,0.2);
+        }
+
+        /* Cover Section */
+        .cover-section {
+            min-height: calc(100vh - 160px);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            background: linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0.98) 100%);
+            border-radius: 30px;
+            padding: 4rem 2rem;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .cover-icon {
+            font-size: 6rem;
+            margin-bottom: 2rem;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        .cover-icon img {
+            width: 200px;
+            height: auto;
+            object-fit: contain;
+            filter: drop-shadow(0 10px 25px rgba(0, 0, 0, 0.15));
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
+        }
+
+        .cover-title {
+            font-family: 'Poppins', sans-serif;
+            font-size: clamp(2.5rem, 5vw, 4rem);
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--primary-red) 0%, var(--dark-red) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 1rem;
+            line-height: 1.2;
+        }
+
+        .cover-subtitle {
+            font-size: clamp(1.2rem, 2.5vw, 1.5rem);
+            color: var(--text-medium);
+            margin-bottom: 3rem;
+            max-width: 700px;
+        }
+
+        .cover-cta {
+            display: inline-flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1.25rem 2.5rem;
+            background: var(--primary-red);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            font-size: 1.2rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 24px rgba(255, 59, 59, 0.3);
+        }
+
+        .cover-cta:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 32px rgba(255, 59, 59, 0.4);
+            background: var(--dark-red);
+        }
+
+        /* Typography */
+        h1, h2, h3 {
+            font-family: 'Poppins', sans-serif;
+            font-weight: 700;
+            line-height: 1.3;
+        }
+
+        h1 {
+            font-size: clamp(2rem, 4vw, 3rem);
+            margin-bottom: 1.5rem;
+            color: var(--text-dark);
+        }
+
+        h2 {
+            font-size: clamp(1.75rem, 3vw, 2.25rem);
+            margin-bottom: 1.25rem;
+            color: var(--primary-red);
+        }
+
+        h3 {
+            font-size: clamp(1.25rem, 2vw, 1.75rem);
+            margin-bottom: 1rem;
+            color: var(--text-dark);
+        }
+
+        h4 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+            color: var(--primary-red);
+        }
+
+        p {
+            line-height: 1.7;
+            margin-bottom: 1rem;
+            color: var(--text-medium);
+            font-size: 1.05rem;
+        }
+
+        /* Section Counter */
+        .section-counter {
+            display: inline-block;
+            padding: 0.5rem 1.25rem;
+            background: var(--primary-red);
+            color: white;
+            border-radius: 50px;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            font-size: 0.9rem;
+        }
+
+        /* Highlight Boxes */
+        .highlight-box {
+            padding: 1.5rem;
+            border-radius: 12px;
+            margin: 1.5rem 0;
+            border-left: 4px solid;
+        }
+
+        .highlight-red {
+            background: var(--pale-red);
+            border-color: var(--primary-red);
+        }
+
+        .highlight-orange {
+            background: var(--light-orange);
+            border-color: var(--alma-orange);
+        }
+
+        .highlight-vida-red {
+            background: var(--light-vida-red);
+            border-color: var(--vida-red);
+        }
+
+        .highlight-blue {
+            background: var(--light-blue);
+            border-color: var(--voz-blue);
+        }
+
+        .highlight-green {
+            background: var(--light-green);
+            border-color: var(--corpo-green);
+        }
+
+        .highlight-orange {
+            background: var(--light-orange);
+            border-color: var(--vida-orange);
+        }
+
+        /* Quote Block */
+        .quote-block {
+            padding: 2rem;
+            margin: 2rem 0;
+            background: linear-gradient(135deg, var(--pale-red) 0%, #fff 100%);
+            border-left: 5px solid var(--primary-red);
+            border-radius: 0 12px 12px 0;
+            font-size: 1.25rem;
+            font-style: italic;
+            color: var(--text-dark);
+            font-weight: 500;
+        }
+
+        /* Lists */
+        ul, ol {
+            margin: 1.5rem 0;
+            padding-left: 2rem;
+        }
+
+        li {
+            margin: 0.75rem 0;
+            line-height: 1.7;
+            color: var(--text-medium);
+        }
+
+        /* Checkbox Lists */
+        .checkbox-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .checkbox-list li {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+            padding: 0.75rem;
+            border-radius: 8px;
+            transition: background 0.2s ease;
+        }
+
+        .checkbox-list li:hover {
+            background: var(--light-bg);
+        }
+
+        .checkbox-list li::before {
+            content: "✓";
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 24px;
+            height: 24px;
+            background: var(--corpo-green);
+            color: white;
+            border-radius: 6px;
+            flex-shrink: 0;
+            font-weight: bold;
+            margin-top: 2px;
+        }
+
+        .checkbox-list.error li::before {
+            content: "✗";
+            background: var(--primary-red);
+        }
+
+        /* Grid Layouts */
+        .grid-2 {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin: 2rem 0;
+        }
+
+        .grid-3 {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+
+        .grid-4 {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+
+        /* Info Cards */
+        .info-card {
+            padding: 1.5rem;
+            border-radius: 12px;
+            background: var(--light-bg);
+            border: 2px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        .info-card:hover {
+            border-color: var(--primary-red);
+            transform: translateY(-3px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .info-card-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+
+        /* Pilar Cards */
+        .pilar-card {
+            padding: 2rem;
+            border-radius: 20px;
+            background: white;
+            border-top: 5px solid;
+            box-shadow: var(--shadow-md);
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .pilar-card:hover {
+            transform: translateY(-10px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .pilar-card.alma {
+            border-color: var(--alma-orange);
+        }
+
+        .pilar-card.voz {
+            border-color: var(--voz-blue);
+        }
+
+        .pilar-card.corpo {
+            border-color: var(--corpo-green);
+        }
+
+        .pilar-card.vida {
+            border-color: var(--vida-red);
+        }
+
+        .pilar-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+        }
+
+        .pilar-title {
+            font-size: 2rem;
+            font-weight: 800;
+            margin-bottom: 0.5rem;
+        }
+
+        .pilar-card.alma .pilar-title {
+            color: var(--alma-orange);
+        }
+
+        .pilar-card.voz .pilar-title {
+            color: var(--voz-blue);
+        }
+
+        .pilar-card.corpo .pilar-title {
+            color: var(--corpo-green);
+        }
+
+        .pilar-card.vida .pilar-title {
+            color: var(--vida-red);
+        }
+
+        /* Accordion */
+        .accordion {
+            margin: 2rem 0;
+        }
+
+        .accordion-item {
+            background: white;
+            border-radius: 12px;
+            margin-bottom: 1rem;
+            overflow: hidden;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .accordion-header {
+            padding: 1.5rem;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 600;
+            color: var(--text-dark);
+            transition: background 0.3s ease;
+        }
+
+        .accordion-header:hover {
+            background: var(--light-bg);
+        }
+
+        .accordion-icon {
+            transition: transform 0.3s ease;
+        }
+
+        .accordion-item.active .accordion-icon {
+            transform: rotate(180deg);
+        }
+
+        .accordion-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+        }
+
+        .accordion-item.active .accordion-content {
+            max-height: 3000px;
+        }
+
+        .accordion-body {
+            padding: 0 1.5rem 1.5rem;
+        }
+
+        /* Exercise Cards */
+        .exercise-card {
+            background: linear-gradient(135deg, var(--light-bg) 0%, #fff 100%);
+            border-radius: 16px;
+            padding: 2rem;
+            margin: 2rem 0;
+            border: 3px dashed var(--primary-red);
+            position: relative;
+        }
+
+        .exercise-badge {
+            position: absolute;
+            top: -15px;
+            left: 20px;
+            background: var(--primary-red);
+            color: white;
+            padding: 0.5rem 1.5rem;
+            border-radius: 50px;
+            font-weight: 700;
+            font-size: 0.9rem;
+        }
+
+        .exercise-card h4 {
+            margin-top: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        /* Navigation Arrows */
+        .nav-arrows {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 3rem;
+            gap: 1rem;
+        }
+
+        .nav-button {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 1rem 2rem;
+            background: white;
+            border: 2px solid var(--primary-red);
+            color: var(--primary-red);
+            border-radius: 50px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .nav-button:hover:not(:disabled) {
+            background: var(--primary-red);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .nav-button:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        .nav-button.primary {
+            background: var(--primary-red);
+            color: white;
+        }
+
+        .nav-button.primary:hover {
+            background: var(--dark-red);
+        }
+
+        /* Process Flow */
+        .process-flow {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+            margin: 3rem 0;
+            flex-wrap: wrap;
+        }
+
+        .process-step {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 16px;
+            text-align: center;
+            min-width: 150px;
+            box-shadow: var(--shadow-md);
+            transition: all 0.3s ease;
+        }
+
+        .process-step:hover {
+            transform: scale(1.05);
+        }
+
+        .process-arrow {
+            font-size: 2rem;
+            color: var(--primary-red);
+        }
+
+        /* Comparison Table */
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 2rem 0;
+            overflow: hidden;
+            border-radius: 12px;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .comparison-table th,
+        .comparison-table td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .comparison-table th {
+            background: var(--primary-red);
+            color: white;
+            font-weight: 600;
+        }
+
+        .comparison-table tr:hover {
+            background: var(--light-bg);
+        }
+
+        /* Code Block */
+        .code-block {
+            background: var(--dark-bg);
+            color: #fff;
+            padding: 1.5rem;
+            border-radius: 12px;
+            font-family: 'Monaco', 'Courier New', monospace;
+            font-size: 0.9rem;
+            overflow-x: auto;
+            margin: 1.5rem 0;
+            line-height: 1.6;
+        }
+
+        /* Tags */
+        .tag {
+            display: inline-block;
+            padding: 0.4rem 1rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin: 0.25rem;
+        }
+
+        .tag-red {
+            background: var(--pale-red);
+            color: var(--primary-red);
+        }
+
+        .tag-orange {
+            background: var(--light-orange);
+            color: var(--alma-orange);
+        }
+
+        .tag-blue {
+            background: var(--light-blue);
+            color: var(--voz-blue);
+        }
+
+        .tag-green {
+            background: var(--light-green);
+            color: var(--corpo-green);
+        }
+
+        .tag-vida-red {
+            background: var(--light-vida-red);
+            color: var(--vida-red);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .menu-toggle {
+                display: block;
+            }
+
+            .nav-menu {
+                display: none;
+                position: absolute;
+                top: 100%;
+                left: 0;
+                right: 0;
+                background: white;
+                flex-direction: column;
+                box-shadow: var(--shadow-md);
+                padding: 1rem;
+            }
+
+            .nav-menu.active {
+                display: flex;
+            }
+
+            .nav-menu button {
+                width: 100%;
+                text-align: left;
+            }
+
+            .app-container {
+                padding: 1rem;
+            }
+
+            .card {
+                padding: 1.5rem;
+            }
+
+            .cover-section {
+                padding: 2rem 1rem;
+            }
+
+            .grid-2,
+            .grid-3,
+            .grid-4 {
+                grid-template-columns: 1fr;
+            }
+
+            .nav-arrows {
+                flex-direction: column;
+            }
+
+            .nav-button {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .process-flow {
+                flex-direction: column;
+            }
+
+            .process-arrow {
+                transform: rotate(90deg);
+            }
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 10px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--primary-red);
+            border-radius: 5px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--dark-red);
+        }
+    </style>
+</head>
+<body>
+    <!-- Loading Screen -->
+    <div id="loading">
+        <div class="loader"></div>
+    </div>
+
+    <!-- Header -->
+    <header id="header">
+        <nav>
+            <a href="#" class="logo" onclick="goToSection(0); return false;">
+                <span class="logo-icon">💫</span>
+                <span>Branding Vivo</span>
+            </a>
+            
+            <button class="menu-toggle" onclick="toggleMenu()">☰</button>
+            
+            <ul class="nav-menu" id="navMenu">
+                <li><button onclick="goToSection(0)">Início</button></li>
+                <li><button onclick="goToSection(1)">Introdução</button></li>
+                <li><button onclick="goToSection(2)">ALMA</button></li>
+                <li><button onclick="goToSection(3)">VOZ</button></li>
+                <li><button onclick="goToSection(4)">CORPO</button></li>
+                <li><button onclick="goToSection(5)">VIDA</button></li>
+                <li><button onclick="goToSection(6)">Conclusão</button></li>
+            </ul>
+        </nav>
+        <div class="progress-bar" id="progressBar"></div>
+    </header>
+
+    <!-- Main Container -->
+    <div class="app-container">
+        
+        <!-- Section 0: Cover -->
+        <div class="section-wrapper active" id="section-0">
+            <div class="cover-section">
+                <div class="cover-icon">
+                    <img src="https://i.ibb.co/spdbH23w/Tuquinha-sobre-n-s-manifesto.png" alt="Tuquinha - Metodologia Branding Vivo">
+                </div>
+                <h1 class="cover-title">Metodologia Branding Vivo</h1>
+                <p class="cover-subtitle">
+                    Transforme marcas genéricas em personalidades autênticas que vivem, respiram e se conectam genuinamente com as pessoas
+                </p>
+                <button class="cover-cta" onclick="nextSection()">
+                    Começar Jornada
+                    <span>→</span>
+                </button>
+
+                <div class="grid-4" style="margin-top: 4rem; width: 100%; max-width: 900px;">
+                    <div class="pilar-card alma">
+                        <div class="pilar-icon">🔥</div>
+                        <div class="pilar-title">ALMA</div>
+                        <p style="font-size: 0.9rem;">Essência e propósito</p>
+                    </div>
+                    <div class="pilar-card voz">
+                        <div class="pilar-icon">💬</div>
+                        <div class="pilar-title">VOZ</div>
+                        <p style="font-size: 0.9rem;">Personalidade única</p>
+                    </div>
+                    <div class="pilar-card corpo">
+                        <div class="pilar-icon">💚</div>
+                        <div class="pilar-title">CORPO</div>
+                        <p style="font-size: 0.9rem;">Identidade visual</p>
+                    </div>
+                    <div class="pilar-card vida">
+                        <div class="pilar-icon">❤️</div>
+                        <div class="pilar-title">VIDA</div>
+                        <p style="font-size: 0.9rem;">Ativação e presença</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 1: Introdução -->
+        <div class="section-wrapper" id="section-1">
+            <div class="card">
+                <span class="section-counter">Seção 1 de 6</span>
+                <h1>📖 Introdução</h1>
+                
+                <h2>Por que "branding vivo"?</h2>
+                
+                <div class="quote-block">
+                    Pense nas marcas que você ama. Apple. Nike. Burger King. Netflix.
+                    O que elas têm em comum? <strong>Personalidade.</strong>
+                </div>
+
+                <p>Você não compra um iPhone. Você compra um pedaço da visão de mundo da Apple.</p>
+                <p>Você não compra um tênis Nike. Você compra a atitude de quem não desiste.</p>
+
+                <div class="highlight-box highlight-red">
+                    <h3>Essas marcas são presenças vivas no mundo</h3>
+                    <p><strong>Elas têm:</strong></p>
+                    <ul>
+                        <li>Opinião sobre as coisas</li>
+                        <li>Jeito próprio de falar</li>
+                        <li>Valores não-negociáveis</li>
+                        <li>Conexão emocional real</li>
+                    </ul>
+                </div>
+
+                <h2>O problema das marcas frias</h2>
+                
+                <div class="grid-2">
+                    <div class="info-card" style="border: 3px solid var(--primary-red);">
+                        <h3>❌ Erros Comuns</h3>
+                        <ul class="checkbox-list error">
+                            <li><strong>Começam pelo visual:</strong> "Logo bonito e depois pensamos no resto"</li>
+                            <li><strong>Copiam o mercado:</strong> "Nossos concorrentes fazem assim..."</li>
+                            <li><strong>Linguagem corporativa:</strong> "Buscamos excelência através da inovação..."</li>
+                            <li><strong>Sem personalidade:</strong> Parecem robôs vendendo algo</li>
+                            <li><strong>Competem por preço:</strong> Quando não há diferenciação, só resta baixar o preço</li>
+                        </ul>
+                    </div>
+
+                    <div class="info-card" style="border: 3px solid var(--corpo-green);">
+                        <h3>✅ A Solução: De dentro para fora</h3>
+                        <p><strong>Processo tradicional:</strong></p>
+                        <p style="color: var(--primary-red);">Logo → Cores → Fontes → "Pronto"</p>
+                        
+                        <p style="margin-top: 1.5rem;"><strong>Processo Branding Vivo:</strong></p>
+                        <p style="color: var(--corpo-green); font-weight: 600;">Essência → Personalidade → Identidade verbal → Identidade visual</p>
+                    </div>
+                </div>
+
+                <div class="highlight-box highlight-blue">
+                    <h3>💡 A Analogia</h3>
+                    <p>É como conhecer uma pessoa: você não conhece alguém pelo que ela veste. Você conhece pela personalidade, jeitos, valores.</p>
+                    <p><strong>A roupa é só a manifestação externa disso.</strong></p>
+                </div>
+
+                <h2>Os 4 Pilares da Metodologia</h2>
+
+                <div class="process-flow">
+                    <div class="process-step" style="border-top: 5px solid var(--alma-orange);">
+                        <div style="font-size: 3rem; margin-bottom: 0.5rem;">🔥</div>
+                        <h4 style="color: var(--alma-orange);">ALMA</h4>
+                        <p style="font-size: 0.85rem; margin: 0;">Essência profunda</p>
+                    </div>
+                    
+                    <div class="process-arrow">→</div>
+                    
+                    <div class="process-step" style="border-top: 5px solid var(--voz-blue);">
+                        <div style="font-size: 3rem; margin-bottom: 0.5rem;">💬</div>
+                        <h4 style="color: var(--voz-blue);">VOZ</h4>
+                        <p style="font-size: 0.85rem; margin: 0;">Como se expressa</p>
+                    </div>
+                    
+                    <div class="process-arrow">→</div>
+                    
+                    <div class="process-step" style="border-top: 5px solid var(--corpo-green);">
+                        <div style="font-size: 3rem; margin-bottom: 0.5rem;">💚</div>
+                        <h4 style="color: var(--corpo-green);">CORPO</h4>
+                        <p style="font-size: 0.85rem; margin: 0;">Como aparece</p>
+                    </div>
+                    
+                    <div class="process-arrow">→</div>
+                    
+                    <div class="process-step" style="border-top: 5px solid var(--vida-red);">
+                        <div style="font-size: 3rem; margin-bottom: 0.5rem;">❤️</div>
+                        <h4 style="color: var(--vida-red);">VIDA</h4>
+                        <p style="font-size: 0.85rem; margin: 0;">Como vive no mundo</p>
+                    </div>
+                </div>
+
+                <div class="highlight-box highlight-red" style="margin-top: 3rem;">
+                    <h3>🎯 Objetivo Final</h3>
+                    <p style="font-size: 1.2rem;">Criar marcas que não são entidades corporativas frias, mas <strong>presenças autênticas</strong> que transformam o mundo ao seu redor.</p>
+                </div>
+            </div>
+
+            <div class="nav-arrows">
+                <button class="nav-button" onclick="previousSection()" disabled>← Anterior</button>
+                <button class="nav-button primary" onclick="nextSection()">Próximo: ALMA →</button>
+            </div>
+        </div>
+
+        <!-- Section 2: ALMA -->
+        <div class="section-wrapper" id="section-2">
+            <div class="card">
+                <span class="section-counter" style="background: var(--alma-orange);">Seção 2 de 6</span>
+                <h1 style="color: var(--alma-orange);">🔥 Capítulo 1: ALMA</h1>
+                <h2>A essência da marca</h2>
+                
+                <div class="quote-block" style="border-color: var(--alma-orange); background: linear-gradient(135deg, var(--light-orange) 0%, #fff 100%);">
+                    É o núcleo profundo. A razão de existir. O propósito verdadeiro.
+                </div>
+
+                <div class="grid-2">
+                    <div class="info-card" style="border: 3px solid var(--primary-red);">
+                        <h3>❌ Não é:</h3>
+                        <ul>
+                            <li>Missão/visão/valores emoldurados na parede</li>
+                            <li>Marketing bonito</li>
+                            <li>Slogan criativo</li>
+                        </ul>
+                    </div>
+                    <div class="info-card" style="border: 3px solid var(--alma-orange);">
+                        <h3>✅ É:</h3>
+                        <p>A resposta honesta para:</p>
+                        <p style="font-size: 1.3rem; font-weight: 700; color: var(--alma-orange); margin-top: 1rem;">
+                            "Por que diabos essa marca existe?"
+                        </p>
+                    </div>
+                </div>
+
+                <h2>Descobrindo a essência</h2>
+                <p>A essência não é inventada. É <strong style="color: var(--alma-orange);">DESCOBERTA</strong>.</p>
+                <p>Ela já existe dentro do negócio. Nosso trabalho é trazer à superfície.</p>
+
+                <!-- Exercício 1 -->
+                <div class="exercise-card">
+                    <span class="exercise-badge">✏️ EXERCÍCIO 1</span>
+                    <h4>As 5 camadas de profundidade</h4>
+                    <p>Pegue qualquer afirmação sobre o negócio. Depois pergunte "Por quê?" cinco vezes.</p>
+                    
+                    <div class="highlight-box highlight-orange">
+                        <p><strong>Exemplo:</strong></p>
+                        <ol>
+                            <li>"Vendemos café especial" → <em>Por quê?</em></li>
+                            <li>"Porque queremos que as pessoas tomem café de qualidade" → <em>Por quê?</em></li>
+                            <li>"Porque a maioria toma café ruim sem nem perceber" → <em>Por quê isso importa?</em></li>
+                            <li>"Porque os pequenos momentos do dia merecem ser melhores" → <em>Por quê?</em></li>
+                            <li>"Porque a vida é feita de pequenos momentos, e transformá-los é transformar a vida"</li>
+                        </ol>
+                        <p style="margin-top: 1.5rem; font-size: 1.2rem;"><strong>Aí está a essência:</strong> Transformar a vida através de pequenos momentos.</p>
+                    </div>
+                </div>
+
+                <!-- Exercício 2 -->
+                <div class="exercise-card">
+                    <span class="exercise-badge">✏️ EXERCÍCIO 2</span>
+                    <h4>O teste do funeral</h4>
+                    <p>Imagine que sua marca deixou de existir amanhã.</p>
+                    <ul>
+                        <li>Quem sentiria falta? Por quê?</li>
+                        <li>O que seria perdido no mundo?</li>
+                        <li>Que vazio seria deixado?</li>
+                    </ul>
+                    <div class="highlight-box highlight-red">
+                        <p><strong>Se a resposta é "nada mudaria muito", você ainda não encontrou a essência.</strong></p>
+                    </div>
+                </div>
+
+                <!-- Exercício 3 -->
+                <div class="exercise-card">
+                    <span class="exercise-badge">✏️ EXERCÍCIO 3</span>
+                    <h4>O manifesto pessoal</h4>
+                    <p>Peça ao fundador/dono para completar:</p>
+                    <ul>
+                        <li>"Eu acredito que..."</li>
+                        <li>"Eu não suporto quando..."</li>
+                        <li>"Eu sonho com um mundo onde..."</li>
+                        <li>"Eu acordo todos os dias para..."</li>
+                    </ul>
+                    <div class="highlight-box highlight-orange">
+                        <p>💡 As marcas mais autênticas refletem as convicções pessoais de quem as criou.</p>
+                    </div>
+                </div>
+
+                <h2>Construindo o propósito</h2>
+
+                <div class="grid-2">
+                    <div class="info-card" style="border: 3px solid var(--primary-red);">
+                        <h3>❌ Propósito ruim:</h3>
+                        <ul>
+                            <li>"Ser a maior empresa do setor até 2030" <em>(Isso é meta, não propósito)</em></li>
+                            <li>"Oferecer produtos de qualidade com excelência" <em>(Isso é obrigação básica)</em></li>
+                        </ul>
+                    </div>
+                    <div class="info-card" style="border: 3px solid var(--corpo-green);">
+                        <h3>✅ Propósito bom:</h3>
+                        <ul>
+                            <li>"Democratizar o acesso à educação de qualidade"</li>
+                            <li>"Provar que negócios podem regenerar o planeta"</li>
+                            <li>"Dar voz a quem nunca foi ouvido"</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="highlight-box highlight-orange">
+                    <h3>🎯 Fórmula do propósito:</h3>
+                    <p style="font-size: 1.2rem; font-weight: 700; text-align: center; margin: 1.5rem 0;">
+                        [Verbo de transformação] + [o quê/quem] + [para que impacto]
+                    </p>
+                    <p><strong>Exemplos:</strong></p>
+                    <ul>
+                        <li><strong>Empoderar</strong> pequenos produtores <strong>para que controlem seu destino</strong></li>
+                        <li><strong>Transformar</strong> a relação das pessoas com dinheiro <strong>para criar liberdade real</strong></li>
+                        <li><strong>Revelar</strong> a beleza natural de cada corpo <strong>para acabar com padrões tóxicos</strong></li>
+                    </ul>
+                </div>
+
+                <!-- Exercício 4 -->
+                <div class="exercise-card">
+                    <span class="exercise-badge">✏️ EXERCÍCIO 4</span>
+                    <h4>Encontre seu propósito</h4>
+                    <p>Complete estas frases:</p>
+                    <ol>
+                        <li>O mundo seria melhor se...</li>
+                        <li>Nós existimos para mudar...</li>
+                        <li>Nosso maior sonho é ver...</li>
+                        <li>Em 10 anos, queremos ter causado...</li>
+                        <li>Nossa obsessão é...</li>
+                    </ol>
+                    <p style="margin-top: 1.5rem;"><strong>Depois, destile em uma frase poderosa.</strong></p>
+                </div>
+
+                <h2>Definindo valores verdadeiros</h2>
+
+                <div class="highlight-box highlight-red">
+                    <p>Valores não são palavras bonitas na parede. São <strong>critérios de decisão</strong>.</p>
+                </div>
+
+                <div class="highlight-box highlight-orange">
+                    <h3>Teste dos valores reais</h3>
+                    <p>Um valor só é real se:</p>
+                    <ul class="checkbox-list">
+                        <li>Você já perdeu dinheiro defendendo ele</li>
+                        <li>Você já recusou cliente/projeto por causa dele</li>
+                        <li>Ele guia decisões difíceis do dia a dia</li>
+                        <li>Todo mundo na empresa consegue dar exemplo dele</li>
+                    </ul>
+                </div>
+
+                <h3>Como definir valores autênticos:</h3>
+                <div class="accordion">
+                    <div class="accordion-item">
+                        <div class="accordion-header" onclick="toggleAccordion(this)">
+                            <span>Passo 1: Liste 20 valores possíveis</span>
+                            <span class="accordion-icon">▼</span>
+                        </div>
+                        <div class="accordion-content">
+                            <div class="accordion-body">
+                                <p>Autenticidade, coragem, empatia, excelência, ousadia, transparência, inovação, sustentabilidade, diversidade, colaboração, integridade, criatividade, respeito, paixão, responsabilidade, simplicidade, qualidade, comunidade, impacto, liberdade...</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="accordion-item">
+                        <div class="accordion-header" onclick="toggleAccordion(this)">
+                            <span>Passo 2: Elimine os óbvios</span>
+                            <span class="accordion-icon">▼</span>
+                        </div>
+                        <div class="accordion-content">
+                            <div class="accordion-body">
+                                <p>Se TODO negócio deveria ter aquele valor, elimine.</p>
+                                <p><strong>Exemplo:</strong> "honestidade" - todo mundo deveria ser honesto, então não é um diferencial.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="accordion-item">
+                        <div class="accordion-header" onclick="toggleAccordion(this)">
+                            <span>Passo 3: Escolha 3-5 não-negociáveis</span>
+                            <span class="accordion-icon">▼</span>
+                        </div>
+                        <div class="accordion-content">
+                            <div class="accordion-body">
+                                <p>Aqueles que você defenderia mesmo custando caro.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="accordion-item">
+                        <div class="accordion-header" onclick="toggleAccordion(this)">
+                            <span>Passo 4: Traduza em comportamentos</span>
+                            <span class="accordion-icon">▼</span>
+                        </div>
+                        <div class="accordion-content">
+                            <div class="accordion-body">
+                                <p><strong>"Transparência radical"</strong> → "Compartilhamos nossos números e desafios publicamente"</p>
+                                <p><strong>"Coragem criativa"</strong> → "Apresentamos ideias ousadas mesmo com medo de rejeição"</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Exercício 5 -->
+                <div class="exercise-card">
+                    <span class="exercise-badge">✏️ EXERCÍCIO 5</span>
+                    <h4>O teste da decisão difícil</h4>
+                    <p>Pense em uma decisão difícil recente do negócio.</p>
+                    <ul>
+                        <li>Que valores guiaram essa decisão?</li>
+                        <li>Você abriu mão de algo em nome de um princípio?</li>
+                    </ul>
+                    <p style="margin-top: 1rem;"><strong>Esses são seus valores reais.</strong></p>
+                </div>
+
+                <h2>Estrutura completa da alma</h2>
+                <div class="highlight-box highlight-orange">
+                    <h3>Ao final desta fase, você deve ter:</h3>
+                    <ul class="checkbox-list">
+                        <li>Propósito claro (1 frase)</li>
+                        <li>Essência destilada (qual a verdade profunda)</li>
+                        <li>3-5 valores não-negociáveis</li>
+                        <li>Origem story (por que foi criado)</li>
+                        <li>Visão de futuro (mundo que quer criar)</li>
+                    </ul>
+                </div>
+
+                <div class="code-block">
+<strong>Exemplo completo</strong><br><br>
+Marca fictícia - "Raiz Orgânicos"<br><br>
+<br>
+<strong style="color: #FF9800;">Propósito:</strong><br>
+Reconectar famílias com a origem real da comida<br><br>
+
+<strong style="color: #FF9800;">Essência:</strong><br>
+Comida de verdade cura corpo e alma<br><br>
+
+<strong style="color: #FF9800;">Valores:</strong><br>
+• Transparência da fazenda ao prato<br>
+• Respeito pelo tempo da natureza<br>
+• Comunidade acima do lucro<br><br>
+
+<strong style="color: #FF9800;">Origem:</strong><br>
+Fundadora cresceu na roça, mudou pra cidade, adoeceu comendo <br>
+industrializados. Voltou às raízes e se curou. Quer isso pra <br>
+outras famílias.<br><br>
+
+<strong style="color: #FF9800;">Visão:</strong><br>
+Um mundo onde toda criança sabe de onde vem sua comida
+                </div>
+            </div>
+
+            <div class="nav-arrows">
+                <button class="nav-button" onclick="previousSection()">← Anterior</button>
+                <button class="nav-button primary" onclick="nextSection()">Próximo: VOZ →</button>
+            </div>
+        </div>
+
+        <!-- Section 3: VOZ -->
+        <div class="section-wrapper" id="section-3">
+            <div class="card">
+                <span class="section-counter" style="background: var(--voz-blue);">Seção 3 de 6</span>
+                <h1 style="color: var(--voz-blue);">💬 Capítulo 2: VOZ</h1>
+                <h2>Humanizando a comunicação</h2>
+                
+                <h3>De corporativo para humano</h3>
+                
+                <div class="grid-2">
+                    <div class="info-card" style="border: 3px solid var(--primary-red);">
+                        <h3>❌ Linguagem corporativa é morta:</h3>
+                        <ul>
+                            <li>"A [Empresa X] possui um portfólio diversificado de soluções"</li>
+                            <li>"Nosso compromisso é com a excelência e satisfação do cliente"</li>
+                            <li>"Através de metodologias inovadoras, buscamos agregar valor"</li>
+                        </ul>
+                    </div>
+                    <div class="info-card" style="border: 3px solid var(--corpo-green);">
+                        <h3>✅ Linguagem humana é viva:</h3>
+                        <ul>
+                            <li>"Fazemos [coisa específica] porque acreditamos em [valor]"</li>
+                            <li>"Você vai adorar isso"</li>
+                            <li>"Olha, isso aqui não é pra todo mundo. Mas se você [característica], vai se apaixonar"</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="highlight-box highlight-blue">
+                    <p style="font-size: 1.2rem;"><strong>A diferença?</strong> Parece que uma pessoa de verdade está falando.</p>
+                </div>
+
+                <h2>Construindo a brand persona</h2>
+
+                <div class="quote-block" style="border-color: var(--voz-blue); background: linear-gradient(135deg, var(--light-blue) 0%, #fff 100%);">
+                    Brand persona é responder: <strong>"Se minha marca fosse uma pessoa, quem seria?"</strong>
+                </div>
+
+                <div class="highlight-box highlight-red">
+                    <p><strong>⚠️ Importante:</strong> Não é o público-alvo. É a MARCA como pessoa.</p>
+                </div>
+
+                <!-- Exercício 6 -->
+                <div class="exercise-card">
+                    <span class="exercise-badge">✏️ EXERCÍCIO 6</span>
+                    <h4>Entrevista com a marca</h4>
+                    <p>Imagine que sua marca é uma pessoa sentada na sua frente. Pergunte:</p>
+                    
+                    <div class="accordion">
+                        <div class="accordion-item">
+                            <div class="accordion-header" onclick="toggleAccordion(this)">
+                                <span>Sobre personalidade</span>
+                                <span class="accordion-icon">▼</span>
+                            </div>
+                            <div class="accordion-content">
+                                <div class="accordion-body">
+                                    <ul>
+                                        <li>Como você se descreveria em 3 palavras?</li>
+                                        <li>Qual seu maior medo?</li>
+                                        <li>Qual sua maior alegria?</li>
+                                        <li>O que te deixa com raiva?</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="accordion-item">
+                            <div class="accordion-header" onclick="toggleAccordion(this)">
+                                <span>Sobre estilo</span>
+                                <span class="accordion-icon">▼</span>
+                            </div>
+                            <div class="accordion-content">
+                                <div class="accordion-body">
+                                    <ul>
+                                        <li>Como você se veste no dia a dia?</li>
+                                        <li>Que música toca na sua playlist?</li>
+                                        <li>Qual seu restaurante favorito? Por quê?</li>
+                                        <li>Que filme te representa?</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="accordion-item">
+                            <div class="accordion-header" onclick="toggleAccordion(this)">
+                                <span>Sobre relacionamentos</span>
+                                <span class="accordion-icon">▼</span>
+                            </div>
+                            <div class="accordion-content">
+                                <div class="accordion-body">
+                                    <ul>
+                                        <li>Como você se comporta numa festa?</li>
+                                        <li>Como são seus amigos?</li>
+                                        <li>Como você prefere se comunicar? (WhatsApp? E-mail? Ligação?)</li>
+                                        <li>Você é mais de abraçar ou apertar a mão?</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="accordion-item">
+                            <div class="accordion-header" onclick="toggleAccordion(this)">
+                                <span>Sobre valores</span>
+                                <span class="accordion-icon">▼</span>
+                            </div>
+                            <div class="accordion-content">
+                                <div class="accordion-body">
+                                    <ul>
+                                        <li>O que você nunca faria mesmo que pagassem muito?</li>
+                                        <li>Que causa você defenderia em público?</li>
+                                        <li>Como você lida com críticas?</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <h3>Template de brand persona</h3>
+
+                <div class="code-block">
+<strong style="color: var(--voz-blue);">TEMPLATE DE BRAND PERSONA</strong><br><br>
+<br>
+Nome fictício: [dê um nome humano]<br><br>
+
+Idade: [faixa etária que representaria]<br><br>
+
+Profissão: [se fosse pessoa, que trabalho teria]<br><br>
+<br>
+
+<strong>Personalidade:</strong><br><br>
+
+• Traços dominantes: [3-5 adjetivos]<br>
+• Arquétipo principal: [O mago, O rebelde, etc]<br>
+• Energia geral: [calma/intensa, introvertida/extrovertida]<br><br>
+<br>
+
+<strong>Estilo de vida:</strong><br><br>
+
+• Hobbies:<br>
+• Estilo de roupa:<br>
+• Tipo de música:<br>
+• Como passa o fim de semana:<br><br>
+<br>
+
+<strong>Na comunicação:</strong><br><br>
+
+• Tom geral: [profissional mas acessível / descontraído / provocador]<br>
+• Como começa uma conversa:<br>
+• Como despede:<br>
+• Usa emojis? Quais?<br>
+• Usa gírias? Quais?<br><br>
+<br>
+
+<strong>Valores e convicções:</strong><br><br>
+
+• Defende fortemente:<br>
+• Não tolera:<br>
+• Apoia causas:
+                </div>
+
+                <div class="highlight-box highlight-blue">
+                    <h3>Exemplo - Raiz Orgânicos:</h3>
+                    <p><strong>Nome:</strong> Rita</p>
+                    <p><strong>Idade:</strong> 38 anos</p>
+                    <p><strong>Profissão:</strong> Agricultora que virou educadora</p>
+                    
+                    <p style="margin-top: 1rem;"><strong>Personalidade:</strong> Sábia, acolhedora, autêntica, firme, calorosa</p>
+                    <p><strong>Tom:</strong> Acolhedor mas educador, nunca condescendente</p>
+                    <p><strong>Emojis:</strong> 🌱🥕🌻💚 (naturais, calorosos)</p>
+                </div>
+
+                <h2>Definindo tom de voz</h2>
+
+                <p>Tom de voz é <strong>como</strong> você diz as coisas.</p>
+
+                <div class="highlight-box highlight-blue">
+                    <h3>Exemplo: "Seu pedido chegará amanhã"</h3>
+                    <p><strong>Tom corporativo:</strong> "Informamos que seu pedido será entregue no prazo de 24h"</p>
+                    <p><strong>Tom amigável:</strong> "Boa notícia! Seu pedido chega aí amanhã 🎉"</p>
+                    <p><strong>Tom descolado:</strong> "Bora! Seu pedido cai aí amanhã 🚀"</p>
+                    <p><strong>Tom técnico:</strong> "Pedido #12345 com entrega confirmada para 29/10"</p>
+                </div>
+
+                <h3>4 dimensões do tom de voz:</h3>
+
+                <div class="grid-2">
+                    <div class="info-card">
+                        <h4>1. Formal ←→ Informal</h4>
+                        <p>Você/senhor ou tu/você? Palavras rebuscadas ou simples?</p>
+                    </div>
+                    <div class="info-card">
+                        <h4>2. Sério ←→ Divertido</h4>
+                        <p>Vai fazer piadas ou manter postura séria?</p>
+                    </div>
+                    <div class="info-card">
+                        <h4>3. Respeitoso ←→ Irreverente</h4>
+                        <p>Questiona autoridades ou respeita tradições?</p>
+                    </div>
+                    <div class="info-card">
+                        <h4>4. Direto ←→ Indireto</h4>
+                        <p>Vai direto ao ponto ou contextualiza bastante?</p>
+                    </div>
+                </div>
+
+                <!-- Exercício 7 -->
+                <div class="exercise-card">
+                    <span class="exercise-badge">✏️ EXERCÍCIO 7</span>
+                    <h4>Escolhas de tom</h4>
+                    <p>Para cada situação, escreva como sua marca responderia:</p>
+                    <ol>
+                        <li><strong>Situação 1:</strong> Cliente reclama de atraso na entrega</li>
+                        <li><strong>Situação 2:</strong> Lançamento de produto novo</li>
+                        <li><strong>Situação 3:</strong> Cliente elogia muito o produto</li>
+                        <li><strong>Situação 4:</strong> Explicar algo técnico/complicado</li>
+                        <li><strong>Situação 5:</strong> Contar que algo deu errado</li>
+                    </ol>
+                    <p style="margin-top: 1rem;"><strong>Compare as respostas. Elas têm consistência de tom?</strong></p>
+                </div>
+
+                <h2>Vocabulário da marca</h2>
+
+                <div class="highlight-box highlight-blue">
+                    <p>Toda marca deve ter:</p>
+                    <div class="grid-2" style="margin-top: 1rem;">
+                        <div>
+                            <h4 style="color: var(--corpo-green);">✅ Palavras que usa frequentemente:</h4>
+                            <ul>
+                                <li>Marcantes</li>
+                                <li>Autênticas</li>
+                                <li>Criam reconhecimento</li>
+                            </ul>
+                        </div>
+                        <div>
+                            <h4 style="color: var(--primary-red);">❌ Palavras que evita:</h4>
+                            <ul>
+                                <li>Genéricas</li>
+                                <li>Corporativas</li>
+                                <li>Inautênticas</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Exercício 8 -->
+                <div class="exercise-card">
+                    <span class="exercise-badge">✏️ EXERCÍCIO 8</span>
+                    <h4>Faça suas listas</h4>
+                    
+                    <div class="grid-2">
+                        <div>
+                            <p><strong>Palavras/frases da marca (Mínimo 10):</strong></p>
+                            <p><em>Exemplo Raiz Orgânicos:</em></p>
+                            <ul>
+                                <li>"Da terra pro seu prato"</li>
+                                <li>"Comida de verdade"</li>
+                                <li>"Raiz" (literal e metafórico)</li>
+                                <li>"Nutrir"</li>
+                                <li>"Ciclo natural"</li>
+                            </ul>
+                        </div>
+                        <div>
+                            <p><strong>Palavras proibidas (Mínimo 10):</strong></p>
+                            <p><em>Exemplo Raiz Orgânicos:</em></p>
+                            <ul>
+                                <li>"Commodities"</li>
+                                <li>"Portfólio"</li>
+                                <li>"Soluções"</li>
+                                <li>"Processos otimizados"</li>
+                                <li>"Excelência"</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <h2>Estrutura completa da voz</h2>
+                <div class="highlight-box highlight-blue">
+                    <h3>Ao final desta fase, você deve ter:</h3>
+                    <ul class="checkbox-list">
+                        <li>Brand persona detalhada</li>
+                        <li>Tom de voz definido (4 dimensões)</li>
+                        <li>Vocabulário próprio (usa e evita)</li>
+                        <li>Guia de escrita com exemplos</li>
+                        <li>Tipos de mensagem (erro, sucesso, explicação, etc)</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="nav-arrows">
+                <button class="nav-button" onclick="previousSection()">← Anterior</button>
+                <button class="nav-button primary" onclick="nextSection()">Próximo: CORPO →</button>
+            </div>
+        </div>
+
+        <!-- Section 4: CORPO -->
+        <div class="section-wrapper" id="section-4">
+            <div class="card">
+                <span class="section-counter" style="background: var(--corpo-green);">Seção 4 de 6</span>
+                <h1 style="color: var(--corpo-green);">💚 Capítulo 3: CORPO</h1>
+                <h2>Da estratégia ao visual</h2>
+                
+                <h3>Por que visual vem depois?</h3>
+
+                <div class="quote-block" style="border-color: var(--corpo-green); background: linear-gradient(135deg, var(--light-green) 0%, #fff 100%);">
+                    O visual não é a marca. É a <strong>roupa</strong> da marca.<br>
+                    E você não escolhe roupa antes de saber quem você é.
+                </div>
+
+                <div class="highlight-box highlight-red">
+                    <p>Você já viu logo "bonito" mas esquecível?</p>
+                    <p>Marca com identidade visual "profissional" mas sem personalidade?</p>
+                    <p><strong>É porque pularam direto pro visual sem construir a base.</strong></p>
+                </div>
+
+                <h2>Traduzindo personalidade em visual</h2>
+                <p>Cada escolha visual comunica algo:</p>
+
+                <div class="grid-3">
+                    <div class="info-card">
+                        <h4 style="color: var(--corpo-green);">Formas</h4>
+                        <ul style="font-size: 0.9rem;">
+                            <li>⭕ Círculos = acolhedor, suave, orgânico</li>
+                            <li>⬜ Quadrados = sólido, confiável, estruturado</li>
+                            <li>🔺 Triângulos = dinâmico, ousado, direcional</li>
+                            <li>〰️ Linhas curvas = fluido, natural, humano</li>
+                            <li>➖ Linhas retas = preciso, técnico, moderno</li>
+                        </ul>
+                    </div>
+
+                    <div class="info-card">
+                        <h4 style="color: var(--corpo-green);">Cores</h4>
+                        <ul style="font-size: 0.9rem;">
+                            <li>🔴 Vermelho = paixão, urgência, energia</li>
+                            <li>🔵 Azul = confiança, profissional, calma</li>
+                            <li>🟢 Verde = natural, crescimento, saúde</li>
+                            <li>🟡 Amarelo = alegria, otimismo, atenção</li>
+                            <li>🟣 Roxo = criatividade, luxo, espiritual</li>
+                            <li>⚫ Preto = elegância, poder, sofisticação</li>
+                        </ul>
+                    </div>
+
+                    <div class="info-card">
+                        <h4 style="color: var(--corpo-green);">Tipografia</h4>
+                        <ul style="font-size: 0.9rem;">
+                            <li><strong>Serif</strong> = clássica, tradicional, confiável</li>
+                            <li><strong>Sans-serif</strong> = moderna, limpa, acessível</li>
+                            <li><em>Script</em> = elegante, pessoal, sofisticada</li>
+                            <li><span style="font-family: Impact, sans-serif;">Display</span> = ousada, única, criativa</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Exercício 9 -->
+                <div class="exercise-card">
+                    <span class="exercise-badge">✏️ EXERCÍCIO 9</span>
+                    <h4>Moodboard da personalidade</h4>
+                    <p>Antes de criar logo, crie um moodboard que capture a <strong>personalidade</strong>.</p>
+                    
+                    <div class="highlight-box highlight-green">
+                        <p><strong>Reúna:</strong></p>
+                        <ul class="checkbox-list">
+                            <li>Fotos que transmitem a energia</li>
+                            <li>Cores que ressoam</li>
+                            <li>Texturas que representam</li>
+                            <li>Tipografias que comunicam</li>
+                            <li>Palavras-chave visuais</li>
+                        </ul>
+                        <p style="margin-top: 1rem;"><strong>O moodboard deve fazer você SENTIR a marca antes de ver qualquer logo.</strong></p>
+                    </div>
+                </div>
+
+                <h2>Briefing criativo para design</h2>
+
+                <div class="code-block">
+<strong style="color: var(--corpo-green);">BRIEFING CRIATIVO</strong><br><br>
+<br>
+
+<strong>ESSÊNCIA DA MARCA:</strong><br><br>
+
+[Resumo do Capítulo ALMA]<br><br>
+<br>
+
+<strong>PERSONALIDADE:</strong><br><br>
+
+[Brand persona do Capítulo VOZ]<br><br>
+<br>
+
+<strong>REFERÊNCIAS DE PERSONALIDADE (NÃO copiar):</strong><br><br>
+
+Marca 1: [O que gostamos da energia dela]<br><br>
+
+Marca 2: [Aspecto específico que ressoa]<br><br>
+
+Marca 3: [Elemento que captura nosso espírito]<br><br>
+<br>
+
+<strong>EVITAR:</strong><br><br>
+
+[Estilos que não representam]<br><br>
+<br>
+
+<strong>APLICAÇÕES PRINCIPAIS:</strong><br><br>
+
+[Onde a marca vai viver: digital, físico, etc]
+                </div>
+
+                <h2>Consistência visual</h2>
+
+                <div class="highlight-box highlight-green">
+                    <p style="font-size: 1.2rem; text-align: center; margin-bottom: 1.5rem;">
+                        <strong>Marca forte = consistência</strong><br>
+                        Mas consistência ≠ rigidez
+                    </p>
+                    
+                    <div class="grid-2">
+                        <div>
+                            <h4 style="color: var(--corpo-green);">✅ Elementos consistentes:</h4>
+                            <ul>
+                                <li>Paleta de cores</li>
+                                <li>Tipografia principal</li>
+                                <li>Elementos gráficos signature</li>
+                                <li>Tom visual geral</li>
+                                <li>Uso do logo</li>
+                            </ul>
+                        </div>
+                        <div>
+                            <h4 style="color: var(--voz-blue);">🔄 Elementos flexíveis:</h4>
+                            <ul>
+                                <li>Composições</li>
+                                <li>Fotos/ilustrações</li>
+                                <li>Layouts específicos</li>
+                                <li>Proporções</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <h2>Sistema de identidade visual</h2>
+                <p>Uma identidade não é só logo. É um <strong>sistema</strong> de elementos que trabalham juntos:</p>
+
+                <div class="accordion">
+                    <div class="accordion-item">
+                        <div class="accordion-header" onclick="toggleAccordion(this)">
+                            <span>Camada 1: Logo</span>
+                            <span class="accordion-icon">▼</span>
+                        </div>
+                        <div class="accordion-content">
+                            <div class="accordion-body">
+                                <ul>
+                                    <li>Principal</li>
+                                    <li>Simplificado</li>
+                                    <li>Ícone isolado</li>
+                                    <li>Versões de cor</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="accordion-item">
+                        <div class="accordion-header" onclick="toggleAccordion(this)">
+                            <span>Camada 2: Cores</span>
+                            <span class="accordion-icon">▼</span>
+                        </div>
+                        <div class="accordion-content">
+                            <div class="accordion-body">
+                                <ul>
+                                    <li>Principais (2-3 cores)</li>
+                                    <li>Secundárias (2-3 cores)</li>
+                                    <li>Neutras (cinzas, etc)</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="accordion-item">
+                        <div class="accordion-header" onclick="toggleAccordion(this)">
+                            <span>Camada 3: Tipografia</span>
+                            <span class="accordion-icon">▼</span>
+                        </div>
+                        <div class="accordion-content">
+                            <div class="accordion-body">
+                                <ul>
+                                    <li>Títulos</li>
+                                    <li>Corpo de texto</li>
+                                    <li>Destaque/call-out</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="accordion-item">
+                        <div class="accordion-header" onclick="toggleAccordion(this)">
+                            <span>Camada 4: Elementos gráficos</span>
+                            <span class="accordion-icon">▼</span>
+                        </div>
+                        <div class="accordion-content">
+                            <div class="accordion-body">
+                                <ul>
+                                    <li>Padrões</li>
+                                    <li>Ilustrações</li>
+                                    <li>Ícones</li>
+                                    <li>Texturas</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="accordion-item">
+                        <div class="accordion-header" onclick="toggleAccordion(this)">
+                            <span>Camada 5: Fotografia</span>
+                            <span class="accordion-icon">▼</span>
+                        </div>
+                        <div class="accordion-content">
+                            <div class="accordion-body">
+                                <ul>
+                                    <li>Estilo (natural, corporativa, lifestyle)</li>
+                                    <li>Paleta de cor</li>
+                                    <li>Composição</li>
+                                    <li>Mood</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <h2>Estrutura completa do corpo</h2>
+                <div class="highlight-box highlight-green">
+                    <h3>Ao final desta fase, você deve ter:</h3>
+                    <ul class="checkbox-list">
+                        <li>Identidade visual completa</li>
+                        <li>Manual de uso</li>
+                        <li>Arquivos em todos os formatos</li>
+                        <li>Aplicações em mockups</li>
+                        <li>Sistema flexível mas consistente</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="nav-arrows">
+                <button class="nav-button" onclick="previousSection()">← Anterior</button>
+                <button class="nav-button primary" onclick="nextSection()">Próximo: VIDA →</button>
+            </div>
+        </div>
+
+        <!-- Section 5: VIDA -->
+        <div class="section-wrapper" id="section-5">
+            <div class="card">
+                <span class="section-counter" style="background: var(--vida-red);">Seção 5 de 6</span>
+                <h1 style="color: var(--vida-red);">❤️ Capítulo 4: VIDA</h1>
+                <h2>Ativando a marca</h2>
+                
+                <div class="quote-block" style="border-color: var(--vida-red); background: linear-gradient(135deg, var(--light-vida-red) 0%, #fff 100%);">
+                    Você pode ter a melhor estratégia e o visual mais incrível.<br>
+                    Mas se a marca não <strong>vive</strong> no dia a dia, é só papel bonito.
+                </div>
+
+                <h3>Marca não é documento, é presença</h3>
+                <p>Marca viva está presente em cada ponto de contato.</p>
+
+                <h2>Mapeando pontos de contato</h2>
+                <p>Liste TODOS os lugares onde as pessoas encontram a marca:</p>
+
+                <div class="grid-3">
+                    <div class="info-card" style="border-top: 5px solid var(--voz-blue);">
+                        <h4 style="color: var(--voz-blue);">💻 Digital</h4>
+                        <ul>
+                            <li>Site</li>
+                            <li>Redes sociais</li>
+                            <li>E-mail</li>
+                            <li>Apps</li>
+                            <li>Anúncios</li>
+                        </ul>
+                    </div>
+
+                    <div class="info-card" style="border-top: 5px solid var(--corpo-green);">
+                        <h4 style="color: var(--corpo-green);">📦 Físico</h4>
+                        <ul>
+                            <li>Loja/escritório</li>
+                            <li>Embalagens</li>
+                            <li>Uniforme</li>
+                            <li>Materiais impressos</li>
+                            <li>Sinalizações</li>
+                        </ul>
+                    </div>
+
+                    <div class="info-card" style="border-top: 5px solid var(--alma-orange);">
+                        <h4 style="color: var(--alma-orange);">👥 Humano</h4>
+                        <ul>
+                            <li>Atendimento</li>
+                            <li>Vendas</li>
+                            <li>Pós-venda</li>
+                            <li>Eventos</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="highlight-box highlight-vida-red">
+                    <h3>Cada ponto de contato deve:</h3>
+                    <ul class="checkbox-list">
+                        <li>Refletir a personalidade</li>
+                        <li>Usar o tom de voz correto</li>
+                        <li>Aplicar identidade visual consistentemente</li>
+                        <li>Criar experiência coerente</li>
+                    </ul>
+                </div>
+
+                <!-- Exercício 10 -->
+                <div class="exercise-card">
+                    <span class="exercise-badge">✏️ EXERCÍCIO 10</span>
+                    <h4>Auditoria de marca</h4>
+                    <p>Para cada ponto de contato, pergunte:</p>
+                    <ol>
+                        <li>Está refletindo nossa essência?</li>
+                        <li>O tom de voz está correto?</li>
+                        <li>O visual está consistente?</li>
+                        <li>A experiência parece da mesma marca?</li>
+                    </ol>
+                    <p style="margin-top: 1rem;"><strong>Se a resposta é "não" pra algum ponto, você achou o que precisa ajustar.</strong></p>
+                </div>
+
+                <h2>Guia de implementação prática</h2>
+
+                <div class="accordion">
+                    <div class="accordion-item">
+                        <div class="accordion-header" onclick="toggleAccordion(this)">
+                            <span>Semana 1-2: Internalizando</span>
+                            <span class="accordion-icon">▼</span>
+                        </div>
+                        <div class="accordion-content">
+                            <div class="accordion-body">
+                                <ul class="checkbox-list">
+                                    <li>Time inteiro lê estratégia de marca</li>
+                                    <li>Workshop de imersão</li>
+                                    <li>Todos entendem essência, personalidade, valores</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="accordion-item">
+                        <div class="accordion-header" onclick="toggleAccordion(this)">
+                            <span>Semana 3-4: Padronizando</span>
+                            <span class="accordion-icon">▼</span>
+                        </div>
+                        <div class="accordion-content">
+                            <div class="accordion-body">
+                                <ul class="checkbox-list">
+                                    <li>Criar templates principais</li>
+                                    <li>Definir processos de aprovação</li>
+                                    <li>Documentar uso correto</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="accordion-item">
+                        <div class="accordion-header" onclick="toggleAccordion(this)">
+                            <span>Semana 5-6: Implementando</span>
+                            <span class="accordion-icon">▼</span>
+                        </div>
+                        <div class="accordion-content">
+                            <div class="accordion-body">
+                                <ul class="checkbox-list">
+                                    <li>Atualizar materiais existentes</li>
+                                    <li>Lançar novos pontos de contato</li>
+                                    <li>Treinar equipe</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="accordion-item">
+                        <div class="accordion-header" onclick="toggleAccordion(this)">
+                            <span>Semana 7-8: Refinando</span>
+                            <span class="accordion-icon">▼</span>
+                        </div>
+                        <div class="accordion-content">
+                            <div class="accordion-body">
+                                <ul class="checkbox-list">
+                                    <li>Ouvir feedback</li>
+                                    <li>Ajustar o que não funciona</li>
+                                    <li>Documentar aprendizados</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <h2>Mantendo a marca viva</h2>
+
+                <div class="highlight-box highlight-red">
+                    <p style="font-size: 1.2rem; text-align: center;">
+                        <strong>Marca não é projeto de 3 meses. É presença constante.</strong>
+                    </p>
+                </div>
+
+                <h3>Rituais para manter viva:</h3>
+
+                <div class="grid-3">
+                    <div class="info-card" style="border-top: 5px solid var(--corpo-green);">
+                        <h4 style="color: var(--corpo-green);">📅 Mensal</h4>
+                        <ul>
+                            <li>Revisar se comunicação está no tom</li>
+                            <li>Analisar feedback de clientes</li>
+                            <li>Ajustar o que precisa</li>
+                        </ul>
+                    </div>
+
+                    <div class="info-card" style="border-top: 5px solid var(--voz-blue);">
+                        <h4 style="color: var(--voz-blue);">📊 Trimestral</h4>
+                        <ul>
+                            <li>Workshop de alinhamento</li>
+                            <li>Atualizar materiais</li>
+                            <li>Treinar novos membros do time</li>
+                        </ul>
+                    </div>
+
+                    <div class="info-card" style="border-top: 5px solid var(--vida-red);">
+                        <h4 style="color: var(--vida-red);">📈 Anual</h4>
+                        <ul>
+                            <li>Auditoria completa de marca</li>
+                            <li>Avaliar se ainda representa</li>
+                            <li>Evoluir se necessário</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <h2>Evoluindo sem perder essência</h2>
+
+                <div class="highlight-box highlight-vida-red">
+                    <p style="font-size: 1.2rem; margin-bottom: 1.5rem;"><strong>Marcas vivas evoluem. Mas essência permanece.</strong></p>
+                    
+                    <div class="grid-2">
+                        <div>
+                            <h4 style="color: var(--corpo-green);">✅ Pode mudar:</h4>
+                            <ul>
+                                <li>Visual (refinamento)</li>
+                                <li>Canais de comunicação</li>
+                                <li>Produtos/serviços</li>
+                                <li>Táticas</li>
+                            </ul>
+                        </div>
+                        <div>
+                            <h4 style="color: var(--primary-red);">❌ Não muda:</h4>
+                            <ul>
+                                <li>Propósito</li>
+                                <li>Valores fundamentais</li>
+                                <li>Essência</li>
+                                <li>Personalidade core</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="highlight-box highlight-blue">
+                    <h3>💡 Exemplo</h3>
+                    <p>Apple sempre foi sobre pensar diferente (essência).</p>
+                    <p>Mas produtos, visual, canais mudaram muito.</p>
+                </div>
+
+                <h2>Estrutura completa da vida</h2>
+                <div class="highlight-box highlight-vida-red">
+                    <h3>Ao final desta fase, você deve ter:</h3>
+                    <ul class="checkbox-list">
+                        <li>Marca ativa em todos pontos de contato</li>
+                        <li>Time alinhado e capacitado</li>
+                        <li>Processos de manutenção</li>
+                        <li>Sistema de evolução</li>
+                        <li>Presença consistente e reconhecível</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="nav-arrows">
+                <button class="nav-button" onclick="previousSection()">← Anterior</button>
+                <button class="nav-button primary" onclick="nextSection()">Conclusão →</button>
+            </div>
+        </div>
+
+        <!-- Section 6: Conclusão -->
+        <div class="section-wrapper" id="section-6">
+            <div class="card">
+                <span class="section-counter">Seção 6 de 6</span>
+                <h1>🎯 Conclusão</h1>
+                
+                <h2>Os 4 pilares em resumo</h2>
+
+                <div class="grid-2">
+                    <div class="pilar-card alma">
+                        <div class="pilar-icon">🔥</div>
+                        <div class="pilar-title">ALMA</div>
+                        <p>Essência, propósito, valores</p>
+                        <p style="font-weight: 600; margin-top: 1rem;">→ Responde: "Por que existimos?"</p>
+                    </div>
+
+                    <div class="pilar-card voz">
+                        <div class="pilar-icon">💬</div>
+                        <div class="pilar-title">VOZ</div>
+                        <p>Personalidade, tom, vocabulário</p>
+                        <p style="font-weight: 600; margin-top: 1rem;">→ Responde: "Como nos expressamos?"</p>
+                    </div>
+
+                    <div class="pilar-card corpo">
+                        <div class="pilar-icon">💚</div>
+                        <div class="pilar-title">CORPO</div>
+                        <p>Identidade visual, sistema</p>
+                        <p style="font-weight: 600; margin-top: 1rem;">→ Responde: "Como nos mostramos?"</p>
+                    </div>
+
+                    <div class="pilar-card vida">
+                        <div class="pilar-icon">❤️</div>
+                        <div class="pilar-title">VIDA</div>
+                        <p>Ativação, presença, consistência</p>
+                        <p style="font-weight: 600; margin-top: 1rem;">→ Responde: "Como vivemos no dia a dia?"</p>
+                    </div>
+                </div>
+
+                <h2>Checklist de implementação completa</h2>
+                <p>Use este checklist para garantir que não esqueceu nada:</p>
+
+                <div class="accordion">
+                    <div class="accordion-item">
+                        <div class="accordion-header" onclick="toggleAccordion(this)">
+                            <span style="color: var(--alma-orange);">🔥 ALMA</span>
+                            <span class="accordion-icon">▼</span>
+                        </div>
+                        <div class="accordion-content">
+                            <div class="accordion-body">
+                                <ul class="checkbox-list">
+                                    <li>Propósito definido</li>
+                                    <li>Essência destilada</li>
+                                    <li>Valores não-negociáveis (3-5)</li>
+                                    <li>Origem story documentada</li>
+                                    <li>Visão de futuro clara</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="accordion-item">
+                        <div class="accordion-header" onclick="toggleAccordion(this)">
+                            <span style="color: var(--voz-blue);">💬 VOZ</span>
+                            <span class="accordion-icon">▼</span>
+                        </div>
+                        <div class="accordion-content">
+                            <div class="accordion-body">
+                                <ul class="checkbox-list">
+                                    <li>Brand persona completa</li>
+                                    <li>Tom de voz definido (4 dimensões)</li>
+                                    <li>Vocabulário da marca (usa e evita)</li>
+                                    <li>Guia de escrita com exemplos</li>
+                                    <li>Mensagens-tipo escritas</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="accordion-item">
+                        <div class="accordion-header" onclick="toggleAccordion(this)">
+                            <span style="color: var(--corpo-green);">💚 CORPO</span>
+                            <span class="accordion-icon">▼</span>
+                        </div>
+                        <div class="accordion-content">
+                            <div class="accordion-body">
+                                <ul class="checkbox-list">
+                                    <li>Logo e variações</li>
+                                    <li>Paleta de cores (primária + secundária)</li>
+                                    <li>Tipografia (títulos + texto)</li>
+                                    <li>Elementos gráficos</li>
+                                    <li>Estilo fotográfico</li>
+                                    <li>Manual de marca</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="accordion-item">
+                        <div class="accordion-header" onclick="toggleAccordion(this)">
+                            <span style="color: var(--vida-red);">❤️ VIDA</span>
+                            <span class="accordion-icon">▼</span>
+                        </div>
+                        <div class="accordion-content">
+                            <div class="accordion-body">
+                                <ul class="checkbox-list">
+                                    <li>Pontos de contato mapeados</li>
+                                    <li>Materiais principais atualizados</li>
+                                    <li>Time treinado</li>
+                                    <li>Processos de manutenção</li>
+                                    <li>Presença consistente</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <h2>O que fazer agora</h2>
+
+                <div class="grid-2">
+                    <div class="info-card" style="border: 3px solid var(--primary-red);">
+                        <div class="info-card-icon">1️⃣</div>
+                        <h4>Escolha um projeto</h4>
+                        <p>Seu ou de cliente</p>
+                    </div>
+
+                    <div class="info-card" style="border: 3px solid var(--alma-orange);">
+                        <div class="info-card-icon">2️⃣</div>
+                        <h4>Aplique na ordem</h4>
+                        <p>Não pule etapas: Alma → Voz → Corpo → Vida</p>
+                    </div>
+
+                    <div class="info-card" style="border: 3px solid var(--voz-blue);">
+                        <div class="info-card-icon">3️⃣</div>
+                        <h4>Use os exercícios</h4>
+                        <p>Cada exercício existe por um motivo. Faça todos.</p>
+                    </div>
+
+                    <div class="info-card" style="border: 3px solid var(--corpo-green);">
+                        <div class="info-card-icon">4️⃣</div>
+                        <h4>Documente tudo</h4>
+                        <p>Estratégia só funciona se sair da sua cabeça pro papel</p>
+                    </div>
+
+                    <div class="info-card" style="border: 3px solid var(--vida-red);">
+                        <div class="info-card-icon">5️⃣</div>
+                        <h4>Implemente consistentemente</h4>
+                        <p>Marca viva requer presença constante</p>
+                    </div>
+                </div>
+
+                <div style="background: linear-gradient(135deg, #d03242 0%, #a9232e 100%); border-radius: 24px; padding: 3rem 2rem; color: white; box-shadow: 0 12px 40px rgba(208, 50, 66, 0.4); margin: 3rem 0; text-align: center;">
+                    <h2 style="color: white; margin-bottom: 1.5rem; font-size: 2rem;">Uma última reflexão</h2>
+                    
+                    <div style="background: rgba(255,255,255,0.15); backdrop-filter: blur(10px); border-radius: 16px; padding: 2rem; margin: 2rem 0; border: 2px solid rgba(255,255,255,0.3);">
+                        <p style="font-size: 1.3rem; margin-bottom: 1rem; color: white;">Marcas genéricas saturam o mercado.</p>
+                        <p style="font-size: 1.3rem; color: white;">Marcas vivas transformam ele.</p>
+                    </div>
+                    
+                    <p style="font-size: 1.1rem; line-height: 1.8; color: rgba(255,255,255,0.95); margin: 1.5rem 0;">
+                        A diferença está em fazer o trabalho profundo de descobrir a essência antes de desenhar um logo.
+                    </p>
+                    
+                    <p style="font-size: 1.1rem; line-height: 1.8; color: rgba(255,255,255,0.95);">
+                        É mais trabalhoso? <strong>Sim.</strong><br>
+                        Demora mais? <strong>Um pouco.</strong><br>
+                        Vale a pena? <strong style="font-size: 1.3rem;">Absolutamente.</strong>
+                    </p>
+                    
+                    <div style="background: rgba(255, 215, 0, 0.2); border: 3px solid rgba(255, 215, 0, 0.5); border-radius: 16px; padding: 2rem; margin: 2rem 0;">
+                        <p style="font-size: 1.2rem; font-weight: 700; color: white;">
+                            Porque no final você não tem só "mais uma marca".<br>
+                            Você tem uma <span style="color: #FFD700;">PRESENÇA</span> que as pessoas se conectam.
+                        </p>
+                    </div>
+                    
+                    <p style="font-size: 1.4rem; font-weight: 800; color: white; margin-top: 2rem;">
+                        E isso muda tudo.
+                    </p>
+                </div>
+
+                <div class="cover-section" style="margin-top: 4rem;">
+                    <div class="cover-icon">
+                        <img src="https://i.ibb.co/spdbH23w/Tuquinha-sobre-n-s-manifesto.png" alt="Tuquinha - Metodologia Branding Vivo">
+                    </div>
+                    <h1 class="cover-title">Bora transformar marcas em personalidades?</h1>
+                    <p class="cover-subtitle">
+                        Marcas vivas. Conexões reais.<br>
+                        <strong>Agência Tuca</strong>
+                    </p>
+                    <button class="cover-cta" onclick="goToSection(0)">
+                        Voltar ao Início
+                        <span>↺</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="nav-arrows">
+                <button class="nav-button" onclick="previousSection()">← Anterior</button>
+                <button class="nav-button" onclick="goToSection(0)">Voltar ao Início 🏠</button>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        let currentSection = 0;
+        const totalSections = 7;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(() => {
+                document.getElementById('loading').classList.add('hide');
+            }, 1000);
+
+            updateNavigation();
+            updateProgressBar();
+            
+            let lastScroll = 0;
+            window.addEventListener('scroll', () => {
+                const currentScroll = window.pageYOffset;
+                const header = document.getElementById('header');
+                
+                if (currentScroll > lastScroll && currentScroll > 100) {
+                    header.classList.add('hidden');
+                } else {
+                    header.classList.remove('hidden');
+                }
+                lastScroll = currentScroll;
+            });
+        });
+
+        function goToSection(sectionIndex) {
+            document.getElementById(`section-${currentSection}`).classList.remove('active');
+            currentSection = sectionIndex;
+            document.getElementById(`section-${currentSection}`).classList.add('active');
+            
+            updateNavigation();
+            updateProgressBar();
+            
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+
+            document.getElementById('navMenu').classList.remove('active');
+        }
+
+        function nextSection() {
+            if (currentSection < totalSections - 1) {
+                goToSection(currentSection + 1);
+            }
+        }
+
+        function previousSection() {
+            if (currentSection > 0) {
+                goToSection(currentSection - 1);
+            }
+        }
+
+        function updateNavigation() {
+            const navButtons = document.querySelectorAll('.nav-menu button');
+            navButtons.forEach((btn, index) => {
+                if (index === currentSection) {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                }
+            });
+        }
+
+        function updateProgressBar() {
+            const progress = (currentSection / (totalSections - 1)) * 100;
+            document.getElementById('progressBar').style.width = progress + '%';
+        }
+
+        function toggleMenu() {
+            document.getElementById('navMenu').classList.toggle('active');
+        }
+
+        function toggleAccordion(header) {
+            const item = header.parentElement;
+            const wasActive = item.classList.contains('active');
+            
+            const accordion = item.closest('.accordion');
+            accordion.querySelectorAll('.accordion-item').forEach(i => {
+                i.classList.remove('active');
+            });
+            
+            if (!wasActive) {
+                item.classList.add('active');
+            }
+        }
+
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+                nextSection();
+            } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+                previousSection();
+            }
+        });
+    </script>
+</body>
+</html>

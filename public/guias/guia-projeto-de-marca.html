@@ -1,0 +1,3574 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Guia - Projeto de Marca | Agência Tuca</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-red: #ff3b3b;
+            --dark-red: #d63031;
+            --light-red: #ff6b6b;
+            --pale-red: #ffe5e5;
+            
+            --primary-blue: #4A90E2;
+            --light-blue: #E3F2FD;
+            
+            --primary-green: #4CAF50;
+            --light-green: #E8F5E9;
+            
+            --primary-purple: #9C27B0;
+            --light-purple: #F3E5F5;
+            
+            --primary-orange: #FF9800;
+            --light-orange: #FFF3E0;
+            
+            --primary-yellow: #FFD700;
+            --light-yellow: #FFFACD;
+            
+            --dark-bg: #1a1a1a;
+            --medium-bg: #2c2c2c;
+            --light-bg: #f8f8f8;
+            
+            --text-dark: #2c2c2c;
+            --text-medium: #666;
+            --text-light: #999;
+            
+            --shadow-sm: 0 2px 8px rgba(0,0,0,0.08);
+            --shadow-md: 0 4px 16px rgba(0,0,0,0.12);
+            --shadow-lg: 0 8px 32px rgba(0,0,0,0.16);
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #d03242 0%, #a9232e 100%);
+            min-height: 100vh;
+            color: var(--text-dark);
+            overflow-x: hidden;
+        }
+
+        /* Loading Screen */
+        #loading {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #d03242 0%, #a9232e 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            transition: opacity 0.5s, visibility 0.5s;
+        }
+
+        #loading.hide {
+            opacity: 0;
+            visibility: hidden;
+        }
+
+        .loader {
+            width: 60px;
+            height: 60px;
+            border: 4px solid rgba(255,255,255,0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Header Navigation */
+        header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(10px);
+            box-shadow: var(--shadow-md);
+            z-index: 1000;
+            padding: 0;
+            transition: transform 0.3s ease;
+        }
+
+        header.hidden {
+            transform: translateY(-100%);
+        }
+
+        nav {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 1rem 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 2rem;
+        }
+
+        .logo {
+            font-family: 'Poppins', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--primary-red);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            text-decoration: none;
+        }
+
+        .logo-icon {
+            font-size: 2rem;
+        }
+
+        .nav-menu {
+            display: flex;
+            gap: 0.5rem;
+            list-style: none;
+            flex-wrap: wrap;
+            flex: 1;
+            justify-content: center;
+        }
+
+        .nav-menu li {
+            position: relative;
+        }
+
+        .nav-menu button {
+            background: none;
+            border: none;
+            padding: 0.75rem 1rem;
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: var(--text-medium);
+            cursor: pointer;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+
+        .nav-menu button:hover {
+            background: var(--light-bg);
+            color: var(--text-dark);
+        }
+
+        .nav-menu button.active {
+            background: var(--primary-red);
+            color: white;
+        }
+
+        .progress-bar {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            height: 3px;
+            background: var(--primary-red);
+            transition: width 0.3s ease;
+        }
+
+        /* Mobile Menu Toggle */
+        .menu-toggle {
+            display: none;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 0.5rem;
+        }
+
+        /* Main Container */
+        .app-container {
+            margin-top: 80px;
+            max-width: 1200px;
+            margin-left: auto;
+            margin-right: auto;
+            padding: 2rem;
+            min-height: calc(100vh - 80px);
+        }
+
+        /* Section Wrapper */
+        .section-wrapper {
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .section-wrapper.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Card Styles */
+        .card {
+            background: white;
+            border-radius: 20px;
+            padding: 2.5rem;
+            margin-bottom: 2rem;
+            box-shadow: var(--shadow-lg);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 40px rgba(0,0,0,0.2);
+        }
+
+        /* Cover Section */
+        .cover-section {
+            min-height: calc(100vh - 160px);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            background: linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0.98) 100%);
+            border-radius: 30px;
+            padding: 4rem 2rem;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .cover-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    margin-bottom: 2rem;
+}
+
+.cover-image {
+    width: 200px; /* aumenta o tamanho conforme desejar */
+    height: auto;
+    object-fit: contain;
+    border-radius: 0; /* caso queira arredondar, mude para ex: 20px */
+    animation: float 3s ease-in-out infinite;
+    filter: drop-shadow(0 10px 25px rgba(0, 0, 0, 0.15));
+}
+
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
+        }
+
+        .cover-title {
+            font-family: 'Poppins', sans-serif;
+            font-size: clamp(2.5rem, 5vw, 4rem);
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--primary-red) 0%, var(--dark-red) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 1rem;
+            line-height: 1.2;
+        }
+
+        .cover-subtitle {
+            font-size: clamp(1.2rem, 2.5vw, 1.5rem);
+            color: var(--text-medium);
+            margin-bottom: 3rem;
+            max-width: 700px;
+        }
+
+        .cover-cta {
+            display: inline-flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1.25rem 2.5rem;
+            background: var(--primary-red);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            font-size: 1.2rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 24px rgba(255, 59, 59, 0.3);
+        }
+
+        .cover-cta:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 32px rgba(255, 59, 59, 0.4);
+            background: var(--dark-red);
+        }
+
+        .cover-features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 2rem;
+            margin-top: 4rem;
+            width: 100%;
+            max-width: 900px;
+        }
+
+        .feature-item {
+            text-align: center;
+            padding: 1.5rem;
+            background: var(--light-bg);
+            border-radius: 15px;
+            transition: transform 0.3s ease;
+        }
+
+        .feature-item:hover {
+            transform: scale(1.05);
+        }
+
+        .feature-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .feature-text {
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+
+        /* Typography */
+        h1, h2, h3 {
+            font-family: 'Poppins', sans-serif;
+            font-weight: 700;
+            line-height: 1.3;
+        }
+
+        h1 {
+            font-size: clamp(2rem, 4vw, 3rem);
+            margin-bottom: 1.5rem;
+            color: var(--text-dark);
+        }
+
+        h2 {
+            font-size: clamp(1.75rem, 3vw, 2.25rem);
+            margin-bottom: 1.25rem;
+            color: var(--primary-red);
+        }
+
+        h3 {
+            font-size: clamp(1.25rem, 2vw, 1.75rem);
+            margin-bottom: 1rem;
+            color: var(--text-dark);
+        }
+
+        h4 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+            color: var(--primary-red);
+        }
+
+        p {
+            line-height: 1.7;
+            margin-bottom: 1rem;
+            color: var(--text-medium);
+            font-size: 1.05rem;
+        }
+
+        /* Highlight Boxes */
+        .highlight-box {
+            padding: 1.5rem;
+            border-radius: 12px;
+            margin: 1.5rem 0;
+            border-left: 4px solid;
+        }
+
+        .highlight-red {
+            background: var(--pale-red);
+            border-color: var(--primary-red);
+        }
+
+        .highlight-blue {
+            background: var(--light-blue);
+            border-color: var(--primary-blue);
+        }
+
+        .highlight-green {
+            background: var(--light-green);
+            border-color: var(--primary-green);
+        }
+
+        .highlight-purple {
+            background: var(--light-purple);
+            border-color: var(--primary-purple);
+        }
+
+        .highlight-orange {
+            background: var(--light-orange);
+            border-color: var(--primary-orange);
+        }
+
+        /* Lists */
+        ul, ol {
+            margin: 1.5rem 0;
+            padding-left: 2rem;
+        }
+
+        li {
+            margin: 0.75rem 0;
+            line-height: 1.7;
+            color: var(--text-medium);
+        }
+
+        /* Checkbox Lists */
+        .checkbox-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .checkbox-list li {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+            padding: 0.75rem;
+            border-radius: 8px;
+            transition: background 0.2s ease;
+        }
+
+        .checkbox-list li:hover {
+            background: var(--light-bg);
+        }
+
+        .checkbox-list li::before {
+            content: "✓";
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 24px;
+            height: 24px;
+            background: var(--primary-green);
+            color: white;
+            border-radius: 6px;
+            flex-shrink: 0;
+            font-weight: bold;
+            margin-top: 2px;
+        }
+
+        .checkbox-list.error li::before {
+            content: "✗";
+            background: var(--primary-red);
+        }
+
+        /* Grid Layouts */
+        .grid-2 {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin: 2rem 0;
+        }
+
+        .grid-3 {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+
+        /* Info Cards */
+        .info-card {
+            padding: 1.5rem;
+            border-radius: 12px;
+            background: var(--light-bg);
+            border: 2px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        .info-card:hover {
+            border-color: var(--primary-red);
+            transform: translateY(-3px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .info-card-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .info-card h4 {
+            margin-bottom: 0.5rem;
+        }
+
+        /* Quote Blocks */
+        .quote-block {
+            padding: 2rem;
+            margin: 2rem 0;
+            background: linear-gradient(135deg, var(--pale-red) 0%, #fff 100%);
+            border-left: 5px solid var(--primary-red);
+            border-radius: 0 12px 12px 0;
+            font-size: 1.25rem;
+            font-style: italic;
+            color: var(--text-dark);
+            font-weight: 500;
+        }
+
+        /* Code Blocks */
+        .code-block {
+            background: var(--dark-bg);
+            color: #fff;
+            padding: 1.5rem;
+            border-radius: 12px;
+            font-family: 'Monaco', 'Courier New', monospace;
+            font-size: 0.9rem;
+            overflow-x: auto;
+            margin: 1.5rem 0;
+        }
+
+        /* Timeline */
+        .timeline {
+            position: relative;
+            padding: 2rem 0;
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 30px;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            background: var(--primary-red);
+        }
+
+        .timeline-item {
+            position: relative;
+            padding-left: 80px;
+            margin-bottom: 2rem;
+        }
+
+        .timeline-marker {
+            position: absolute;
+            left: 17px;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: var(--primary-red);
+            border: 4px solid white;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .timeline-content {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: var(--shadow-sm);
+        }
+
+        /* Navigation Arrows */
+        .nav-arrows {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 3rem;
+            gap: 1rem;
+        }
+
+        .nav-button {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 1rem 2rem;
+            background: white;
+            border: 2px solid var(--primary-red);
+            color: var(--primary-red);
+            border-radius: 50px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .nav-button:hover:not(:disabled) {
+            background: var(--primary-red);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .nav-button:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        .nav-button.primary {
+            background: var(--primary-red);
+            color: white;
+        }
+
+        .nav-button.primary:hover {
+            background: var(--dark-red);
+        }
+
+        /* Section Counter */
+        .section-counter {
+            display: inline-block;
+            padding: 0.5rem 1.25rem;
+            background: var(--primary-red);
+            color: white;
+            border-radius: 50px;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            font-size: 0.9rem;
+        }
+
+        /* Tables */
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 2rem 0;
+            overflow: hidden;
+            border-radius: 12px;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .comparison-table th,
+        .comparison-table td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .comparison-table th {
+            background: var(--primary-red);
+            color: white;
+            font-weight: 600;
+        }
+
+        .comparison-table tr:hover {
+            background: var(--light-bg);
+        }
+
+        /* Accordion */
+        .accordion {
+            margin: 2rem 0;
+        }
+
+        .accordion-item {
+            background: white;
+            border-radius: 12px;
+            margin-bottom: 1rem;
+            overflow: hidden;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .accordion-header {
+            padding: 1.5rem;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 600;
+            color: var(--text-dark);
+            transition: background 0.3s ease;
+        }
+
+        .accordion-header:hover {
+            background: var(--light-bg);
+        }
+
+        .accordion-icon {
+            transition: transform 0.3s ease;
+        }
+
+        .accordion-item.active .accordion-icon {
+            transform: rotate(180deg);
+        }
+
+        .accordion-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+        }
+
+        .accordion-item.active .accordion-content {
+            max-height: 2000px;
+        }
+
+        .accordion-body {
+            padding: 0 1.5rem 1.5rem;
+        }
+
+        /* Tags */
+        .tag {
+            display: inline-block;
+            padding: 0.4rem 1rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin: 0.25rem;
+        }
+
+        .tag-red {
+            background: var(--pale-red);
+            color: var(--primary-red);
+        }
+
+        .tag-blue {
+            background: var(--light-blue);
+            color: var(--primary-blue);
+        }
+
+        .tag-green {
+            background: var(--light-green);
+            color: var(--primary-green);
+        }
+
+
+        /* Cards verticais da Seção 4 - Um abaixo do outro */
+        .delivery-cards-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+            margin: 2rem 0;
+        }
+
+        .delivery-cards-grid .info-card {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .delivery-cards-grid .info-card .info-card-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .delivery-cards-grid .info-card h4 {
+            margin-bottom: 0.75rem;
+        }
+
+        .delivery-cards-grid .info-card p {
+            margin-bottom: 1rem;
+        }
+
+        .delivery-cards-grid .info-card .tag {
+            margin-top: 0.5rem;
+        }
+
+        .delivery-cards-grid .info-card .toggle-button {
+            margin-top: 1rem;
+            width: 100%;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .menu-toggle {
+                display: block;
+            }
+
+            .nav-menu {
+                display: none;
+                position: absolute;
+                top: 100%;
+                left: 0;
+                right: 0;
+                background: white;
+                flex-direction: column;
+                box-shadow: var(--shadow-md);
+                padding: 1rem;
+            }
+
+            .nav-menu.active {
+                display: flex;
+            }
+
+            .nav-menu button {
+                width: 100%;
+                text-align: left;
+            }
+
+            .app-container {
+                padding: 1rem;
+            }
+
+            .card {
+                padding: 1.5rem;
+            }
+
+            .cover-section {
+                padding: 2rem 1rem;
+            }
+
+            .grid-2,
+            .grid-3 {
+                grid-template-columns: 1fr;
+            }
+
+            .nav-arrows {
+                flex-direction: column;
+            }
+
+            .nav-button {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .timeline::before {
+                left: 20px;
+            }
+
+            .timeline-item {
+                padding-left: 60px;
+            }
+
+            .timeline-marker {
+                left: 7px;
+            }
+        }
+
+        /* Print Styles */
+        @media print {
+            header {
+                position: static;
+            }
+
+            .app-container {
+                margin-top: 0;
+            }
+
+            .nav-arrows,
+            .menu-toggle {
+                display: none;
+            }
+
+            .card {
+                break-inside: avoid;
+            }
+        }
+
+        /* Animations */
+        @keyframes slideInRight {
+            from {
+                opacity: 0;
+                transform: translateX(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes slideInLeft {
+            from {
+                opacity: 0;
+                transform: translateX(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .animate-in {
+            animation: slideInRight 0.5s ease;
+        }
+
+        /* Copy Button */
+        .copy-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1.5rem;
+            background: var(--primary-blue);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .copy-button:hover {
+            background: #3a7bc8;
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .copy-button.success {
+            background: var(--primary-green);
+        }
+
+        /* Toggle Content Button */
+        .toggle-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1.5rem;
+            background: var(--primary-red);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: var(--shadow-sm);
+            margin: 1rem 0;
+        }
+
+        .toggle-button:hover {
+            background: var(--dark-red);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        /* Collapsible Content */
+        .collapsible-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.5s ease;
+        }
+
+        .collapsible-content.active {
+            max-height: 3000px;
+        }
+
+        /* Formula Visual */
+        .formula-box {
+            background: linear-gradient(135deg, var(--pale-red) 0%, #fff 100%);
+            border: 3px solid var(--primary-red);
+            border-radius: 20px;
+            padding: 2rem;
+            margin: 2rem 0;
+            text-align: center;
+        }
+
+        .formula-main {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--primary-red);
+            margin-bottom: 2rem;
+        }
+        
+        @media(max-width:767px){
+            
+        .formula-main {
+            font-size: 0.8rem;
+        }
+            
+        }
+
+        .formula-parts {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .formula-part {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: var(--shadow-sm);
+        }
+        
+        
+        @media(max-width:767px){
+            
+        .formula-part p{
+            font-size: 0.8rem;
+        }
+            
+        }
+
+        .formula-emoji {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        /* Pricing Tiers Enhanced */
+        .pricing-tier {
+            background: white;
+            border: 3px solid;
+            border-radius: 20px;
+            padding: 2rem;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .pricing-tier:hover {
+            transform: translateY(-10px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .pricing-tier.basic {
+            border-color: var(--primary-blue);
+        }
+
+        .pricing-tier.intermediate {
+            border-color: var(--primary-orange);
+        }
+
+        .pricing-tier.premium {
+            border-color: var(--primary-red);
+            background: linear-gradient(135deg, var(--pale-red) 0%, #fff 100%);
+        }
+
+        .pricing-badge {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+
+        .pricing-value-big {
+            font-size: 3rem;
+            font-weight: 800;
+            margin: 1rem 0;
+        }
+
+        /* File Structure */
+        .file-structure {
+            background: var(--dark-bg);
+            color: #a8dadc;
+            padding: 2rem;
+            border-radius: 12px;
+            font-family: 'Monaco', 'Courier New', monospace;
+            font-size: 0.9rem;
+            line-height: 1.8;
+            overflow-x: auto;
+        }
+
+        .file-structure .folder {
+            color: #f1fa8c;
+        }
+
+        .file-structure .file {
+            color: #8be9fd;
+        }
+
+        /* Presentation Cards */
+        .presentation-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem;
+            margin: 2rem 0;
+        }
+
+        .presentation-card {
+            background: white;
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: var(--shadow-md);
+            border-top: 4px solid;
+            transition: all 0.3s ease;
+        }
+
+        .presentation-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .presentation-card.strategy {
+            border-color: var(--primary-blue);
+        }
+
+        .presentation-card.verbal {
+            border-color: var(--primary-green);
+        }
+
+        .presentation-card.visual {
+            border-color: var(--primary-purple);
+        }
+
+        .presentation-card.final {
+            border-color: var(--primary-red);
+        }
+
+        .presentation-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        /* Red Background Box */
+        .red-bg-box {
+            background: linear-gradient(135deg, var(--primary-red) 0%, var(--dark-red) 100%);
+            color: white;
+            padding: 3rem 2rem;
+            border-radius: 20px;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .red-bg-box h2,
+        .red-bg-box h3,
+        .red-bg-box p {
+            color: white !important;
+        }
+
+        .red-bg-box .tag {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 2px solid white;
+        }
+
+        /* File Tree Styles for Visual Structure */
+.file-tree-container {
+    background: rgba(255, 255, 255, 0.98);
+    border-radius: 16px;
+    padding: 2rem;
+    margin-top: 1rem;
+    box-shadow: var(--shadow-md);
+}
+
+.file-tree-header {
+    margin-bottom: 1.5rem;
+    border-bottom: 2px solid #f0f0f0;
+    padding-bottom: 1rem;
+}
+
+.file-tree-header h4 {
+    font-size: 1.5rem;
+    color: #1a1a1a;
+    margin-bottom: 0.5rem;
+}
+
+.file-tree-header p {
+    color: #6b7280;
+    font-size: 0.95rem;
+}
+
+.file-tree {
+    list-style: none;
+    padding: 0;
+}
+
+.file-tree li {
+    position: relative;
+    padding: 4px 0;
+}
+
+.item {
+    display: flex;
+    align-items: center;
+    padding: 10px 12px;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.item:hover {
+    background: #f8f9fa;
+    transform: translateX(4px);
+}
+
+.icon {
+    margin-right: 10px;
+    font-size: 18px;
+    min-width: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.folder-icon {
+    color: #667eea;
+}
+
+.file-icon {
+    color: #94a3b8;
+}
+
+.item-name {
+    font-size: 14px;
+    color: #334155;
+    font-weight: 500;
+}
+
+.nested {
+    list-style: none;
+    padding-left: 28px;
+    margin-top: 4px;
+}
+
+.nested-deep {
+    padding-left: 32px;
+}
+
+.root-folder {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.root-folder:hover {
+    transform: translateX(0);
+    box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
+}
+
+.root-folder .item-name {
+    color: white;
+}
+
+.root-folder .icon {
+    color: white;
+}
+
+.file-extension {
+    margin-left: auto;
+    font-size: 11px;
+    color: #94a3b8;
+    background: #f1f5f9;
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-weight: 500;
+}
+
+.level-1 {
+    border-left: 2px solid #e2e8f0;
+    padding-left: 16px;
+    margin-left: 10px;
+}
+
+.level-2 {
+    border-left: 2px solid #e2e8f0;
+    padding-left: 16px;
+    margin-left: 10px;
+}
+
+
+        /* Scrollbar Styling */
+        ::-webkit-scrollbar {
+            width: 10px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--primary-red);
+            border-radius: 5px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--dark-red);
+        }
+        
+        
+
+/* Ajustes para Mobile - Estrutura de Arquivos */
+@media (max-width: 768px) {
+    .file-tree-container {
+        padding: 1rem;
+        overflow-x: auto;
+    }
+
+    .file-tree-header h4 {
+        font-size: 1.1rem;
+    }
+
+    .file-tree-header p {
+        font-size: 0.85rem;
+    }
+
+    .item {
+        padding: 6px 8px;
+        font-size: 0.85rem;
+    }
+
+    .icon {
+        margin-right: 6px;
+        font-size: 14px;
+        min-width: 16px;
+    }
+
+    .item-name {
+        font-size: 0.75rem;
+        word-break: break-word;
+    }
+
+    .nested {
+        padding-left: 16px;
+    }
+
+    .nested-deep {
+        padding-left: 20px;
+    }
+
+    .level-1 {
+        padding-left: 12px;
+        margin-left: 6px;
+    }
+
+    .level-2 {
+        padding-left: 12px;
+        margin-left: 6px;
+    }
+
+    .file-extension {
+        font-size: 9px;
+        padding: 2px 6px;
+        margin-left: 4px;
+    }
+
+    .root-folder {
+        margin-bottom: 0.5rem;
+    }
+
+    .root-folder .item-name {
+        font-size: 0.8rem;
+    }
+}
+    </style>
+</head>
+<body>
+    <!-- Loading Screen -->
+    <div id="loading">
+        <div class="loader"></div>
+    </div>
+
+    <!-- Header Navigation -->
+    <header id="header">
+        <nav>
+            <a href="#" class="logo" onclick="goToSection(0); return false;">
+                <span class="logo-icon">✦</span>
+                <span>Guia de Marca</span>
+            </a>
+            
+            <button class="menu-toggle" onclick="toggleMenu()">
+                ☰
+            </button>
+            
+            <ul class="nav-menu" id="navMenu">
+                <li><button onclick="goToSection(0)" data-section="0">Início</button></li>
+                <li><button onclick="goToSection(1)" data-section="1">Introdução</button></li>
+                <li><button onclick="goToSection(2)" data-section="2">Antes</button></li>
+                <li><button onclick="goToSection(3)" data-section="3">Durante</button></li>
+                <li><button onclick="goToSection(4)" data-section="4">Depois</button></li>
+                <li><button onclick="goToSection(5)" data-section="5">Erros</button></li>
+                <li><button onclick="goToSection(6)" data-section="6">Precificação</button></li>
+                <li><button onclick="goToSection(7)" data-section="7">Apresentação</button></li>
+                <li><button onclick="goToSection(8)" data-section="8">Manual</button></li>
+                <li><button onclick="goToSection(9)" data-section="9">Conclusão</button></li>
+            </ul>
+        </nav>
+        <div class="progress-bar" id="progressBar"></div>
+    </header>
+
+    <!-- Main App Container -->
+    <div class="app-container">
+        
+       <!-- Section 0: Cover/Capa -->
+<div class="section-wrapper active" id="section-0">
+    <div class="cover-section">
+        <div class="cover-icon">
+            <img src="https://i.ibb.co/spdbH23w/Tuquinha-sobre-n-s-manifesto.png" alt="Ícone da capa" class="cover-image">
+        </div>
+        <h1 class="cover-title">Guia - Projeto de Marca</h1>
+        <p class="cover-subtitle">
+            Um guia prático para entregar projetos de branding que impressionam e convertem
+        </p>
+        <button class="cover-cta" onclick="nextSection()">
+            Começar Agora
+            <span>→</span>
+        </button>
+
+        <div class="cover-features">
+            <div class="feature-item">
+                <div class="feature-icon">📋</div>
+                <div class="feature-text">9 Seções Completas</div>
+            </div>
+            <div class="feature-item">
+                <div class="feature-icon">💡</div>
+                <div class="feature-text">Dicas Práticas</div>
+            </div>
+            <div class="feature-item">
+                <div class="feature-icon">⚡</div>
+                <div class="feature-text">Resultados Rápidos</div>
+            </div>
+            <div class="feature-item">
+                <div class="feature-icon">✅</div>
+                <div class="feature-text">Checklists Prontos</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+        <!-- Section 1: Introdução -->
+        <div class="section-wrapper" id="section-1">
+            <div class="card">
+                <span class="section-counter">Seção 1 de 9</span>
+                <h1>📖 Introdução</h1>
+                
+                <div class="highlight-box highlight-red">
+                    <h3>Sobre este guia</h3>
+                    <p>Este guia une tudo que já vivenciei em anos de experiência em projetos de branding.</p>
+                    <p><strong>Não é teoria.</strong> São lições práticas de dezenas de projetos reais: os que deram certo, os que deram errado, e tudo que aprendemos no meio.</p>
+                    <p>Se você quer entregar projetos de marca com qualidade, está no lugar certo.</p>
+                </div>
+
+                <h2>O que é um "projeto perfeito"?</h2>
+                <p>Não existe perfeição. Mas existe <strong>excelência consistente</strong>.</p>
+
+                <h3>Um projeto excelente:</h3>
+                <ul class="checkbox-list">
+                    <li>Atende objetivos estratégicos do cliente</li>
+                    <li>É entregue no prazo</li>
+                    <li>Supera expectativas</li>
+                    <li>Gera indicações</li>
+                    <li>Pode ser usado no seu portfólio com orgulho</li>
+                </ul>
+
+                <h2>Anatomia de um projeto excepcional</h2>
+                <div class="grid-3">
+                    <div class="info-card">
+                        <div class="info-card-icon">🎯</div>
+                        <h4>1. Estratégia sólida</h4>
+                        <p>Base profunda, não só logo bonito</p>
+                    </div>
+                    <div class="info-card">
+                        <div class="info-card-icon">✨</div>
+                        <h4>2. Execução impecável</h4>
+                        <p>Atenção aos detalhes em cada entrega</p>
+                    </div>
+                    <div class="info-card">
+                        <div class="info-card-icon">🔧</div>
+                        <h4>3. Gestão profissional</h4>
+                        <p>Processo claro, comunicação constante</p>
+                    </div>
+                </div>
+
+                <div class="highlight-box highlight-orange">
+                    <p><strong>A maioria dos designers foca só no #1 e #2.</strong></p>
+                    <p>Mas projetos fracassam por falha no #3.</p>
+                </div>
+
+                <h2>Como este guia está estruturado</h2>
+                <div class="timeline">
+                    <div class="timeline-item">
+                        <div class="timeline-marker"></div>
+                        <div class="timeline-content">
+                            <h4>Seção 1: Antes do projeto</h4>
+                            <p>Preparação e qualificação</p>
+                        </div>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-marker"></div>
+                        <div class="timeline-content">
+                            <h4>Seção 2: Durante o projeto</h4>
+                            <p>Execução e gestão</p>
+                        </div>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-marker"></div>
+                        <div class="timeline-content">
+                            <h4>Seção 3: Depois do projeto</h4>
+                            <p>Finalização e relacionamento</p>
+                        </div>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-marker"></div>
+                        <div class="timeline-content">
+                            <h4>Seções 4-7: Ferramentas</h4>
+                            <p>Erros, precificação, apresentação e manual</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="nav-arrows">
+                <button class="nav-button" onclick="previousSection()" disabled>
+                    ← Anterior
+                </button>
+                <button class="nav-button primary" onclick="nextSection()">
+                    Próxima Seção →
+                </button>
+            </div>
+        </div>
+
+        <!-- Section 2: Antes do Projeto -->
+        <div class="section-wrapper" id="section-2">
+            <div class="card">
+                <span class="section-counter">Seção 2 de 9</span>
+                <h1>🚀 Antes do Projeto</h1>
+                
+                <h2>Qualificando o cliente</h2>
+                
+                <div class="quote-block">
+                    Nem todo cliente é cliente ideal.
+                </div>
+
+                <div class="grid-2">
+                    <div class="info-card" style="border: 3px solid var(--primary-green);">
+                        <h3>✅ Cliente Bom</h3>
+                        <ul class="checkbox-list">
+                            <li>Entende valor de branding estratégico</li>
+                            <li>Tem orçamento adequado</li>
+                            <li>Está disposto a investir tempo no processo</li>
+                            <li>Confia em profissionais</li>
+                            <li>Busca parceria, não fornecedor</li>
+                        </ul>
+                    </div>
+
+                    <div class="info-card" style="border: 3px solid var(--primary-red);">
+                        <h3>❌ Cliente Problemático</h3>
+                        <ul class="checkbox-list error">
+                            <li>"Quero só um logo rapidinho"</li>
+                            <li>"Meu sobrinho faz por R$ 200"</li>
+                            <li>"Já sei exatamente o que quero"</li>
+                            <li>"Não tenho pressa, mas precisa pra amanhã"</li>
+                            <li>Histórico de ter trocado 5 designers antes</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <h2>Pergunta-chave na primeira conversa</h2>
+                <div class="highlight-box highlight-red">
+                    <h4>🎯 Por que você está buscando um projeto de marca?</h4>
+                    <ul>
+                        <li>Por que você acha que precisa de um projeto de marca?</li>
+                        <li>Como você vê isso ajudando sua empresa hoje?</li>
+                        <li>De onde você tirou essa ideia?</li>
+                    </ul>
+                </div>
+
+                <h2>Primeira reunião estratégica</h2>
+                
+                <h3>Objetivos:</h3>
+                <div class="grid-3">
+                    <div class="tag tag-blue">Entender o negócio</div>
+                    <div class="tag tag-green">Avaliar fit</div>
+                    <div class="tag tag-red">Identificar escopo</div>
+                    <div class="tag tag-blue">Alinhar expectativas</div>
+                    <div class="tag tag-green">Gerar confiança</div>
+                </div>
+
+                <h3>Roteiro da reunião</h3>
+                <div class="accordion">
+                    <div class="accordion-item">
+                        <div class="accordion-header" onclick="toggleAccordion(this)">
+                            <span>📊 PARTE 1: Descoberta</span>
+                            <span class="accordion-icon">▼</span>
+                        </div>
+                        <div class="accordion-content">
+                            <div class="accordion-body">
+                                <p><strong>Faça perguntas como:</strong></p>
+                                <ul>
+                                    <li>Conte a história do negócio. Como começou?</li>
+                                    <li>Por que você criou isso?</li>
+                                    <li>Onde você quer estar em 3 anos?</li>
+                                    <li>Quem é seu cliente dos sonhos?</li>
+                                    <li>Qual o REAL diferencial do seu negócio?</li>
+                                    <li>Quais os principais problemas que você enfrenta?</li>
+                                    <li>Qual resultado você espera desse projeto?</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="accordion-item">
+                        <div class="accordion-header" onclick="toggleAccordion(this)">
+                            <span>🎯 PARTE 2: Expectativas</span>
+                            <span class="accordion-icon">▼</span>
+                        </div>
+                        <div class="accordion-content">
+                            <div class="accordion-body">
+                                <p><strong>Explique:</strong></p>
+                                <ul>
+                                    <li>Seu processo (timeline, etapas)</li>
+                                    <li>O que você precisa do cliente</li>
+                                    <li>O que cliente receberá (entregas específicas)</li>
+                                    <li>Como funciona aprovação e revisões</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="accordion-item">
+                        <div class="accordion-header" onclick="toggleAccordion(this)">
+                            <span>💼 PARTE 3: Proposta</span>
+                            <span class="accordion-icon">▼</span>
+                        </div>
+                        <div class="accordion-content">
+                            <div class="accordion-body">
+                                <div class="highlight-box highlight-orange">
+                                    <p><strong>Não feche na hora!</strong> Essa é uma reunião de diagnóstico. Como você quer oferecer uma solução sem antes entender o problema?</p>
+                                </div>
+                                <p>Diga:</p>
+                                <p><em>"Vou preparar uma proposta detalhada baseada na nossa conversa. Podemos agendar uma segunda call dia [dia] para lhe apresentar a proposta?"</em></p>
+                                <div class="highlight-box highlight-blue">
+                                    <p>💡 <strong>Dica:</strong> Grave a reunião. Ajuda a não esquecer detalhes e revisar depois.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="nav-arrows">
+                <button class="nav-button" onclick="previousSection()">
+                    ← Anterior
+                </button>
+                <button class="nav-button primary" onclick="nextSection()">
+                    Próxima Seção →
+                </button>
+            </div>
+        </div>
+
+        <!-- Section 3: Durante o Projeto -->
+        <div class="section-wrapper" id="section-3">
+            <div class="card">
+                <span class="section-counter">Seção 3 de 9</span>
+                <h1>⚙️ Durante o Projeto</h1>
+                
+                <h2>Kickoff memorável</h2>
+                
+                <div class="quote-block">
+                    A primeira reunião após fechamento é CRUCIAL. É aqui que define se o projeto será um sucesso ou terá complicações.
+                </div>
+
+                <h3>Objetivos do kickoff:</h3>
+                <div class="grid-3">
+                    <div class="info-card">
+                        <div class="info-card-icon">✅</div>
+                        <p>Alinhar expectativas</p>
+                    </div>
+                    <div class="info-card">
+                        <div class="info-card-icon">📋</div>
+                        <p>Apresentar processo</p>
+                    </div>
+                    <div class="info-card">
+                        <div class="info-card-icon">📊</div>
+                        <p>Coletar informações</p>
+                    </div>
+                    <div class="info-card">
+                        <div class="info-card-icon">🎉</div>
+                        <p>Gerar empolgação</p>
+                    </div>
+                    <div class="info-card">
+                        <div class="info-card-icon">💬</div>
+                        <p>Estabelecer comunicação</p>
+                    </div>
+                </div>
+
+                <h2>Estrutura de Kickoff</h2>
+                <div class="timeline">
+                    <div class="timeline-item">
+                        <div class="timeline-marker"></div>
+                        <div class="timeline-content">
+                            <h4>1. Celebração</h4>
+                            <p>"Estamos oficialmente começando! Animado com esse projeto."</p>
+                        </div>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-marker"></div>
+                        <div class="timeline-content">
+                            <h4>2. Revisão de objetivos</h4>
+                            <p>"Vamos relembrar onde queremos chegar..."</p>
+                        </div>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-marker"></div>
+                        <div class="timeline-content">
+                            <h4>3. Apresentação do processo</h4>
+                            <p>Mostre visualmente cada fase, o que acontece, quando, entregas.</p>
+                        </div>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-marker"></div>
+                        <div class="timeline-content">
+                            <h4>4. Definição de comunicação</h4>
+                            <ul>
+                                <li>Canal principal (WhatsApp/E-mail/Slack?)</li>
+                                <li>Frequência de updates</li>
+                                <li>Como pedir feedback</li>
+                                <li>Tempo de resposta esperado</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-marker"></div>
+                        <div class="timeline-content">
+                            <h4>5. Imersão profunda</h4>
+                            <p>Use as perguntas do módulo de Descoberta do Tuquinha</p>
+                            <button class="copy-button" onclick="window.open('https://www.notion.so/Dominando-o-Tuquinha29cfd646c3fc80bc8d8cd83539d0501a', '_blank')" style="margin-top: 1rem;">
+                                🔗 Acessar módulo
+                            </button>
+                        </div>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-marker"></div>
+                        <div class="timeline-content">
+                            <h4>6. Próximos passos</h4>
+                            <p>"Essa semana vou [X]. Preciso que você [Y]. Nos falamos [quando]."</p>
+                        </div>
+                    </div>
+                </div>
+
+                <h2>Comunicação estratégica</h2>
+                
+                <div class="highlight-box highlight-red">
+                    <h3>Regra de ouro</h3>
+                    <p><strong>Comunicação proativa > Reativa</strong></p>
+                </div>
+
+                <div class="grid-2">
+                    <div>
+                        <h4 style="color: var(--primary-red);">❌ NÃO FAÇA:</h4>
+                        <ul class="checkbox-list error">
+                            <li>Sumir por semanas</li>
+                            <li>Só falar quando tiver problema</li>
+                            <li>Responder dias depois</li>
+                            <li>Ser vago ("está andando")</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4 style="color: var(--primary-green);">✅ FAÇA:</h4>
+                        <ul class="checkbox-list">
+                            <li>Updates semanais (mesmo sem novidade)</li>
+                            <li>Antecipar atrasos ou mudanças</li>
+                            <li>Responder em até 24h úteis</li>
+                            <li>Ser específico</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <h3>Template de update semanal</h3>
+                <div class="highlight-box" style="background: linear-gradient(135deg, #25D366 0%, #128C7E 100%); border: none; padding: 2rem; border-radius: 20px; box-shadow: 0 8px 24px rgba(37, 211, 102, 0.3);">
+                    <div style="background: white; border-radius: 12px; padding: 1.5rem; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;">
+                        <div style="color: #075E54; font-weight: 600; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
+                            <span style="font-size: 1.5rem;">💬</span>
+                            <span>Mensagem para WhatsApp</span>
+                        </div>
+                        <div style="color: #303030; line-height: 1.6; white-space: pre-line; font-size: 0.95rem;">Oi [Nome]! Update da semana:
+
+✅ O QUE FOI FEITO:
+* Finalizamos a descoberta estratégica
+* Criamos as diretrizes de posicionamento
+* Iniciamos a construção da brand persona
+
+➡️ PRÓXIMOS PASSOS:
+* Enviarei o documento de posicionamento até quinta
+* Preciso do seu feedback até segunda que vem
+* Aí partimos para identidade verbal
+
+📅 TIMELINE: Estamos na Semana 3 de 8. No prazo!</div>
+                    </div>
+                    <div style="text-align: center; margin-top: 1rem;">
+                        <small style="color: rgba(255,255,255,0.9);">💡 Copie este template e personalize para seu cliente</small>
+                    </div>
+                </div>
+
+                <h2>Apresentações parciais</h2>
+                
+                <div class="quote-block">
+                    Não entregue tudo de uma vez só no final.
+                </div>
+
+                <h3>Apresente em fases para:</h3>
+                <div class="grid-3">
+                    <div class="tag tag-green" style="font-size: 1rem; padding: 0.75rem;">Validar direção</div>
+                    <div class="tag tag-blue" style="font-size: 1rem; padding: 0.75rem;">Evitar trabalho perdido</div>
+                    <div class="tag tag-red" style="font-size: 1rem; padding: 0.75rem;">Manter cliente envolvido</div>
+                </div>
+
+                <div class="presentation-grid">
+                    <div class="presentation-card strategy">
+                        <div class="presentation-icon">🔬</div>
+                        <h4>APRESENTAÇÃO 1: Estratégia</h4>
+                        <p><strong>Apresente:</strong></p>
+                        <ul>
+                            <li>Descoberta/Análise compilada</li>
+                            <li>Posicionamento</li>
+                            <li>Recomendação</li>
+                        </ul>
+                        <p><strong>Peça:</strong></p>
+                        <ul>
+                            <li>Feedback para refinamento</li>
+                            <li>Aprovação para avançar</li>
+                        </ul>
+                    </div>
+
+                    <div class="presentation-card verbal">
+                        <div class="presentation-icon">💡</div>
+                        <h4>APRESENTAÇÃO 2: Identidade verbal</h4>
+                        <p><strong>Apresente:</strong></p>
+                        <ul>
+                            <li>Brand persona</li>
+                            <li>Tom de voz</li>
+                            <li>Manifesto</li>
+                            <li>Taglines</li>
+                            <li>Pilares</li>
+                        </ul>
+                        <p><strong>Peça:</strong></p>
+                        <ul>
+                            <li>Se ressoa</li>
+                            <li>Ajustes necessários</li>
+                            <li>Aprovação para visual</li>
+                        </ul>
+                    </div>
+
+                    <div class="presentation-card visual">
+                        <div class="presentation-icon">🎨</div>
+                        <h4>APRESENTAÇÃO 3: Conceitos visuais</h4>
+                        <p><strong>Apresente:</strong></p>
+                        <ul>
+                            <li>Moodboard com ideias de logo, tipografia, paleta</li>
+                            <li>Estilo visual a ser seguido</li>
+                            <li>Aplicações básicas</li>
+                        </ul>
+                        <p><strong>Peça:</strong></p>
+                        <ul>
+                            <li>Escolha uma direção</li>
+                            <li>Refinamentos</li>
+                            <li>Aprovação para finalizar</li>
+                        </ul>
+                    </div>
+
+                    <div class="presentation-card final">
+                        <div class="presentation-icon">😊</div>
+                        <h4>APRESENTAÇÃO 4: Identidade Visual</h4>
+                        <p><strong>Apresente:</strong></p>
+                        <ul>
+                            <li>Marca finalizada</li>
+                            <li>Manual completo</li>
+                            <li>Aplicações em contextos reais</li>
+                            <li>Próximos passos de implementação</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <h2>Lidando com mudança de escopo</h2>
+                
+                <div class="highlight-box highlight-orange">
+                    <p>Cliente sempre pede mais do que foi combinado.</p>
+                    <p><em>"Já que está fazendo, pode fazer também [coisa gigante]?"</em></p>
+                </div>
+
+                <h3>Como responder:</h3>
+                <div class="accordion">
+                    <div class="accordion-item">
+                        <div class="accordion-header" onclick="toggleAccordion(this)">
+                            <span>SE FOR PEQUENO (10-15min de trabalho)</span>
+                            <span class="accordion-icon">▼</span>
+                        </div>
+                        <div class="accordion-content">
+                            <div class="accordion-body">
+                                <p>Faça sem cobrar. Boa vontade gera fidelização.</p>
+                                <p><em>"Claro! Já incluo isso."</em></p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="accordion-item">
+                        <div class="accordion-header" onclick="toggleAccordion(this)">
+                            <span>SE FOR MÉDIO (algumas horas)</span>
+                            <span class="accordion-icon">▼</span>
+                        </div>
+                        <div class="accordion-content">
+                            <div class="accordion-body">
+                                <p>Avalie se vale fazer de graça pela relação ou se cobra.</p>
+                                <p><em>"Posso fazer sim. Não estava no escopo original, então seria +R$ [X]. Ou podemos deixar pra fase 2. O que prefere?"</em></p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="accordion-item">
+                        <div class="accordion-header" onclick="toggleAccordion(this)">
+                            <span>SE FOR GRANDE (muda projeto significativamente)</span>
+                            <span class="accordion-icon">▼</span>
+                        </div>
+                        <div class="accordion-content">
+                            <div class="accordion-body">
+                                <p>Seja firme.</p>
+                                <p><em>"Entendo que seria valioso. Mas isso muda significativamente o escopo. Posso orçar separadamente e você decide se quer adicionar?"</em></p>
+                                <div class="highlight-box highlight-red">
+                                    <p><strong>Nunca aceite mudanças grandes sem ajuste.</strong> Você ensina o cliente como te tratar.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="nav-arrows">
+                <button class="nav-button" onclick="previousSection()">
+                    ← Anterior
+                </button>
+                <button class="nav-button primary" onclick="nextSection()">
+                    Próxima Seção →
+                </button>
+            </div>
+        </div>
+
+        <!-- Section 4: Depois do Projeto -->
+        <div class="section-wrapper" id="section-4">
+            <div class="card">
+                <span class="section-counter">Seção 4 de 9</span>
+                <h1>🎁 Depois do Projeto</h1>
+                
+                <h2>Entrega final</h2>
+                
+                <div class="quote-block">
+                    Não é só enviar arquivos. É criar experiência memorável.
+                </div>
+
+                <h3>O que incluir:</h3>
+                
+                <div class="delivery-cards-grid">
+                    <div class="info-card">
+                        <div class="info-card-icon">📚</div>
+                        <h4>1. Manual de marca (PDF)</h4>
+                        <p>Documento completo e profissional</p>
+                        <span class="tag tag-red">Essencial</span>
+                        <button class="copy-button" onclick="goToSection(8)" style="margin-top: 1rem; width: 100%;">
+                            📖 Acessar modelo
+                        </button>
+                    </div>
+
+                    <div class="info-card">
+                        <div class="info-card-icon">📁</div>
+                        <h4>2. Arquivos organizados</h4>
+                        <p>Estrutura clara de pastas e arquivos</p>
+                        <span class="tag tag-red">Essencial</span>
+                        <button class="toggle-button" onclick="toggleContent('fileStructure')">
+                            👁️ Ver estrutura
+                        </button>
+                        <div id="fileStructure" class="collapsible-content">
+                            <div class="file-tree-container">
+    <div class="file-tree-header">
+        <h4>📁 Estrutura de Arquivos Finais</h4>
+        <p>Organização completa do projeto de marca</p>
+    </div>
+    
+    <ul class="file-tree">
+        <li>
+            <div class="item root-folder">
+                <span class="icon">📂</span>
+                <span class="item-name">[NOME DA MARCA] - Arquivos Finais</span>
+            </div>
+            <ul class="nested">
+                <li>
+                    <div class="item">
+                        <span class="icon folder-icon">📁</span>
+                        <span class="item-name">01_Identidade_Visual</span>
+                    </div>
+                    <ul class="nested level-1">
+                        <li>
+                            <div class="item">
+                                <span class="icon folder-icon">📁</span>
+                                <span class="item-name">Logo</span>
+                            </div>
+                            <ul class="nested level-2">
+                                <li>
+                                    <div class="item">
+                                        <span class="icon folder-icon">📁</span>
+                                        <span class="item-name">Vetorial</span>
+                                    </div>
+                                    <ul class="nested nested-deep">
+                                        <li>
+                                            <div class="item">
+                                                <span class="icon file-icon">📄</span>
+                                                <span class="item-name">Logo_Principal.ai</span>
+                                                <span class="file-extension">AI</span>
+                                            </div>
+                                        </li>
+                                        <li>
+                                            <div class="item">
+                                                <span class="icon file-icon">📄</span>
+                                                <span class="item-name">Logo_Principal.eps</span>
+                                                <span class="file-extension">EPS</span>
+                                            </div>
+                                        </li>
+                                        <li>
+                                            <div class="item">
+                                                <span class="icon file-icon">📄</span>
+                                                <span class="item-name">Logo_Principal.svg</span>
+                                                <span class="file-extension">SVG</span>
+                                            </div>
+                                        </li>
+                                    </ul>
+                                </li>
+                                <li>
+                                    <div class="item">
+                                        <span class="icon folder-icon">📁</span>
+                                        <span class="item-name">PNG</span>
+                                    </div>
+                                    <ul class="nested nested-deep">
+                                        <li>
+                                            <div class="item">
+                                                <span class="icon file-icon">🖼️</span>
+                                                <span class="item-name">Logo_Principal_RGB.png</span>
+                                                <span class="file-extension">PNG</span>
+                                            </div>
+                                        </li>
+                                        <li>
+                                            <div class="item">
+                                                <span class="icon file-icon">🖼️</span>
+                                                <span class="item-name">Logo_Principal_CMYK.png</span>
+                                                <span class="file-extension">PNG</span>
+                                            </div>
+                                        </li>
+                                        <li>
+                                            <div class="item">
+                                                <span class="icon file-icon">🖼️</span>
+                                                <span class="item-name">Logo_Preto.png</span>
+                                                <span class="file-extension">PNG</span>
+                                            </div>
+                                        </li>
+                                        <li>
+                                            <div class="item">
+                                                <span class="icon file-icon">🖼️</span>
+                                                <span class="item-name">Logo_Branco.png</span>
+                                                <span class="file-extension">PNG</span>
+                                            </div>
+                                        </li>
+                                    </ul>
+                                </li>
+                                <li>
+                                    <div class="item">
+                                        <span class="icon folder-icon">📁</span>
+                                        <span class="item-name">Variações</span>
+                                    </div>
+                                </li>
+                            </ul>
+                        </li>
+                        <li>
+                            <div class="item">
+                                <span class="icon folder-icon">📁</span>
+                                <span class="item-name">Cores</span>
+                            </div>
+                            <ul class="nested level-2">
+                                <li>
+                                    <div class="item">
+                                        <span class="icon file-icon">📕</span>
+                                        <span class="item-name">Paleta_Cores.pdf</span>
+                                        <span class="file-extension">PDF</span>
+                                    </div>
+                                </li>
+                            </ul>
+                        </li>
+                        <li>
+                            <div class="item">
+                                <span class="icon folder-icon">📁</span>
+                                <span class="item-name">Elementos_Gráficos</span>
+                            </div>
+                        </li>
+                    </ul>
+                </li>
+                <li>
+                    <div class="item">
+                        <span class="icon folder-icon">📁</span>
+                        <span class="item-name">02_Manual_de_Marca</span>
+                    </div>
+                    <ul class="nested level-1">
+                        <li>
+                            <div class="item">
+                                <span class="icon file-icon">📕</span>
+                                <span class="item-name">Manual_[MARCA]_Completo.pdf</span>
+                                <span class="file-extension">PDF</span>
+                            </div>
+                        </li>
+                        <li>
+                            <div class="item">
+                                <span class="icon file-icon">📕</span>
+                                <span class="item-name">Manual_[MARCA]_Resumido.pdf</span>
+                                <span class="file-extension">PDF</span>
+                            </div>
+                        </li>
+                    </ul>
+                </li>
+                <li>
+                    <div class="item">
+                        <span class="icon folder-icon">📁</span>
+                        <span class="item-name">03_Estratégia</span>
+                    </div>
+                    <ul class="nested level-1">
+                        <li>
+                            <div class="item">
+                                <span class="icon file-icon">📕</span>
+                                <span class="item-name">Posicionamento_Estratégico.pdf</span>
+                                <span class="file-extension">PDF</span>
+                            </div>
+                        </li>
+                        <li>
+                            <div class="item">
+                                <span class="icon file-icon">📕</span>
+                                <span class="item-name">Brand_Persona.pdf</span>
+                                <span class="file-extension">PDF</span>
+                            </div>
+                        </li>
+                        <li>
+                            <div class="item">
+                                <span class="icon file-icon">📕</span>
+                                <span class="item-name">Guia_Tom_de_Voz.pdf</span>
+                                <span class="file-extension">PDF</span>
+                            </div>
+                        </li>
+                    </ul>
+                </li>
+                <li>
+                    <div class="item">
+                        <span class="icon folder-icon">📁</span>
+                        <span class="item-name">04_Templates</span>
+                    </div>
+                    <ul class="nested level-1">
+                        <li>
+                            <div class="item">
+                                <span class="icon file-icon">🎨</span>
+                                <span class="item-name">Template_Instagram.psd</span>
+                                <span class="file-extension">PSD</span>
+                            </div>
+                        </li>
+                        <li>
+                            <div class="item">
+                                <span class="icon file-icon">📊</span>
+                                <span class="item-name">Template_Apresentação.pptx</span>
+                                <span class="file-extension">PPTX</span>
+                            </div>
+                        </li>
+                        <li>
+                            <div class="item">
+                                <span class="icon file-icon">✉️</span>
+                                <span class="item-name">Assinatura_Email.html</span>
+                                <span class="file-extension">HTML</span>
+                            </div>
+                        </li>
+                    </ul>
+                </li>
+                <li>
+                    <div class="item">
+                        <span class="icon file-icon">📝</span>
+                        <span class="item-name">LEIA-ME.txt</span>
+                        <span class="file-extension">TXT</span>
+                    </div>
+                </li>
+            </ul>
+        </li>
+    </ul>
+</div>
+
+                        </div>
+                    </div>
+
+                    <div class="info-card">
+                        <div class="info-card-icon">🎥</div>
+                        <h4>3. Vídeo de explicação</h4>
+                        <p>Guia em vídeo sobre como usar os arquivos</p>
+                        <span class="tag tag-blue">Diferencial</span>
+                    </div>
+
+                    <div class="info-card">
+                        <div class="info-card-icon">✅</div>
+                        <h4>4. Guia de implementação</h4>
+                        <p>Checklist de próximos passos</p>
+                        <span class="tag tag-green">Recomendado</span>
+                        <button class="toggle-button" onclick="toggleContent('implementationChecklist')">
+                            📋 Ver checklist
+                        </button>
+                        <div id="implementationChecklist" class="collapsible-content">
+                            <div class="highlight-box highlight-blue" style="margin-top: 1rem;">
+                                <h4>Checklist de Implementação</h4>
+                                <ul class="checkbox-list">
+                                    <li>Atualizar redes sociais</li>
+                                    <li>Atualizar email</li>
+                                    <li>Imprimir cartões</li>
+                                    <li>Atualizar site</li>
+                                    <li>Comunicar internamente</li>
+                                    <li>Lançamento externo</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <h2>Pedindo depoimento</h2>
+                
+                <div class="highlight-box highlight-blue">
+                    <p><strong>Timing é tudo.</strong> Peça logo após entrega, quando cliente está feliz.</p>
+                </div>
+
+                <h3>Como pedir:</h3>
+                <div class="highlight-box" style="background: linear-gradient(135deg, #25D366 0%, #128C7E 100%); border: none; padding: 2rem; border-radius: 20px; box-shadow: 0 8px 24px rgba(37, 211, 102, 0.3);">
+                    <div style="background: white; border-radius: 12px; padding: 1.5rem; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;">
+                        <div style="color: #075E54; font-weight: 600; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
+                            <span style="font-size: 1.5rem;">💬</span>
+                            <span>Mensagem para WhatsApp</span>
+                        </div>
+                        <div style="color: #303030; line-height: 1.6; white-space: pre-line; font-size: 0.95rem;">Ficou feliz com o resultado? 
+
+Se sim, eu adoraria um depoimento seu. Ajuda muito outros clientes a me conhecerem.
+
+Pode gravar um vídeo de 1min respondendo: 
+- Qual era seu desafio antes? 
+- Como foi trabalhar comigo? 
+- Que resultado teve? 
+
+Ou se preferir, escreve algumas linhas que eu formato.</div>
+                    </div>
+                    <div style="text-align: center; margin-top: 1rem;">
+                        <small style="color: rgba(255,255,255,0.9);">💡 Copie este template e personalize para seu cliente</small>
+                    </div>
+                </div>
+
+                <div class="highlight-box highlight-green">
+                    <p>💡 <strong>Facilite:</strong></p>
+                    <ul>
+                        <li>Dê roteiro (perguntas acima)</li>
+                        <li>Ofereça formatos (vídeo/texto/áudio)</li>
+                        <li>Mostre exemplos</li>
+                    </ul>
+                    <p><strong>70% dos clientes satisfeitos dão depoimento se você PEDIR DIREITO.</strong></p>
+                </div>
+
+                <h2>Cultivando relacionamento pós-projeto</h2>
+                
+                <div class="highlight-box highlight-red">
+                    <p><strong>Erro comum:</strong> entregar e sumir.</p>
+                </div>
+
+                <p>Cliente satisfeito é:</p>
+                <div class="grid-3">
+                    <div class="tag tag-green">Fonte de indicações</div>
+                    <div class="tag tag-blue">Possível cliente recorrente</div>
+                    <div class="tag tag-red">Promotor da sua marca</div>
+                </div>
+
+                <h3>Estratégia de follow-up:</h3>
+                <div class="timeline">
+                    <div class="timeline-item">
+                        <div class="timeline-marker"></div>
+                        <div class="timeline-content">
+                            <h4>1 semana depois</h4>
+                            <p>"E aí, conseguiu implementar? Alguma dúvida surgiu?"</p>
+                        </div>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-marker"></div>
+                        <div class="timeline-content">
+                            <h4>1 mês depois</h4>
+                            <p>"Como está sendo ter a nova marca? Já percebeu algum resultado?"</p>
+                        </div>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-marker"></div>
+                        <div class="timeline-content">
+                            <h4>3 meses depois</h4>
+                            <p>"Vi que [algo no Instagram deles]. Ficou ótimo! Se precisar de [serviço complementar], posso ajudar."</p>
+                        </div>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-marker"></div>
+                        <div class="timeline-content">
+                            <h4>Aniversário da marca</h4>
+                            <p>"Hoje faz 1 ano da [marca]! 🎉 Que trajetória, né?"</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="highlight-box highlight-purple">
+                    <p><strong>Continue nutrindo.</strong> Não precisa ser vendedor. Seja presente.</p>
+                </div>
+            </div>
+
+            <div class="nav-arrows">
+                <button class="nav-button" onclick="previousSection()">
+                    ← Anterior
+                </button>
+                <button class="nav-button primary" onclick="nextSection()">
+                    Próxima Seção →
+                </button>
+            </div>
+        </div>
+
+        <!-- Section 5: 10 Erros -->
+        <div class="section-wrapper" id="section-5">
+            <div class="card">
+                <span class="section-counter">Seção 5 de 9</span>
+                <h1>⚠️ 10 Erros que Destroem Projetos</h1>
+                
+                <div class="accordion">
+                    <!-- Erro 1 -->
+                    <div class="accordion-item">
+                        <div class="accordion-header" onclick="toggleAccordion(this)">
+                            <span>❌ Erro #1: Começar sem briefing adequado</span>
+                            <span class="accordion-icon">▼</span>
+                        </div>
+                        <div class="accordion-content">
+                            <div class="accordion-body">
+                                <div class="highlight-box highlight-red">
+                                    <p><strong>O problema:</strong> Cliente diz "quero um logo" e você já começa a desenhar.</p>
+                                    <p><strong>Por que é destrutivo:</strong> Você vai na direção errada, perde tempo, cliente fica insatisfeito, refaz 10x.</p>
+                                </div>
+                                <div class="highlight-box highlight-green">
+                                    <p><strong>A solução:</strong></p>
+                                    <ul>
+                                        <li>SEMPRE faça descoberta estratégica primeiro</li>
+                                        <li>Use perguntas detalhadas</li>
+                                        <li>Documente tudo antes de criar qualquer coisa</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Erro 2 -->
+                    <div class="accordion-item">
+                        <div class="accordion-header" onclick="toggleAccordion(this)">
+                            <span>❌ Erro #2: Não documentar combinados</span>
+                            <span class="accordion-icon">▼</span>
+                        </div>
+                        <div class="accordion-content">
+                            <div class="accordion-body">
+                                <div class="highlight-box highlight-red">
+                                    <p><strong>O problema:</strong> Tudo é verbal. "Achei que tinha pedido X", "Mas falamos Y".</p>
+                                    <p><strong>Por que é destrutivo:</strong> Conflitos, retrabalho, cliente questiona cobranças.</p>
+                                </div>
+                                <div class="highlight-box highlight-green">
+                                    <p><strong>A solução - Documente TUDO:</strong></p>
+                                    <ul class="checkbox-list">
+                                        <li>Contrato escrito</li>
+                                        <li>Escopo detalhado</li>
+                                        <li>Atas de reunião</li>
+                                        <li>Feedback por escrito</li>
+                                        <li>Mudanças em adendo</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Erro 3 -->
+                    <div class="accordion-item">
+                        <div class="accordion-header" onclick="toggleAccordion(this)">
+                            <span>❌ Erro #3: Sumir durante o projeto</span>
+                            <span class="accordion-icon">▼</span>
+                        </div>
+                        <div class="accordion-content">
+                            <div class="accordion-body">
+                                <div class="highlight-box highlight-red">
+                                    <p><strong>O problema:</strong> Cliente não sabe onde está projeto, se está andando, se você existe.</p>
+                                    <p><strong>Por que é destrutivo:</strong> Ansiedade do cliente cresce, confiança diminui, cobranças aumentam.</p>
+                                </div>
+                                <div class="highlight-box highlight-green">
+                                    <p><strong>A solução:</strong> Updates semanais proativos. Mesmo que seja: "Semana de pesquisa, apresentação vem sexta".</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Erro 4 -->
+                    <div class="accordion-item">
+                        <div class="accordion-header" onclick="toggleAccordion(this)">
+                            <span>❌ Erro #4: Aceitar todo feedback sem questionar</span>
+                            <span class="accordion-icon">▼</span>
+                        </div>
+                        <div class="accordion-content">
+                            <div class="accordion-body">
+                                <div class="highlight-box highlight-red">
+                                    <p><strong>O problema:</strong> Cliente pede "pode deixar rosa com borboletas?" Você: "Claro!"</p>
+                                    <p><strong>Por que é destrutivo:</strong> Você destrói sua própria estratégia. Resultado final é ruim. Cliente culpa você (mesmo tendo pedido).</p>
+                                </div>
+                                <div class="highlight-box highlight-green">
+                                    <p><strong>A solução:</strong> Educação gentil.</p>
+                                    <p><em>"Entendo o pedido, mas [explica por que não funciona]. Podemos [alternativa estratégica]?"</em></p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Erro 5 -->
+                    <div class="accordion-item">
+                        <div class="accordion-header" onclick="toggleAccordion(this)">
+                            <span>❌ Erro #5: Não ter processo claro</span>
+                            <span class="accordion-icon">▼</span>
+                        </div>
+                        <div class="accordion-content">
+                            <div class="accordion-body">
+                                <div class="highlight-box highlight-red">
+                                    <p><strong>O problema:</strong> Cada projeto é uma aventura. Você inventa tudo na hora.</p>
+                                    <p><strong>Por que é destrutivo:</strong> Projetos demoram demais, você esquece etapas, cliente fica perdido.</p>
+                                </div>
+                                <div class="highlight-box highlight-green">
+                                    <p><strong>A solução - Tenha processo fixo:</strong></p>
+                                    <ol>
+                                        <li>Discovery</li>
+                                        <li>Estratégia</li>
+                                        <li>Conceito</li>
+                                        <li>Refinamento</li>
+                                        <li>Entrega</li>
+                                    </ol>
+                                    <p>Mesmos passos todo projeto.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Erros 6-10 continuam no mesmo formato... -->
+                    <div class="accordion-item">
+                        <div class="accordion-header" onclick="toggleAccordion(this)">
+                            <span>❌ Erro #6: Cobrar muito barato</span>
+                            <span class="accordion-icon">▼</span>
+                        </div>
+                        <div class="accordion-content">
+                            <div class="accordion-body">
+                                <div class="highlight-box highlight-red">
+                                    <p><strong>O problema:</strong> Medo de perder cliente, você cobra mixaria.</p>
+                                    <p><strong>Por que é destrutivo:</strong> Trabalho não se paga, você fica ressentido, atrai clientes ruins, não tem tempo pra fazer bem.</p>
+                                </div>
+                                <div class="highlight-box highlight-green">
+                                    <p><strong>A solução:</strong> Precifique baseado em valor, não em tempo. (Veja próxima seção)</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="accordion-item">
+                        <div class="accordion-header" onclick="toggleAccordion(this)">
+                            <span>❌ Erro #7: Mostrar muitas opções</span>
+                            <span class="accordion-icon">▼</span>
+                        </div>
+                        <div class="accordion-content">
+                            <div class="accordion-body">
+                                <div class="highlight-box highlight-red">
+                                    <p><strong>O problema:</strong> "Fiz 10 versões de logo pra você escolher!"</p>
+                                    <p><strong>Por que é destrutivo:</strong> Cliente fica perdido, paralisa, ou pior: escolhe o pior. Você parece inseguro.</p>
+                                </div>
+                                <div class="highlight-box highlight-green">
+                                    <p><strong>A solução:</strong> Analise bem e traga A SOLUÇÃO! Com recomendação clara de que isso é o melhor e por quê.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="accordion-item">
+                        <div class="accordion-header" onclick="toggleAccordion(this)">
+                            <span>❌ Erro #8: Não educar o cliente</span>
+                            <span class="accordion-icon">▼</span>
+                        </div>
+                        <div class="accordion-content">
+                            <div class="accordion-body">
+                                <div class="highlight-box highlight-red">
+                                    <p><strong>O problema:</strong> Cliente acha que branding é "fazer logo".</p>
+                                    <p><strong>Por que é destrutivo:</strong> Ele não valoriza seu trabalho, questiona preço, pula etapas.</p>
+                                </div>
+                                <div class="highlight-box highlight-green">
+                                    <p><strong>A solução:</strong></p>
+                                    <ul>
+                                        <li>Eduque desde primeira conversa</li>
+                                        <li>Mostre diferença entre logo e marca</li>
+                                        <li>Explique valor da estratégia</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="accordion-item">
+                        <div class="accordion-header" onclick="toggleAccordion(this)">
+                            <span>❌ Erro #9: Entregar arquivos bagunçados</span>
+                            <span class="accordion-icon">▼</span>
+                        </div>
+                        <div class="accordion-content">
+                            <div class="accordion-body">
+                                <div class="highlight-box highlight-red">
+                                    <p><strong>O problema:</strong> "final-final-revisado-3-ESTEFINAL.ai". Arquivos sem organização, sem manual.</p>
+                                    <p><strong>Por que é destrutivo:</strong> Cliente não sabe usar, te liga toda hora, parece amador.</p>
+                                </div>
+                                <div class="highlight-box highlight-green">
+                                    <p><strong>A solução:</strong></p>
+                                    <ul>
+                                        <li>Organização impecável</li>
+                                        <li>Nomes claros</li>
+                                        <li>Estrutura de pastas</li>
+                                        <li>Manual explicativo</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="accordion-item">
+                        <div class="accordion-header" onclick="toggleAccordion(this)">
+                            <span>❌ Erro #10: Não pedir pagamento antes de entregar</span>
+                            <span class="accordion-icon">▼</span>
+                        </div>
+                        <div class="accordion-content">
+                            <div class="accordion-body">
+                                <div class="highlight-box highlight-red">
+                                    <p><strong>O problema:</strong> "Ah, pode me mandar os arquivos finais que eu pago depois."</p>
+                                    <p><strong>Por que é destrutivo:</strong> Cliente some. Você nunca recebe. Perdeu todo trabalho.</p>
+                                </div>
+                                <div class="highlight-box highlight-green">
+                                    <p><strong>A solução:</strong> Pagamento ANTES da entrega final. Sem exceções.</p>
+                                    <p><em>"Assim que confirmar pagamento, libero arquivos."</em></p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="nav-arrows">
+                <button class="nav-button" onclick="previousSection()">
+                    ← Anterior
+                </button>
+                <button class="nav-button primary" onclick="nextSection()">
+                    Próxima Seção →
+                </button>
+            </div>
+        </div>
+
+        <!-- Section 6: Precificação -->
+        <div class="section-wrapper" id="section-6">
+            <div class="card">
+                <span class="section-counter">Seção 6 de 9</span>
+                <h1>💰 Como Precificar Corretamente</h1>
+                
+                <h2>Precificação baseada em valor</h2>
+                
+                <div class="highlight-box highlight-red">
+                    <h3>❌ NÃO calcule por hora</h3>
+                    <p>"Cobro R$ 50/hora, projeto levou 20h, então R$ 1.000."</p>
+                    <p><strong>Errado por 3 motivos:</strong></p>
+                    <ol>
+                        <li>Penaliza você por ser rápido/eficiente</li>
+                        <li>Cliente vê como custo, não investimento</li>
+                        <li>Você nunca ganha mais mesmo entregando mais valor</li>
+                    </ol>
+                </div>
+
+                <div class="highlight-box highlight-green">
+                    <h3>✅ Calcule por VALOR gerado</h3>
+                    <p><strong>Perguntas:</strong></p>
+                    <ul>
+                        <li>Quanto cliente vai ganhar com marca forte?</li>
+                        <li>Quanto ele perde mantendo marca fraca?</li>
+                        <li>Qual impacto no negócio dele?</li>
+                    </ul>
+                </div>
+
+                <h2>Método de precificação</h2>
+                
+                <div class="formula-box">
+                    <h3>Fórmula base:</h3>
+                    <div class="formula-main">
+                        💰 PREÇO = VALOR PERCEBIDO - OBJEÇÃO
+                    </div>
+                    
+                    <div class="formula-parts">
+                        <div class="formula-part">
+                            <div class="formula-emoji">✨</div>
+                            <h4 style="color: var(--primary-green);">Valor percebido</h4>
+                            <p>Benefício potencial × Sua autoridade</p>
+                        </div>
+                        
+                        <div class="formula-part">
+                            <div class="formula-emoji">⚠️</div>
+                            <h4 style="color: var(--primary-red);">Objeção</h4>
+                            <p>Risco percebido + Esforço requerido</p>
+                        </div>
+                    </div>
+                </div>
+
+                <h2>Tiers de preço</h2>
+                
+                <div class="grid-3">
+                    <div class="pricing-tier basic">
+                        <div class="pricing-badge" style="background: var(--light-blue); color: var(--primary-blue);">🥉 Básico</div>
+                        <div class="pricing-value-big" style="color: var(--primary-blue);">R$ 2-4k</div>
+                        <h4>O que inclui:</h4>
+                        <ul style="text-align: left;">
+                            <li>Identidade Visual + manual simples</li>
+                        </ul>
+                        <div class="highlight-box highlight-blue" style="margin-top: 1.5rem;">
+                            <p><strong>Recomendado:</strong> Micro empresas</p>
+                            <p style="font-size: 0.9rem;"><em>Ex: Padarias locais, salões de beleza, consultórios</em></p>
+                        </div>
+                        <div class="highlight-box highlight-green" style="margin-top: 1rem;">
+                            <p><strong>Para:</strong> Freelancers iniciando como designer de marcas</p>
+                        </div>
+                    </div>
+
+                    <div class="pricing-tier intermediate">
+                        <div class="pricing-badge" style="background: var(--light-orange); color: var(--primary-orange);">🥈 Intermediário</div>
+                        <div class="pricing-value-big" style="color: var(--primary-orange);">R$ 5-10k</div>
+                        <h4>O que inclui:</h4>
+                        <ul style="text-align: left;">
+                            <li>Posicionamento completo</li>
+                            <li>Identidade verbal + visual</li>
+                        </ul>
+                        <div class="highlight-box highlight-orange" style="margin-top: 1.5rem;">
+                            <p><strong>Recomendado:</strong> Pequenas empresas</p>
+                            <p style="font-size: 0.9rem;"><em>Ex: E-commerces, academias, escritórios</em></p>
+                        </div>
+                        <div class="highlight-box highlight-green" style="margin-top: 1rem;">
+                            <p><strong>Para:</strong> Designers experientes em estratégia de marca</p>
+                        </div>
+                    </div>
+
+                    <div class="pricing-tier premium">
+                        <div class="pricing-badge" style="background: var(--primary-red); color: white;">🥇 Premium</div>
+                        <div class="pricing-value-big" style="color: var(--primary-red);">R$ 10k+</div>
+                        <h4>O que inclui:</h4>
+                        <ul style="text-align: left;">
+                            <li>Branding completo + naming</li>
+                            <li>Aplicações + implementação</li>
+                        </ul>
+                        <div class="highlight-box highlight-red" style="margin-top: 1.5rem;">
+                            <p><strong>Recomendado:</strong> Médias empresas e Startups</p>
+                            <p style="font-size: 0.9rem;"><em>Ex: SaaS, fintechs, agências, rebranding corporativo</em></p>
+                        </div>
+                        <div class="highlight-box highlight-green" style="margin-top: 1rem;">
+                            <p><strong>Para:</strong> Designers experientes com equipe especializada</p>
+                        </div>
+                    </div>
+                </div>
+
+                <h2>Apresente investimento, não preço</h2>
+                
+                <div class="grid-2">
+                    <div class="highlight-box highlight-red">
+                        <p>❌ "O preço é R$ 12.000"</p>
+                    </div>
+                    <div class="highlight-box highlight-green">
+                        <p>✅ "O investimento para transformar sua marca é R$ 12.000"</p>
+                    </div>
+                </div>
+
+                <p><strong>Palavra importa.</strong></p>
+
+                <h2>Mostre ROI esperado</h2>
+                
+                <div style="background: linear-gradient(135deg, #5b0000 0%, #282828 100%); border-radius: 24px; padding: 3rem 2rem; color: white; box-shadow: 0 12px 40px rgba(102, 126, 234, 0.4);">
+                    <h3 style="color: white; text-align: center; margin-bottom: 2rem; font-size: 1.8rem;">📊 Exemplo de ROI para o Cliente</h3>
+                    
+                    <div style="background: rgba(255,255,255,0.15); backdrop-filter: blur(10px); border-radius: 16px; padding: 2rem; margin-bottom: 2rem; border: 2px solid rgba(255,255,255,0.3);">
+                        <div style="text-align: center;">
+                            <div style="font-size: 3rem; font-weight: 800; margin-bottom: 1rem;">💰 R$ 12.000</div>
+                            <div style="font-size: 1.2rem; opacity: 0.9;">Investimento inicial</div>
+                        </div>
+                    </div>
+                    
+                    <div style="background: rgba(255,255,255,0.1); border-radius: 16px; padding: 2rem; margin-bottom: 2rem; border-left: 5px solid #FFD700;">
+                        <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">
+                            <span style="font-size: 2.5rem;">📈</span>
+                            <h4 style="color: white; margin: 0;">Impacto comprovado</h4>
+                        </div>
+                        <p style="color: white; margin: 0; line-height: 1.7; font-size: 1.05rem;">
+                            Pesquisas mostram que <strong style="color: #FFD700;">54% dos consumidores</strong> levam a identidade das marcas como fator extremamente relevante na decisão de compra.
+                        </p>
+                    </div>
+                    
+                    <div style="background: rgba(255,255,255,0.1); border-radius: 16px; padding: 2rem; border-left: 5px solid #fffafa;">
+                        <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem;">
+                            <span style="font-size: 2.5rem;">💡</span>
+                            <h4 style="color: white; margin: 0;">Cálculo prático</h4>
+                        </div>
+                        
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; margin-bottom: 1.5rem;">
+                            <div style="background: rgba(76, 175, 80, 0.2); padding: 1.5rem; border-radius: 12px; text-align: center;">
+                                <div style="font-size: 1.8rem; font-weight: 700; margin-bottom: 0.5rem;">+2 clientes</div>
+                                <div style="font-size: 0.9rem; opacity: 0.9;">por mês</div>
+                            </div>
+                            <div style="background: rgba(76, 175, 80, 0.2); padding: 1.5rem; border-radius: 12px; text-align: center;">
+                                <div style="font-size: 1.8rem; font-weight: 700; margin-bottom: 0.5rem;">R$ 1.500</div>
+                                <div style="font-size: 0.9rem; opacity: 0.9;">cada</div>
+                            </div>
+                            <div style="background: rgba(76, 175, 80, 0.3); padding: 1.5rem; border-radius: 12px; text-align: center; border: 2px solid rgba(76, 175, 80, 0.5);">
+                                <div style="font-size: 1.8rem; font-weight: 700; margin-bottom: 0.5rem;">R$ 3.000</div>
+                                <div style="font-size: 0.9rem; opacity: 0.9;">por mês</div>
+                            </div>
+                        </div>
+                        
+                        <div style="text-align: center; padding: 1.5rem; background: rgba(255, 215, 0, 0.2); border-radius: 12px; border: 2px dashed rgba(255, 215, 0, 0.6);">
+                            <div style="font-size: 1.3rem; margin-bottom: 0.5rem;">⏱️ <strong>Payback em 4 meses</strong></div>
+                            <div style="font-size: 1rem; opacity: 0.9;">Depois disso é lucro puro!</div>
+                        </div>
+                    </div>
+                    
+                    <div style="text-align: center; margin-top: 2rem; padding: 1.5rem; background: rgba(255,255,255,0.1); border-radius: 12px;">
+                        <p style="color: white; margin: 0; font-size: 1.1rem;">
+                            ✨ <strong>Resultado:</strong> Sua marca forte gerando R$ 3.000/mês extras = <strong style="color: #4CAF50;">R$ 36.000/ano</strong>
+                        </p>
+                    </div>
+                </div>
+
+                <h2>Quando cobrar menos</h2>
+                
+                <div class="grid-2">
+                    <div>
+                        <h4 style="color: var(--primary-green);">✅ Situações OK para desconto:</h4>
+                        <ul class="checkbox-list">
+                            <li>Primeiro projeto em novo nicho (aprendizado)</li>
+                            <li>Cliente troca serviços</li>
+                            <li>Portfolio building (case incrível)</li>
+                            <li>Cliente indicou 3+ outros</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4 style="color: var(--primary-red);">❌ NUNCA dar desconto:</h4>
+                        <ul class="checkbox-list error">
+                            <li>Só porque cliente chorou</li>
+                            <li>Porque tem "pouco" dinheiro</li>
+                            <li>Promessa de "trabalhos futuros"</li>
+                            <li>"Vai ser ótimo pro seu portfolio"</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <h2>Forma de pagamento</h2>
+                
+                <div class="accordion">
+                    <div class="accordion-item">
+                        <div class="accordion-header" onclick="toggleAccordion(this)">
+                            <span>💳 Opção 1: À vista (desconto 10%)</span>
+                            <span class="accordion-icon">▼</span>
+                        </div>
+                        <div class="accordion-content">
+                            <div class="accordion-body">
+                                <p>R$ 12.000 → R$ 10.800 à vista</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="accordion-item">
+                        <div class="accordion-header" onclick="toggleAccordion(this)">
+                            <span>📅 Opção 2: Parcelado sem juros</span>
+                            <span class="accordion-icon">▼</span>
+                        </div>
+                        <div class="accordion-content">
+                            <div class="accordion-body">
+                                <p>Entrada 40% + 30% meio + 30% final</p>
+                                <p>ou</p>
+                                <p>3x sem juros no cartão</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="accordion-item">
+                        <div class="accordion-header" onclick="toggleAccordion(this)">
+                            <span>💰 Opção 3: Parcelado com juros</span>
+                            <span class="accordion-icon">▼</span>
+                        </div>
+                        <div class="accordion-content">
+                            <div class="accordion-body">
+                                <p>Até 6x no cartão (juros da operadora)</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="highlight-box highlight-red">
+                    <h3>NUNCA:</h3>
+                    <ul class="checkbox-list error">
+                        <li>Sem sinal</li>
+                        <li>"Paga tudo no final"</li>
+                        <li>Muitas parcelas pequenas</li>
+                    </ul>
+                    <p><strong>Regra:</strong> Pelo menos 40% antes de começar efetivamente.</p>
+                </div>
+            </div>
+
+            <div class="nav-arrows">
+                <button class="nav-button" onclick="previousSection()">
+                    ← Anterior
+                </button>
+                <button class="nav-button primary" onclick="nextSection()">
+                    Próxima Seção →
+                </button>
+            </div>
+        </div>
+
+        <!-- Section 7: Apresentação -->
+        <div class="section-wrapper" id="section-7">
+            <div class="card">
+                <span class="section-counter">Seção 7 de 9</span>
+                <h1>🎤 Apresentação que Vende</h1>
+                
+                <h2>Estrutura narrativa</h2>
+                
+                <div class="quote-block">
+                    Apresentação não é "mostrar trabalho". É contar história de transformação.
+                </div>
+
+                <h3>Arco narrativo:</h3>
+                <div class="timeline">
+                    <div class="timeline-item">
+                        <div class="timeline-marker"></div>
+                        <div class="timeline-content">
+                            <h4>1. Era uma vez</h4>
+                            <p>Situação atual problemática</p>
+                        </div>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-marker"></div>
+                        <div class="timeline-content">
+                            <h4>2. Um dia</h4>
+                            <p>Decisão de mudar</p>
+                        </div>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-marker"></div>
+                        <div class="timeline-content">
+                            <h4>3. Por causa disso</h4>
+                            <p>Processo de descoberta</p>
+                        </div>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-marker"></div>
+                        <div class="timeline-content">
+                            <h4>4. Até que finalmente</h4>
+                            <p>Solução/marca</p>
+                        </div>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-marker"></div>
+                        <div class="timeline-content">
+                            <h4>5. E desde então</h4>
+                            <p>Futuro transformado</p>
+                        </div>
+                    </div>
+                </div>
+
+                <h2>Estrutura de Apresentação</h2>
+                
+                <button class="toggle-button" onclick="toggleContent('slideStructure')">
+                    📊 Ver estrutura completa
+                </button>
+                
+                <div id="slideStructure" class="collapsible-content">
+                    <div class="accordion" style="margin-top: 1rem;">
+                        <div class="accordion-item">
+                            <div class="accordion-header" onclick="toggleAccordion(this)">
+                                <span><strong>SLIDE 1-5:</strong> Introdução e Contexto</span>
+                                <span class="accordion-icon">▼</span>
+                            </div>
+                            <div class="accordion-content">
+                                <div class="accordion-body">
+                                    <h4>SLIDE 1: Título</h4>
+                                    <p>[NOME DA MARCA]<br>
+                                    Identidade e posicionamento estratégico<br>
+                                    [Sua logo/nome]<br>
+                                    [Data]</p>
+                                    
+                                    <h4>SLIDE 2: Agenda</h4>
+                                    <p>Hoje vamos ver:</p>
+                                    <ul>
+                                        <li>O desafio</li>
+                                        <li>O processo</li>
+                                        <li>A estratégia</li>
+                                        <li>A marca</li>
+                                        <li>Os próximos passos</li>
+                                    </ul>
+                                    
+                                    <h4>SLIDES 3-4: O desafio</h4>
+                                    <p><strong>O CONTEXTO:</strong> [Situação do negócio]</p>
+                                    <p><strong>O DESAFIO:</strong> [Problema específico que branding resolve]</p>
+                                    <p><strong>O OBJETIVO:</strong> [Onde querem chegar]</p>
+                                    
+                                    <h4>SLIDE 5: O processo</h4>
+                                    <p><strong>METODOLOGIA BRANDING VIVO</strong></p>
+                                    <ol>
+                                        <li>ALMA → Descobrir essência</li>
+                                        <li>VOZ → Construir personalidade</li>
+                                        <li>CORPO → Criar identidade visual</li>
+                                        <li>VIDA → Ativar a marca</li>
+                                    </ol>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="accordion-item">
+                            <div class="accordion-header" onclick="toggleAccordion(this)">
+                                <span><strong>SLIDES 6-13:</strong> Estratégia e Personalidade</span>
+                                <span class="accordion-icon">▼</span>
+                            </div>
+                            <div class="accordion-content">
+                                <div class="accordion-body">
+                                    <h4>SLIDES 6-8: Descoberta</h4>
+                                    <p><strong>O QUE DESCOBRIMOS:</strong></p>
+                                    <p><strong>PROPÓSITO:</strong> [Por que existe]</p>
+                                    <p><strong>VALORES:</strong> [O que é inegociável]</p>
+                                    <p><strong>DIFERENCIAL:</strong> [O que torna único]</p>
+                                    
+                                    <h4>SLIDE 9: Posicionamento (destaque visual)</h4>
+                                    <p>"Para [público] que [necessidade],<br>
+                                    [marca] é [categoria] que [benefício],<br>
+                                    porque [diferencial único]"</p>
+                                    <p><em>[Deixe esse slide RESPIRAR]</em></p>
+                                    
+                                    <h4>SLIDES 10-12: Personalidade</h4>
+                                    <p><strong>SE [MARCA] FOSSE UMA PESSOA...</strong></p>
+                                    <ul>
+                                        <li>[Imagem representativa]</li>
+                                        <li>[Traços de personalidade]</li>
+                                        <li>[Valores]</li>
+                                        <li>[Como se comporta]</li>
+                                    </ul>
+                                    
+                                    <h4>SLIDE 13: Manifesto (tela cheia, tipografia impactante)</h4>
+                                    <p>[Texto do manifesto]</p>
+                                    <p><em>[Deixe impactar]</em></p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="accordion-item">
+                            <div class="accordion-header" onclick="toggleAccordion(this)">
+                                <span><strong>SLIDES 14-25:</strong> Identidade Verbal e Visual</span>
+                                <span class="accordion-icon">▼</span>
+                            </div>
+                            <div class="accordion-content">
+                                <div class="accordion-body">
+                                    <h4>SLIDES 14-16: Identidade verbal</h4>
+                                    <p><strong>TOM DE VOZ:</strong> [Características]</p>
+                                    <p><strong>VOCABULÁRIO:</strong></p>
+                                    <p>Usamos: [palavras]<br>
+                                    Evitamos: [palavras]</p>
+                                    <p><strong>EXEMPLOS:</strong> [Como a marca fala em situações reais]</p>
+                                    
+                                    <h4>SLIDE 17: Transição</h4>
+                                    <p><strong>AGORA QUE TEMOS A ALMA E A VOZ...</strong><br>
+                                    VAMOS VER O CORPO.</p>
+                                    
+                                    <h4>SLIDES 18-25: Identidade visual</h4>
+                                    <ul>
+                                        <li><strong>MOODBOARD:</strong> [Visual que inspirou]</li>
+                                        <li><strong>CONSTRUÇÃO DO LOGO:</strong> [Processo/conceito]</li>
+                                        <li><strong>LOGO FINAL:</strong> [Versão principal, grande, sem texto]</li>
+                                        <li><strong>VARIAÇÕES:</strong> [Outras versões]</li>
+                                        <li><strong>CORES:</strong> [Paleta com aplicações]</li>
+                                        <li><strong>TIPOGRAFIA:</strong> [Fontes com exemplos]</li>
+                                        <li><strong>ELEMENTOS GRÁFICOS:</strong> [Padrões, ícones, etc]</li>
+                                        <li><strong>APLICAÇÕES:</strong> [Mockups em contexto real]</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="accordion-item">
+                            <div class="accordion-header" onclick="toggleAccordion(this)">
+                                <span><strong>SLIDES 26-32:</strong> Sistema Completo e Próximos Passos</span>
+                                <span class="accordion-icon">▼</span>
+                            </div>
+                            <div class="accordion-content">
+                                <div class="accordion-body">
+                                    <h4>SLIDES 26-28: Sistema completo</h4>
+                                    <p>[Mockups lindos mostrando marca em uso]</p>
+                                    <ul>
+                                        <li>Cartão de visita</li>
+                                        <li>Instagram</li>
+                                        <li>Embalagem</li>
+                                        <li>Site</li>
+                                        <li>Etc</li>
+                                    </ul>
+                                    
+                                    <h4>SLIDE 29: Manual</h4>
+                                    <p><strong>MANUAL DE MARCA</strong></p>
+                                    <p>Documento completo com:</p>
+                                    <ul>
+                                        <li>✓ Posicionamento estratégico</li>
+                                        <li>✓ Personalidade e tom de voz</li>
+                                        <li>✓ Identidade visual</li>
+                                        <li>✓ Regras de uso</li>
+                                        <li>✓ Aplicações</li>
+                                    </ul>
+                                    <p>[Preview de algumas páginas]</p>
+                                    
+                                    <h4>SLIDE 30: Antes e depois</h4>
+                                    <p>[Se aplicável, comparação do antes/depois]</p>
+                                    <p>Impacto visual de ver a transformação.</p>
+                                    
+                                    <h4>SLIDE 31: Implementação</h4>
+                                    <p><strong>PRÓXIMOS PASSOS:</strong></p>
+                                    <ul>
+                                        <li>□ Atualizar [lista específica]</li>
+                                        <li>□ Criar [o que precisa criar]</li>
+                                        <li>□ Lançar [quando/como]</li>
+                                    </ul>
+                                    <p>Posso ajudar com:</p>
+                                    <ul>
+                                        <li>Website</li>
+                                        <li>Gestão de redes</li>
+                                        <li>Materiais impressos</li>
+                                    </ul>
+                                    
+                                    <h4>SLIDE 32: Fechamento</h4>
+                                    <p><strong>É ISSO.</strong></p>
+                                    <p>[MARCA] agora tem personalidade própria,<br>
+                                    posicionamento claro e identidade forte.</p>
+                                    <p>Pronta para conquistar o mercado.</p>
+                                    <p><strong>Perguntas?</strong></p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <h2>Dicas de apresentação</h2>
+                
+                <div class="grid-2">
+                    <div>
+                        <h4 style="color: var(--primary-green);">✅ FAÇA:</h4>
+                        <ul class="checkbox-list">
+                            <li>Conte história, não leia slides</li>
+                            <li>Pause nos momentos chave</li>
+                            <li>Mostre entusiasmo</li>
+                            <li>Explique o porquê de cada escolha</li>
+                            <li>Conecte ao negócio do cliente</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4 style="color: var(--primary-red);">❌ NÃO FAÇA:</h4>
+                        <ul class="checkbox-list error">
+                            <li>Ser técnico demais</li>
+                            <li>Justificar demais</li>
+                            <li>Pedir desculpas</li>
+                            <li>Falar de kerning e detalhes técnicos</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <h2>Lidando com objeções</h2>
+                
+                <div class="accordion">
+                    <div class="accordion-item">
+                        <div class="accordion-header" onclick="toggleAccordion(this)">
+                            <span>Objeção: "Não gostei"</span>
+                            <span class="accordion-icon">▼</span>
+                        </div>
+                        <div class="accordion-content">
+                            <div class="accordion-body">
+                                <p><strong>Resposta:</strong></p>
+                                <p><em>"O que especificamente? Me ajuda a entender melhor."</em></p>
+                                <p>[Busque detalhes antes de reagir]</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="accordion-item">
+                        <div class="accordion-header" onclick="toggleAccordion(this)">
+                            <span>Objeção: "Muito ousado/diferente"</span>
+                            <span class="accordion-icon">▼</span>
+                        </div>
+                        <div class="accordion-content">
+                            <div class="accordion-body">
+                                <p><strong>Resposta:</strong></p>
+                                <p><em>"Entendo o receio. Mas lembra do nosso objetivo de [X]? Ser igual a todo mundo não vai nos levar lá. Quer que eu mostre como isso nos diferencia?"</em></p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="accordion-item">
+                        <div class="accordion-header" onclick="toggleAccordion(this)">
+                            <span>Objeção: "Queria algo mais [genérico]"</span>
+                            <span class="accordion-icon">▼</span>
+                        </div>
+                        <div class="accordion-content">
+                            <div class="accordion-body">
+                                <p><strong>Resposta:</strong></p>
+                                <p><em>"Posso fazer, mas vou te mostrar o que perdemos com isso: [Mostra comparação] Ainda quer ir por esse caminho?"</em></p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="accordion-item">
+                        <div class="accordion-header" onclick="toggleAccordion(this)">
+                            <span>Objeção: "Meu sócio/esposa não gostou"</span>
+                            <span class="accordion-icon">▼</span>
+                        </div>
+                        <div class="accordion-content">
+                            <div class="accordion-body">
+                                <p><strong>Resposta:</strong></p>
+                                <p><em>"Entendo. Que tal marcarmos call com todo mundo junto? Assim consigo explicar o raciocínio e ouvir preocupações."</em></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="nav-arrows">
+                <button class="nav-button" onclick="previousSection()">
+                    ← Anterior
+                </button>
+                <button class="nav-button primary" onclick="nextSection()">
+                    Próxima Seção →
+                </button>
+            </div>
+        </div>
+
+        <!-- Section 8: Manual de Marca -->
+        <div class="section-wrapper" id="section-8">
+            <div class="card">
+                <span class="section-counter">Seção 8 de 9</span>
+                <h1>📚 O Manual de Marca Definitivo</h1>
+                
+                <h2>Por que manual é crucial</h2>
+                
+                <div class="highlight-box highlight-purple">
+                    <p><strong>Manual de marca é:</strong></p>
+                    <ul>
+                        <li>Guia de uso para quem vai aplicar</li>
+                        <li>Documento de referência</li>
+                        <li>Garantia de consistência</li>
+                        <li>Entregável que mostra profissionalismo</li>
+                    </ul>
+                </div>
+
+                <div class="highlight-box highlight-red">
+                    <p><strong>Sem manual = marca vira bagunça em 3 meses.</strong></p>
+                </div>
+
+                <h2>Estrutura completa</h2>
+                
+                <div class="accordion">
+                    <div class="accordion-item active">
+                        <div class="accordion-header" onclick="toggleAccordion(this)">
+                            <span>📖 Índice completo do manual</span>
+                            <span class="accordion-icon">▼</span>
+                        </div>
+                        <div class="accordion-content">
+                            <div class="accordion-body">
+                                <ol>
+                                    <li><strong>INTRODUÇÃO</strong> (2-3 páginas)
+                                        <ul>
+                                            <li>Bem-vindo</li>
+                                            <li>Como usar este manual</li>
+                                            <li>Contatos</li>
+                                        </ul>
+                                    </li>
+                                    <li><strong>A MARCA</strong> (4-5 páginas)
+                                        <ul>
+                                            <li>História e propósito</li>
+                                            <li>Posicionamento estratégico</li>
+                                            <li>Valores</li>
+                                            <li>Personalidade</li>
+                                            <li>Tom de voz</li>
+                                        </ul>
+                                    </li>
+                                    <li><strong>LOGOTIPO</strong> (8-10 páginas)
+                                        <ul>
+                                            <li>Versão principal</li>
+                                            <li>Variações</li>
+                                            <li>Versões de cor</li>
+                                            <li>Área de proteção</li>
+                                            <li>Tamanho mínimo</li>
+                                            <li>Aplicações corretas</li>
+                                            <li>Aplicações incorretas</li>
+                                        </ul>
+                                    </li>
+                                    <li><strong>CORES</strong> (3-4 páginas)
+                                        <ul>
+                                            <li>Paleta principal</li>
+                                            <li>Cores secundárias</li>
+                                            <li>Especificações (RGB, CMYK, HEX, Pantone)</li>
+                                            <li>Proporções de uso</li>
+                                        </ul>
+                                    </li>
+                                    <li><strong>TIPOGRAFIA</strong> (2-3 páginas)
+                                        <ul>
+                                            <li>Tipografia principal</li>
+                                            <li>Tipografia secundária</li>
+                                            <li>Hierarquia</li>
+                                            <li>Alternativas web-safe</li>
+                                        </ul>
+                                    </li>
+                                    <li><strong>ELEMENTOS GRÁFICOS</strong> (2-4 páginas)
+                                        <ul>
+                                            <li>Padrões</li>
+                                            <li>Ilustrações</li>
+                                            <li>Ícones</li>
+                                            <li>Como usar</li>
+                                        </ul>
+                                    </li>
+                                    <li><strong>FOTOGRAFIA</strong> (2-3 páginas)
+                                        <ul>
+                                            <li>Estilo fotográfico</li>
+                                            <li>Tratamento de cor</li>
+                                            <li>Composição</li>
+                                        </ul>
+                                    </li>
+                                    <li><strong>APLICAÇÕES</strong> (5-10 páginas)
+                                        <ul>
+                                            <li>Papelaria</li>
+                                            <li>Digital</li>
+                                            <li>Sinalização</li>
+                                            <li>Outros</li>
+                                        </ul>
+                                    </li>
+                                    <li><strong>VOZ E TOM</strong> (3-4 páginas)
+                                        <ul>
+                                            <li>Características</li>
+                                            <li>Vocabulário</li>
+                                            <li>Exemplos práticos</li>
+                                        </ul>
+                                    </li>
+                                </ol>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <h2>Páginas essenciais</h2>
+                
+                <h3>Página de aplicações incorretas</h3>
+                <div class="highlight-box highlight-red">
+                    <p><strong>Mostre claramente o que NÃO fazer:</strong></p>
+                    <ul class="checkbox-list error">
+                        <li>Não distorcer o logo</li>
+                        <li>Não mudar as cores</li>
+                        <li>Não adicionar sombras</li>
+                        <li>Não usar em fundo confuso</li>
+                        <li>Não aplicar em baixa resolução</li>
+                        <li>Não modificar elementos</li>
+                    </ul>
+                    <p>Visual com exemplos ruins ajuda muito.</p>
+                </div>
+
+                <h3>Página de tom de voz - Exemplos</h3>
+                <div class="highlight-box highlight-blue">
+                    <p><strong>SITUAÇÃO:</strong> Cliente reclama de atraso</p>
+                    <p>❌ NÃO ESCREVER:</p>
+                    <p><em>"Informamos que devido a intercorrências..."</em></p>
+                    <p>✅ ESCREVER:</p>
+                    <p><em>"Oi [nome]! Tivemos um problema e seu pedido vai atrasar 2 dias. Mil desculpas! [solução]"</em></p>
+                </div>
+
+                <h2>Formato do manual</h2>
+                
+                <div class="grid-2">
+                    <div class="info-card">
+                        <div class="info-card-icon">💻</div>
+                        <h4>Digital (sempre)</h4>
+                        <ul>
+                            <li>PDF de alta qualidade</li>
+                            <li>Otimizado para tela</li>
+                            <li>Links funcionais</li>
+                        </ul>
+                    </div>
+
+                    <div class="info-card">
+                        <div class="info-card-icon">📖</div>
+                        <h4>Impresso (opcional)</h4>
+                        <ul>
+                            <li>Capa dura ou wire-o</li>
+                            <li>Papel de qualidade</li>
+                            <li>Impressão profissional</li>
+                        </ul>
+                        <span class="tag tag-red">Cliente R$ 10k+ merece</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="nav-arrows">
+                <button class="nav-button" onclick="previousSection()">
+                    ← Anterior
+                </button>
+                <button class="nav-button primary" onclick="nextSection()">
+                    Próxima Seção →
+                </button>
+            </div>
+        </div>
+
+        <!-- Section 9: Conclusão -->
+        <div class="section-wrapper" id="section-9">
+            <div class="card">
+                <span class="section-counter">Seção 9 de 9</span>
+                <h1>🎯 Conclusão</h1>
+                
+                <h2>Checklist final do projeto perfeito</h2>
+                <p>Use isso em todo projeto:</p>
+
+                <div class="grid-3">
+                    <div class="info-card">
+                        <h4 style="color: var(--primary-blue);">ANTES DE COMEÇAR</h4>
+                        <ul class="checkbox-list">
+                            <li>Primeira reunião realizada</li>
+                            <li>Cliente qualificado</li>
+                            <li>Proposta enviada e aprovada</li>
+                            <li>Contrato assinado</li>
+                            <li>Pagamento inicial recebido</li>
+                            <li>Kickoff agendado</li>
+                        </ul>
+                    </div>
+
+                    <div class="info-card">
+                        <h4 style="color: var(--primary-green);">DURANTE O PROJETO</h4>
+                        <ul class="checkbox-list">
+                            <li>Descoberta estratégica completa</li>
+                            <li>Posicionamento aprovado</li>
+                            <li>Brand persona criada</li>
+                            <li>Identidade verbal desenvolvida</li>
+                            <li>Conceitos visuais apresentados</li>
+                            <li>Refinamentos realizados</li>
+                            <li>Cliente atualizado semanalmente</li>
+                            <li>Feedback documentado</li>
+                        </ul>
+                    </div>
+
+                    <div class="info-card">
+                        <h4 style="color: var(--primary-red);">ENTREGA</h4>
+                        <ul class="checkbox-list">
+                            <li>Manual de marca completo</li>
+                            <li>Arquivos organizados</li>
+                            <li>Vídeo explicativo</li>
+                            <li>Guia de implementação</li>
+                            <li>Reunião de entrega realizada</li>
+                            <li>Pagamento final recebido</li>
+                            <li>Depoimento coletado</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="info-card" style="margin-top: 2rem;">
+                    <h4 style="color: var(--primary-purple);">PÓS-PROJETO</h4>
+                    <ul class="checkbox-list">
+                        <li>Follow-up 1 semana</li>
+                        <li>Follow-up 1 mês</li>
+                        <li>Follow-up 3 meses</li>
+                        <li>Cliente adicionado à newsletter</li>
+                        <li>Relacionamento cultivado</li>
+                    </ul>
+                </div>
+
+                <h2>Seus próximos passos</h2>
+                
+                <div class="grid-2">
+                    <div class="info-card" style="border: 3px solid var(--primary-red);">
+                        <div class="info-card-icon">1️⃣</div>
+                        <h4>Aplique em um projeto agora</h4>
+                        <p>Pegue projeto atual (ou fictício) e use este guia.</p>
+                    </div>
+
+                    <div class="info-card" style="border: 3px solid var(--primary-blue);">
+                        <div class="info-card-icon">2️⃣</div>
+                        <h4>Crie seus templates</h4>
+                        <p>Proposta, contrato, apresentação. Templates economizam tempo e profissionalizam.</p>
+                    </div>
+
+                    <div class="info-card" style="border: 3px solid var(--primary-green);">
+                        <div class="info-card-icon">3️⃣</div>
+                        <h4>Refine seu processo</h4>
+                        <p>Cada projeto é aprendizado. Documente o que funciona.</p>
+                    </div>
+
+                    <div class="info-card" style="border: 3px solid var(--primary-purple);">
+                        <div class="info-card-icon">4️⃣</div>
+                        <h4>Compartilhe resultados</h4>
+                        <p>Mostre seus projetos, receba feedback da comunidade.</p>
+                    </div>
+                </div>
+
+                <div class="red-bg-box" style="margin: 3rem 0; text-align: center;">
+                    <h2 style="color: white; margin-bottom: 1rem;">Uma última reflexão</h2>
+                    <p style="font-size: 1.2rem; margin-bottom: 1rem;">Projeto perfeito não é sobre perfeição técnica.</p>
+                    <p style="font-size: 1.1rem;"><strong>É sobre:</strong></p>
+                    <div class="grid-3" style="margin-top: 1.5rem;">
+                        <div class="tag" style="font-size: 1rem; padding: 0.75rem 1.5rem; background: rgba(255,255,255,0.2); color: white; border: 2px solid white;">Cliente feliz</div>
+                        <div class="tag" style="font-size: 1rem; padding: 0.75rem 1.5rem; background: rgba(255,255,255,0.2); color: white; border: 2px solid white;">Você orgulhoso</div>
+                        <div class="tag" style="font-size: 1rem; padding: 0.75rem 1.5rem; background: rgba(255,255,255,0.2); color: white; border: 2px solid white;">Marca que funciona</div>
+                        <div class="tag" style="font-size: 1rem; padding: 0.75rem 1.5rem; background: rgba(255,215,0,0.3); color: white; border: 2px solid #FFD700;">Processo tranquilo</div>
+                        <div class="tag" style="font-size: 1rem; padding: 0.75rem 1.5rem; background: rgba(255,140,0,0.3); color: white; border: 2px solid #FF8C00;">Pagamento justo</div>
+                    </div>
+                    <p style="font-size: 1.1rem; margin-top: 1.5rem;"><strong>Se você tem isso, tem projeto perfeito.</strong></p>
+                </div>
+
+                <div class="cover-section" style="margin-top: 4rem;">
+                    <div class="cover-icon">✨</div>
+                    <h1 class="cover-title">Bora criar projetos incríveis!</h1>
+                    <p class="cover-subtitle">Agência Tuca<br>Marcas vivas. Conexões reais.</p>
+                    <button class="cover-cta" onclick="goToSection(0)">
+                        Voltar ao Início
+                        <span>↺</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="nav-arrows">
+                <button class="nav-button" onclick="previousSection()">
+                    ← Anterior
+                </button>
+                <button class="nav-button" onclick="goToSection(0)">
+                    Voltar ao Início 🏠
+                </button>
+            </div>
+            
+            
+        </div>
+
+    </div>
+
+    <script>
+        // Current section tracker
+        let currentSection = 0;
+        const totalSections = 10;
+
+        // Initialize app
+        document.addEventListener('DOMContentLoaded', function() {
+            // Hide loading screen after a short delay
+            setTimeout(() => {
+                document.getElementById('loading').classList.add('hide');
+            }, 1000);
+
+            // Update navigation
+            updateNavigation();
+            updateProgressBar();
+            
+            // Add scroll listener for header
+            let lastScroll = 0;
+            window.addEventListener('scroll', () => {
+                const currentScroll = window.pageYOffset;
+                const header = document.getElementById('header');
+                
+                if (currentScroll > lastScroll && currentScroll > 100) {
+                    header.classList.add('hidden');
+                } else {
+                    header.classList.remove('hidden');
+                }
+                lastScroll = currentScroll;
+            });
+        });
+
+        // Navigate to specific section
+        function goToSection(sectionIndex) {
+            // Hide current section
+            document.getElementById(`section-${currentSection}`).classList.remove('active');
+            
+            // Show new section
+            currentSection = sectionIndex;
+            document.getElementById(`section-${currentSection}`).classList.add('active');
+            
+            // Update navigation
+            updateNavigation();
+            updateProgressBar();
+            
+            // Scroll to top smoothly
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+
+            // Close mobile menu if open
+            document.getElementById('navMenu').classList.remove('active');
+        }
+
+        // Next section
+        function nextSection() {
+            if (currentSection < totalSections - 1) {
+                goToSection(currentSection + 1);
+            }
+        }
+
+        // Previous section
+        function previousSection() {
+            if (currentSection > 0) {
+                goToSection(currentSection - 1);
+            }
+        }
+
+        // Update navigation buttons
+        function updateNavigation() {
+            // Update nav menu active state
+            const navButtons = document.querySelectorAll('.nav-menu button');
+            navButtons.forEach((btn, index) => {
+                if (index === currentSection) {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                }
+            });
+        }
+
+        // Update progress bar
+        function updateProgressBar() {
+            const progress = (currentSection / (totalSections - 1)) * 100;
+            document.getElementById('progressBar').style.width = progress + '%';
+        }
+
+        // Toggle mobile menu
+        function toggleMenu() {
+            document.getElementById('navMenu').classList.toggle('active');
+        }
+
+        // Toggle accordion
+        function toggleAccordion(header) {
+            const item = header.parentElement;
+            const wasActive = item.classList.contains('active');
+            
+            // Close all accordion items in the same accordion
+            const accordion = item.closest('.accordion');
+            accordion.querySelectorAll('.accordion-item').forEach(i => {
+                i.classList.remove('active');
+            });
+            
+            // Toggle current item
+            if (!wasActive) {
+                item.classList.add('active');
+            }
+        }
+
+        // Keyboard navigation
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+                nextSection();
+            } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+                previousSection();
+            }
+        });
+
+     
+
+        // Copy template function
+        function copyTemplate(elementId) {
+            const element = document.getElementById(elementId);
+            const text = element.innerText;
+            
+            navigator.clipboard.writeText(text).then(() => {
+                // Get the button that was clicked
+                const button = event.target;
+                const originalText = button.innerHTML;
+                
+                // Change button appearance
+                button.innerHTML = '✅ Copiado!';
+                button.classList.add('success');
+                
+                // Reset after 2 seconds
+                setTimeout(() => {
+                    button.innerHTML = originalText;
+                    button.classList.remove('success');
+                }, 2000);
+            }).catch(err => {
+                alert('Erro ao copiar. Por favor, copie manualmente.');
+            });
+        }
+
+        // Toggle collapsible content
+        function toggleContent(contentId) {
+            const content = document.getElementById(contentId);
+            const button = event.target;
+            
+            if (content.classList.contains('active')) {
+                content.classList.remove('active');
+                button.innerHTML = button.innerHTML.replace('👁️ Ocultar', '👁️ Ver').replace('📊 Ocultar', '📊 Ver').replace('📋 Ocultar', '📋 Ver');
+            } else {
+                content.classList.add('active');
+                button.innerHTML = button.innerHTML.replace('Ver', 'Ocultar');
+            }
+        }
+    </script>
+</body>
+</html>

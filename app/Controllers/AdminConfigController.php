@@ -64,6 +64,8 @@ class AdminConfigController extends Controller
         $mediaVideoEndpoint = Setting::get('media_video_upload_endpoint', defined('MEDIA_VIDEO_UPLOAD_ENDPOINT') ? MEDIA_VIDEO_UPLOAD_ENDPOINT : '');
         $textExtractionEndpoint = Setting::get('text_extraction_endpoint', '');
 
+        $tuquinhaAboutVideoUrl = Setting::get('tuquinha_about_video_url', '');
+
         $certificateIssuerName = Setting::get('certificate_issuer_name', 'Thiago Marques');
         $certificateSignatureImagePath = Setting::get('certificate_signature_image_path', '');
 
@@ -101,6 +103,7 @@ class AdminConfigController extends Controller
             'mediaEndpoint' => $mediaEndpoint,
             'mediaVideoEndpoint' => $mediaVideoEndpoint,
             'textExtractionEndpoint' => $textExtractionEndpoint,
+            'tuquinhaAboutVideoUrl' => $tuquinhaAboutVideoUrl,
             'certificateIssuerName' => $certificateIssuerName,
             'certificateSignatureImagePath' => $certificateSignatureImagePath,
             'coursePartnerMinPayoutCents' => $coursePartnerMinPayoutCents,
@@ -154,6 +157,8 @@ class AdminConfigController extends Controller
         $mediaEndpoint = trim($_POST['media_endpoint'] ?? '');
         $mediaVideoEndpoint = trim($_POST['media_video_endpoint'] ?? '');
         $textExtractionEndpoint = trim($_POST['text_extraction_endpoint'] ?? '');
+
+        $tuquinhaAboutVideoUrl = trim($_POST['tuquinha_about_video_url'] ?? '');
 
         $certificateIssuerName = trim($_POST['certificate_issuer_name'] ?? 'Thiago Marques');
         if ($certificateIssuerName === '') {
@@ -228,6 +233,7 @@ class AdminConfigController extends Controller
             'media_upload_endpoint' => $mediaEndpoint !== '' ? $mediaEndpoint : (defined('MEDIA_UPLOAD_ENDPOINT') ? MEDIA_UPLOAD_ENDPOINT : ''),
             'media_video_upload_endpoint' => $mediaVideoEndpoint !== '' ? $mediaVideoEndpoint : (defined('MEDIA_VIDEO_UPLOAD_ENDPOINT') ? MEDIA_VIDEO_UPLOAD_ENDPOINT : ''),
             'text_extraction_endpoint' => $textExtractionEndpoint,
+            'tuquinha_about_video_url' => $tuquinhaAboutVideoUrl,
             'certificate_issuer_name' => $certificateIssuerName,
             'certificate_signature_image_path' => $certificateSignatureImagePath,
             'course_partner_min_payout_cents' => (string)$coursePartnerMinPayoutCents,
@@ -279,6 +285,7 @@ class AdminConfigController extends Controller
             'mediaEndpoint' => $mediaEndpoint !== '' ? $mediaEndpoint : (defined('MEDIA_UPLOAD_ENDPOINT') ? MEDIA_UPLOAD_ENDPOINT : ''),
             'mediaVideoEndpoint' => $mediaVideoEndpoint !== '' ? $mediaVideoEndpoint : (defined('MEDIA_VIDEO_UPLOAD_ENDPOINT') ? MEDIA_VIDEO_UPLOAD_ENDPOINT : ''),
             'textExtractionEndpoint' => $textExtractionEndpoint,
+            'tuquinhaAboutVideoUrl' => $tuquinhaAboutVideoUrl,
             'certificateIssuerName' => $certificateIssuerName,
             'certificateSignatureImagePath' => $certificateSignatureImagePath,
             'coursePartnerMinPayoutCents' => $coursePartnerMinPayoutCents,
@@ -338,6 +345,8 @@ class AdminConfigController extends Controller
         $mediaVideoEndpoint = Setting::get('media_video_upload_endpoint', defined('MEDIA_VIDEO_UPLOAD_ENDPOINT') ? MEDIA_VIDEO_UPLOAD_ENDPOINT : '');
         $textExtractionEndpoint = Setting::get('text_extraction_endpoint', '');
 
+        $tuquinhaAboutVideoUrl = Setting::get('tuquinha_about_video_url', '');
+
         $certificateIssuerName = Setting::get('certificate_issuer_name', 'Thiago Marques');
         $certificateSignatureImagePath = Setting::get('certificate_signature_image_path', '');
 
@@ -391,6 +400,7 @@ class AdminConfigController extends Controller
             'mediaEndpoint' => $mediaEndpoint,
             'mediaVideoEndpoint' => $mediaVideoEndpoint,
             'textExtractionEndpoint' => $textExtractionEndpoint,
+            'tuquinhaAboutVideoUrl' => $tuquinhaAboutVideoUrl,
             'certificateIssuerName' => $certificateIssuerName,
             'certificateSignatureImagePath' => $certificateSignatureImagePath,
             'coursePartnerMinPayoutCents' => $coursePartnerMinPayoutCents,
