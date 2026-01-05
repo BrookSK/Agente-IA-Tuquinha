@@ -394,6 +394,7 @@
     this.tour = tour;
     this.idx = 0;
     this.active = false;
+    this._missingRetries = 0;
     this.overlay = null;
     this.hole = null;
     this.tooltip = null;
@@ -552,10 +553,21 @@
     var el = this._findStepEl(step);
 
     if (!el) {
-      // Se não achar o elemento, tenta pular automaticamente
+      // Se não achar o elemento, aguarda um pouco (chat pode renderizar depois)
+      var self = this;
+      this._missingRetries = (this._missingRetries || 0) + 1;
+      if (this._missingRetries <= 10) {
+        setTimeout(function () { self._position(); }, 250);
+        return;
+      }
+      // Se ainda não achar após retries, tenta pular automaticamente
+      this._missingRetries = 0;
       this._next(true);
       return;
     }
+
+    // achou elemento: reseta contador de retries
+    this._missingRetries = 0;
 
     var r = el.getBoundingClientRect();
     var pad = 10;
@@ -673,6 +685,7 @@
 
     this.active = true;
     this.idx = 0;
+    this._missingRetries = 0;
 
     this._ensureUi();
     this.overlay.style.display = 'block';
@@ -866,7 +879,20 @@
 
     // Auto start apenas no onboarding (ou force) - com tentativas extras
     var start = function () {
-      try { runner.start(true, true); } catch (e) {}
+      try {
+        runner.start(true, true);
+      } catch (e) {
+        try {
+          console.error('[tuquinha-tour] Falha ao iniciar tour', {
+            path: window.location.pathname,
+            search: window.location.search,
+            onboardingActive: !!(st && st.active),
+            tourId: tour && tour.id,
+            error: e
+          });
+        } catch (e2) {}
+        try { runner.active = false; } catch (e3) {}
+      }
     };
     setTimeout(start, 50);
     setTimeout(start, 450);
