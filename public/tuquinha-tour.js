@@ -907,7 +907,7 @@
           return;
         }
         // Se estiver fora da página esperada, redireciona para manter o fluxo
-        window.location.href = expected;
+        window.location.href = appendOnboardingParams(expected, st.idx || 0);
         return;
       }
     } else {
