@@ -35,6 +35,42 @@
     return p;
   }
 
+  function getConfig() {
+    try {
+      var cfg = window.TUQ_TOUR_CONFIG || {};
+      return {
+        onboarding: !!cfg.onboarding,
+        force: !!cfg.force,
+        allowFab: !!cfg.allowFab
+      };
+    } catch (e) {
+      return { onboarding: false, force: false, allowFab: false };
+    }
+  }
+
+  var ONBOARDING_FLOW = ['/personalidades', '/chat', '/projetos', '/conta'];
+
+  function onboardingState() {
+    var ls = safeLocalStorage();
+    if (!ls) return { active: false, idx: 0 };
+    var active = ls.getItem('tuq_onboarding_active') === '1';
+    var idx = parseInt(ls.getItem('tuq_onboarding_idx') || '0', 10);
+    if (!isFinite(idx) || idx < 0) idx = 0;
+    return { active: active, idx: idx };
+  }
+
+  function setOnboarding(active, idx) {
+    var ls = safeLocalStorage();
+    if (!ls) return;
+    if (active) {
+      ls.setItem('tuq_onboarding_active', '1');
+      ls.setItem('tuq_onboarding_idx', String(idx || 0));
+      return;
+    }
+    ls.removeItem('tuq_onboarding_active');
+    ls.removeItem('tuq_onboarding_idx');
+  }
+
   // Tours por página
   var TOURS = {
     '/personalidades': {
@@ -104,6 +140,22 @@
           text: 'Aqui ficam seus projetos. Clique em um card para abrir.'
         }
       ]
+    },
+    '/conta': {
+      id: 'conta_v1',
+      title: 'Tour: Minha conta',
+      steps: [
+        {
+          selector: '#tuq-refazer-tour',
+          title: 'Refazer tour quando quiser',
+          text: 'Se você quiser rever o guia, é só clicar aqui e o Tuquinha te leva de novo pelas telas principais.'
+        },
+        {
+          selector: 'form[action="/conta"]',
+          title: 'Dados da conta',
+          text: 'Aqui você ajusta seu nome, como o Tuquinha deve te chamar e define memórias e regras globais.'
+        }
+      ]
     }
   };
 
@@ -169,7 +221,7 @@
 
     var tooltip = createEl('div', { 'data-tuquinha-tour': 'tooltip' });
     tooltip.style.position = 'fixed';
-    tooltip.style.maxWidth = '360px';
+    tooltip.style.maxWidth = 'min(360px, calc(100vw - 16px))';
     tooltip.style.background = 'rgba(17,17,24,0.98)';
     tooltip.style.border = '1px solid rgba(255,255,255,0.12)';
     tooltip.style.borderRadius = '14px';
@@ -298,6 +350,18 @@
     var ttW = tt.offsetWidth || 320;
     var ttH = tt.offsetHeight || 140;
 
+    // Mobile: fixa tooltip embaixo, centralizado
+    if (window.innerWidth <= 520) {
+      tt.style.left = '8px';
+      tt.style.right = '8px';
+      tt.style.top = '';
+      tt.style.bottom = '12px';
+      return;
+    }
+
+    tt.style.right = '';
+    tt.style.bottom = '';
+
     var belowY = y + h + 12;
     var aboveY = y - ttH - 12;
 
@@ -372,14 +436,22 @@
     var self = this;
     this.btnPrev.onclick = function () { self._prev(); };
     this.btnNext.onclick = function () { self._next(false); };
-    this.btnSkip.onclick = function () { self.finish(true); };
-    this.btnClose.onclick = function () { self.finish(false); };
+    this.btnSkip.onclick = function () { self.cancel(); };
+    this.btnClose.onclick = function () { self.cancel(); };
 
     this._boundReposition = function () { self._position(); };
     window.addEventListener('resize', this._boundReposition);
     window.addEventListener('scroll', this._boundReposition, true);
 
     this._renderStep();
+  };
+
+  TourRunner.prototype.cancel = function () {
+    // Cancelamento explícito: não marca como concluído e interrompe qualquer onboarding
+    try {
+      setOnboarding(false, 0);
+    } catch (e) {}
+    this.finish(false);
   };
 
   TourRunner.prototype._prev = function () {
@@ -432,6 +504,36 @@
       window.removeEventListener('scroll', this._boundReposition, true);
       this._boundReposition = null;
     }
+
+    // Onboarding multi-página
+    try {
+      var cfg = getConfig();
+      var st = onboardingState();
+
+      // Se o tour foi fechado/pulado, encerra onboarding
+      if (!markDone) {
+        if (st.active || cfg.onboarding || cfg.force) {
+          setOnboarding(false, 0);
+        }
+        return;
+      }
+
+      if (st.active || cfg.onboarding || cfg.force) {
+        var idx = st.idx || 0;
+        if (!st.active) {
+          setOnboarding(true, idx);
+        }
+
+        var nextIdx = (idx || 0) + 1;
+        if (nextIdx >= ONBOARDING_FLOW.length) {
+          setOnboarding(false, 0);
+          return;
+        }
+
+        setOnboarding(true, nextIdx);
+        window.location.href = ONBOARDING_FLOW[nextIdx];
+      }
+    } catch (e) {}
   };
 
   function mountFloatingButton(runner) {
@@ -463,17 +565,50 @@
 
   function bootstrap() {
     var tour = getTourForCurrentPage();
+    var cfg = getConfig();
+
+    // Onboarding: ativa fluxo multi-página apenas quando sinalizado pelo backend
+    if (cfg.onboarding) {
+      setOnboarding(true, 0);
+    }
+    if (cfg.force) {
+      setOnboarding(true, 0);
+    }
+
+    var st = onboardingState();
+    var currentPath = normalizePath(window.location.pathname);
+    if (st.active) {
+      var expected = ONBOARDING_FLOW[st.idx] || ONBOARDING_FLOW[0];
+      if (currentPath !== expected) {
+        // Se estiver fora da página esperada, redireciona para manter o fluxo
+        window.location.href = expected;
+        return;
+      }
+    } else {
+      // Sem onboarding: não inicia automaticamente
+      if (!cfg.force && !cfg.onboarding) {
+        if (!tour || !tour.steps || !tour.steps.length) return;
+
+        if (cfg.allowFab) {
+          var runnerA = new TourRunner(tour);
+          mountFloatingButton(runnerA);
+        }
+        return;
+      }
+    }
+
     if (!tour || !tour.steps || !tour.steps.length) return;
 
     var runner = new TourRunner(tour);
 
-    // botão sempre disponível (reexecutar)
-    mountFloatingButton(runner);
+    if (cfg.allowFab) {
+      mountFloatingButton(runner);
+    }
 
-    // auto start (1a vez)
+    // Auto start apenas no onboarding (ou force)
     setTimeout(function () {
-      runner.start(false);
-    }, 550);
+      runner.start(true);
+    }, 450);
   }
 
   if (document.readyState === 'loading') {

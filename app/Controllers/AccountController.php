@@ -257,6 +257,17 @@ class AccountController extends Controller
         $this->reloadWithMessages($user, null, 'Senha alterada com sucesso.');
     }
 
+    public function restartTour(): void
+    {
+        $this->requireLogin();
+
+        $_SESSION['tuq_onboarding_tour'] = 1;
+        $_SESSION['tuq_onboarding_tour_force'] = 1;
+
+        header('Location: /conta');
+        exit;
+    }
+
     private function reloadWithMessages(array $user, ?string $error, ?string $success): void
     {
         $isAdmin = !empty($_SESSION['is_admin']);

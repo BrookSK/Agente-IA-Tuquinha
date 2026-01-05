@@ -120,6 +120,7 @@ $router->post('/projetos/arquivo-base/remover', 'ProjectController@removeBaseFil
 $router->get('/conta', 'AccountController@index');
 $router->post('/conta', 'AccountController@updateProfile');
 $router->post('/conta/senha', 'AccountController@updatePassword');
+$router->post('/conta/refazer-tour', 'AccountController@restartTour');
 $router->post('/conta/assinatura/cancelar', 'AccountController@cancelSubscription');
 $router->get('/conta/personalidade', 'PersonalityPreferenceController@index');
 $router->post('/conta/personalidade', 'PersonalityPreferenceController@save');

@@ -265,6 +265,9 @@ class AuthController extends Controller
         $hash = password_hash($password, PASSWORD_BCRYPT);
         $userId = User::createUser($name, $email, $hash);
 
+        // Marca que este usuário acabou de se cadastrar (para exibir onboarding/tour após confirmar e-mail)
+        $_SESSION['tuq_just_registered_user_id'] = (int)$userId;
+
         // Se o cadastro veio de um link de indicação válido, registra a indicação pendente
         $pendingReferral = $_SESSION['pending_referral'] ?? null;
         if ($pendingReferral && !empty($pendingReferral['referrer_user_id']) && !empty($pendingReferral['plan_id'])) {
@@ -580,6 +583,13 @@ HTML;
         $_SESSION['user_id'] = (int)$user['id'];
         $_SESSION['user_name'] = $user['name'];
         $_SESSION['user_email'] = $user['email'];
+
+        // Só ativa onboarding/tour automático quando o fluxo veio de um cadastro recém-criado
+        $justRegisteredId = isset($_SESSION['tuq_just_registered_user_id']) ? (int)$_SESSION['tuq_just_registered_user_id'] : 0;
+        if ($justRegisteredId > 0 && $justRegisteredId === (int)$user['id']) {
+            $_SESSION['tuq_onboarding_tour'] = 1;
+            unset($_SESSION['tuq_just_registered_user_id']);
+        }
         if (isset($user['default_persona_id']) && $user['default_persona_id']) {
             $_SESSION['default_persona_id'] = (int)$user['default_persona_id'];
         } else {

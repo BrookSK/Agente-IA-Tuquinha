@@ -50,6 +50,15 @@ if ($freeChatLimit <= 0) { $freeChatLimit = 400; }
             <h2 style="font-size:18px; margin-bottom:8px;">Dados da conta</h2>
             <p style="font-size:13px; color:#b0b0b0; margin-bottom:10px;">Ajuste como o Tuquinha te chama e confira seu e-mail de acesso.</p>
 
+            <div style="margin-bottom:12px; display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+                <form action="/conta/refazer-tour" method="post" style="margin:0;">
+                    <button id="tuq-refazer-tour" type="submit" style="border:none; border-radius:999px; padding:8px 14px; background:linear-gradient(135deg,#e53935,#ff6f60); color:#050509; font-weight:650; cursor:pointer; font-size:13px;">
+                        Refazer tour
+                    </button>
+                </form>
+                <div style="font-size:12px; color:#8d8d8d;">Você pode refazer o tour quando quiser.</div>
+            </div>
+
             <?php if (!empty($error)): ?>
                 <div style="background:#311; border:1px solid #a33; color:#ffbaba; padding:8px 10px; border-radius:8px; font-size:13px; margin-bottom:10px;">
                     <?= htmlspecialchars($error) ?>

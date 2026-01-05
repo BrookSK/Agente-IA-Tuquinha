@@ -1041,6 +1041,23 @@ if (!empty($_SESSION['user_id'])) {
     })();
     </script>
 
+    <?php
+        $tuqOnboarding = !empty($_SESSION['tuq_onboarding_tour']);
+        $tuqOnboardingForce = !empty($_SESSION['tuq_onboarding_tour_force']);
+        if ($tuqOnboarding) {
+            unset($_SESSION['tuq_onboarding_tour']);
+        }
+        if ($tuqOnboardingForce) {
+            unset($_SESSION['tuq_onboarding_tour_force']);
+        }
+    ?>
+    <script>
+        window.TUQ_TOUR_CONFIG = {
+            onboarding: <?= $tuqOnboarding ? 'true' : 'false' ?>,
+            force: <?= $tuqOnboardingForce ? 'true' : 'false' ?>,
+            allowFab: false
+        };
+    </script>
     <script src="/public/tuquinha-tour.js"></script>
 </body>
 </html>
