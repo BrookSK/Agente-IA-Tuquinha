@@ -29,6 +29,18 @@
     }
   }
 
+  function safeSessionStorage() {
+    try {
+      if (!window.sessionStorage) return null;
+      var k = '__tuq_ss_test__' + String(now());
+      sessionStorage.setItem(k, '1');
+      sessionStorage.removeItem(k);
+      return sessionStorage;
+    } catch (e) {
+      return null;
+    }
+  }
+
   function normalizePath(pathname) {
     var p = String(pathname || '/');
     if (p.length > 1 && p.endsWith('/')) p = p.slice(0, -1);
@@ -138,7 +150,9 @@
     var active = ls.getItem('tuq_onboarding_active') === '1';
     var idx = parseInt(ls.getItem('tuq_onboarding_idx') || '0', 10);
     if (!isFinite(idx) || idx < 0) idx = 0;
-    return { active: active, idx: idx };
+    var startedAt = parseInt(ls.getItem('tuq_onboarding_started_at') || '0', 10);
+    if (!isFinite(startedAt) || startedAt < 0) startedAt = 0;
+    return { active: active, idx: idx, startedAt: startedAt };
   }
 
   function setOnboarding(active, idx) {
@@ -147,11 +161,48 @@
     if (active) {
       ls.setItem('tuq_onboarding_active', '1');
       ls.setItem('tuq_onboarding_idx', String(idx || 0));
+      if (!ls.getItem('tuq_onboarding_started_at')) {
+        ls.setItem('tuq_onboarding_started_at', String(now()));
+      }
       return;
     }
     ls.removeItem('tuq_onboarding_active');
     ls.removeItem('tuq_onboarding_idx');
     ls.removeItem('tuq_onboarding_flow');
+    ls.removeItem('tuq_onboarding_started_at');
+  }
+
+  function finishOnboarding() {
+    try {
+      clearAllToursDone();
+    } catch (e) {}
+    setOnboarding(false, 0);
+  }
+
+  function shouldAbortRedirectLoop() {
+    // Proteção contra loop infinito de redirecionamento
+    var ss = safeSessionStorage();
+    if (!ss) return false;
+    try {
+      var count = parseInt(ss.getItem('tuq_tour_redirect_count') || '0', 10);
+      var ts = parseInt(ss.getItem('tuq_tour_redirect_ts') || '0', 10);
+      if (!isFinite(count) || count < 0) count = 0;
+      if (!isFinite(ts) || ts < 0) ts = 0;
+      var t = now();
+
+      if (!ts || (t - ts) > 8000) {
+        count = 0;
+        ts = t;
+      }
+
+      count += 1;
+      ss.setItem('tuq_tour_redirect_count', String(count));
+      ss.setItem('tuq_tour_redirect_ts', String(ts));
+
+      return count >= 5;
+    } catch (e) {
+      return false;
+    }
   }
 
   // Tours por página
@@ -688,6 +739,11 @@
         return;
       }
 
+      // Última página do onboarding: encerra
+      if (flow && flow.length && pageIdx >= flow.length - 1) {
+        finishOnboarding();
+      }
+
       this.finish(true);
       return;
     }
@@ -763,10 +819,23 @@
     var st = onboardingState();
     var currentPath = normalizePath(window.location.pathname);
     if (st.active) {
+      // Se o onboarding ficou preso no localStorage sem sinal do backend, expira automaticamente
+      if (!cfg.onboarding && !cfg.force) {
+        var startedAt = st.startedAt || 0;
+        if (!startedAt || (now() - startedAt) > (15 * 60 * 1000)) {
+          setOnboarding(false, 0);
+          return;
+        }
+      }
+
       var flow = getOnboardingFlow();
       var expected = flow[st.idx] || flow[0] || '/';
       var expectedPath = getPathnameFromUrl(expected);
       if (currentPath !== expectedPath) {
+        if (shouldAbortRedirectLoop()) {
+          finishOnboarding();
+          return;
+        }
         // Se estiver fora da página esperada, redireciona para manter o fluxo
         window.location.href = expected;
         return;
