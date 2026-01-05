@@ -571,6 +571,12 @@
 
     if (isLast && flow && flow.length && pageIdx < flow.length - 1) {
       this.btnNext.textContent = 'Próxima página';
+
+      // Deixa explícito o fluxo de página por página
+      var baseText = String(step.text || '');
+      if (baseText.indexOf('Próxima página') === -1) {
+        this.textEl.textContent = baseText + (baseText ? ' ' : '') + 'Quando terminar aqui, clique em "Próxima página".';
+      }
     } else {
       this.btnNext.textContent = isLast ? 'Finalizar' : 'Próximo';
     }

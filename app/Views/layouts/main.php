@@ -1058,6 +1058,10 @@ if (!empty($_SESSION['user_id'])) {
             allowFab: false
         };
     </script>
-    <script src="/public/tuquinha-tour.js"></script>
+    <?php
+        $tuqTourJsPath = dirname(__DIR__, 3) . '/public/tuquinha-tour.js';
+        $tuqTourJsV = is_file($tuqTourJsPath) ? (string)filemtime($tuqTourJsPath) : (string)time();
+    ?>
+    <script src="/public/tuquinha-tour.js?v=<?= htmlspecialchars($tuqTourJsV) ?>"></script>
 </body>
 </html>
