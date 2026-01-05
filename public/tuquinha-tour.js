@@ -35,6 +35,17 @@
     return p;
   }
 
+  function getPathnameFromUrl(url) {
+    try {
+      var u = String(url || '');
+      var q = u.indexOf('?');
+      if (q >= 0) u = u.slice(0, q);
+      return normalizePath(u || '/');
+    } catch (e) {
+      return '/';
+    }
+  }
+
   function getConfig() {
     try {
       var cfg = window.TUQ_TOUR_CONFIG || {};
@@ -76,12 +87,12 @@
       var href = String(newChat.getAttribute('href') || '');
       if (href.indexOf('/personalidades') === 0) {
         flow.push('/personalidades');
-        flow.push('/chat');
+        flow.push('/chat?new=1');
       } else {
-        flow.push('/chat');
+        flow.push('/chat?new=1');
       }
     } else {
-      flow.push('/chat');
+      flow.push('/chat?new=1');
     }
 
     if (qs('[data-tour="nav-projects"]')) flow.push('/projetos');
@@ -754,7 +765,8 @@
     if (st.active) {
       var flow = getOnboardingFlow();
       var expected = flow[st.idx] || flow[0] || '/';
-      if (currentPath !== expected) {
+      var expectedPath = getPathnameFromUrl(expected);
+      if (currentPath !== expectedPath) {
         // Se estiver fora da página esperada, redireciona para manter o fluxo
         window.location.href = expected;
         return;
