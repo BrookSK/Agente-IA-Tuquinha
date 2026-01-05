@@ -237,6 +237,35 @@
     }
   }
 
+  function setPendingOnboarding(idx) {
+    var ss = safeSessionStorage();
+    if (!ss) return;
+    try {
+      ss.setItem('tuq_onboarding_pending', JSON.stringify({ idx: idx || 0, ts: now() }));
+    } catch (e) {}
+  }
+
+  function takePendingOnboarding() {
+    var ss = safeSessionStorage();
+    if (!ss) return null;
+    try {
+      var raw = ss.getItem('tuq_onboarding_pending');
+      if (!raw) return null;
+      ss.removeItem('tuq_onboarding_pending');
+      var obj = JSON.parse(raw);
+      if (!obj || typeof obj !== 'object') return null;
+      var idx = parseInt(String(obj.idx || 0), 10);
+      var ts = parseInt(String(obj.ts || 0), 10);
+      if (!isFinite(idx) || idx < 0) idx = 0;
+      if (!isFinite(ts) || ts < 0) ts = 0;
+      // Expira rápido: só serve para transição imediata entre páginas
+      if (!ts || (now() - ts) > 120000) return null;
+      return { idx: idx, ts: ts };
+    } catch (e) {
+      return null;
+    }
+  }
+
   // Tours por página
   var TOURS = {
     '/': {
@@ -791,6 +820,7 @@
       if (flow && flow.length && pageIdx < flow.length - 1) {
         var nextPath = flow[pageIdx + 1];
         setOnboarding(true, pageIdx + 1);
+        setPendingOnboarding(pageIdx + 1);
         this._closeUiOnly();
         window.location.href = appendOnboardingParams(nextPath, pageIdx + 1);
         return;
@@ -857,6 +887,14 @@
     var tour = getTourForCurrentPage();
     var cfg = getConfig();
 
+    // Fallback: se o servidor remove query params no redirect (ex.: /chat?new=1), usamos sessionStorage
+    try {
+      var pending = takePendingOnboarding();
+      if (pending && pending.idx != null) {
+        setOnboarding(true, pending.idx);
+      }
+    } catch (e) {}
+
     // Se veio por query param (troca de página do onboarding), restaura o estado
     try {
       var qpOnb = getQueryParam('tuq_onb');
@@ -864,6 +902,7 @@
       if (qpOnb === '1' && qpIdx != null) {
         var restoredIdx = parseInt(String(qpIdx), 10);
         if (!isFinite(restoredIdx) || restoredIdx < 0) restoredIdx = 0;
+        setPendingOnboarding(restoredIdx);
         setOnboarding(true, restoredIdx);
         // Remove params temporários (mantém ?new=1, ?c=..., etc.)
         removeQueryParams(['tuq_onb', 'tuq_idx', 'tuq_ts']);
@@ -907,6 +946,7 @@
           return;
         }
         // Se estiver fora da página esperada, redireciona para manter o fluxo
+        setPendingOnboarding(st.idx || 0);
         window.location.href = appendOnboardingParams(expected, st.idx || 0);
         return;
       }
