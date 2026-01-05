@@ -89,6 +89,38 @@
     } catch (e) {}
   }
 
+  function getQueryParam(name) {
+    try {
+      var sp = new URLSearchParams(String(window.location.search || ''));
+      return sp.get(name);
+    } catch (e) {
+      return null;
+    }
+  }
+
+  function removeQueryParams(paramNames) {
+    try {
+      if (!window.history || !window.history.replaceState) return;
+      var url = new URL(window.location.href);
+      for (var i = 0; i < paramNames.length; i++) {
+        url.searchParams.delete(paramNames[i]);
+      }
+      // Mantém pathname + query restante + hash
+      var next = url.pathname + (url.search || '') + (url.hash || '');
+      window.history.replaceState({}, '', next);
+    } catch (e) {}
+  }
+
+  function appendOnboardingParams(url, idx) {
+    try {
+      var u = String(url || '/');
+      var sep = u.indexOf('?') >= 0 ? '&' : '?';
+      return u + sep + 'tuq_onb=1&tuq_idx=' + encodeURIComponent(String(idx || 0)) + '&tuq_ts=' + encodeURIComponent(String(now()));
+    } catch (e) {
+      return url;
+    }
+  }
+
   function buildOnboardingFlowFromDom() {
     // Sempre começa na Home
     var flow = ['/'];
@@ -760,7 +792,7 @@
         var nextPath = flow[pageIdx + 1];
         setOnboarding(true, pageIdx + 1);
         this._closeUiOnly();
-        window.location.href = nextPath;
+        window.location.href = appendOnboardingParams(nextPath, pageIdx + 1);
         return;
       }
 
@@ -824,6 +856,19 @@
   function bootstrap() {
     var tour = getTourForCurrentPage();
     var cfg = getConfig();
+
+    // Se veio por query param (troca de página do onboarding), restaura o estado
+    try {
+      var qpOnb = getQueryParam('tuq_onb');
+      var qpIdx = getQueryParam('tuq_idx');
+      if (qpOnb === '1' && qpIdx != null) {
+        var restoredIdx = parseInt(String(qpIdx), 10);
+        if (!isFinite(restoredIdx) || restoredIdx < 0) restoredIdx = 0;
+        setOnboarding(true, restoredIdx);
+        // Remove params temporários (mantém ?new=1, ?c=..., etc.)
+        removeQueryParams(['tuq_onb', 'tuq_idx', 'tuq_ts']);
+      }
+    } catch (e) {}
 
     // Remove botão antigo (caso tenha ficado de uma versão anterior)
     try {
