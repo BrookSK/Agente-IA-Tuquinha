@@ -264,7 +264,7 @@ class AccountController extends Controller
         $_SESSION['tuq_onboarding_tour'] = 1;
         $_SESSION['tuq_onboarding_tour_force'] = 1;
 
-        header('Location: /conta');
+        header('Location: /');
         exit;
     }
 

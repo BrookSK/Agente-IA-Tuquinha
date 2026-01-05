@@ -107,6 +107,20 @@
     return flow;
   }
 
+  function clearAllToursDone() {
+    var ls = safeLocalStorage();
+    if (!ls) return;
+    try {
+      for (var i = ls.length - 1; i >= 0; i--) {
+        var k = ls.key(i);
+        if (!k) continue;
+        if (String(k).indexOf('tuq_tour_done:') === 0) {
+          ls.removeItem(k);
+        }
+      }
+    } catch (e) {}
+  }
+
   function onboardingState() {
     var ls = safeLocalStorage();
     if (!ls) return { active: false, idx: 0 };
@@ -726,6 +740,9 @@
 
     // Onboarding: ativa fluxo multi-página apenas quando sinalizado pelo backend
     if (cfg.onboarding || cfg.force) {
+      // Reinicia o onboarding do zero (evita fluxo antigo preso no localStorage)
+      setOnboarding(false, 0);
+      clearAllToursDone();
       setOnboarding(true, 0);
       // garante que o fluxo seja calculado no contexto do DOM atual (sidebar)
       getOnboardingFlow();
