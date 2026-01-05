@@ -1040,5 +1040,7 @@ if (!empty($_SESSION['user_id'])) {
         } catch (e) {}
     })();
     </script>
+
+    <script src="/public/tuquinha-tour.js"></script>
 </body>
 </html>

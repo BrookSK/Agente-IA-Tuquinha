@@ -1,0 +1,484 @@
+(function () {
+  'use strict';
+
+  function qs(sel, root) {
+    try { return (root || document).querySelector(sel); } catch (e) { return null; }
+  }
+
+  function qsa(sel, root) {
+    try { return Array.prototype.slice.call((root || document).querySelectorAll(sel)); } catch (e) { return []; }
+  }
+
+  function now() {
+    return Date.now ? Date.now() : 0;
+  }
+
+  function clamp(n, min, max) {
+    return Math.max(min, Math.min(max, n));
+  }
+
+  function safeLocalStorage() {
+    try {
+      if (!window.localStorage) return null;
+      var k = '__tuq_ls_test__' + String(now());
+      localStorage.setItem(k, '1');
+      localStorage.removeItem(k);
+      return localStorage;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  function normalizePath(pathname) {
+    var p = String(pathname || '/');
+    if (p.length > 1 && p.endsWith('/')) p = p.slice(0, -1);
+    return p;
+  }
+
+  // Tours por página
+  var TOURS = {
+    '/personalidades': {
+      id: 'personalidades_v1',
+      title: 'Tour: Personalidades',
+      steps: [
+        {
+          selector: 'h1',
+          title: 'Escolha uma personalidade',
+          text: 'Cada personalidade muda o foco e o jeito do Tuquinha. Aqui você escolhe como ele vai te ajudar no próximo chat.'
+        },
+        {
+          selector: '#persona-carousel',
+          title: 'Navegue pelas personalidades',
+          text: 'Use o carrossel para ver as opções disponíveis. Você pode navegar e escolher a que combina com o que você precisa agora.'
+        },
+        {
+          selector: '#persona-next',
+          title: 'Próxima personalidade',
+          text: 'Clique aqui para avançar no carrossel e ver a próxima personalidade.'
+        }
+      ]
+    },
+    '/chat': {
+      id: 'chat_v1',
+      title: 'Tour: Chat',
+      steps: [
+        {
+          selector: '#chat-message',
+          title: 'Escreva sua mensagem',
+          text: 'Digite aqui sua pergunta/pedido. Quanto mais contexto, melhor a resposta.'
+        },
+        {
+          selector: '#chat-send-btn',
+          title: 'Enviar',
+          text: 'Clique para enviar e iniciar a conversa com o Tuquinha.'
+        },
+        {
+          selector: '#tuqChatMenuBtn',
+          title: 'Opções do chat',
+          text: 'Aqui você encontra ações como favoritar, renomear e outras opções do chat.'
+        }
+      ]
+    },
+    '/projetos': {
+      id: 'projetos_v1',
+      title: 'Tour: Projetos',
+      steps: [
+        {
+          selector: 'h1',
+          title: 'Seus projetos',
+          text: 'Aqui você organiza seus trabalhos e conversas do Tuquinha por projeto.'
+        },
+        {
+          selector: 'a[href="/projetos/novo"]',
+          title: 'Criar novo projeto',
+          text: 'Clique aqui para criar um novo projeto.'
+        },
+        {
+          selector: '#projectsSearch',
+          title: 'Buscar projetos',
+          text: 'Use a busca para encontrar projetos rapidamente.'
+        },
+        {
+          selector: '#projectsGrid',
+          title: 'Lista de projetos',
+          text: 'Aqui ficam seus projetos. Clique em um card para abrir.'
+        }
+      ]
+    }
+  };
+
+  function getTourForCurrentPage() {
+    var path = normalizePath(window.location.pathname);
+    return TOURS[path] || null;
+  }
+
+  function createEl(tag, attrs) {
+    var el = document.createElement(tag);
+    if (attrs) {
+      Object.keys(attrs).forEach(function (k) {
+        if (k === 'style' && attrs.style && typeof attrs.style === 'object') {
+          Object.keys(attrs.style).forEach(function (sk) { el.style[sk] = attrs.style[sk]; });
+          return;
+        }
+        if (k === 'text') {
+          el.textContent = String(attrs.text);
+          return;
+        }
+        el.setAttribute(k, String(attrs[k]));
+      });
+    }
+    return el;
+  }
+
+  function TourRunner(tour) {
+    this.tour = tour;
+    this.idx = 0;
+    this.active = false;
+    this.overlay = null;
+    this.hole = null;
+    this.tooltip = null;
+    this.titleEl = null;
+    this.textEl = null;
+    this.btnPrev = null;
+    this.btnNext = null;
+    this.btnSkip = null;
+    this.btnClose = null;
+    this._boundReposition = null;
+  }
+
+  TourRunner.prototype._ensureUi = function () {
+    if (this.overlay) return;
+
+    var overlay = createEl('div', { 'data-tuquinha-tour': 'overlay' });
+    overlay.style.position = 'fixed';
+    overlay.style.inset = '0';
+    overlay.style.zIndex = '99999';
+    overlay.style.pointerEvents = 'auto';
+
+    var hole = createEl('div', { 'data-tuquinha-tour': 'hole' });
+    hole.style.position = 'fixed';
+    hole.style.left = '0';
+    hole.style.top = '0';
+    hole.style.width = '10px';
+    hole.style.height = '10px';
+    hole.style.borderRadius = '14px';
+    hole.style.boxShadow = '0 0 0 9999px rgba(0,0,0,0.72)';
+    hole.style.outline = '2px solid rgba(255,255,255,0.12)';
+    hole.style.pointerEvents = 'none';
+    hole.style.transition = 'all 180ms ease';
+
+    var tooltip = createEl('div', { 'data-tuquinha-tour': 'tooltip' });
+    tooltip.style.position = 'fixed';
+    tooltip.style.maxWidth = '360px';
+    tooltip.style.background = 'rgba(17,17,24,0.98)';
+    tooltip.style.border = '1px solid rgba(255,255,255,0.12)';
+    tooltip.style.borderRadius = '14px';
+    tooltip.style.boxShadow = '0 18px 45px rgba(0,0,0,0.45)';
+    tooltip.style.padding = '12px 12px 10px 12px';
+    tooltip.style.color = '#f5f5f5';
+    tooltip.style.fontFamily = 'system-ui, -apple-system, Segoe UI, sans-serif';
+
+    var title = createEl('div', { 'data-tuquinha-tour': 'title' });
+    title.style.fontSize = '14px';
+    title.style.fontWeight = '750';
+    title.style.marginBottom = '6px';
+
+    var text = createEl('div', { 'data-tuquinha-tour': 'text' });
+    text.style.fontSize = '12.5px';
+    text.style.color = 'rgba(245,245,245,0.82)';
+    text.style.lineHeight = '1.45';
+    text.style.marginBottom = '10px';
+
+    var actions = createEl('div', { 'data-tuquinha-tour': 'actions' });
+    actions.style.display = 'flex';
+    actions.style.gap = '8px';
+    actions.style.alignItems = 'center';
+    actions.style.justifyContent = 'space-between';
+
+    var left = createEl('div');
+    left.style.display = 'flex';
+    left.style.gap = '8px';
+
+    var right = createEl('div');
+    right.style.display = 'flex';
+    right.style.gap = '8px';
+
+    function mkBtn(label, variant) {
+      var btn = createEl('button', { type: 'button' });
+      btn.textContent = label;
+      btn.style.border = '1px solid rgba(255,255,255,0.12)';
+      btn.style.borderRadius = '999px';
+      btn.style.padding = '7px 10px';
+      btn.style.fontSize = '12px';
+      btn.style.cursor = 'pointer';
+      btn.style.background = 'transparent';
+      btn.style.color = '#f5f5f5';
+      if (variant === 'primary') {
+        btn.style.border = 'none';
+        btn.style.background = 'linear-gradient(135deg, #e53935, #ff6f60)';
+        btn.style.color = '#050509';
+        btn.style.fontWeight = '750';
+      }
+      if (variant === 'danger') {
+        btn.style.color = '#ffbaba';
+      }
+      return btn;
+    }
+
+    var btnPrev = mkBtn('Voltar');
+    var btnNext = mkBtn('Próximo', 'primary');
+    var btnSkip = mkBtn('Pular', 'danger');
+    var btnClose = mkBtn('Fechar');
+
+    left.appendChild(btnPrev);
+    left.appendChild(btnNext);
+    right.appendChild(btnSkip);
+    right.appendChild(btnClose);
+
+    actions.appendChild(left);
+    actions.appendChild(right);
+
+    tooltip.appendChild(title);
+    tooltip.appendChild(text);
+    tooltip.appendChild(actions);
+
+    overlay.appendChild(hole);
+    overlay.appendChild(tooltip);
+
+    document.body.appendChild(overlay);
+
+    this.overlay = overlay;
+    this.hole = hole;
+    this.tooltip = tooltip;
+    this.titleEl = title;
+    this.textEl = text;
+    this.btnPrev = btnPrev;
+    this.btnNext = btnNext;
+    this.btnSkip = btnSkip;
+    this.btnClose = btnClose;
+  };
+
+  TourRunner.prototype._findStepEl = function (step) {
+    if (!step || !step.selector) return null;
+    return qs(step.selector);
+  };
+
+  TourRunner.prototype._scrollIntoView = function (el) {
+    try {
+      if (!el) return;
+      el.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
+    } catch (e) {}
+  };
+
+  TourRunner.prototype._position = function () {
+    if (!this.active) return;
+    var step = this.tour.steps[this.idx];
+    var el = this._findStepEl(step);
+
+    if (!el) {
+      // Se não achar o elemento, tenta pular automaticamente
+      this._next(true);
+      return;
+    }
+
+    var r = el.getBoundingClientRect();
+    var pad = 10;
+    var x = clamp(r.left - pad, 8, window.innerWidth - 8);
+    var y = clamp(r.top - pad, 8, window.innerHeight - 8);
+    var w = clamp(r.width + pad * 2, 24, window.innerWidth - 16);
+    var h = clamp(r.height + pad * 2, 24, window.innerHeight - 16);
+
+    this.hole.style.left = x + 'px';
+    this.hole.style.top = y + 'px';
+    this.hole.style.width = w + 'px';
+    this.hole.style.height = h + 'px';
+
+    // Tooltip
+    var tt = this.tooltip;
+    var ttW = tt.offsetWidth || 320;
+    var ttH = tt.offsetHeight || 140;
+
+    var belowY = y + h + 12;
+    var aboveY = y - ttH - 12;
+
+    var placeBelow = (belowY + ttH) < (window.innerHeight - 8);
+    var top = placeBelow ? belowY : aboveY;
+    if (top < 8) top = 8;
+
+    var left = clamp(x, 8, window.innerWidth - ttW - 8);
+    // Se tiver espaço à direita do highlight, tenta alinhar melhor
+    if (x + w + 12 + ttW < window.innerWidth - 8) {
+      left = clamp(x + w + 12, 8, window.innerWidth - ttW - 8);
+      top = clamp(y, 8, window.innerHeight - ttH - 8);
+    }
+
+    tt.style.left = left + 'px';
+    tt.style.top = top + 'px';
+  };
+
+  TourRunner.prototype._renderStep = function () {
+    this._ensureUi();
+
+    var step = this.tour.steps[this.idx];
+    var el = this._findStepEl(step);
+    if (el) {
+      this._scrollIntoView(el);
+    }
+
+    this.titleEl.textContent = String(step.title || this.tour.title || 'Tour');
+    this.textEl.textContent = String(step.text || '');
+
+    this.btnPrev.disabled = this.idx <= 0;
+    this.btnPrev.style.opacity = this.btnPrev.disabled ? '0.55' : '1';
+    this.btnPrev.style.cursor = this.btnPrev.disabled ? 'not-allowed' : 'pointer';
+
+    var isLast = this.idx >= (this.tour.steps.length - 1);
+    this.btnNext.textContent = isLast ? 'Finalizar' : 'Próximo';
+
+    this._position();
+  };
+
+  TourRunner.prototype._saveDone = function () {
+    var ls = safeLocalStorage();
+    if (!ls) return;
+    var key = 'tuq_tour_done:' + String(this.tour.id);
+    ls.setItem(key, '1');
+  };
+
+  TourRunner.prototype._clearDone = function () {
+    var ls = safeLocalStorage();
+    if (!ls) return;
+    var key = 'tuq_tour_done:' + String(this.tour.id);
+    ls.removeItem(key);
+  };
+
+  TourRunner.prototype.isDone = function () {
+    var ls = safeLocalStorage();
+    if (!ls) return false;
+    var key = 'tuq_tour_done:' + String(this.tour.id);
+    return ls.getItem(key) === '1';
+  };
+
+  TourRunner.prototype.start = function (force) {
+    if (this.active) return;
+    if (!force && this.isDone()) return;
+
+    this.active = true;
+    this.idx = 0;
+
+    this._ensureUi();
+    this.overlay.style.display = 'block';
+
+    var self = this;
+    this.btnPrev.onclick = function () { self._prev(); };
+    this.btnNext.onclick = function () { self._next(false); };
+    this.btnSkip.onclick = function () { self.finish(true); };
+    this.btnClose.onclick = function () { self.finish(false); };
+
+    this._boundReposition = function () { self._position(); };
+    window.addEventListener('resize', this._boundReposition);
+    window.addEventListener('scroll', this._boundReposition, true);
+
+    this._renderStep();
+  };
+
+  TourRunner.prototype._prev = function () {
+    if (!this.active) return;
+    this.idx = Math.max(0, this.idx - 1);
+    this._renderStep();
+  };
+
+  TourRunner.prototype._next = function (autoSkipIfMissing) {
+    if (!this.active) return;
+
+    var isLast = this.idx >= (this.tour.steps.length - 1);
+    if (isLast) {
+      this.finish(true);
+      return;
+    }
+
+    this.idx = Math.min(this.tour.steps.length - 1, this.idx + 1);
+
+    if (autoSkipIfMissing) {
+      // evita loop infinito
+      var guard = 0;
+      while (guard < 10) {
+        var step = this.tour.steps[this.idx];
+        if (this._findStepEl(step)) break;
+        if (this.idx >= this.tour.steps.length - 1) break;
+        this.idx += 1;
+        guard += 1;
+      }
+    }
+
+    this._renderStep();
+  };
+
+  TourRunner.prototype.finish = function (markDone) {
+    if (!this.active) return;
+
+    if (markDone) {
+      this._saveDone();
+    }
+
+    this.active = false;
+
+    try {
+      if (this.overlay) this.overlay.style.display = 'none';
+    } catch (e) {}
+
+    if (this._boundReposition) {
+      window.removeEventListener('resize', this._boundReposition);
+      window.removeEventListener('scroll', this._boundReposition, true);
+      this._boundReposition = null;
+    }
+  };
+
+  function mountFloatingButton(runner) {
+    var existing = qs('[data-tuquinha-tour="fab"]');
+    if (existing) return;
+
+    var btn = createEl('button', { type: 'button', 'data-tuquinha-tour': 'fab' });
+    btn.textContent = 'Tour';
+    btn.style.position = 'fixed';
+    btn.style.right = '14px';
+    btn.style.bottom = '14px';
+    btn.style.zIndex = '9999';
+    btn.style.border = 'none';
+    btn.style.borderRadius = '999px';
+    btn.style.padding = '10px 14px';
+    btn.style.background = 'linear-gradient(135deg, #e53935, #ff6f60)';
+    btn.style.color = '#050509';
+    btn.style.fontWeight = '800';
+    btn.style.cursor = 'pointer';
+    btn.style.boxShadow = '0 12px 30px rgba(0,0,0,0.35)';
+
+    btn.onclick = function () {
+      runner._clearDone();
+      runner.start(true);
+    };
+
+    document.body.appendChild(btn);
+  }
+
+  function bootstrap() {
+    var tour = getTourForCurrentPage();
+    if (!tour || !tour.steps || !tour.steps.length) return;
+
+    var runner = new TourRunner(tour);
+
+    // botão sempre disponível (reexecutar)
+    mountFloatingButton(runner);
+
+    // auto start (1a vez)
+    setTimeout(function () {
+      runner.start(false);
+    }, 550);
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', bootstrap);
+  } else {
+    bootstrap();
+  }
+})();
