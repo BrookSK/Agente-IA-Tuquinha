@@ -667,7 +667,7 @@
     return ls.getItem(key) === '1';
   };
 
-  TourRunner.prototype.start = function (force) {
+  TourRunner.prototype.start = function (force, autoSkipIfMissing) {
     if (this.active) return;
     if (!force && this.isDone()) return;
 
@@ -686,6 +686,18 @@
     this._boundReposition = function () { self._position(); };
     window.addEventListener('resize', this._boundReposition);
     window.addEventListener('scroll', this._boundReposition, true);
+
+    if (autoSkipIfMissing) {
+      // tenta iniciar no primeiro passo que existir no DOM
+      var guard = 0;
+      while (guard < 10) {
+        var step = this.tour.steps[this.idx];
+        if (this._findStepEl(step)) break;
+        if (this.idx >= this.tour.steps.length - 1) break;
+        this.idx += 1;
+        guard += 1;
+      }
+    }
 
     this._renderStep();
   };
@@ -854,10 +866,16 @@
 
     // Auto start apenas no onboarding (ou force) - com tentativas extras
     var start = function () {
-      try { runner.start(true); } catch (e) {}
+      try { runner.start(true, true); } catch (e) {}
     };
     setTimeout(start, 50);
     setTimeout(start, 450);
+
+    // Algumas páginas (ex.: chat) podem renderizar componentes depois do DOMContentLoaded
+    if (st && st.active) {
+      setTimeout(start, 1200);
+      setTimeout(start, 2500);
+    }
   }
 
   if (document.readyState === 'loading') {
