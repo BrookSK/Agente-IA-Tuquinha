@@ -38,6 +38,11 @@ class PersonalityController extends Controller
             exit;
         }
 
+        if (!Personality::hasAnyUsableForUsers()) {
+            header('Location: /chat?new=1');
+            exit;
+        }
+
         $conversationId = isset($_GET['conversation_id']) ? (int)$_GET['conversation_id'] : 0;
         if ($conversationId > 0) {
             // Seleção de personalidade por chat: só permite se o usuário atual tem acesso à conversa

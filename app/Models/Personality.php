@@ -7,6 +7,14 @@ use PDO;
 
 class Personality
 {
+    public static function hasAnyUsableForUsers(): bool
+    {
+        $pdo = Database::getConnection();
+        $stmt = $pdo->query('SELECT 1 FROM personalities WHERE active = 1 AND coming_soon = 0 LIMIT 1');
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        return (bool)$row;
+    }
+
     public static function allVisibleForUsers(): array
     {
         $pdo = Database::getConnection();

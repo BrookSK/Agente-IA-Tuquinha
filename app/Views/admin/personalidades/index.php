@@ -16,15 +16,40 @@
             <span>+ Nova personalidade</span>
         </a>
 
+        <?php
+            $allComingSoon = true;
+            if (empty($personalities)) {
+                $allComingSoon = false;
+            } else {
+                foreach ($personalities as $pp) {
+                    if (empty($pp['coming_soon'])) {
+                        $allComingSoon = false;
+                        break;
+                    }
+                }
+            }
+        ?>
         <div style="display:flex; gap:8px; align-items:center;">
-            <a href="/admin/personalidades/em-breve/todas?v=1" style="
-                display:inline-flex; align-items:center;
-                border-radius:999px; padding:7px 12px;
-                border:1px solid #3a2a10;
-                background:#201216;
-                color:#ffcc80; font-size:12px; font-weight:600; text-decoration:none;">
-                Marcar todas como Em breve
-            </a>
+            <?php if ($allComingSoon): ?>
+                <span style="
+                    display:inline-flex; align-items:center;
+                    border-radius:999px; padding:7px 12px;
+                    border:1px solid #3a2a10;
+                    background:#201216;
+                    color:#ffcc80; font-size:12px; font-weight:600;
+                    opacity:0.5; cursor:not-allowed; user-select:none;">
+                    Marcar todas como Em breve
+                </span>
+            <?php else: ?>
+                <a href="/admin/personalidades/em-breve/todas?v=1" style="
+                    display:inline-flex; align-items:center;
+                    border-radius:999px; padding:7px 12px;
+                    border:1px solid #3a2a10;
+                    background:#201216;
+                    color:#ffcc80; font-size:12px; font-weight:600; text-decoration:none;">
+                    Marcar todas como Em breve
+                </a>
+            <?php endif; ?>
             <a href="/admin/personalidades/em-breve/todas?v=0" style="
                 display:inline-flex; align-items:center;
                 border-radius:999px; padding:7px 12px;

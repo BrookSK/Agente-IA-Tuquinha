@@ -36,9 +36,15 @@ class ChatController extends Controller
             }
         }
 
-        // Se acessar /chat sem ?new=1 e sem ?c=, e não houver conversa atual, redireciona para seleção de personalidade
+        // Se acessar /chat sem ?new=1 e sem ?c=, e não houver conversa atual, redireciona para seleção de personalidade.
+        // Porém, se todas estiverem "Em breve", não faz sentido pedir seleção.
         if (!$isNew && $conversationParam === 0 && empty($_SESSION['current_conversation_id'])) {
-            header('Location: /personalidades');
+            if (Personality::hasAnyUsableForUsers()) {
+                header('Location: /personalidades');
+                exit;
+            }
+
+            header('Location: /chat?new=1');
             exit;
         }
 
