@@ -636,6 +636,22 @@
     this.finish(false);
   };
 
+  TourRunner.prototype._closeUiOnly = function () {
+    // Fecha o overlay sem mexer no estado do onboarding (usado ao trocar de página)
+    try {
+      this.active = false;
+      if (this.overlay) this.overlay.style.display = 'none';
+    } catch (e) {}
+
+    if (this._boundReposition) {
+      try {
+        window.removeEventListener('resize', this._boundReposition);
+        window.removeEventListener('scroll', this._boundReposition, true);
+      } catch (e) {}
+      this._boundReposition = null;
+    }
+  };
+
   TourRunner.prototype._prev = function () {
     if (!this.active) return;
     this.idx = Math.max(0, this.idx - 1);
@@ -656,8 +672,8 @@
       if (flow && flow.length && pageIdx < flow.length - 1) {
         var nextPath = flow[pageIdx + 1];
         setOnboarding(true, pageIdx + 1);
+        this._closeUiOnly();
         window.location.href = nextPath;
-        this.cancel();
         return;
       }
 
