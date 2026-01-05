@@ -50,7 +50,7 @@ class PersonalityPreferenceController extends Controller
             exit;
         }
 
-        $personalities = Personality::allActive();
+        $personalities = Personality::allVisibleForUsers();
 
         $success = $_SESSION['personality_pref_success'] ?? null;
         if ($success !== null) {
@@ -79,7 +79,7 @@ class PersonalityPreferenceController extends Controller
         $defaultPersonaId = null;
         if ($defaultPersonaIdRaw > 0) {
             $persona = Personality::findById($defaultPersonaIdRaw);
-            if ($persona && !empty($persona['active'])) {
+            if ($persona && !empty($persona['active']) && empty($persona['coming_soon'])) {
                 $defaultPersonaId = (int)$persona['id'];
             }
         }

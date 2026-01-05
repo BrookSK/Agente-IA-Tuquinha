@@ -180,11 +180,12 @@ $successMessage = $success ?? null;
                         $pname = trim((string)($persona['name'] ?? ''));
                         $parea = trim((string)($persona['area'] ?? ''));
                         $imagePath = trim((string)($persona['image_path'] ?? ''));
+                        $isComingSoon = !empty($persona['coming_soon']);
                         if ($imagePath === '') {
                             $imagePath = '/public/favicon.png';
                         }
                     ?>
-                    <button type="button" class="persona-card-btn persona-default-card<?= $currentDefaultPersonaId === $pid ? ' persona-default-card--active' : '' ?>" data-persona-id="<?= $pid ?>">
+                    <button type="button" class="persona-card-btn persona-default-card<?= $currentDefaultPersonaId === $pid ? ' persona-default-card--active' : '' ?>" data-persona-id="<?= $pid ?>" <?= $isComingSoon ? 'disabled' : '' ?> style="cursor:<?= $isComingSoon ? 'not-allowed' : 'pointer' ?>;">
                         <div class="persona-default-card-image">
                             <img src="<?= htmlspecialchars($imagePath) ?>" alt="<?= htmlspecialchars($pname) ?>" style="width:100%; height:100%; object-fit:cover; display:block;">
                         </div>
@@ -193,6 +194,9 @@ $successMessage = $success ?? null;
                                 <div style="font-size:16px; font-weight:650; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
                                     <?= htmlspecialchars($pname) ?>
                                 </div>
+                                <?php if ($isComingSoon): ?>
+                                    <span style="font-size:9px; text-transform:uppercase; letter-spacing:0.14em; border-radius:999px; padding:2px 7px; background:#201216; color:#ffcc80; border:1px solid #ff6f60; flex-shrink:0;">Em breve</span>
+                                <?php endif; ?>
                             </div>
                             <?php if ($parea !== ''): ?>
                                 <div style="font-size:12px; color:#ffcc80; margin-bottom:6px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
@@ -200,7 +204,7 @@ $successMessage = $success ?? null;
                                 </div>
                             <?php endif; ?>
                             <div class="persona-default-card-desc">
-                                Clique para usar essa personalidade como padrão em novos chats.
+                                <?= $isComingSoon ? 'Preview disponível. Em breve você poderá usar como padrão.' : 'Clique para usar essa personalidade como padrão em novos chats.' ?>
                             </div>
                         </div>
                     </button>
@@ -338,6 +342,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
         buttons.forEach(function (btn) {
             btn.addEventListener('click', function () {
+                if (btn.disabled) {
+                    return;
+                }
                 var idx = 0;
                 buttons.forEach(function (b, i) {
                     if (b === btn) idx = i;

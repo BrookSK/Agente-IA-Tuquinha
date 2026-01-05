@@ -53,6 +53,7 @@ class AdminPersonalityController extends Controller
         $imagePath = trim($_POST['image_path'] ?? '');
         $isDefault = !empty($_POST['is_default']) ? 1 : 0;
         $active = !empty($_POST['active']) ? 1 : 0;
+        $comingSoon = !empty($_POST['coming_soon']) ? 1 : 0;
 
         $target = '/admin/personalidades/novo';
         if ($id > 0) {
@@ -131,6 +132,7 @@ class AdminPersonalityController extends Controller
             'image_path' => $imagePath !== '' ? $imagePath : null,
             'is_default' => $isDefault,
             'active' => $active,
+            'coming_soon' => $comingSoon,
         ];
 
         if ($id > 0) {
@@ -159,9 +161,44 @@ class AdminPersonalityController extends Controller
                     'image_path' => $persona['image_path'],
                     'is_default' => $persona['is_default'],
                     'active' => $value === 1 ? 1 : 0,
+                    'coming_soon' => $persona['coming_soon'] ?? 0,
                 ]);
             }
         }
+        header('Location: /admin/personalidades');
+        exit;
+    }
+
+    public function toggleComingSoon(): void
+    {
+        $this->ensureAdmin();
+        $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
+        $value = isset($_GET['v']) ? (int)$_GET['v'] : 0;
+        if ($id > 0) {
+            $persona = Personality::findById($id);
+            if ($persona) {
+                Personality::update($id, [
+                    'name' => $persona['name'],
+                    'area' => $persona['area'],
+                    'slug' => $persona['slug'],
+                    'prompt' => $persona['prompt'],
+                    'image_path' => $persona['image_path'],
+                    'is_default' => $persona['is_default'],
+                    'active' => $persona['active'],
+                    'coming_soon' => $value === 1 ? 1 : 0,
+                ]);
+            }
+        }
+        header('Location: /admin/personalidades');
+        exit;
+    }
+
+    public function setAllComingSoon(): void
+    {
+        $this->ensureAdmin();
+        $value = isset($_GET['v']) ? (int)$_GET['v'] : 0;
+        $pdo = \App\Core\Database::getConnection();
+        $pdo->exec('UPDATE personalities SET coming_soon = ' . ($value === 1 ? '1' : '0'));
         header('Location: /admin/personalidades');
         exit;
     }
@@ -185,6 +222,7 @@ class AdminPersonalityController extends Controller
                     'image_path' => $persona['image_path'],
                     'is_default' => 1,
                     'active' => $persona['active'],
+                    'coming_soon' => $persona['coming_soon'] ?? 0,
                 ]);
             }
         }

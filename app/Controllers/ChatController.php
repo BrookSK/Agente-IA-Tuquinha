@@ -1739,8 +1739,12 @@ class ChatController extends Controller
         $personaId = null;
         if ($personaIdRaw > 0) {
             $persona = Personality::findById($personaIdRaw);
-            if ($persona && !empty($persona['active'])) {
+            if ($persona && !empty($persona['active']) && empty($persona['coming_soon'])) {
                 $personaId = (int)$persona['id'];
+            } elseif ($persona && !empty($persona['active']) && !empty($persona['coming_soon'])) {
+                $_SESSION['chat_error'] = 'Esta personalidade está marcada como Em breve e ainda não pode ser usada.';
+                header('Location: /chat?c=' . $conversationId);
+                exit;
             }
         }
 

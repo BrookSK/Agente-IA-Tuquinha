@@ -67,7 +67,7 @@ class PersonalityController extends Controller
             }
         }
 
-        $personalities = Personality::allActive();
+        $personalities = Personality::allVisibleForUsers();
 
         $this->view('personalities/index', [
             'pageTitle' => 'Escolha a personalidade do Tuquinha',

@@ -15,6 +15,25 @@
             color:#050509; font-size:13px; font-weight:600; text-decoration:none;">
             <span>+ Nova personalidade</span>
         </a>
+
+        <div style="display:flex; gap:8px; align-items:center;">
+            <a href="/admin/personalidades/em-breve/todas?v=1" style="
+                display:inline-flex; align-items:center;
+                border-radius:999px; padding:7px 12px;
+                border:1px solid #3a2a10;
+                background:#201216;
+                color:#ffcc80; font-size:12px; font-weight:600; text-decoration:none;">
+                Marcar todas como Em breve
+            </a>
+            <a href="/admin/personalidades/em-breve/todas?v=0" style="
+                display:inline-flex; align-items:center;
+                border-radius:999px; padding:7px 12px;
+                border:1px solid #272727;
+                background:#111118;
+                color:#b0b0b0; font-size:12px; font-weight:600; text-decoration:none;">
+                Remover Em breve (todas)
+            </a>
+        </div>
     </div>
 
     <div style="border-radius:12px; border:1px solid #272727; overflow:hidden;">
@@ -39,6 +58,7 @@
                     <?php
                         $active = !empty($p['active']);
                         $isDefault = !empty($p['is_default']);
+                        $isComingSoon = !empty($p['coming_soon']);
                     ?>
                     <tr style="background:#111118; border-top:1px solid #272727;">
                         <td style="padding:8px 10px;">
@@ -65,11 +85,26 @@
                                 color:<?= $active ? '#6be28d' : '#ff8a80' ?>;">
                                 <?= $active ? 'Ativa' : 'Inativa' ?>
                             </span>
+
+                            <?php if ($isComingSoon): ?>
+                                <span style="
+                                    display:inline-flex; align-items:center; gap:4px;
+                                    border-radius:999px; padding:2px 8px; font-size:11px;
+                                    background:#201216; color:#ffcc80; border:1px solid #ff6f60;
+                                    margin-left:6px;">
+                                    Em breve
+                                </span>
+                            <?php endif; ?>
                         </td>
                         <td style="padding:8px 10px; text-align:right; white-space:nowrap;">
                             <a href="/admin/personalidades/editar?id=<?= (int)$p['id'] ?>" style="margin-right:6px; color:#ff6f60; text-decoration:none;">Editar</a>
                             <a href="/admin/personalidades/ativar?id=<?= (int)$p['id'] ?>&v=<?= $active ? '0' : '1' ?>" style="color:#b0b0b0; text-decoration:none; font-size:12px;">
                                 <?= $active ? 'Desativar' : 'Ativar' ?>
+                            </a>
+
+                            <span style="margin:0 6px; color:#272727;">|</span>
+                            <a href="/admin/personalidades/em-breve?id=<?= (int)$p['id'] ?>&v=<?= $isComingSoon ? '0' : '1' ?>" style="color:#ffcc80; text-decoration:none; font-size:12px;">
+                                <?= $isComingSoon ? 'Remover Em breve' : 'Marcar Em breve' ?>
                             </a>
                         </td>
                     </tr>

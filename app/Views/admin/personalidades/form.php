@@ -83,6 +83,10 @@ $isEdit = !empty($persona);
                 <input type="checkbox" name="is_default" value="1" <?= !empty($persona['is_default']) ? 'checked' : '' ?>>
                 <span>Definir como personalidade padrão global</span>
             </label>
+            <label style="display:flex; align-items:center; gap:5px;">
+                <input type="checkbox" name="coming_soon" value="1" <?= !empty($persona['coming_soon']) ? 'checked' : '' ?>>
+                <span>Em breve (preview, sem permitir uso)</span>
+            </label>
         </div>
         <div style="font-size:11px; color:#777; margin-top:3px;">
             Apenas uma personalidade será considerada padrão global; se marcar mais de uma, o sistema considera a primeira pelo ID.

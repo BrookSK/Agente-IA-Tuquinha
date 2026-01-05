@@ -275,6 +275,8 @@ $router->get('/admin/personalidades/novo', 'AdminPersonalityController@form');
 $router->get('/admin/personalidades/editar', 'AdminPersonalityController@form');
 $router->post('/admin/personalidades/salvar', 'AdminPersonalityController@save');
 $router->get('/admin/personalidades/ativar', 'AdminPersonalityController@toggleActive');
+$router->get('/admin/personalidades/em-breve', 'AdminPersonalityController@toggleComingSoon');
+$router->get('/admin/personalidades/em-breve/todas', 'AdminPersonalityController@setAllComingSoon');
 $router->get('/admin/personalidades/padrao', 'AdminPersonalityController@setDefault');
 $router->get('/admin/usuarios', 'AdminUserController@index');
 $router->get('/admin/usuarios/ver', 'AdminUserController@show');

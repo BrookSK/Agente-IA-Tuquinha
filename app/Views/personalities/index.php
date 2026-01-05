@@ -176,6 +176,7 @@ $conversationId = isset($conversationId) ? (int)$conversationId : 0;
                         $area = trim((string)($persona['area'] ?? ''));
                         $imagePath = trim((string)($persona['image_path'] ?? ''));
                         $isDefault = !empty($persona['is_default']);
+                        $isComingSoon = !empty($persona['coming_soon']);
                         $prompt = trim((string)($persona['prompt'] ?? ''));
                         $desc = '';
                         if ($prompt !== '') {
@@ -214,14 +215,16 @@ $conversationId = isset($conversationId) ? (int)$conversationId : 0;
                         <form action="/chat/persona" method="post" style="margin:0;">
                             <input type="hidden" name="conversation_id" value="<?= (int)$conversationId ?>">
                             <input type="hidden" name="persona_id" value="<?= $id ?>">
-                            <button type="submit" class="persona-card" style="
+                            <button type="submit" class="persona-card" <?= $isComingSoon ? 'disabled' : '' ?> style="
                                 width:100%;
                                 padding:0;
                                 text-align:left;
-                                cursor:pointer;
+                                cursor:<?= $isComingSoon ? 'not-allowed' : 'pointer' ?>;
                             ">
                     <?php else: ?>
-                        <a href="/chat?new=1&amp;persona_id=<?= $id ?>" class="persona-card" style="
+                        <a href="<?= $isComingSoon ? 'javascript:void(0)' : ('/chat?new=1&amp;persona_id=' . $id) ?>" class="persona-card" style="
+                            cursor:<?= $isComingSoon ? 'not-allowed' : 'pointer' ?>;
+                            pointer-events:<?= $isComingSoon ? 'none' : 'auto' ?>;
                         ">
                     <?php endif; ?>
                         <div class="persona-card-image">
@@ -232,9 +235,14 @@ $conversationId = isset($conversationId) ? (int)$conversationId : 0;
                                 <div style="font-size:18px; font-weight:650; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
                                     <?= htmlspecialchars($name) ?>
                                 </div>
+                                <div style="display:flex; gap:6px; align-items:center; flex-shrink:0;">
+                                <?php if ($isComingSoon): ?>
+                                    <span style="font-size:9px; text-transform:uppercase; letter-spacing:0.14em; border-radius:999px; padding:2px 7px; background:#201216; color:#ffcc80; border:1px solid #ff6f60;">Em breve</span>
+                                <?php endif; ?>
                                 <?php if ($isDefault): ?>
                                     <span style="font-size:9px; text-transform:uppercase; letter-spacing:0.14em; border-radius:999px; padding:2px 7px; background:#201216; color:#ffcc80; border:1px solid #ff6f60;">Principal</span>
                                 <?php endif; ?>
+                                </div>
                             </div>
                             <?php if ($area !== ''): ?>
                                 <div style="font-size:12px; color:#ffcc80; margin-bottom:6px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
@@ -247,7 +255,7 @@ $conversationId = isset($conversationId) ? (int)$conversationId : 0;
                                 </div>
                             <?php else: ?>
                                 <div class="persona-card-muted">
-                                    Clique para começar um chat com essa personalidade.
+                                    <?= $isComingSoon ? 'Preview disponível. Em breve você poderá usar essa personalidade.' : 'Clique para começar um chat com essa personalidade.' ?>
                                 </div>
                             <?php endif; ?>
                         </div>
