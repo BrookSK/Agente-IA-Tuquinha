@@ -119,6 +119,15 @@ $knownModels = [
             <small style="color:#777; font-size:11px;">Cole aqui o link do YouTube/Vimeo. Se estiver vazio, aparece “Vídeo em breve” na Home.</small>
         </div>
 
+        <div>
+            <label style="font-size: 12px; color: #b0b0b0;">Ou envie um vídeo (Quem é o Tuquinha)</label>
+            <input type="file" name="tuquinha_about_video_upload" accept="video/*" style="
+                width: 100%; padding: 8px 10px; border-radius: 8px; border: 1px solid #272727;
+                background: #050509; color: #f5f5f5; font-size: 13px;
+            ">
+            <small style="color:#777; font-size:11px;">Opcional. Se você enviar um arquivo, o sistema faz upload no servidor de vídeos e salva a URL automaticamente.</small>
+        </div>
+
         <div style="margin-top: 8px; padding:10px 12px; border-radius:10px; border:1px solid #272727; background:#0a0a10;">
             <div style="font-size:13px; color:#b0b0b0; margin-bottom:8px;">
                 <strong>Certificados</strong><br>

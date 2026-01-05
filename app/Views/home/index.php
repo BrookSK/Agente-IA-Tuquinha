@@ -42,13 +42,24 @@
                 font-size: 13px;
             ">
                 <?php if (!empty($tuquinhaAboutVideoUrl)): ?>
-                    <iframe
-                        src="<?= htmlspecialchars($tuquinhaAboutVideoUrl) ?>"
-                        title="Vídeo: Quem é o Tuquinha"
-                        style="width:100%; height:100%; min-height:220px; border:0; display:block;"
-                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                        allowfullscreen
-                    ></iframe>
+                    <?php
+                        $videoUrl = (string)$tuquinhaAboutVideoUrl;
+                        $path = parse_url($videoUrl, PHP_URL_PATH);
+                        $ext = is_string($path) ? strtolower(pathinfo($path, PATHINFO_EXTENSION)) : '';
+                        $isDirectVideo = in_array($ext, ['mp4', 'webm', 'ogg', 'mov'], true);
+                    ?>
+
+                    <?php if ($isDirectVideo): ?>
+                        <video src="<?= htmlspecialchars($videoUrl) ?>" controls style="width:100%; height:100%; min-height:220px; display:block;" playsinline></video>
+                    <?php else: ?>
+                        <iframe
+                            src="<?= htmlspecialchars($videoUrl) ?>"
+                            title="Vídeo: Quem é o Tuquinha"
+                            style="width:100%; height:100%; min-height:220px; border:0; display:block;"
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                            allowfullscreen
+                        ></iframe>
+                    <?php endif; ?>
                 <?php else: ?>
                     Vídeo em breve
                 <?php endif; ?>

@@ -160,6 +160,21 @@ class AdminConfigController extends Controller
 
         $tuquinhaAboutVideoUrl = trim($_POST['tuquinha_about_video_url'] ?? '');
 
+        if (isset($_FILES['tuquinha_about_video_upload']) && !empty($_FILES['tuquinha_about_video_upload']['tmp_name'])) {
+            $tmp = (string)($_FILES['tuquinha_about_video_upload']['tmp_name'] ?? '');
+            $originalName = (string)($_FILES['tuquinha_about_video_upload']['name'] ?? '');
+            $mime = (string)($_FILES['tuquinha_about_video_upload']['type'] ?? '');
+
+            if ($tmp !== '' && is_uploaded_file($tmp)) {
+                $defaultVideoEndpoint = defined('MEDIA_VIDEO_UPLOAD_ENDPOINT') ? MEDIA_VIDEO_UPLOAD_ENDPOINT : '';
+                $endpoint = trim(Setting::get('media_video_upload_endpoint', $defaultVideoEndpoint));
+                $remoteVideoUrl = MediaStorageService::uploadFileToEndpoint($tmp, $originalName, $mime, $endpoint);
+                if ($remoteVideoUrl !== null) {
+                    $tuquinhaAboutVideoUrl = $remoteVideoUrl;
+                }
+            }
+        }
+
         $certificateIssuerName = trim($_POST['certificate_issuer_name'] ?? 'Thiago Marques');
         if ($certificateIssuerName === '') {
             $certificateIssuerName = 'Thiago Marques';
