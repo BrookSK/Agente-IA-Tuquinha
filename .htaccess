@@ -1,5 +1,9 @@
 RewriteEngine On
 
+RewriteCond %{REQUEST_URI} ^/guias/ [NC]
+RewriteCond %{DOCUMENT_ROOT}/public%{REQUEST_URI} -f
+RewriteRule ^guias/(.*)$ public/guias/$1 [L]
+
 # Se o arquivo ou diretório físico existir na raiz, entrega direto
 RewriteCond %{REQUEST_FILENAME} -f [OR]
 RewriteCond %{REQUEST_FILENAME} -d
