@@ -670,6 +670,12 @@ if (!empty($_SESSION['user_id'])) {
                             <span>Histórico de tokens extras</span>
                         </a>
                     <?php endif; ?>
+                    <?php if (!empty($_SESSION['is_admin']) || $hasActiveSubscriptionForMenu): ?>
+                        <a href="/suporte" class="sidebar-button" style="margin-top: 6px;">
+                            <span class="icon" aria-hidden="true"><?php echo $renderMenuIcon('account_support', '🛟'); ?></span>
+                            <span>Suporte</span>
+                        </a>
+                    <?php endif; ?>
                     <?php if (!empty($isCoursePartner)): ?>
                         <a href="/parceiro/cursos" class="sidebar-button">
                             <span class="icon" aria-hidden="true"><?php echo $renderMenuIcon('partner_courses', '🎓'); ?></span>
