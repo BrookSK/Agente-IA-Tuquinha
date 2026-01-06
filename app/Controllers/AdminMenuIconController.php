@@ -32,6 +32,7 @@ class AdminMenuIconController extends Controller
             'account_certificates' => 'Cursos concluídos',
             'account_persona' => 'Personalidade padrão',
             'account_tokens' => 'Histórico de tokens extras',
+            'account_support' => 'Suporte',
             'partner_courses' => 'Meus cursos (parceiro)',
             'partner_commissions' => 'Minhas comissões',
             'logout' => 'Sair da conta',
