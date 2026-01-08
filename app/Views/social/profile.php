@@ -392,6 +392,12 @@ $profileId = (int)($profileUser['id'] ?? 0);
                     </div>
 
                     <div>
+                        <label for="cover_file" style="display:block; font-size:12px; color:var(--text-secondary); margin-bottom:3px;">Capa do perfil (estilo Behance)</label>
+                        <input id="cover_file" type="file" name="cover_file" accept="image/*" style="font-size:12px;">
+                        <div style="font-size:11px; color:var(--text-secondary); margin-top:2px;">Recomendado: imagem larga. Até 4 MB.</div>
+                    </div>
+
+                    <div>
                         <label for="nickname" style="display:block; font-size:12px; color:var(--text-secondary); margin-bottom:3px;">Nickname (vai aparecer como @nickname)</label>
                         <input id="nickname" name="nickname" type="text" value="<?= htmlspecialchars((string)($profileUser['nickname'] ?? ''), ENT_QUOTES, 'UTF-8') ?>" placeholder="ex: joao_silva" style="width:100%; padding:6px 8px; border-radius:8px; border:1px solid var(--border-subtle); background:var(--surface-subtle); color:var(--text-primary); font-size:13px;">
                         <div style="font-size:11px; color:var(--text-secondary); margin-top:2px;">Apenas letras minúsculas, números, _ e -. Sem espaço.</div>
@@ -562,6 +568,7 @@ $profileId = (int)($profileUser['id'] ?? 0);
         <script>
         (function () {
             var btn = document.getElementById('openSocialProfileEditBtn');
+            var btnCover = document.getElementById('openSocialProfileEditBtnCover');
             var section = document.getElementById('socialProfileEditSection');
             if (!section) return;
 
@@ -577,9 +584,11 @@ $profileId = (int)($profileUser['id'] ?? 0);
             if (btn) {
                 btn.addEventListener('click', function () {
                     openEdit();
-                    if (window.location) {
-                        window.location.hash = '#editar-perfil';
-                    }
+                });
+
+            if (btnCover) {
+                btnCover.addEventListener('click', function () {
+                    openEdit();
                 });
             }
 

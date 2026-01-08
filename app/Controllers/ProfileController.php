@@ -10,6 +10,7 @@ use App\Models\UserTestimonial;
 use App\Models\UserFriend;
 use App\Models\CommunityMember;
 use App\Models\UserCourseBadge;
+use App\Models\SocialPortfolioItem;
 
 class ProfileController extends Controller
 {
@@ -65,6 +66,9 @@ class ProfileController extends Controller
         $friendship = $targetId !== $currentId ? UserFriend::findFriendship($currentId, $targetId) : null;
         $courseBadges = UserCourseBadge::allWithCoursesByUserId($targetId);
 
+        $published = SocialPortfolioItem::publishedForUser($targetId, 1);
+        $lastPublishedPortfolioItem = !empty($published) && is_array($published[0] ?? null) ? $published[0] : null;
+
         $isFavoriteFriend = false;
         if ($friendship && ($friendship['status'] ?? '') === 'accepted') {
             $pairUserId = (int)($friendship['user_id'] ?? 0);
@@ -90,6 +94,7 @@ class ProfileController extends Controller
             'user' => $currentUser,
             'profileUser' => $profileUser,
             'profile' => $profile,
+            'lastPublishedPortfolioItem' => $lastPublishedPortfolioItem,
             'scraps' => $scraps,
             'publicTestimonials' => $publicTestimonials,
             'pendingTestimonials' => $pendingTestimonials,
@@ -209,6 +214,7 @@ class ProfileController extends Controller
         // Avatar atual (caso não envie um novo, preserva o existente)
         $existingProfile = UserSocialProfile::findByUserId($userId);
         $avatarPath = $existingProfile['avatar_path'] ?? null;
+        $coverPath = $existingProfile['cover_path'] ?? null;
 
         // Upload opcional de nova foto de perfil
         if (!empty($_FILES['avatar_file']) && is_array($_FILES['avatar_file'])) {
@@ -261,6 +267,57 @@ class ProfileController extends Controller
             }
         }
 
+        // Upload opcional de capa do perfil
+        if (!empty($_FILES['cover_file']) && is_array($_FILES['cover_file'])) {
+            $uploadError = (int)($_FILES['cover_file']['error'] ?? UPLOAD_ERR_NO_FILE);
+            if ($uploadError !== UPLOAD_ERR_NO_FILE) {
+                if ($uploadError !== UPLOAD_ERR_OK) {
+                    $_SESSION['social_error'] = 'Erro ao enviar a capa do perfil.';
+                    header('Location: /perfil');
+                    exit;
+                }
+
+                $tmp = $_FILES['cover_file']['tmp_name'] ?? '';
+                $originalName = (string)($_FILES['cover_file']['name'] ?? 'capa');
+                $type = (string)($_FILES['cover_file']['type'] ?? '');
+                $size = (int)($_FILES['cover_file']['size'] ?? 0);
+
+                $maxSize = 4 * 1024 * 1024; // 4MB
+                if ($size <= 0 || $size > $maxSize) {
+                    $_SESSION['social_error'] = 'A capa do perfil deve ter até 4 MB.';
+                    header('Location: /perfil');
+                    exit;
+                }
+
+                if (!str_starts_with($type, 'image/')) {
+                    $_SESSION['social_error'] = 'Envie apenas arquivos de imagem (como JPG ou PNG) para a capa.';
+                    header('Location: /perfil');
+                    exit;
+                }
+
+                $publicDir = __DIR__ . '/../../public/uploads/profile_covers';
+                if (!is_dir($publicDir)) {
+                    @mkdir($publicDir, 0775, true);
+                }
+
+                $ext = strtolower((string)pathinfo($originalName, PATHINFO_EXTENSION));
+                if ($ext === '') {
+                    $ext = 'jpg';
+                }
+
+                $fileName = uniqid('cover_', true) . '.' . $ext;
+                $targetPath = $publicDir . '/' . $fileName;
+
+                if (!@move_uploaded_file($tmp, $targetPath)) {
+                    $_SESSION['social_error'] = 'Não foi possível salvar a capa enviada. Tente novamente.';
+                    header('Location: /perfil');
+                    exit;
+                }
+
+                $coverPath = '/public/uploads/profile_covers/' . $fileName;
+            }
+        }
+
         try {
             User::updateNickname($userId, $nickname !== '' ? $nickname : null);
             UserSocialProfile::upsertForUser($userId, [
@@ -271,6 +328,7 @@ class ProfileController extends Controller
                 'favorite_books' => $favoriteBooks !== '' ? $favoriteBooks : null,
                 'website' => $website !== '' ? $website : null,
                 'avatar_path' => $avatarPath,
+                'cover_path' => $coverPath,
                 'language' => $language !== '' ? $language : null,
                 'profile_category' => $profileCategory !== '' ? $profileCategory : null,
                 'profile_privacy' => $profilePrivacy,

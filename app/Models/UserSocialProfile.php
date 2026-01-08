@@ -38,6 +38,7 @@ class UserSocialProfile
                 favorite_books = :favorite_books,
                 website = :website,
                 avatar_path = :avatar_path,
+                cover_path = :cover_path,
                 language = :language,
                 profile_category = :profile_category,
                 profile_privacy = :profile_privacy,
@@ -66,12 +67,12 @@ class UserSocialProfile
         } else {
             $stmt = $pdo->prepare('INSERT INTO user_social_profiles
                 (user_id, about_me, interests, favorite_music, favorite_movies, favorite_books, website,
-                 avatar_path, language, profile_category, profile_privacy, visibility_scope, relationship_status,
+                 avatar_path, cover_path, language, profile_category, profile_privacy, visibility_scope, relationship_status,
                  birthday, age, children, ethnicity, mood, sexual_orientation, style, smokes, drinks, pets,
                  hometown, location, sports, passions, activities, instagram, facebook, youtube,
                  visits_count, last_visit_at)
                 VALUES (:user_id, :about_me, :interests, :favorite_music, :favorite_movies, :favorite_books, :website,
-                 :avatar_path, :language, :profile_category, :profile_privacy, :visibility_scope, :relationship_status,
+                 :avatar_path, :cover_path, :language, :profile_category, :profile_privacy, :visibility_scope, :relationship_status,
                  :birthday, :age, :children, :ethnicity, :mood, :sexual_orientation, :style, :smokes, :drinks, :pets,
                  :hometown, :location, :sports, :passions, :activities, :instagram, :facebook, :youtube,
                  0, NULL)');
@@ -86,6 +87,7 @@ class UserSocialProfile
             'favorite_books' => $data['favorite_books'] ?? null,
             'website' => $data['website'] ?? null,
             'avatar_path' => $data['avatar_path'] ?? null,
+            'cover_path' => $data['cover_path'] ?? null,
             'language' => $data['language'] ?? null,
             'profile_category' => $data['profile_category'] ?? null,
             'profile_privacy' => $data['profile_privacy'] ?? null,
