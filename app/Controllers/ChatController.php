@@ -630,14 +630,65 @@ class ChatController extends Controller
 
                 $imageUrl = null;
                 if (!empty($img['url'])) {
-                    $imageUrl = (string)$img['url'];
+                    $remoteUrl = (string)$img['url'];
+                    $remoteUrl = trim($remoteUrl);
+
+                    $tmp = tempnam(sys_get_temp_dir(), 'tuq_img_');
+                    if (is_string($tmp) && $tmp !== '') {
+                        $ch = curl_init();
+                        if ($ch !== false) {
+                            $fp = @fopen($tmp, 'wb');
+                            if (is_resource($fp)) {
+                                curl_setopt_array($ch, [
+                                    CURLOPT_URL => $remoteUrl,
+                                    CURLOPT_FILE => $fp,
+                                    CURLOPT_FOLLOWLOCATION => true,
+                                    CURLOPT_TIMEOUT => 60,
+                                    CURLOPT_CONNECTTIMEOUT => 20,
+                                ]);
+                                $ok = curl_exec($ch);
+                                $httpCode = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
+                                curl_close($ch);
+                                @fclose($fp);
+
+                                if ($ok && $httpCode >= 200 && $httpCode < 300 && is_file($tmp) && filesize($tmp) > 0) {
+                                    $mime = 'image/png';
+                                    try {
+                                        $finfo = new \finfo(FILEINFO_MIME_TYPE);
+                                        $detected = $finfo->file($tmp);
+                                        if (is_string($detected) && $detected !== '') {
+                                            $mime = $detected;
+                                        }
+                                    } catch (\Throwable $e) {
+                                    }
+
+                                    $uploaded = MediaStorageService::uploadFile($tmp, 'nano-banana-pro.png', $mime);
+                                    if (is_string($uploaded) && $uploaded !== '') {
+                                        $imageUrl = $uploaded;
+                                    }
+                                }
+                            } else {
+                                curl_close($ch);
+                            }
+                        }
+                        @unlink($tmp);
+                    }
                 } elseif (!empty($img['b64'])) {
                     $bin = base64_decode((string)$img['b64'], true);
                     if (is_string($bin) && $bin !== '') {
                         $tmp = tempnam(sys_get_temp_dir(), 'tuq_img_');
                         if (is_string($tmp) && $tmp !== '') {
                             @file_put_contents($tmp, $bin);
-                            $uploaded = MediaStorageService::uploadFile($tmp, 'nano-banana-pro.png', 'image/png');
+                            $mime = 'image/png';
+                            try {
+                                $finfo = new \finfo(FILEINFO_MIME_TYPE);
+                                $detected = $finfo->file($tmp);
+                                if (is_string($detected) && $detected !== '') {
+                                    $mime = $detected;
+                                }
+                            } catch (\Throwable $e) {
+                            }
+                            $uploaded = MediaStorageService::uploadFile($tmp, 'nano-banana-pro.png', $mime);
                             @unlink($tmp);
                             if (is_string($uploaded) && $uploaded !== '') {
                                 $imageUrl = $uploaded;
