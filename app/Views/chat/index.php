@@ -138,6 +138,8 @@ function render_markdown_safe(string $text): string {
      align-items: center !important;
      justify-content: center !important;
      gap: 6px !important;
+     background: #e53935 !important;
+     color: #fff !important;
  }
 
 @media (max-width: 640px) {
