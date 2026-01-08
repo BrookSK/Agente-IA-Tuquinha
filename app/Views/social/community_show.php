@@ -10,7 +10,13 @@ $category = (string)($community['category'] ?? '');
 $communityType = (string)($community['community_type'] ?? 'public');
 $postingPolicy = (string)($community['posting_policy'] ?? 'any_member');
 $forumType = (string)($community['forum_type'] ?? 'non_anonymous');
-$coverImage = (string)($community['cover_image_path'] ?? $community['image_path'] ?? '');
+$coverImage = (string)($community['cover_image_path'] ?? '');
+$profileImage = (string)($community['image_path'] ?? '');
+$communityInitial = 'C';
+$tmpCommunityName = trim($communityName);
+if ($tmpCommunityName !== '') {
+    $communityInitial = mb_strtoupper(mb_substr($tmpCommunityName, 0, 1, 'UTF-8'), 'UTF-8');
+}
 
 if ($communityType !== 'private') {
     $communityType = 'public';
@@ -83,6 +89,20 @@ $canModerate = !empty($canModerate);
         </div>
     <?php endif; ?>
 
+    <section style="background:var(--surface-card); border-radius:16px; border:1px solid var(--border-subtle); overflow:hidden;">
+        <div style="width:100%; height:220px; background:radial-gradient(circle at 30% 20%, #fff 0, #ff8a65 25%, #e53935 65%, #050509 100%);">
+            <?php if ($coverImage !== ''): ?>
+                <img src="<?= htmlspecialchars($coverImage, ENT_QUOTES, 'UTF-8') ?>" alt="Capa da comunidade" style="width:100%; height:100%; object-fit:cover; display:block;">
+            <?php else: ?>
+                <div style="width:100%; height:100%; display:flex; align-items:flex-end; padding:14px;">
+                    <div style="background:rgba(0,0,0,0.45); border:1px solid rgba(255,255,255,0.12); color:#fff; padding:8px 10px; border-radius:12px; font-size:14px; font-weight:700;">
+                        <?= htmlspecialchars($communityName, ENT_QUOTES, 'UTF-8') ?>
+                    </div>
+                </div>
+            <?php endif; ?>
+        </div>
+    </section>
+
     <section style="background:var(--surface-card); border-radius:16px; border:1px solid var(--border-subtle); padding:10px 12px;">
         <div style="display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:wrap;">
             <div style="font-size:13px; color:var(--text-secondary);">
@@ -95,9 +115,11 @@ $canModerate = !empty($canModerate);
     </section>
 
     <section style="background:var(--surface-card); border-radius:16px; border:1px solid var(--border-subtle); padding:12px 14px; display:flex; gap:12px; align-items:flex-start; flex-wrap:wrap;">
-        <div style="width:64px; height:64px; border-radius:14px; overflow:hidden; background:radial-gradient(circle at 30% 20%, #fff 0, #ff8a65 25%, #e53935 65%, #050509 100%);">
-            <?php if ($coverImage !== ''): ?>
-                <img src="<?= htmlspecialchars($coverImage, ENT_QUOTES, 'UTF-8') ?>" alt="Capa da comunidade" style="width:100%; height:100%; object-fit:cover; display:block;">
+        <div style="width:64px; height:64px; border-radius:14px; overflow:hidden; background:radial-gradient(circle at 30% 20%, #fff 0, #ff8a65 25%, #e53935 65%, #050509 100%); display:flex; align-items:center; justify-content:center; font-size:22px; font-weight:800; color:#050509;">
+            <?php if ($profileImage !== ''): ?>
+                <img src="<?= htmlspecialchars($profileImage, ENT_QUOTES, 'UTF-8') ?>" alt="Imagem de perfil da comunidade" style="width:100%; height:100%; object-fit:cover; display:block;">
+            <?php else: ?>
+                <?= htmlspecialchars($communityInitial, ENT_QUOTES, 'UTF-8') ?>
             <?php endif; ?>
         </div>
         <div style="flex:1 1 200px; min-width:0;">
@@ -191,11 +213,18 @@ $canModerate = !empty($canModerate);
             </div>
 
             <?php if ($isMember): ?>
-                <form id="createTopicForm" action="/comunidades/topicos/novo" method="post" style="margin-bottom:10px; display:none; flex-direction:column; gap:6px;">
+                <form id="createTopicForm" action="/comunidades/topicos/novo" method="post" enctype="multipart/form-data" style="margin-bottom:10px; display:none; flex-direction:column; gap:6px;">
                     <input type="hidden" name="community_id" value="<?= (int)($community['id'] ?? 0) ?>">
                     <input type="text" name="title" placeholder="Título do tópico" style="width:100%; padding:6px 8px; border-radius:8px; border:1px solid var(--border-subtle); background:var(--input-bg); color:var(--text-primary); font-size:13px;">
                     <textarea name="body" rows="3" placeholder="Mensagem inicial do tópico (opcional)" style="width:100%; padding:6px 8px; border-radius:8px; border:1px solid var(--border-subtle); background:var(--input-bg); color:var(--text-primary); font-size:13px; resize:vertical;"></textarea>
-                    <button type="submit" style="align-self:flex-end; border:none; border-radius:999px; padding:5px 10px; background:var(--surface-subtle); border:1px solid var(--border-subtle); color:var(--text-primary); font-size:12px; cursor:pointer;">Criar tópico</button>
+                    <div style="display:flex; flex-wrap:wrap; gap:10px; align-items:center; justify-content:space-between;">
+                        <div style="display:flex; flex-direction:column; gap:2px;">
+                            <label style="font-size:12px; color:var(--text-secondary);">Imagem/vídeo/arquivo (opcional)</label>
+                            <input type="file" name="media" accept="image/*,video/*" style="font-size:12px; color:var(--text-secondary);">
+                            <div style="font-size:11px; color:var(--text-secondary);">Até 20 MB.</div>
+                        </div>
+                        <button type="submit" style="align-self:flex-end; border:none; border-radius:999px; padding:5px 10px; background:var(--surface-subtle); border:1px solid var(--border-subtle); color:var(--text-primary); font-size:12px; cursor:pointer;">Criar tópico</button>
+                    </div>
                 </form>
             <?php endif; ?>
 

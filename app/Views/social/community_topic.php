@@ -33,9 +33,6 @@ $slug = (string)($community['slug'] ?? '');
     </section>
 
     <section style="background:#111118; border-radius:16px; border:1px solid #272727; padding:12px 14px; display:flex; flex-direction:column; gap:8px;">
-        <h1 style="font-size:18px;">
-            <?= htmlspecialchars($topicTitle, ENT_QUOTES, 'UTF-8') ?>
-        </h1>
         <div style="font-size:12px; color:#b0b0b0;">
             <?php
                 $topicAuthorName = (string)($topic['user_name'] ?? 'Usuário');
@@ -45,6 +42,9 @@ $slug = (string)($community['slug'] ?? '');
                 if ($tmpName !== '') {
                     $topicAuthorInitial = mb_strtoupper(mb_substr($tmpName, 0, 1, 'UTF-8'), 'UTF-8');
                 }
+                $topicMediaUrl = trim((string)($topic['media_url'] ?? ''));
+                $topicMediaMime = trim((string)($topic['media_mime'] ?? ''));
+                $topicMediaKind = trim((string)($topic['media_kind'] ?? ''));
             ?>
             <span style="display:inline-flex; align-items:center; gap:6px;">
                 <span style="width:18px; height:18px; border-radius:50%; overflow:hidden; background:radial-gradient(circle at 30% 20%, #fff 0, #ff8a65 25%, #e53935 65%, #050509 100%); display:inline-flex; align-items:center; justify-content:center; font-size:11px; font-weight:800; color:#050509; flex:0 0 18px;">
@@ -60,9 +60,25 @@ $slug = (string)($community['slug'] ?? '');
                 · <?= htmlspecialchars(date('d/m/Y H:i', strtotime((string)$topic['created_at'])), ENT_QUOTES, 'UTF-8') ?>
             <?php endif; ?>
         </div>
+        <h1 style="font-size:18px;">
+            <?= htmlspecialchars($topicTitle, ENT_QUOTES, 'UTF-8') ?>
+        </h1>
         <?php if (!empty($topic['body'])): ?>
             <div style="font-size:13px; color:#f5f5f5; margin-top:4px;">
                 <?= nl2br(htmlspecialchars((string)$topic['body'], ENT_QUOTES, 'UTF-8')) ?>
+            </div>
+        <?php endif; ?>
+        <?php if ($topicMediaUrl !== ''): ?>
+            <div style="margin-top:6px;">
+                <?php if ($topicMediaKind === 'image'): ?>
+                    <img src="<?= htmlspecialchars($topicMediaUrl, ENT_QUOTES, 'UTF-8') ?>" alt="" style="max-width:100%; border-radius:12px; border:1px solid #272727; display:block;">
+                <?php elseif ($topicMediaKind === 'video'): ?>
+                    <video controls style="width:100%; max-width:100%; border-radius:12px; border:1px solid #272727; display:block;">
+                        <source src="<?= htmlspecialchars($topicMediaUrl, ENT_QUOTES, 'UTF-8') ?>" type="<?= htmlspecialchars($topicMediaMime !== '' ? $topicMediaMime : 'video/mp4', ENT_QUOTES, 'UTF-8') ?>">
+                    </video>
+                <?php else: ?>
+                    <a href="<?= htmlspecialchars($topicMediaUrl, ENT_QUOTES, 'UTF-8') ?>" target="_blank" rel="noopener noreferrer" style="color:#ff6f60; text-decoration:none;">Ver arquivo anexado</a>
+                <?php endif; ?>
             </div>
         <?php endif; ?>
     </section>
@@ -74,10 +90,17 @@ $slug = (string)($community['slug'] ?? '');
         </div>
 
         <?php if ($isMember): ?>
-            <form action="/comunidades/topicos/responder" method="post" style="margin-bottom:10px; display:flex; flex-direction:column; gap:6px;">
+            <form action="/comunidades/topicos/responder" method="post" enctype="multipart/form-data" style="margin-bottom:10px; display:flex; flex-direction:column; gap:6px;">
                 <input type="hidden" name="topic_id" value="<?= (int)($topic['id'] ?? 0) ?>">
                 <textarea name="body" rows="3" placeholder="Responda este tópico..." style="width:100%; padding:6px 8px; border-radius:8px; border:1px solid #272727; background:#050509; color:#f5f5f5; font-size:13px; resize:vertical;"></textarea>
-                <button type="submit" style="align-self:flex-end; border:none; border-radius:999px; padding:5px 10px; background:#111118; border:1px solid #272727; color:#f5f5f5; font-size:12px; cursor:pointer;">Enviar resposta</button>
+                <div style="display:flex; flex-wrap:wrap; gap:10px; align-items:center; justify-content:space-between;">
+                    <div style="display:flex; flex-direction:column; gap:2px;">
+                        <label style="font-size:12px; color:#b0b0b0;">Imagem/vídeo/arquivo (opcional)</label>
+                        <input type="file" name="media" accept="image/*,video/*" style="font-size:12px; color:#b0b0b0;">
+                        <div style="font-size:11px; color:#b0b0b0;">Até 20 MB.</div>
+                    </div>
+                    <button type="submit" style="align-self:flex-end; border:none; border-radius:999px; padding:5px 10px; background:#111118; border:1px solid #272727; color:#f5f5f5; font-size:12px; cursor:pointer;">Enviar resposta</button>
+                </div>
             </form>
         <?php else: ?>
             <p style="font-size:13px; color:#b0b0b0;">Entre na comunidade para responder neste tópico.</p>
@@ -99,6 +122,9 @@ $slug = (string)($community['slug'] ?? '');
                                     if ($tmpName2 !== '') {
                                         $postAuthorInitial = mb_strtoupper(mb_substr($tmpName2, 0, 1, 'UTF-8'), 'UTF-8');
                                     }
+                                    $postMediaUrl = trim((string)($p['media_url'] ?? ''));
+                                    $postMediaMime = trim((string)($p['media_mime'] ?? ''));
+                                    $postMediaKind = trim((string)($p['media_kind'] ?? ''));
                                 ?>
                                 <span style="display:inline-flex; align-items:center; gap:8px;">
                                     <span style="width:24px; height:24px; border-radius:50%; overflow:hidden; background:radial-gradient(circle at 30% 20%, #fff 0, #ff8a65 25%, #e53935 65%, #050509 100%); display:inline-flex; align-items:center; justify-content:center; font-size:12px; font-weight:800; color:#050509; flex:0 0 24px;">
@@ -120,6 +146,19 @@ $slug = (string)($community['slug'] ?? '');
                         <div style="font-size:13px; color:#f5f5f5;">
                             <?= nl2br(htmlspecialchars((string)($p['body'] ?? ''), ENT_QUOTES, 'UTF-8')) ?>
                         </div>
+                        <?php if ($postMediaUrl !== ''): ?>
+                            <div style="margin-top:6px;">
+                                <?php if ($postMediaKind === 'image'): ?>
+                                    <img src="<?= htmlspecialchars($postMediaUrl, ENT_QUOTES, 'UTF-8') ?>" alt="" style="max-width:100%; border-radius:12px; border:1px solid #272727; display:block;">
+                                <?php elseif ($postMediaKind === 'video'): ?>
+                                    <video controls style="width:100%; max-width:100%; border-radius:12px; border:1px solid #272727; display:block;">
+                                        <source src="<?= htmlspecialchars($postMediaUrl, ENT_QUOTES, 'UTF-8') ?>" type="<?= htmlspecialchars($postMediaMime !== '' ? $postMediaMime : 'video/mp4', ENT_QUOTES, 'UTF-8') ?>">
+                                    </video>
+                                <?php else: ?>
+                                    <a href="<?= htmlspecialchars($postMediaUrl, ENT_QUOTES, 'UTF-8') ?>" target="_blank" rel="noopener noreferrer" style="color:#ff6f60; text-decoration:none;">Ver arquivo anexado</a>
+                                <?php endif; ?>
+                            </div>
+                        <?php endif; ?>
                     </div>
                 <?php endforeach; ?>
             </div>

@@ -10,12 +10,15 @@ class CommunityTopicPost
     public static function create(array $data): int
     {
         $pdo = Database::getConnection();
-        $stmt = $pdo->prepare('INSERT INTO community_topic_posts (topic_id, user_id, body)
-            VALUES (:topic_id, :user_id, :body)');
+        $stmt = $pdo->prepare('INSERT INTO community_topic_posts (topic_id, user_id, body, media_url, media_mime, media_kind)
+            VALUES (:topic_id, :user_id, :body, :media_url, :media_mime, :media_kind)');
         $stmt->execute([
             'topic_id' => (int)($data['topic_id'] ?? 0),
             'user_id' => (int)($data['user_id'] ?? 0),
             'body' => $data['body'] ?? '',
+            'media_url' => $data['media_url'] ?? null,
+            'media_mime' => $data['media_mime'] ?? null,
+            'media_kind' => $data['media_kind'] ?? null,
         ]);
         return (int)$pdo->lastInsertId();
     }

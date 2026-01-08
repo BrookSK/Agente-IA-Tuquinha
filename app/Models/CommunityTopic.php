@@ -10,13 +10,16 @@ class CommunityTopic
     public static function create(array $data): int
     {
         $pdo = Database::getConnection();
-        $stmt = $pdo->prepare('INSERT INTO community_topics (community_id, user_id, title, body)
-            VALUES (:community_id, :user_id, :title, :body)');
+        $stmt = $pdo->prepare('INSERT INTO community_topics (community_id, user_id, title, body, media_url, media_mime, media_kind)
+            VALUES (:community_id, :user_id, :title, :body, :media_url, :media_mime, :media_kind)');
         $stmt->execute([
             'community_id' => (int)($data['community_id'] ?? 0),
             'user_id' => (int)($data['user_id'] ?? 0),
             'title' => $data['title'] ?? '',
             'body' => $data['body'] ?? null,
+            'media_url' => $data['media_url'] ?? null,
+            'media_mime' => $data['media_mime'] ?? null,
+            'media_kind' => $data['media_kind'] ?? null,
         ]);
         return (int)$pdo->lastInsertId();
     }

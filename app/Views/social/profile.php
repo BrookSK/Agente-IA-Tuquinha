@@ -346,6 +346,15 @@ $profileId = (int)($profileUser['id'] ?? 0);
                 <?php if (!empty($profile['favorite_books'])): ?>
                     <span style="background:var(--surface-subtle); border-radius:999px; padding:4px 8px; border:1px solid var(--border-subtle);">Livros: <?= htmlspecialchars((string)$profile['favorite_books'], ENT_QUOTES, 'UTF-8') ?></span>
                 <?php endif; ?>
+                <?php if (empty($profile['interests']) && empty($profile['favorite_music']) && empty($profile['favorite_movies']) && empty($profile['favorite_books'])): ?>
+                    <span>Nenhum interesse cadastrado ainda.</span>
+                <?php endif; ?>
+            </div>
+        </section>
+
+        <section style="background:var(--surface-card); border-radius:16px; border:1px solid var(--border-subtle); padding:12px 14px;">
+            <h2 style="font-size:16px; margin-bottom:6px; color:var(--text-primary);">Redes sociais</h2>
+            <div style="display:flex; flex-wrap:wrap; gap:6px; font-size:12px; color:var(--text-secondary);">
                 <?php if (!empty($profile['website'])): ?>
                     <a href="<?= htmlspecialchars((string)$profile['website'], ENT_QUOTES, 'UTF-8') ?>" target="_blank" rel="noopener noreferrer" style="background:var(--surface-subtle); border-radius:999px; padding:4px 8px; border:1px solid var(--border-subtle); color:#ff6f60;">Site pessoal</a>
                 <?php endif; ?>
@@ -358,8 +367,8 @@ $profileId = (int)($profileUser['id'] ?? 0);
                 <?php if (!empty($profile['youtube'])): ?>
                     <a href="<?= htmlspecialchars((string)$profile['youtube'], ENT_QUOTES, 'UTF-8') ?>" target="_blank" rel="noopener noreferrer" style="background:var(--surface-subtle); border-radius:999px; padding:4px 8px; border:1px solid var(--border-subtle); color:#ff6f60;">YouTube</a>
                 <?php endif; ?>
-                <?php if (empty($profile['interests']) && empty($profile['favorite_music']) && empty($profile['favorite_movies']) && empty($profile['favorite_books']) && empty($profile['website']) && empty($profile['instagram']) && empty($profile['facebook']) && empty($profile['youtube'])): ?>
-                    <span>Nenhum interesse cadastrado ainda.</span>
+                <?php if (empty($profile['website']) && empty($profile['instagram']) && empty($profile['facebook']) && empty($profile['youtube'])): ?>
+                    <span>Nenhuma rede social cadastrada ainda.</span>
                 <?php endif; ?>
             </div>
         </section>

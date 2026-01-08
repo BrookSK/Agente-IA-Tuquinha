@@ -23,6 +23,54 @@ use App\Services\MailService;
 
 class CommunitiesController extends Controller
 {
+    private function handleTopicMediaUpload(string $fieldName): array
+    {
+        if (empty($_FILES[$fieldName]) || !is_array($_FILES[$fieldName])) {
+            return [null, null, null];
+        }
+
+        $uploadError = (int)($_FILES[$fieldName]['error'] ?? UPLOAD_ERR_NO_FILE);
+        if ($uploadError !== UPLOAD_ERR_OK) {
+            return [null, null, null];
+        }
+
+        $tmp = (string)($_FILES[$fieldName]['tmp_name'] ?? '');
+        $originalName = (string)($_FILES[$fieldName]['name'] ?? '');
+        $mime = (string)($_FILES[$fieldName]['type'] ?? '');
+        $size = (int)($_FILES[$fieldName]['size'] ?? 0);
+
+        if ($tmp === '' || !is_uploaded_file($tmp)) {
+            return [null, null, null];
+        }
+
+        if ($size > (20 * 1024 * 1024)) {
+            return [null, null, null];
+        }
+
+        $kind = 'file';
+        $mimeLower = strtolower($mime);
+        if (str_starts_with($mimeLower, 'image/')) {
+            $kind = 'image';
+        } elseif (str_starts_with($mimeLower, 'video/')) {
+            $kind = 'video';
+        }
+
+        $endpoint = '';
+        if ($kind === 'video') {
+            $defaultVideoEndpoint = defined('MEDIA_VIDEO_UPLOAD_ENDPOINT') ? MEDIA_VIDEO_UPLOAD_ENDPOINT : '';
+            $endpoint = trim(Setting::get('media_video_upload_endpoint', $defaultVideoEndpoint));
+        }
+
+        $url = $endpoint !== ''
+            ? MediaStorageService::uploadFileToEndpoint($tmp, $originalName, $mime, $endpoint)
+            : MediaStorageService::uploadFile($tmp, $originalName, $mime);
+        if ($url === null) {
+            return [null, null, null];
+        }
+
+        return [$url, $mime !== '' ? $mime : null, $kind];
+    }
+
     private function requireLogin(): array
     {
         if (empty($_SESSION['user_id'])) {
@@ -744,11 +792,24 @@ class CommunitiesController extends Controller
             exit;
         }
 
+        [$mediaUrl, $mediaMime, $mediaKind] = $this->handleTopicMediaUpload('media');
+        if (!empty($_FILES['media']) && is_array($_FILES['media'])) {
+            $uploadError = (int)($_FILES['media']['error'] ?? UPLOAD_ERR_NO_FILE);
+            if ($uploadError === UPLOAD_ERR_OK && $mediaUrl === null) {
+                $_SESSION['communities_error'] = 'Não foi possível enviar a mídia do tópico (verifique formato e tamanho).';
+                header('Location: /comunidades/ver?slug=' . urlencode((string)$community['slug']));
+                exit;
+            }
+        }
+
         $topicId = CommunityTopic::create([
             'community_id' => $communityId,
             'user_id' => $userId,
             'title' => $title,
             'body' => $body,
+            'media_url' => $mediaUrl,
+            'media_mime' => $mediaMime,
+            'media_kind' => $mediaKind,
         ]);
 
         $_SESSION['communities_success'] = 'Tópico criado com sucesso.';
@@ -879,10 +940,23 @@ class CommunitiesController extends Controller
             exit;
         }
 
+        [$mediaUrl, $mediaMime, $mediaKind] = $this->handleTopicMediaUpload('media');
+        if (!empty($_FILES['media']) && is_array($_FILES['media'])) {
+            $uploadError = (int)($_FILES['media']['error'] ?? UPLOAD_ERR_NO_FILE);
+            if ($uploadError === UPLOAD_ERR_OK && $mediaUrl === null) {
+                $_SESSION['communities_error'] = 'Não foi possível enviar a mídia da resposta (verifique formato e tamanho).';
+                header('Location: /comunidades/topicos/ver?topic_id=' . $topicId);
+                exit;
+            }
+        }
+
         CommunityTopicPost::create([
             'topic_id' => $topicId,
             'user_id' => $userId,
             'body' => $body,
+            'media_url' => $mediaUrl,
+            'media_mime' => $mediaMime,
+            'media_kind' => $mediaKind,
         ]);
 
         $_SESSION['communities_success'] = 'Resposta enviada.';
