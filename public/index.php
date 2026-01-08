@@ -183,6 +183,7 @@ $router->post('/perfil/portfolio/blocos/salvar', 'SocialPortfolioController@save
 $router->post('/perfil/portfolio/blocos/upload', 'SocialPortfolioController@uploadBlockMedia');
 
 $router->post('/perfil/portfolio/publicar', 'SocialPortfolioController@publishItem');
+$router->post('/perfil/portfolio/despublicar', 'SocialPortfolioController@unpublishItem');
 
 $router->post('/perfil/portfolio/compartilhar/convidar', 'SocialPortfolioController@inviteCollaborator');
 $router->get('/perfil/portfolio/aceitar-convite', 'SocialPortfolioController@acceptInvite');

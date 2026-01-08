@@ -25,6 +25,7 @@ $editTitle = $isEditing ? (string)($editItem['title'] ?? '') : '';
 $editDescription = $isEditing ? (string)($editItem['description'] ?? '') : '';
 $editExternalUrl = $isEditing ? (string)($editItem['external_url'] ?? '') : '';
 $editProjectId = $isEditing ? (int)($editItem['project_id'] ?? 0) : 0;
+$editStatus = $isEditing ? (string)($editItem['status'] ?? 'draft') : 'draft';
 ?>
 <style>
     @media (max-width: 900px) {
@@ -307,10 +308,17 @@ $editProjectId = $isEditing ? (int)($editItem['project_id'] ?? 0) : 0;
                 <?php if ($isEditing): ?>
                     <a href="/perfil/portfolio/gerenciar?owner_user_id=<?= (int)$ownerUserId ?>" style="border-radius:999px; padding:7px 12px; border:1px solid var(--border-subtle); background:var(--surface-card); color:var(--text-primary); font-size:12px; text-decoration:none;">Cancelar</a>
                     <a href="/perfil/portfolio/editor?id=<?= (int)$editItemId ?>" style="border-radius:999px; padding:7px 12px; border:1px solid var(--border-subtle); background:var(--surface-subtle); color:var(--text-primary); font-size:12px; text-decoration:none;">Editar blocos</a>
-                    <form action="/perfil/portfolio/publicar" method="post" style="margin:0;" onsubmit="return confirm('Publicar este projeto? Depois de publicado, ficará visível para todos.');">
-                        <input type="hidden" name="item_id" value="<?= (int)$editItemId ?>" />
-                        <button type="submit" style="border:none; border-radius:999px; padding:7px 12px; background:#1f6feb; color:#fff; font-size:12px; font-weight:800; cursor:pointer;">Publicar</button>
-                    </form>
+                    <?php if ($editStatus !== 'published'): ?>
+                        <form action="/perfil/portfolio/publicar" method="post" style="margin:0;" onsubmit="return confirm('Publicar este projeto? Depois de publicado, ficará visível para todos.');">
+                            <input type="hidden" name="item_id" value="<?= (int)$editItemId ?>" />
+                            <button type="submit" style="border:none; border-radius:999px; padding:7px 12px; background:#1f6feb; color:#fff; font-size:12px; font-weight:800; cursor:pointer;">Publicar</button>
+                        </form>
+                    <?php else: ?>
+                        <form action="/perfil/portfolio/despublicar" method="post" style="margin:0;" onsubmit="return confirm('Despublicar este projeto? Ele voltará para rascunho e ficará oculto para visitantes.');">
+                            <input type="hidden" name="item_id" value="<?= (int)$editItemId ?>" />
+                            <button type="submit" style="border:1px solid var(--border-subtle); border-radius:999px; padding:7px 12px; background:var(--surface-subtle); color:#ffbaba; font-size:12px; font-weight:800; cursor:pointer;">Despublicar</button>
+                        </form>
+                    <?php endif; ?>
                 <?php endif; ?>
                 <button type="submit" style="border:none; border-radius:999px; padding:7px 12px; background:linear-gradient(135deg,#e53935,#ff6f60); color:#050509; font-size:12px; font-weight:650; cursor:pointer;"><?= $isEditing ? 'Salvar' : 'Criar' ?></button>
             </div>
@@ -325,43 +333,45 @@ $editProjectId = $isEditing ? (int)($editItem['project_id'] ?? 0) : 0;
         </section>
     <?php endif; ?>
 
-    <section style="background:var(--surface-card); border-radius:16px; border:1px solid var(--border-subtle); padding:12px 14px;">
-        <h2 style="font-size:16px; margin-bottom:8px;">Meus portfólios</h2>
+    <?php if ($isEditing): ?>
+        <section style="background:var(--surface-card); border-radius:16px; border:1px solid var(--border-subtle); padding:12px 14px;">
+            <h2 style="font-size:16px; margin-bottom:8px;">Meus portfólios</h2>
 
-        <?php if (empty($items)): ?>
-            <div style="font-size:13px; color:var(--text-secondary);">Você ainda não criou nenhum portfólio.</div>
-        <?php else: ?>
-            <div id="portfolioManageGrid" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(320px, 1fr)); gap:10px;">
-                <?php foreach ($items as $it): ?>
-                    <?php $iid = (int)($it['id'] ?? 0); ?>
-                    <div style="border:1px solid var(--border-subtle); background:var(--surface-subtle); border-radius:14px; padding:10px 12px;">
-                        <div style="display:flex; justify-content:space-between; gap:10px; align-items:flex-start;">
-                            <div style="min-width:0;">
-                                <div style="font-weight:650; font-size:13px; color:var(--text-primary); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
-                                    <?= htmlspecialchars((string)($it['title'] ?? 'Portfólio'), ENT_QUOTES, 'UTF-8') ?>
+            <?php if (empty($items)): ?>
+                <div style="font-size:13px; color:var(--text-secondary);">Você ainda não criou nenhum portfólio.</div>
+            <?php else: ?>
+                <div id="portfolioManageGrid" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(320px, 1fr)); gap:10px;">
+                    <?php foreach ($items as $it): ?>
+                        <?php $iid = (int)($it['id'] ?? 0); ?>
+                        <div style="border:1px solid var(--border-subtle); background:var(--surface-subtle); border-radius:14px; padding:10px 12px;">
+                            <div style="display:flex; justify-content:space-between; gap:10px; align-items:flex-start;">
+                                <div style="min-width:0;">
+                                    <div style="font-weight:650; font-size:13px; color:var(--text-primary); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
+                                        <?= htmlspecialchars((string)($it['title'] ?? 'Portfólio'), ENT_QUOTES, 'UTF-8') ?>
+                                    </div>
+                                    <?php if (!empty($it['external_url'])): ?>
+                                        <a href="<?= htmlspecialchars((string)$it['external_url'], ENT_QUOTES, 'UTF-8') ?>" target="_blank" rel="noopener noreferrer" style="font-size:12px; color:#ff6f60; text-decoration:none;">Abrir link externo</a>
+                                    <?php endif; ?>
                                 </div>
-                                <?php if (!empty($it['external_url'])): ?>
-                                    <a href="<?= htmlspecialchars((string)$it['external_url'], ENT_QUOTES, 'UTF-8') ?>" target="_blank" rel="noopener noreferrer" style="font-size:12px; color:#ff6f60; text-decoration:none;">Abrir link externo</a>
-                                <?php endif; ?>
+                                <div style="display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end;">
+                                    <a href="/perfil/portfolio/ver?id=<?= $iid ?>" style="border:1px solid var(--border-subtle); background:var(--surface-card); color:var(--text-primary); border-radius:999px; padding:5px 10px; font-size:12px; text-decoration:none;">Detalhes</a>
+                                    <a href="/perfil/portfolio/gerenciar?owner_user_id=<?= (int)$ownerUserId ?>&edit_id=<?= $iid ?>" style="border:1px solid var(--border-subtle); background:var(--surface-card); color:var(--text-primary); border-radius:999px; padding:5px 10px; font-size:12px; text-decoration:none;">Editar</a>
+                                    <form action="/perfil/portfolio/excluir" method="post" style="margin:0;" onsubmit="return confirm('Excluir este portfólio?');">
+                                        <input type="hidden" name="id" value="<?= $iid ?>">
+                                        <input type="hidden" name="owner_user_id" value="<?= (int)$ownerUserId ?>">
+                                        <button type="submit" style="border:1px solid var(--border-subtle); background:var(--surface-card); color:#ffbaba; border-radius:999px; padding:5px 10px; font-size:12px; cursor:pointer;">Excluir</button>
+                                    </form>
+                                </div>
                             </div>
-                            <div style="display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end;">
-                                <a href="/perfil/portfolio/ver?id=<?= $iid ?>" style="border:1px solid var(--border-subtle); background:var(--surface-card); color:var(--text-primary); border-radius:999px; padding:5px 10px; font-size:12px; text-decoration:none;">Detalhes</a>
-                                <a href="/perfil/portfolio/gerenciar?owner_user_id=<?= (int)$ownerUserId ?>&edit_id=<?= $iid ?>" style="border:1px solid var(--border-subtle); background:var(--surface-card); color:var(--text-primary); border-radius:999px; padding:5px 10px; font-size:12px; text-decoration:none;">Editar</a>
-                                <form action="/perfil/portfolio/excluir" method="post" style="margin:0;" onsubmit="return confirm('Excluir este portfólio?');">
-                                    <input type="hidden" name="id" value="<?= $iid ?>">
-                                    <input type="hidden" name="owner_user_id" value="<?= (int)$ownerUserId ?>">
-                                    <button type="submit" style="border:1px solid var(--border-subtle); background:var(--surface-card); color:#ffbaba; border-radius:999px; padding:5px 10px; font-size:12px; cursor:pointer;">Excluir</button>
-                                </form>
-                            </div>
+                            <?php if (!empty($it['description'])): ?>
+                                <div style="margin-top:6px; font-size:12px; color:var(--text-secondary); line-height:1.35;">
+                                    <?= nl2br(htmlspecialchars((string)$it['description'], ENT_QUOTES, 'UTF-8')) ?>
+                                </div>
+                            <?php endif; ?>
                         </div>
-                        <?php if (!empty($it['description'])): ?>
-                            <div style="margin-top:6px; font-size:12px; color:var(--text-secondary); line-height:1.35;">
-                                <?= nl2br(htmlspecialchars((string)$it['description'], ENT_QUOTES, 'UTF-8')) ?>
-                            </div>
-                        <?php endif; ?>
-                    </div>
-                <?php endforeach; ?>
-            </div>
-        <?php endif; ?>
-    </section>
+                    <?php endforeach; ?>
+                </div>
+            <?php endif; ?>
+        </section>
+    <?php endif; ?>
 </div>

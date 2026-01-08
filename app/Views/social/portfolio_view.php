@@ -9,6 +9,7 @@
 /** @var bool $isLiked */
 /** @var bool $isOwner */
 /** @var bool|null $canEdit */
+/** @var array|null $collaboratorsForItem */
 
 $ownerId = (int)($profileUser['id'] ?? 0);
 $title = (string)($item['title'] ?? 'Portfólio');
@@ -20,31 +21,8 @@ $displayName = trim((string)($profileUser['preferred_name'] ?? $profileUser['nam
 if ($displayName === '') { $displayName = 'Perfil'; }
 
 $blocks = is_array($blocks ?? null) ? $blocks : [];
+$collaboratorsForItem = is_array($collaboratorsForItem ?? null) ? $collaboratorsForItem : [];
 $initial = mb_strtoupper(mb_substr((string)$displayName, 0, 1, 'UTF-8'), 'UTF-8');
-
-$heroCover = trim((string)($item['cover_url'] ?? ''));
-if ($heroCover === '' && !empty($blocks)) {
-    foreach ($blocks as $b) {
-        $t = (string)($b['type'] ?? '');
-        if ($t === 'image') {
-            $u = trim((string)($b['media_url'] ?? ''));
-            if ($u !== '') {
-                $heroCover = $u;
-                break;
-            }
-        }
-        if ($t === 'gallery') {
-            $g = is_array($b['media'] ?? null) ? $b['media'] : [];
-            if (!empty($g) && !empty($g[0]['url'])) {
-                $u = trim((string)$g[0]['url']);
-                if ($u !== '') {
-                    $heroCover = $u;
-                    break;
-                }
-            }
-        }
-    }
-}
 
 $success = $_SESSION['portfolio_success'] ?? null;
 $error = $_SESSION['portfolio_error'] ?? null;
@@ -130,12 +108,6 @@ foreach ($media as $m) {
 </style>
 
 <div style="max-width: 1100px; margin: 0 auto; display:flex; flex-direction:column; gap:14px;">
-    <?php if ($heroCover !== ''): ?>
-        <div id="behanceHero">
-            <img id="behanceHeroImg" src="<?= htmlspecialchars($heroCover, ENT_QUOTES, 'UTF-8') ?>" alt="Capa">
-        </div>
-    <?php endif; ?>
-
     <section id="behanceHeader">
         <div id="behanceHeaderInner">
         <div id="portfolioViewTop" style="display:flex; justify-content:space-between; gap:10px; align-items:center; flex-wrap:wrap;">
@@ -176,6 +148,24 @@ foreach ($media as $m) {
                 <?= nl2br(htmlspecialchars($desc, ENT_QUOTES, 'UTF-8')) ?>
             </div>
         <?php endif; ?>
+
+        <?php if (!empty($collaboratorsForItem)): ?>
+            <div style="margin-top:10px; font-size:12px; color:var(--text-secondary); line-height:1.35;">
+                Colaboradores:
+                <?php
+                    $labels = [];
+                    foreach ($collaboratorsForItem as $c) {
+                        $label = trim((string)($c['user_preferred_name'] ?? ''));
+                        if ($label === '') { $label = trim((string)($c['user_name'] ?? '')); }
+                        if ($label === '') { $label = trim((string)($c['user_nickname'] ?? '')); }
+                        if ($label === '') { $label = trim((string)($c['user_email'] ?? '')); }
+                        if ($label !== '') { $labels[] = $label; }
+                    }
+                    $labels = array_values(array_unique($labels));
+                ?>
+                <?= htmlspecialchars(implode(', ', $labels), ENT_QUOTES, 'UTF-8') ?>
+            </div>
+        <?php endif; ?>
         </div>
     </section>
 
@@ -191,9 +181,7 @@ foreach ($media as $m) {
                         $gallery = is_array($b['media'] ?? null) ? $b['media'] : [];
                     ?>
                     <?php if ($t === 'text'): ?>
-                        <div class="behanceBlock behanceBlockText">
-                            <?= htmlspecialchars($text, ENT_QUOTES, 'UTF-8') ?>
-                        </div>
+                        <div class="behanceBlock behanceBlockText"><?= htmlspecialchars($text, ENT_QUOTES, 'UTF-8') ?></div>
                     <?php elseif ($t === 'image'): ?>
                         <div class="behanceBlock behanceBlockMedia">
                             <img src="<?= htmlspecialchars($url, ENT_QUOTES, 'UTF-8') ?>" alt="Imagem" style="width:100%; height:auto; display:block;">

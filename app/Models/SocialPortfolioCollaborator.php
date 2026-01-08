@@ -139,4 +139,22 @@ class SocialPortfolioCollaborator
         $stmt->execute(['owner' => $ownerUserId]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
     }
+
+    public static function allForItemWithUsers(int $ownerUserId, int $portfolioItemId): array
+    {
+        if ($ownerUserId <= 0 || $portfolioItemId <= 0) {
+            return [];
+        }
+        $pdo = Database::getConnection();
+        $stmt = $pdo->prepare('SELECT c.*, u.name AS user_name, u.preferred_name AS user_preferred_name, u.email AS user_email, u.nickname AS user_nickname
+            FROM social_portfolio_collaborators c
+            INNER JOIN users u ON u.id = c.collaborator_user_id
+            WHERE c.owner_user_id = :owner AND c.portfolio_item_id = :item_id
+            ORDER BY c.role DESC, c.created_at ASC');
+        $stmt->execute([
+            'owner' => $ownerUserId,
+            'item_id' => $portfolioItemId,
+        ]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+    }
 }

@@ -9,6 +9,7 @@
 $itemId = (int)($item['id'] ?? 0);
 $title = (string)($item['title'] ?? 'Projeto');
 $cover = trim((string)($item['cover_url'] ?? ''));
+$status = (string)($item['status'] ?? 'draft');
 ?>
 <style>
     @media (max-width: 980px) {
@@ -53,10 +54,17 @@ $cover = trim((string)($item['cover_url'] ?? ''));
                 <a href="/perfil/portfolio/gerenciar?owner_user_id=<?= (int)($item['user_id'] ?? 0) ?>&edit_id=<?= (int)$itemId ?>" style="border-radius:999px; padding:7px 12px; border:1px solid var(--border-subtle); background:var(--surface-subtle); color:var(--text-primary); font-size:12px; text-decoration:none;">Detalhes</a>
                 <a href="/perfil/portfolio/ver?id=<?= (int)$itemId ?>" target="_blank" rel="noopener noreferrer" style="border-radius:999px; padding:7px 12px; border:1px solid var(--border-subtle); background:var(--surface-subtle); color:var(--text-primary); font-size:12px; text-decoration:none;">Preview</a>
                 <button type="button" id="peSaveBtn" style="border:none; border-radius:999px; padding:7px 12px; background:linear-gradient(135deg,#e53935,#ff6f60); color:#050509; font-size:12px; font-weight:800; cursor:pointer;">Salvar rascunho</button>
-                <form action="/perfil/portfolio/publicar" method="post" style="margin:0;" onsubmit="return confirm('Publicar este projeto? Depois de publicado, ficará visível para todos.');">
-                    <input type="hidden" name="item_id" value="<?= (int)$itemId ?>" />
-                    <button type="submit" style="border:none; border-radius:999px; padding:7px 12px; background:#1f6feb; color:#fff; font-size:12px; font-weight:800; cursor:pointer;">Publicar</button>
-                </form>
+                <?php if ($status !== 'published'): ?>
+                    <form action="/perfil/portfolio/publicar" method="post" style="margin:0;" onsubmit="return confirm('Publicar este projeto? Depois de publicado, ficará visível para todos.');">
+                        <input type="hidden" name="item_id" value="<?= (int)$itemId ?>" />
+                        <button type="submit" style="border:none; border-radius:999px; padding:7px 12px; background:#1f6feb; color:#fff; font-size:12px; font-weight:800; cursor:pointer;">Publicar</button>
+                    </form>
+                <?php else: ?>
+                    <form action="/perfil/portfolio/despublicar" method="post" style="margin:0;" onsubmit="return confirm('Despublicar este projeto? Ele voltará para rascunho e ficará oculto para visitantes.');">
+                        <input type="hidden" name="item_id" value="<?= (int)$itemId ?>" />
+                        <button type="submit" style="border:1px solid var(--border-subtle); border-radius:999px; padding:7px 12px; background:var(--surface-subtle); color:#ffbaba; font-size:12px; font-weight:800; cursor:pointer;">Despublicar</button>
+                    </form>
+                <?php endif; ?>
             </div>
         </div>
         <div id="peFeedback" style="display:none; margin-top:8px; font-size:12px;"></div>
@@ -535,7 +543,12 @@ $cover = trim((string)($item['cover_url'] ?? ''));
                 if (fb) {
                     fb.style.display = 'block';
                     fb.style.color = (json && json.ok) ? '#c8ffd4' : '#ffbaba';
-                    fb.textContent = (json && json.ok) ? 'Rascunho salvo.' : ((json && json.error) ? json.error : 'Não foi possível salvar.');
+                    var msg = (json && json.ok) ? 'Rascunho salvo.' : ((json && json.error) ? json.error : 'Não foi possível salvar.');
+                    if (json && json.ok && Array.isArray(json.warnings) && json.warnings.length) {
+                        msg = msg + ' ' + json.warnings.join(' ');
+                        fb.style.color = '#ffe7a1';
+                    }
+                    fb.textContent = msg;
                 }
             } catch(e) {
                 if (fb) {

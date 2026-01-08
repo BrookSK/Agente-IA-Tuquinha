@@ -130,6 +130,46 @@ class SocialPortfolioItem
         ]);
     }
 
+    public static function unpublish(int $id, int $userId): void
+    {
+        if ($id <= 0 || $userId <= 0) {
+            return;
+        }
+        $pdo = Database::getConnection();
+        $stmt = $pdo->prepare("UPDATE social_portfolio_items SET status = 'draft', published_at = NULL, updated_at = NOW() WHERE id = :id AND user_id = :user_id AND deleted_at IS NULL");
+        $stmt->execute([
+            'id' => $id,
+            'user_id' => $userId,
+        ]);
+    }
+
+    public static function sharedForCollaborator(int $collaboratorUserId, bool $onlyPublished = true, int $limit = 100): array
+    {
+        if ($collaboratorUserId <= 0) {
+            return [];
+        }
+        $limit = $limit > 0 ? $limit : 100;
+        if ($limit > 300) {
+            $limit = 300;
+        }
+
+        $pdo = Database::getConnection();
+        $sql = 'SELECT i.*
+            FROM social_portfolio_collaborators c
+            INNER JOIN social_portfolio_items i ON i.id = c.portfolio_item_id
+            WHERE c.collaborator_user_id = :uid
+              AND c.role = "edit"
+              AND i.deleted_at IS NULL';
+        if ($onlyPublished) {
+            $sql .= " AND i.status = 'published'";
+        }
+        $sql .= ' ORDER BY i.published_at DESC, i.created_at DESC LIMIT ' . (int)$limit;
+
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute(['uid' => $collaboratorUserId]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+    }
+
     public static function updateCover(int $id, int $userId, ?string $coverUrl, ?string $coverMime): void
     {
         if ($id <= 0 || $userId <= 0) {

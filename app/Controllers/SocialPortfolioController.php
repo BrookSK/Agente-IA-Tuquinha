@@ -59,6 +59,10 @@ class SocialPortfolioController extends Controller
                 return '';
             }
 
+            if (strpos($src, '//') === 0) {
+                $src = 'https:' . $src;
+            }
+
             if (!preg_match('/^https?:\/\//i', $src)) {
                 return '';
             }
@@ -130,6 +134,29 @@ class SocialPortfolioController extends Controller
             $out[] = $b;
         }
         return $out;
+    }
+
+    private function getEmbedSanitizationErrors(array $before, array $after): array
+    {
+        $errors = [];
+        $max = max(count($before), count($after));
+        for ($i = 0; $i < $max; $i++) {
+            $b1 = isset($before[$i]) && is_array($before[$i]) ? $before[$i] : null;
+            $b2 = isset($after[$i]) && is_array($after[$i]) ? $after[$i] : null;
+
+            $t1 = $b1 && isset($b1['type']) ? strtolower(trim((string)$b1['type'])) : '';
+            if ($t1 !== 'embed') {
+                continue;
+            }
+
+            $raw = $b1 && isset($b1['text']) ? trim((string)$b1['text']) : '';
+            $clean = $b2 && isset($b2['text']) ? trim((string)$b2['text']) : '';
+            if ($raw !== '' && $clean === '') {
+                $errors[] = 'Um bloco de embed foi recusado. Use apenas iframe (YouTube/Vimeo).';
+                break;
+            }
+        }
+        return $errors;
     }
     private function wantsJson(): bool
     {
@@ -279,7 +306,26 @@ class SocialPortfolioController extends Controller
         }
 
         $isOwn = $targetId === $currentId;
+
+        // Para o próprio usuário: mostra tudo dele (draft/published) + itens compartilhados com permissão de edição.
+        // Para visitantes: mostra somente publicados do usuário alvo.
         $items = $isOwn ? SocialPortfolioItem::allForUser($targetId, 200) : SocialPortfolioItem::publishedForUser($targetId, 200);
+        if ($isOwn) {
+            $shared = SocialPortfolioItem::sharedForCollaborator($currentId, true, 200);
+            if (!empty($shared)) {
+                $byId = [];
+                foreach ($items as $it) {
+                    $byId[(int)($it['id'] ?? 0)] = $it;
+                }
+                foreach ($shared as $it) {
+                    $iid = (int)($it['id'] ?? 0);
+                    if ($iid > 0 && !isset($byId[$iid])) {
+                        $it['is_shared'] = 1;
+                        $items[] = $it;
+                    }
+                }
+            }
+        }
         foreach ($items as &$it) {
             $iid = (int)($it['id'] ?? 0);
             if ($iid <= 0) {
@@ -487,6 +533,8 @@ class SocialPortfolioController extends Controller
 
         $canEdit = $ownerId === $currentId ? true : SocialPortfolioCollaborator::canEditItem($ownerId, $currentId, $id);
 
+        $collabUsers = SocialPortfolioCollaborator::allForItemWithUsers($ownerId, $id);
+
         $this->view('social/portfolio_view', [
             'pageTitle' => 'Portfólio - ' . (string)($item['title'] ?? 'Item'),
             'user' => $currentUser,
@@ -499,6 +547,7 @@ class SocialPortfolioController extends Controller
             'isLiked' => $isLiked,
             'isOwner' => $ownerId === $currentId,
             'canEdit' => $canEdit,
+            'collaboratorsForItem' => $collabUsers,
         ]);
     }
 
@@ -576,7 +625,9 @@ class SocialPortfolioController extends Controller
             return;
         }
 
+        $before = $parsed;
         $parsed = $this->sanitizeBlocksForSave($parsed);
+        $embedErrors = $this->getEmbedSanitizationErrors($before, $parsed);
 
         SocialPortfolioBlock::replaceForItem($itemId, $parsed);
 
@@ -584,7 +635,7 @@ class SocialPortfolioController extends Controller
         SocialPortfolioItem::updateCover($itemId, (int)($item['user_id'] ?? 0), $cover, null);
 
         header('Content-Type: application/json; charset=utf-8');
-        echo json_encode(['ok' => true, 'cover_url' => $cover]);
+        echo json_encode(['ok' => true, 'cover_url' => $cover, 'warnings' => $embedErrors]);
     }
 
     public function publishItem(): void
@@ -615,6 +666,38 @@ class SocialPortfolioController extends Controller
             return;
         }
         $_SESSION['portfolio_success'] = 'Projeto publicado.';
+        header('Location: /perfil/portfolio/ver?id=' . $itemId);
+        exit;
+    }
+
+    public function unpublishItem(): void
+    {
+        $currentUser = $this->requireLogin();
+        $currentId = (int)($currentUser['id'] ?? 0);
+
+        $itemId = isset($_POST['item_id']) ? (int)$_POST['item_id'] : 0;
+        $item = $itemId > 0 ? SocialPortfolioItem::findById($itemId) : null;
+        if (!$item) {
+            if ($this->wantsJson()) {
+                http_response_code(404);
+                header('Content-Type: application/json; charset=utf-8');
+                echo json_encode(['ok' => false, 'error' => 'Item não encontrado.']);
+                return;
+            }
+            $_SESSION['portfolio_error'] = 'Item não encontrado.';
+            header('Location: /perfil/portfolio/gerenciar');
+            exit;
+        }
+        $this->requirePortfolioItemEdit($item, $currentId);
+
+        SocialPortfolioItem::unpublish($itemId, (int)($item['user_id'] ?? 0));
+
+        if ($this->wantsJson()) {
+            header('Content-Type: application/json; charset=utf-8');
+            echo json_encode(['ok' => true]);
+            return;
+        }
+        $_SESSION['portfolio_success'] = 'Projeto despublicado.';
         header('Location: /perfil/portfolio/ver?id=' . $itemId);
         exit;
     }
