@@ -94,10 +94,22 @@ $slug = (string)($community['slug'] ?? '');
                 <input type="hidden" name="topic_id" value="<?= (int)($topic['id'] ?? 0) ?>">
                 <textarea name="body" rows="3" placeholder="Responda este tópico..." style="width:100%; padding:6px 8px; border-radius:8px; border:1px solid #272727; background:#050509; color:#f5f5f5; font-size:13px; resize:vertical;"></textarea>
                 <div style="display:flex; flex-wrap:wrap; gap:10px; align-items:center; justify-content:space-between;">
-                    <div style="display:flex; flex-direction:column; gap:2px;">
-                        <label style="font-size:12px; color:#b0b0b0;">Imagem/vídeo/arquivo (opcional)</label>
-                        <input type="file" name="media" accept="image/*,video/*" style="font-size:12px; color:#b0b0b0;">
-                        <div style="font-size:11px; color:#b0b0b0;">Até 20 MB.</div>
+                    <div style="display:flex; flex-direction:column; gap:6px;">
+                        <input id="communityReplyMediaInput" type="file" name="media" accept="image/*,video/*" style="display:none;">
+                        <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                            <label for="communityReplyMediaInput" style="display:inline-flex; align-items:center; gap:8px; padding:6px 10px; border-radius:999px; border:1px solid #272727; background:#111118; color:#f5f5f5; font-size:12px; cursor:pointer; user-select:none;">
+                                <span style="width:18px; height:18px; border-radius:6px; display:inline-flex; align-items:center; justify-content:center; background:rgba(255,111,96,0.12); border:1px solid rgba(255,111,96,0.28);">
+                                    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#ff6f60" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                        <path d="M21 15V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v8" />
+                                        <path d="M3 17l4-4 4 4 4-4 6 6" />
+                                        <path d="M14 10a2 2 0 1 1-4 0 2 2 0 0 1 4 0z" />
+                                    </svg>
+                                </span>
+                                <span>Anexar mídia</span>
+                            </label>
+                            <span id="communityReplyMediaName" style="font-size:12px; color:#b0b0b0;">Nenhum arquivo selecionado</span>
+                        </div>
+                        <div style="font-size:11px; color:#b0b0b0;">Imagem/vídeo/arquivo (opcional) · Até 20 MB.</div>
                     </div>
                     <button type="submit" style="align-self:flex-end; border:none; border-radius:999px; padding:5px 10px; background:#111118; border:1px solid #272727; color:#f5f5f5; font-size:12px; cursor:pointer;">Enviar resposta</button>
                 </div>
@@ -165,3 +177,15 @@ $slug = (string)($community['slug'] ?? '');
         <?php endif; ?>
     </section>
 </div>
+
+<script>
+    (function(){
+        var input = document.getElementById('communityReplyMediaInput');
+        var nameEl = document.getElementById('communityReplyMediaName');
+        if (!input || !nameEl) return;
+        input.addEventListener('change', function(){
+            var f = input.files && input.files[0] ? input.files[0] : null;
+            nameEl.textContent = f ? f.name : 'Nenhum arquivo selecionado';
+        });
+    })();
+</script>
