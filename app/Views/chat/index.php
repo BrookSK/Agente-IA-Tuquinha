@@ -139,7 +139,7 @@ function render_markdown_safe(string $text): string {
      justify-content: center !important;
      gap: 6px !important;
      background: #e53935 !important;
-     color: #fff !important;
+     color: #000 !important;
  }
 
 @media (max-width: 640px) {
