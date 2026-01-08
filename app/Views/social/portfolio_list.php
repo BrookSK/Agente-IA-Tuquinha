@@ -60,6 +60,9 @@ $initial = mb_strtoupper(mb_substr((string)$displayName, 0, 1, 'UTF-8'), 'UTF-8'
 
             <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
                 <a href="/perfil?user_id=<?= (int)$targetId ?>" style="font-size:12px; color:#ff6f60; text-decoration:none;">Voltar ao perfil</a>
+                <?php if ($isOwn): ?>
+                    <a href="/perfil/portfolio/gerenciar?owner_user_id=<?= (int)$targetId ?>" style="border-radius:999px; padding:6px 12px; border:1px solid var(--border-subtle); background:var(--surface-subtle); color:var(--text-primary); font-size:12px; font-weight:650; text-decoration:none; white-space:nowrap;">Criar novo projeto</a>
+                <?php endif; ?>
                 <?php if (!empty($canManage) || $isOwn): ?>
                     <a href="/perfil/portfolio/gerenciar?owner_user_id=<?= (int)$targetId ?>" style="border-radius:999px; padding:6px 12px; background:linear-gradient(135deg,#e53935,#ff6f60); color:#050509; font-size:12px; font-weight:650; text-decoration:none; white-space:nowrap;">Gerenciar</a>
                 <?php endif; ?>
@@ -68,9 +71,18 @@ $initial = mb_strtoupper(mb_substr((string)$displayName, 0, 1, 'UTF-8'), 'UTF-8'
     </section>
 
     <?php if (empty($items)): ?>
-        <div style="background:var(--surface-card); border-radius:16px; border:1px solid var(--border-subtle); padding:14px; color:var(--text-secondary); font-size:13px;">
-            Nenhum portfólio publicado ainda.
-        </div>
+        <?php if ($isOwn): ?>
+            <a href="/perfil/portfolio/gerenciar?owner_user_id=<?= (int)$targetId ?>" style="text-decoration:none;">
+                <div style="border-radius:16px; border:2px dashed rgba(255,255,255,0.18); padding:18px; background:rgba(255,255,255,0.03); color:var(--text-primary);">
+                    <div style="font-weight:750; font-size:13px;">Criar novo projeto</div>
+                    <div style="margin-top:4px; font-size:12px; color:var(--text-secondary);">Clique para criar e depois montar os blocos (texto, imagem, grade, vídeo...).</div>
+                </div>
+            </a>
+        <?php else: ?>
+            <div style="background:var(--surface-card); border-radius:16px; border:1px solid var(--border-subtle); padding:14px; color:var(--text-secondary); font-size:13px;">
+                Nenhum portfólio publicado ainda.
+            </div>
+        <?php endif; ?>
     <?php else: ?>
         <div id="portfolioCardsGrid" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(240px, 1fr)); gap:10px;">
             <?php foreach ($items as $it): ?>

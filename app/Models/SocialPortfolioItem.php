@@ -89,6 +89,22 @@ class SocialPortfolioItem
         return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
     }
 
+    public static function publishedForUser(int $userId, int $limit = 100): array
+    {
+        if ($userId <= 0) {
+            return [];
+        }
+        $limit = $limit > 0 ? $limit : 100;
+        if ($limit > 300) {
+            $limit = 300;
+        }
+
+        $pdo = Database::getConnection();
+        $stmt = $pdo->prepare("SELECT * FROM social_portfolio_items WHERE user_id = :uid AND deleted_at IS NULL AND status = 'published' ORDER BY published_at DESC, created_at DESC LIMIT " . (int)$limit);
+        $stmt->execute(['uid' => $userId]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+    }
+
     public static function findById(int $id): ?array
     {
         if ($id <= 0) {
@@ -99,6 +115,19 @@ class SocialPortfolioItem
         $stmt->execute(['id' => $id]);
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
         return $row ?: null;
+    }
+
+    public static function publish(int $id, int $userId): void
+    {
+        if ($id <= 0 || $userId <= 0) {
+            return;
+        }
+        $pdo = Database::getConnection();
+        $stmt = $pdo->prepare("UPDATE social_portfolio_items SET status = 'published', published_at = COALESCE(published_at, NOW()), updated_at = NOW() WHERE id = :id AND user_id = :user_id AND deleted_at IS NULL");
+        $stmt->execute([
+            'id' => $id,
+            'user_id' => $userId,
+        ]);
     }
 
     public static function updateCover(int $id, int $userId, ?string $coverUrl, ?string $coverMime): void

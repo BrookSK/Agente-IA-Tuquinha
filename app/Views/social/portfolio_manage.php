@@ -8,12 +8,15 @@
 /** @var array|null $collaborators */
 /** @var array|null $pendingInvites */
 /** @var array|null $editItem */
+/** @var array|null $editBlocks */
 
 $userId = (int)($user['id'] ?? 0);
 $ownerUserId = isset($ownerId) ? (int)$ownerId : $userId;
 $canShare = !empty($canShare);
 $collaborators = is_array($collaborators ?? null) ? $collaborators : [];
 $pendingInvites = is_array($pendingInvites ?? null) ? $pendingInvites : [];
+
+$editBlocks = is_array($editBlocks ?? null) ? $editBlocks : [];
 
 $editItem = is_array($editItem ?? null) ? $editItem : null;
 $isEditing = !empty($editItem) && !empty($editItem['id']);
@@ -303,11 +306,24 @@ $editProjectId = $isEditing ? (int)($editItem['project_id'] ?? 0) : 0;
             <div style="display:flex; gap:8px; justify-content:flex-end; flex-wrap:wrap;">
                 <?php if ($isEditing): ?>
                     <a href="/perfil/portfolio/gerenciar?owner_user_id=<?= (int)$ownerUserId ?>" style="border-radius:999px; padding:7px 12px; border:1px solid var(--border-subtle); background:var(--surface-card); color:var(--text-primary); font-size:12px; text-decoration:none;">Cancelar</a>
+                    <a href="/perfil/portfolio/editor?id=<?= (int)$editItemId ?>" style="border-radius:999px; padding:7px 12px; border:1px solid var(--border-subtle); background:var(--surface-subtle); color:var(--text-primary); font-size:12px; text-decoration:none;">Editar blocos</a>
+                    <form action="/perfil/portfolio/publicar" method="post" style="margin:0;" onsubmit="return confirm('Publicar este projeto? Depois de publicado, ficará visível para todos.');">
+                        <input type="hidden" name="item_id" value="<?= (int)$editItemId ?>" />
+                        <button type="submit" style="border:none; border-radius:999px; padding:7px 12px; background:#1f6feb; color:#fff; font-size:12px; font-weight:800; cursor:pointer;">Publicar</button>
+                    </form>
                 <?php endif; ?>
                 <button type="submit" style="border:none; border-radius:999px; padding:7px 12px; background:linear-gradient(135deg,#e53935,#ff6f60); color:#050509; font-size:12px; font-weight:650; cursor:pointer;"><?= $isEditing ? 'Salvar' : 'Criar' ?></button>
             </div>
         </form>
     </section>
+
+    <?php if ($isEditing && $editItemId > 0): ?>
+        <section style="background:var(--surface-card); border-radius:16px; border:1px solid var(--border-subtle); padding:12px 14px;">
+            <h2 style="font-size:16px; margin-bottom:8px;">Blocos do projeto</h2>
+            <div style="font-size:12px; color:var(--text-secondary); margin-bottom:10px;">Abra o editor para montar o projeto com blocos (texto, imagem, grade, vídeo...).</div>
+            <a href="/perfil/portfolio/editor?id=<?= (int)$editItemId ?>" style="display:inline-block; border-radius:999px; padding:8px 12px; background:linear-gradient(135deg,#e53935,#ff6f60); color:#050509; font-size:12px; font-weight:800; text-decoration:none;">Abrir editor de blocos</a>
+        </section>
+    <?php endif; ?>
 
     <section style="background:var(--surface-card); border-radius:16px; border:1px solid var(--border-subtle); padding:12px 14px;">
         <h2 style="font-size:16px; margin-bottom:8px;">Meus portfólios</h2>

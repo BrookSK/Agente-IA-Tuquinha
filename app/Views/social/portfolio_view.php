@@ -221,6 +221,26 @@ foreach ($media as $m) {
                                 </div>
                             <?php endif; ?>
                         <?php endif; ?>
+                    <?php elseif ($t === 'audio'): ?>
+                        <?php if ($url !== ''): ?>
+                            <?php if ($mime !== '' && str_starts_with($mime, 'audio/')): ?>
+                                <div class="behanceBlockMedia" style="padding:12px;">
+                                    <audio controls style="width:100%;">
+                                        <source src="<?= htmlspecialchars($url, ENT_QUOTES, 'UTF-8') ?>" type="<?= htmlspecialchars($mime, ENT_QUOTES, 'UTF-8') ?>">
+                                    </audio>
+                                </div>
+                            <?php else: ?>
+                                <div class="behanceBlockMedia" style="padding:12px;">
+                                    <a href="<?= htmlspecialchars($url, ENT_QUOTES, 'UTF-8') ?>" target="_blank" rel="noopener noreferrer" style="color:#ff6f60; text-decoration:none;">Ouvir áudio</a>
+                                </div>
+                            <?php endif; ?>
+                        <?php endif; ?>
+                    <?php elseif ($t === 'embed'): ?>
+                        <?php if ($text !== ''): ?>
+                            <div class="behanceBlockMedia" style="padding:12px;">
+                                <?= $text ?>
+                            </div>
+                        <?php endif; ?>
                     <?php endif; ?>
                 <?php endforeach; ?>
             </div>
@@ -240,37 +260,12 @@ foreach ($media as $m) {
 
     <?php if (!empty($canEdit) || $isOwner): ?>
         <section style="background:var(--surface-card); border-radius:16px; border:1px solid var(--border-subtle); padding:12px 14px;">
-            <h2 style="font-size:16px; margin-bottom:8px;">Conteúdo do projeto</h2>
-            <div style="font-size:12px; color:var(--text-secondary); margin-bottom:10px;">Adicione blocos como no Behance: texto, imagem, grade e vídeo.</div>
-
-            <div id="behanceBuilderToolbar" style="display:flex; gap:8px; flex-wrap:wrap;">
-                <button type="button" data-add="text" style="border:1px solid var(--border-subtle); background:var(--surface-subtle); color:var(--text-primary); border-radius:999px; padding:7px 12px; font-size:12px; cursor:pointer;">Texto</button>
-                <button type="button" data-add="image" style="border:1px solid var(--border-subtle); background:var(--surface-subtle); color:var(--text-primary); border-radius:999px; padding:7px 12px; font-size:12px; cursor:pointer;">Imagem</button>
-                <button type="button" data-add="gallery" style="border:1px solid var(--border-subtle); background:var(--surface-subtle); color:var(--text-primary); border-radius:999px; padding:7px 12px; font-size:12px; cursor:pointer;">Grade</button>
-                <button type="button" data-add="video" style="border:1px solid var(--border-subtle); background:var(--surface-subtle); color:var(--text-primary); border-radius:999px; padding:7px 12px; font-size:12px; cursor:pointer;">Vídeo</button>
+            <h2 style="font-size:16px; margin-bottom:8px;">Edição</h2>
+            <div style="font-size:12px; color:var(--text-secondary); margin-bottom:10px;">Edite os detalhes no gerenciar ou abra o editor para mexer nos blocos.</div>
+            <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                <a href="/perfil/portfolio/gerenciar?owner_user_id=<?= (int)$ownerId ?>&edit_id=<?= (int)($item['id'] ?? 0) ?>" style="border-radius:999px; padding:7px 12px; border:1px solid var(--border-subtle); background:var(--surface-subtle); color:var(--text-primary); font-size:12px; text-decoration:none;">Editar detalhes</a>
+                <a href="/perfil/portfolio/editor?id=<?= (int)($item['id'] ?? 0) ?>" style="border-radius:999px; padding:7px 12px; background:linear-gradient(135deg,#e53935,#ff6f60); color:#050509; font-size:12px; font-weight:800; text-decoration:none;">Editar blocos</a>
             </div>
-
-            <div id="behanceBuilderList" style="margin-top:12px; display:flex; flex-direction:column; gap:10px;"></div>
-
-            <div style="display:flex; gap:8px; justify-content:flex-end; margin-top:12px; flex-wrap:wrap;">
-                <button type="button" id="behanceSaveBtn" style="border:none; border-radius:999px; padding:8px 12px; background:linear-gradient(135deg,#e53935,#ff6f60); color:#050509; font-size:12px; font-weight:700; cursor:pointer;">Salvar conteúdo</button>
-            </div>
-
-            <div id="behanceSaveFeedback" style="display:none; margin-top:8px; font-size:12px;"></div>
-        </section>
-
-        <section style="background:var(--surface-card); border-radius:16px; border:1px solid var(--border-subtle); padding:12px 14px;">
-            <h2 style="font-size:16px; margin-bottom:8px;">Adicionar mídia</h2>
-            <form action="/perfil/portfolio/upload" method="post" enctype="multipart/form-data" style="display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap;">
-                <input type="hidden" name="item_id" value="<?= (int)($item['id'] ?? 0) ?>">
-                <input type="hidden" name="owner_user_id" value="<?= (int)$ownerId ?>">
-                <div style="flex:1 1 260px; min-width:0;">
-                    <label style="display:block; font-size:12px; color:var(--text-secondary); margin-bottom:3px;">Arquivo (imagem ou documento)</label>
-                    <input type="file" name="file" required style="font-size:12px;">
-                </div>
-                <button type="submit" style="border:none; border-radius:999px; padding:7px 12px; background:linear-gradient(135deg,#e53935,#ff6f60); color:#050509; font-size:12px; font-weight:650; cursor:pointer;">Enviar</button>
-            </form>
-            <div style="margin-top:6px; font-size:11px; color:var(--text-secondary);">Dica: imagens viram galeria; outros arquivos viram anexos.</div>
         </section>
     <?php endif; ?>
 

@@ -172,6 +172,7 @@ $router->post('/perfil/salvar', 'ProfileController@saveProfile');
 $router->get('/perfil/portfolio', 'SocialPortfolioController@listForUser');
 $router->get('/perfil/portfolio/gerenciar', 'SocialPortfolioController@manage');
 $router->get('/perfil/portfolio/ver', 'SocialPortfolioController@viewItem');
+$router->get('/perfil/portfolio/editor', 'SocialPortfolioController@editor');
 $router->post('/perfil/portfolio/salvar', 'SocialPortfolioController@upsert');
 $router->post('/perfil/portfolio/excluir', 'SocialPortfolioController@delete');
 $router->post('/perfil/portfolio/curtir', 'SocialPortfolioController@toggleLike');
@@ -180,6 +181,8 @@ $router->post('/perfil/portfolio/midia/excluir', 'SocialPortfolioController@dele
 
 $router->post('/perfil/portfolio/blocos/salvar', 'SocialPortfolioController@saveBlocks');
 $router->post('/perfil/portfolio/blocos/upload', 'SocialPortfolioController@uploadBlockMedia');
+
+$router->post('/perfil/portfolio/publicar', 'SocialPortfolioController@publishItem');
 
 $router->post('/perfil/portfolio/compartilhar/convidar', 'SocialPortfolioController@inviteCollaborator');
 $router->get('/perfil/portfolio/aceitar-convite', 'SocialPortfolioController@acceptInvite');
