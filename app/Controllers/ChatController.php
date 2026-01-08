@@ -597,8 +597,10 @@ class ChatController extends Controller
                     'response_format' => 'b64_json',
                 ]);
 
-                if (!$img) {
-                    $friendly = 'Não consegui gerar a imagem agora. Tente novamente em instantes.';
+                if (!$img || !empty($img['error'])) {
+                    $friendly = !empty($img['error']) && is_string($img['error'])
+                        ? (string)$img['error']
+                        : 'Não consegui gerar a imagem agora. Tente novamente em instantes.';
                     Message::create($conversation->id, 'assistant', $friendly, null);
 
                     if ($isAjax) {
