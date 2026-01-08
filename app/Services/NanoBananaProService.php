@@ -98,6 +98,7 @@ class NanoBananaProService
             }
 
             $bodyMsg = '';
+            $retrySeconds = null;
             if (is_string($raw) && $raw !== '') {
                 $maybeJson = json_decode($raw, true);
                 if (is_array($maybeJson)) {
@@ -116,6 +117,10 @@ class NanoBananaProService
                 if ($bodyMsg === '') {
                     $bodyMsg = mb_substr(trim($raw), 0, 280, 'UTF-8');
                 }
+
+                if (preg_match('/retry\s+in\s+([0-9]+(?:\.[0-9]+)?)s/i', $raw, $m)) {
+                    $retrySeconds = (float)$m[1];
+                }
             }
 
             $logLine = '[NanoBananaPro] Falha ao gerar imagem. endpoint=' . $finalUrl
@@ -124,7 +129,17 @@ class NanoBananaProService
                 . ($bodyMsg !== '' ? ' body=' . $bodyMsg : '');
             error_log($logLine);
 
-            $friendly = 'Falha ao gerar imagem (' . $details . ').';
+            $friendly = '';
+            if ($httpCode === 429) {
+                $friendly = 'A API do Nano Banana/Gemini bloqueou por limite de uso (HTTP 429 - quota/rate limit).';
+                if ($retrySeconds !== null) {
+                    $friendly .= ' Tente novamente em aproximadamente ' . number_format($retrySeconds, 1, ',', '.') . 's.';
+                }
+                $friendly .= ' Verifique se sua chave do Gemini tem billing/quota habilitados no Google Cloud.';
+            } else {
+                $friendly = 'Falha ao gerar imagem (' . $details . ').';
+            }
+
             if ($bodyMsg !== '' && $bodyMsg !== 'HTTP ' . $httpCode) {
                 $friendly .= ' ' . $bodyMsg;
             }
