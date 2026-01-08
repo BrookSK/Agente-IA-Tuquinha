@@ -332,46 +332,4 @@ $editStatus = $isEditing ? (string)($editItem['status'] ?? 'draft') : 'draft';
             <a href="/perfil/portfolio/editor?id=<?= (int)$editItemId ?>" style="display:inline-block; border-radius:999px; padding:8px 12px; background:linear-gradient(135deg,#e53935,#ff6f60); color:#050509; font-size:12px; font-weight:800; text-decoration:none;">Abrir editor de blocos</a>
         </section>
     <?php endif; ?>
-
-    <?php if ($isEditing): ?>
-        <section style="background:var(--surface-card); border-radius:16px; border:1px solid var(--border-subtle); padding:12px 14px;">
-            <h2 style="font-size:16px; margin-bottom:8px;">Meus portfólios</h2>
-
-            <?php if (empty($items)): ?>
-                <div style="font-size:13px; color:var(--text-secondary);">Você ainda não criou nenhum portfólio.</div>
-            <?php else: ?>
-                <div id="portfolioManageGrid" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(320px, 1fr)); gap:10px;">
-                    <?php foreach ($items as $it): ?>
-                        <?php $iid = (int)($it['id'] ?? 0); ?>
-                        <div style="border:1px solid var(--border-subtle); background:var(--surface-subtle); border-radius:14px; padding:10px 12px;">
-                            <div style="display:flex; justify-content:space-between; gap:10px; align-items:flex-start;">
-                                <div style="min-width:0;">
-                                    <div style="font-weight:650; font-size:13px; color:var(--text-primary); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
-                                        <?= htmlspecialchars((string)($it['title'] ?? 'Portfólio'), ENT_QUOTES, 'UTF-8') ?>
-                                    </div>
-                                    <?php if (!empty($it['external_url'])): ?>
-                                        <a href="<?= htmlspecialchars((string)$it['external_url'], ENT_QUOTES, 'UTF-8') ?>" target="_blank" rel="noopener noreferrer" style="font-size:12px; color:#ff6f60; text-decoration:none;">Abrir link externo</a>
-                                    <?php endif; ?>
-                                </div>
-                                <div style="display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end;">
-                                    <a href="/perfil/portfolio/ver?id=<?= $iid ?>" style="border:1px solid var(--border-subtle); background:var(--surface-card); color:var(--text-primary); border-radius:999px; padding:5px 10px; font-size:12px; text-decoration:none;">Detalhes</a>
-                                    <a href="/perfil/portfolio/gerenciar?owner_user_id=<?= (int)$ownerUserId ?>&edit_id=<?= $iid ?>" style="border:1px solid var(--border-subtle); background:var(--surface-card); color:var(--text-primary); border-radius:999px; padding:5px 10px; font-size:12px; text-decoration:none;">Editar</a>
-                                    <form action="/perfil/portfolio/excluir" method="post" style="margin:0;" onsubmit="return confirm('Excluir este portfólio?');">
-                                        <input type="hidden" name="id" value="<?= $iid ?>">
-                                        <input type="hidden" name="owner_user_id" value="<?= (int)$ownerUserId ?>">
-                                        <button type="submit" style="border:1px solid var(--border-subtle); background:var(--surface-card); color:#ffbaba; border-radius:999px; padding:5px 10px; font-size:12px; cursor:pointer;">Excluir</button>
-                                    </form>
-                                </div>
-                            </div>
-                            <?php if (!empty($it['description'])): ?>
-                                <div style="margin-top:6px; font-size:12px; color:var(--text-secondary); line-height:1.35;">
-                                    <?= nl2br(htmlspecialchars((string)$it['description'], ENT_QUOTES, 'UTF-8')) ?>
-                                </div>
-                            <?php endif; ?>
-                        </div>
-                    <?php endforeach; ?>
-                </div>
-            <?php endif; ?>
-        </section>
-    <?php endif; ?>
 </div>

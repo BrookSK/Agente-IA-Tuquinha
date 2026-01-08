@@ -11,6 +11,7 @@ use App\Models\SocialPortfolioBlock;
 use App\Models\SocialPortfolioLike;
 use App\Models\SocialPortfolioCollaborator;
 use App\Models\SocialPortfolioInvitation;
+use App\Models\Setting;
 use App\Services\MediaStorageService;
 use App\Services\MailService;
 
@@ -743,7 +744,18 @@ class SocialPortfolioController extends Controller
             return;
         }
 
-        $remoteUrl = MediaStorageService::uploadFile($tmp, $originalName, $type);
+        $mimeLower = strtolower($type);
+        $isVideoOrAudio = $mimeLower !== '' && (str_starts_with($mimeLower, 'video/') || str_starts_with($mimeLower, 'audio/'));
+        $remoteUrl = null;
+        if ($isVideoOrAudio) {
+            $defaultVideoEndpoint = defined('MEDIA_VIDEO_UPLOAD_ENDPOINT') ? MEDIA_VIDEO_UPLOAD_ENDPOINT : '';
+            $endpoint = trim(Setting::get('media_video_upload_endpoint', $defaultVideoEndpoint));
+            $remoteUrl = $endpoint !== ''
+                ? MediaStorageService::uploadFileToEndpoint($tmp, $originalName, $type, $endpoint)
+                : MediaStorageService::uploadFile($tmp, $originalName, $type);
+        } else {
+            $remoteUrl = MediaStorageService::uploadFile($tmp, $originalName, $type);
+        }
         if (!is_string($remoteUrl) || trim($remoteUrl) === '') {
             http_response_code(500);
             header('Content-Type: application/json; charset=utf-8');
@@ -818,10 +830,21 @@ class SocialPortfolioController extends Controller
             exit;
         }
 
-        $isImage = $type !== '' && str_starts_with($type, 'image/');
+        $mimeLower = strtolower($type);
+        $isImage = $mimeLower !== '' && str_starts_with($mimeLower, 'image/');
+        $isVideoOrAudio = $mimeLower !== '' && (str_starts_with($mimeLower, 'video/') || str_starts_with($mimeLower, 'audio/'));
         $kind = $isImage ? 'image' : 'file';
 
-        $remoteUrl = MediaStorageService::uploadFile($tmp, $originalName, $type);
+        $remoteUrl = null;
+        if ($isVideoOrAudio) {
+            $defaultVideoEndpoint = defined('MEDIA_VIDEO_UPLOAD_ENDPOINT') ? MEDIA_VIDEO_UPLOAD_ENDPOINT : '';
+            $endpoint = trim(Setting::get('media_video_upload_endpoint', $defaultVideoEndpoint));
+            $remoteUrl = $endpoint !== ''
+                ? MediaStorageService::uploadFileToEndpoint($tmp, $originalName, $type, $endpoint)
+                : MediaStorageService::uploadFile($tmp, $originalName, $type);
+        } else {
+            $remoteUrl = MediaStorageService::uploadFile($tmp, $originalName, $type);
+        }
         if (!is_string($remoteUrl) || $remoteUrl === '') {
             $_SESSION['portfolio_error'] = 'Não foi possível enviar a mídia para o servidor. Verifique a configuração do endpoint de mídia.';
             header('Location: /perfil/portfolio/ver?id=' . $itemId);
