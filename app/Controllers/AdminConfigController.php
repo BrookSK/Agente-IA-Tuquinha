@@ -66,6 +66,9 @@ class AdminConfigController extends Controller
 
         $tuquinhaAboutVideoUrl = Setting::get('tuquinha_about_video_url', '');
 
+        $supportWhatsapp = Setting::get('support_whatsapp', '5517988093160');
+        $supportEmail = Setting::get('support_email', 'contato@lrvweb.com.br');
+
         $certificateIssuerName = Setting::get('certificate_issuer_name', 'Thiago Marques');
         $certificateSignatureImagePath = Setting::get('certificate_signature_image_path', '');
 
@@ -104,6 +107,8 @@ class AdminConfigController extends Controller
             'mediaVideoEndpoint' => $mediaVideoEndpoint,
             'textExtractionEndpoint' => $textExtractionEndpoint,
             'tuquinhaAboutVideoUrl' => $tuquinhaAboutVideoUrl,
+            'supportWhatsapp' => $supportWhatsapp,
+            'supportEmail' => $supportEmail,
             'certificateIssuerName' => $certificateIssuerName,
             'certificateSignatureImagePath' => $certificateSignatureImagePath,
             'coursePartnerMinPayoutCents' => $coursePartnerMinPayoutCents,
@@ -159,6 +164,9 @@ class AdminConfigController extends Controller
         $textExtractionEndpoint = trim($_POST['text_extraction_endpoint'] ?? '');
 
         $tuquinhaAboutVideoUrl = trim($_POST['tuquinha_about_video_url'] ?? '');
+
+        $supportWhatsapp = trim((string)($_POST['support_whatsapp'] ?? ''));
+        $supportEmail = trim((string)($_POST['support_email'] ?? ''));
 
         if (isset($_FILES['tuquinha_about_video_upload']) && !empty($_FILES['tuquinha_about_video_upload']['tmp_name'])) {
             $tmp = (string)($_FILES['tuquinha_about_video_upload']['tmp_name'] ?? '');
@@ -249,6 +257,8 @@ class AdminConfigController extends Controller
             'media_video_upload_endpoint' => $mediaVideoEndpoint !== '' ? $mediaVideoEndpoint : (defined('MEDIA_VIDEO_UPLOAD_ENDPOINT') ? MEDIA_VIDEO_UPLOAD_ENDPOINT : ''),
             'text_extraction_endpoint' => $textExtractionEndpoint,
             'tuquinha_about_video_url' => $tuquinhaAboutVideoUrl,
+            'support_whatsapp' => $supportWhatsapp,
+            'support_email' => $supportEmail,
             'certificate_issuer_name' => $certificateIssuerName,
             'certificate_signature_image_path' => $certificateSignatureImagePath,
             'course_partner_min_payout_cents' => (string)$coursePartnerMinPayoutCents,

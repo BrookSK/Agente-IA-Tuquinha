@@ -27,6 +27,8 @@
 /** @var string $mediaEndpoint */
 /** @var string $textExtractionEndpoint */
 /** @var string $tuquinhaAboutVideoUrl */
+/** @var string $supportWhatsapp */
+/** @var string $supportEmail */
 /** @var string $certificateIssuerName */
 /** @var string $certificateSignatureImagePath */
 /** @var int $coursePartnerMinPayoutCents */
@@ -117,6 +119,30 @@ $knownModels = [
                 background: #050509; color: #f5f5f5; font-size: 13px;
             " placeholder="https://www.youtube.com/watch?v=...">
             <small style="color:#777; font-size:11px;">Cole aqui o link do YouTube/Vimeo. Se estiver vazio, aparece “Vídeo em breve” na Home.</small>
+        </div>
+
+        <div style="margin-top: 8px; padding:10px 12px; border-radius:10px; border:1px solid #272727; background:#0a0a10;">
+            <div style="font-size:13px; color:#b0b0b0; margin-bottom:8px;">
+                <strong>Suporte</strong><br>
+                Configure os contatos exibidos na página /suporte.
+            </div>
+            <div style="display:flex; flex-direction:column; gap:10px;">
+                <div>
+                    <label style="font-size: 12px; color: #b0b0b0;">WhatsApp (somente números)</label>
+                    <input name="support_whatsapp" value="<?= htmlspecialchars($supportWhatsapp ?? '') ?>" style="
+                        width: 100%; padding: 8px 10px; border-radius: 8px; border: 1px solid #272727;
+                        background: #050509; color: #f5f5f5; font-size: 13px;
+                    " placeholder="5517999999999">
+                    <small style="color:#777; font-size:11px;">Ex.: 5517999999999 (código do país + DDD + número).</small>
+                </div>
+                <div>
+                    <label style="font-size: 12px; color: #b0b0b0;">E-mail de suporte</label>
+                    <input name="support_email" value="<?= htmlspecialchars($supportEmail ?? '') ?>" style="
+                        width: 100%; padding: 8px 10px; border-radius: 8px; border: 1px solid #272727;
+                        background: #050509; color: #f5f5f5; font-size: 13px;
+                    " placeholder="suporte@dominio.com">
+                </div>
+            </div>
         </div>
 
         <div>
