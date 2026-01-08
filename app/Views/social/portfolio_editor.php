@@ -249,15 +249,6 @@ $status = (string)($item['status'] ?? 'draft');
                 return btn;
             }
 
-            var saveInline = aBtn('Salvar');
-            saveInline.style.background = 'linear-gradient(135deg,#e53935,#ff6f60)';
-            saveInline.style.border = 'none';
-            saveInline.style.color = '#050509';
-            saveInline.style.fontWeight = '800';
-            saveInline.addEventListener('click', function(){
-                saveNow(false);
-            });
-
             var up = aBtn('↑');
             var down = aBtn('↓');
             var del = aBtn('Excluir');
@@ -285,7 +276,6 @@ $status = (string)($item['status'] ?? 'draft');
                 render();
             });
 
-            actions.appendChild(saveInline);
             actions.appendChild(up);
             actions.appendChild(down);
             actions.appendChild(del);
