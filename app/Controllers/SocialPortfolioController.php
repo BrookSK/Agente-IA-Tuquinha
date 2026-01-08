@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Models\UserSocialProfile;
 use App\Models\SocialPortfolioItem;
 use App\Models\SocialPortfolioMedia;
+use App\Models\SocialPortfolioBlock;
 use App\Models\SocialPortfolioLike;
 use App\Models\SocialPortfolioCollaborator;
 use App\Models\SocialPortfolioInvitation;
@@ -163,6 +164,20 @@ class SocialPortfolioController extends Controller
         }
 
         $items = SocialPortfolioItem::allForUser($targetId, 200);
+        foreach ($items as &$it) {
+            $iid = (int)($it['id'] ?? 0);
+            if ($iid <= 0) {
+                continue;
+            }
+            if (!empty($it['cover_url'])) {
+                continue;
+            }
+            $autoCover = SocialPortfolioBlock::firstCoverUrlForItem($iid);
+            if ($autoCover) {
+                $it['cover_url'] = $autoCover;
+            }
+        }
+        unset($it);
 
         $likesCountById = [];
         foreach ($items as $it) {
@@ -330,6 +345,7 @@ class SocialPortfolioController extends Controller
         }
 
         $media = SocialPortfolioMedia::allForItem($id);
+        $blocks = SocialPortfolioBlock::allForItem($id);
         $likesCount = SocialPortfolioLike::countForItem($id);
         $isLiked = $currentId > 0 ? SocialPortfolioLike::isLikedByUser($id, $currentId) : false;
 
@@ -348,10 +364,106 @@ class SocialPortfolioController extends Controller
             'profile' => $profile,
             'item' => $item,
             'media' => $media,
+            'blocks' => $blocks,
             'likesCount' => $likesCount,
             'isLiked' => $isLiked,
             'isOwner' => $ownerId === $currentId,
             'canEdit' => $canEdit,
+        ]);
+    }
+
+    public function saveBlocks(): void
+    {
+        $currentUser = $this->requireLogin();
+        $currentId = (int)($currentUser['id'] ?? 0);
+
+        $itemId = isset($_POST['item_id']) ? (int)$_POST['item_id'] : 0;
+        $item = $itemId > 0 ? SocialPortfolioItem::findById($itemId) : null;
+        if (!$item) {
+            http_response_code(404);
+            header('Content-Type: application/json; charset=utf-8');
+            echo json_encode(['ok' => false, 'error' => 'Item não encontrado.']);
+            return;
+        }
+        $this->requirePortfolioItemEdit($item, $currentId);
+
+        $raw = (string)($_POST['blocks_json'] ?? '');
+        if (trim($raw) === '') {
+            $raw = '[]';
+        }
+        $parsed = json_decode($raw, true);
+        if (!is_array($parsed)) {
+            http_response_code(422);
+            header('Content-Type: application/json; charset=utf-8');
+            echo json_encode(['ok' => false, 'error' => 'JSON inválido.']);
+            return;
+        }
+
+        SocialPortfolioBlock::replaceForItem($itemId, $parsed);
+
+        $cover = SocialPortfolioBlock::firstCoverUrlForItem($itemId);
+        SocialPortfolioItem::updateCover($itemId, (int)($item['user_id'] ?? 0), $cover, null);
+
+        header('Content-Type: application/json; charset=utf-8');
+        echo json_encode(['ok' => true, 'cover_url' => $cover]);
+    }
+
+    public function uploadBlockMedia(): void
+    {
+        $currentUser = $this->requireLogin();
+        $currentId = (int)($currentUser['id'] ?? 0);
+
+        $itemId = isset($_POST['item_id']) ? (int)$_POST['item_id'] : 0;
+        $item = $itemId > 0 ? SocialPortfolioItem::findById($itemId) : null;
+        if (!$item) {
+            http_response_code(404);
+            header('Content-Type: application/json; charset=utf-8');
+            echo json_encode(['ok' => false, 'error' => 'Item não encontrado.']);
+            return;
+        }
+        $this->requirePortfolioItemEdit($item, $currentId);
+
+        if (empty($_FILES['file']) || !is_array($_FILES['file'])) {
+            http_response_code(422);
+            header('Content-Type: application/json; charset=utf-8');
+            echo json_encode(['ok' => false, 'error' => 'Envie um arquivo.']);
+            return;
+        }
+
+        $err = (int)($_FILES['file']['error'] ?? UPLOAD_ERR_NO_FILE);
+        if ($err !== UPLOAD_ERR_OK) {
+            http_response_code(422);
+            header('Content-Type: application/json; charset=utf-8');
+            echo json_encode(['ok' => false, 'error' => 'Erro no upload.']);
+            return;
+        }
+
+        $tmp = (string)($_FILES['file']['tmp_name'] ?? '');
+        $originalName = (string)($_FILES['file']['name'] ?? 'arquivo');
+        $type = (string)($_FILES['file']['type'] ?? '');
+        $size = (int)($_FILES['file']['size'] ?? 0);
+        if (!is_file($tmp) || $size <= 0) {
+            http_response_code(422);
+            header('Content-Type: application/json; charset=utf-8');
+            echo json_encode(['ok' => false, 'error' => 'Arquivo inválido.']);
+            return;
+        }
+
+        $remoteUrl = MediaStorageService::uploadFile($tmp, $originalName, $type);
+        if (!is_string($remoteUrl) || trim($remoteUrl) === '') {
+            http_response_code(500);
+            header('Content-Type: application/json; charset=utf-8');
+            echo json_encode(['ok' => false, 'error' => 'Não foi possível enviar a mídia para o servidor.']);
+            return;
+        }
+
+        header('Content-Type: application/json; charset=utf-8');
+        echo json_encode([
+            'ok' => true,
+            'url' => $remoteUrl,
+            'mime_type' => $type !== '' ? $type : null,
+            'size_bytes' => $size,
+            'title' => $originalName,
         ]);
     }
 

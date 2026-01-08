@@ -178,6 +178,9 @@ $router->post('/perfil/portfolio/curtir', 'SocialPortfolioController@toggleLike'
 $router->post('/perfil/portfolio/upload', 'SocialPortfolioController@uploadMedia');
 $router->post('/perfil/portfolio/midia/excluir', 'SocialPortfolioController@deleteMedia');
 
+$router->post('/perfil/portfolio/blocos/salvar', 'SocialPortfolioController@saveBlocks');
+$router->post('/perfil/portfolio/blocos/upload', 'SocialPortfolioController@uploadBlockMedia');
+
 $router->post('/perfil/portfolio/compartilhar/convidar', 'SocialPortfolioController@inviteCollaborator');
 $router->get('/perfil/portfolio/aceitar-convite', 'SocialPortfolioController@acceptInvite');
 $router->post('/perfil/portfolio/compartilhar/revogar', 'SocialPortfolioController@revokeInvite');

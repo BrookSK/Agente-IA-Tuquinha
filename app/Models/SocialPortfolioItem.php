@@ -100,4 +100,26 @@ class SocialPortfolioItem
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
         return $row ?: null;
     }
+
+    public static function updateCover(int $id, int $userId, ?string $coverUrl, ?string $coverMime): void
+    {
+        if ($id <= 0 || $userId <= 0) {
+            return;
+        }
+        $coverUrl = $coverUrl !== null ? trim($coverUrl) : null;
+        $coverUrl = $coverUrl !== '' ? $coverUrl : null;
+        $coverMime = $coverMime !== null ? trim($coverMime) : null;
+        $coverMime = $coverMime !== '' ? $coverMime : null;
+
+        $pdo = Database::getConnection();
+        $stmt = $pdo->prepare('UPDATE social_portfolio_items
+            SET cover_url = :cover_url, cover_mime = :cover_mime, cover_updated_at = NOW(), updated_at = NOW()
+            WHERE id = :id AND user_id = :user_id AND deleted_at IS NULL');
+        $stmt->execute([
+            'cover_url' => $coverUrl,
+            'cover_mime' => $coverMime,
+            'id' => $id,
+            'user_id' => $userId,
+        ]);
+    }
 }
