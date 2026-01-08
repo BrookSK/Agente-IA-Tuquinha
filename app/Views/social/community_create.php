@@ -69,9 +69,14 @@ $moderatorsEmails = (string)($old['moderators_emails'] ?? '');
 
             <div style="display:flex; flex-wrap:wrap; gap:10px; align-items:flex-end;">
                 <div style="flex:1 1 220px; min-width:0;">
+                    <label for="profile_image" style="display:block; font-size:12px; color:var(--text-secondary); margin-bottom:3px;">Imagem de perfil</label>
+                    <input id="profile_image" type="file" name="profile_image" accept="image/*" style="font-size:12px;">
+                    <div style="font-size:11px; color:var(--text-secondary); margin-top:2px;">Opcional. Dimensões recomendadas: <strong>400×400</strong>.</div>
+                </div>
+                <div style="flex:1 1 220px; min-width:0;">
                     <label for="cover_image" style="display:block; font-size:12px; color:var(--text-secondary); margin-bottom:3px;">Imagem de capa</label>
                     <input id="cover_image" type="file" name="cover_image" accept="image/*" style="font-size:12px;">
-                    <div style="font-size:11px; color:var(--text-secondary); margin-top:2px;">Opcional. Usada na tela da comunidade.</div>
+                    <div style="font-size:11px; color:var(--text-secondary); margin-top:2px;">Opcional. Usada na tela da comunidade. Dimensões recomendadas: <strong>1200×300</strong>.</div>
                 </div>
             </div>
 

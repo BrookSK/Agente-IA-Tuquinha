@@ -69,12 +69,13 @@ $conversationId = isset($conversationId) ? (int)$conversationId : 0;
     .persona-stage {
         position: relative;
         margin-top: 16px;
-        padding: 8px 40px 10px 40px;
+        padding: 18px 40px 26px 40px;
         min-height: 420px;
         display: flex;
         align-items: center;
         justify-content: center;
-        overflow: hidden;
+        overflow-x: hidden;
+        overflow-y: visible;
         touch-action: pan-y;
     }
     #persona-carousel {

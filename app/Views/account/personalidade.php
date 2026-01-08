@@ -59,6 +59,13 @@ $successMessage = $success ?? null;
         line-height:1;
     }
 
+    body[data-theme="light"] .persona-nav-btn {
+        background: rgba(255, 255, 255, 0.92);
+        color: #000000;
+        border-color: rgba(15, 23, 42, 0.18);
+        box-shadow: 0 10px 22px rgba(0,0,0,0.10);
+    }
+
     .persona-stage {
         position: relative;
         margin-top: 12px;

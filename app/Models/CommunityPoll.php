@@ -162,4 +162,28 @@ class CommunityPoll
         $stmt = $pdo->prepare('UPDATE community_polls SET closed_at = NULL WHERE id = :id');
         $stmt->execute(['id' => $pollId]);
     }
+
+    public static function deleteById(int $pollId): void
+    {
+        if ($pollId <= 0) {
+            return;
+        }
+
+        $pdo = Database::getConnection();
+        $pdo->beginTransaction();
+        try {
+            $stmt = $pdo->prepare('DELETE FROM community_poll_votes WHERE poll_id = :pid');
+            $stmt->execute(['pid' => $pollId]);
+
+            $stmt = $pdo->prepare('DELETE FROM community_polls WHERE id = :pid LIMIT 1');
+            $stmt->execute(['pid' => $pollId]);
+
+            $pdo->commit();
+        } catch (\Throwable $e) {
+            if ($pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+            throw $e;
+        }
+    }
 }

@@ -3,6 +3,7 @@
 /** @var string $term */
 /** @var int $retentionDays */
 /** @var bool $favoritesOnly */
+/** @var array $userProjects */
 ?>
 <style>
     .tuqPersonaBadge {
@@ -17,6 +18,11 @@
         width: 180px;
         max-width: 180px;
         min-width: 180px;
+    }
+    .tuqPersonaBadgeInline {
+        width: auto;
+        max-width: 240px;
+        min-width: 0;
     }
     .tuqChatTitleRow {
         display: flex;
@@ -158,6 +164,13 @@
                     $personaName = !empty($planAllowsPersonalities) ? trim((string)($conv['persona_name'] ?? '')) : '';
                     $personaArea = !empty($planAllowsPersonalities) ? trim((string)($conv['persona_area'] ?? '')) : '';
                     $personaImg = !empty($planAllowsPersonalities) ? trim((string)($conv['persona_image_path'] ?? '')) : '';
+                    $convId = (int)($conv['id'] ?? 0);
+                    $isFav = !empty($conv['is_favorite']);
+                    $currentProjectId = isset($conv['project_id']) ? (int)$conv['project_id'] : 0;
+                    $qs = [];
+                    if (!empty($term)) { $qs['q'] = $term; }
+                    if (!empty($favoritesOnly)) { $qs['fav'] = '1'; }
+                    $querySuffix = !empty($qs) ? ('?' . http_build_query($qs)) : '';
                 ?>
                 <div style="background:var(--surface-card); border-radius:12px; padding:10px 12px; border:1px solid var(--border-subtle);" class="tuqChatListItem">
                     <div class="tuqChatListItemMain">
@@ -165,8 +178,64 @@
                             <div class="tuqChatTitleRowTitle" style="font-size:14px; font-weight:500;">
                                 <?= htmlspecialchars($title) ?>
                             </div>
+                        </div>
+                        <?php if ($created): ?>
+                            <div style="font-size:11px; color:var(--text-secondary); margin-bottom:4px;">
+                                Iniciado em <?= htmlspecialchars(date('d/m/Y H:i', strtotime($created))) ?>
+                            </div>
+                        <?php endif; ?>
+                    </div>
+                    <div class="tuqChatListItemActions">
+                        <button type="button" title="Renomear chat" onclick="return tuqRenameConversation(<?= (int)$convId ?>, <?= json_encode($title, JSON_UNESCAPED_UNICODE) ?>);" style="
+                            border:1px solid var(--border-subtle);
+                            background:var(--surface-subtle);
+                            color:var(--text-primary);
+                            width:34px; height:34px;
+                            border-radius:999px;
+                            cursor:pointer;
+                            font-size:14px;
+                            line-height:1;
+                        ">✏️</button>
+
+                        <form method="post" action="/historico/favoritar<?= htmlspecialchars($querySuffix) ?>" style="display:inline;">
+                            <input type="hidden" name="id" value="<?= (int)$convId ?>">
+                            <input type="hidden" name="is_favorite" value="<?= $isFav ? '0' : '1' ?>">
+                            <button type="submit" title="<?= $isFav ? 'Remover dos favoritos' : 'Favoritar' ?>" style="
+                                border:1px solid var(--border-subtle);
+                                background:var(--surface-subtle);
+                                color:<?= $isFav ? '#ffd166' : 'var(--text-primary)' ?>;
+                                width:34px; height:34px;
+                                border-radius:999px;
+                                cursor:pointer;
+                                font-size:14px;
+                                line-height:1;
+                            "><?= $isFav ? '★' : '☆' ?></button>
+                        </form>
+
+                        <?php if (!empty($userProjects) && is_array($userProjects)): ?>
+                            <form method="post" action="/historico/projeto<?= htmlspecialchars($querySuffix) ?>" style="display:inline;">
+                                <input type="hidden" name="id" value="<?= (int)$convId ?>">
+                                <select name="project_id" title="Adicionar a projeto" onchange="this.form.submit()" style="
+                                    max-width:180px;
+                                    padding:7px 10px;
+                                    border-radius:999px;
+                                    border:1px solid var(--border-subtle);
+                                    background:var(--surface-subtle);
+                                    color:var(--text-primary);
+                                    font-size:12px;
+                                ">
+                                    <option value="0" <?= $currentProjectId <= 0 ? 'selected' : '' ?>>Adicionar a projeto</option>
+                                    <?php foreach ($userProjects as $p): ?>
+                                        <?php $pid = (int)($p['id'] ?? 0); if ($pid <= 0) { continue; } ?>
+                                        <option value="<?= (int)$pid ?>" <?= $currentProjectId === $pid ? 'selected' : '' ?>><?= htmlspecialchars((string)($p['name'] ?? ('Projeto #' . $pid))) ?></option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </form>
+                        <?php endif; ?>
+
+                        <div style="display:inline-flex; align-items:center; gap:8px;">
                             <?php if ($personaName !== ''): ?>
-                                <span class="tuqPersonaBadge" title="<?= htmlspecialchars($personaName . ($personaArea !== '' ? ' · ' . $personaArea : '')) ?>">
+                                <span class="tuqPersonaBadge tuqPersonaBadgeInline" title="<?= htmlspecialchars($personaName . ($personaArea !== '' ? ' · ' . $personaArea : '')) ?>">
                                     <span class="tuqPersonaBadgeAvatar">
                                         <?php if ($personaImg !== ''): ?>
                                             <img src="<?= htmlspecialchars($personaImg) ?>" alt="">
@@ -182,7 +251,7 @@
                                     </span>
                                 </span>
                             <?php else: ?>
-                                <span class="tuqPersonaBadge" title="Padrão do Tuquinha / da conta">
+                                <span class="tuqPersonaBadge tuqPersonaBadgeInline" title="Padrão do Tuquinha / da conta">
                                     <span class="tuqPersonaBadgeAvatar">
                                         <img src="/public/favicon.png" alt="">
                                     </span>
@@ -192,23 +261,18 @@
                                     </span>
                                 </span>
                             <?php endif; ?>
+
+                            <a href="/chat?c=<?= (int)$conv['id'] ?>" style="
+                                display:inline-flex; align-items:center; gap:6px;
+                                border-radius:999px; padding:6px 12px;
+                                border:1px solid var(--border-subtle); background:var(--surface-subtle); color:var(--text-primary);
+                                font-size:12px; text-decoration:none;
+                                white-space:nowrap;
+                            ">
+                                <span>Abrir chat</span>
+                                <span>➜</span>
+                            </a>
                         </div>
-                        <?php if ($created): ?>
-                            <div style="font-size:11px; color:var(--text-secondary); margin-bottom:4px;">
-                                Iniciado em <?= htmlspecialchars(date('d/m/Y H:i', strtotime($created))) ?>
-                            </div>
-                        <?php endif; ?>
-                    </div>
-                    <div class="tuqChatListItemActions">
-                        <a href="/chat?c=<?= (int)$conv['id'] ?>" style="
-                            display:inline-flex; align-items:center; gap:6px;
-                            border-radius:999px; padding:6px 12px;
-                            border:1px solid var(--border-subtle); background:var(--surface-subtle); color:var(--text-primary);
-                            font-size:12px; text-decoration:none;
-                        ">
-                            <span>Abrir chat</span>
-                            <span>➜</span>
-                        </a>
 
                         <form method="post" action="/chat/excluir" style="display:inline; margin-left:6px;">
                             <input type="hidden" name="conversation_id" value="<?= (int)$conv['id'] ?>">
@@ -224,9 +288,42 @@
                                 line-height:1;
                             ">🗑</button>
                         </form>
+
+                        <form method="post" action="/historico/renomear<?= htmlspecialchars($querySuffix) ?>" id="tuqRenameForm<?= (int)$convId ?>" style="display:none;">
+                            <input type="hidden" name="id" value="<?= (int)$convId ?>">
+                            <input type="hidden" name="title" value="">
+                        </form>
                     </div>
                 </div>
             <?php endforeach; ?>
         </div>
     <?php endif; ?>
 </div>
+
+<script>
+    function tuqRenameConversation(id, currentTitle) {
+        try {
+            var title = prompt('Novo nome do chat:', (currentTitle || '').toString());
+            if (title === null) {
+                return false;
+            }
+            title = (title || '').trim();
+            if (title === '') {
+                title = 'Chat com o Tuquinha';
+            }
+            var form = document.getElementById('tuqRenameForm' + id);
+            if (!form) {
+                return false;
+            }
+            var input = form.querySelector('input[name="title"]');
+            if (!input) {
+                return false;
+            }
+            input.value = title;
+            form.submit();
+            return false;
+        } catch (e) {
+            return false;
+        }
+    }
+</script>

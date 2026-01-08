@@ -183,6 +183,7 @@ class Community
                 posting_policy = :posting_policy,
                 forum_type = :forum_type,
                 allow_poll_closing = :allow_poll_closing,
+                image_path = :image_path,
                 cover_image_path = :cover_image_path
             WHERE id = :id');
         $stmt->execute([
@@ -195,6 +196,7 @@ class Community
             'posting_policy' => $data['posting_policy'] ?? 'any_member',
             'forum_type' => $data['forum_type'] ?? 'non_anonymous',
             'allow_poll_closing' => !empty($data['allow_poll_closing']) ? 1 : 0,
+            'image_path' => $data['image_path'] ?? null,
             'cover_image_path' => $data['cover_image_path'] ?? null,
         ]);
     }

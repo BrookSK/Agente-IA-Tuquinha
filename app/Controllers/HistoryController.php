@@ -7,6 +7,7 @@ use App\Models\Conversation;
 use App\Models\Plan;
 use App\Core\Database;
 use App\Models\Setting;
+use App\Models\Project;
 
 class HistoryController extends Controller
 {
@@ -57,6 +58,15 @@ class HistoryController extends Controller
             $conversations = Conversation::searchBySession($sessionId, $term);
         }
 
+        $userProjects = [];
+        if ($userId > 0) {
+            try {
+                $userProjects = Project::allForUser($userId);
+            } catch (\Throwable $e) {
+                $userProjects = [];
+            }
+        }
+
         $this->view('chat/history', [
             'pageTitle' => 'Histórico de conversas',
             'conversations' => $conversations,
@@ -64,6 +74,7 @@ class HistoryController extends Controller
             'retentionDays' => $retentionDays,
             'planAllowsPersonalities' => $planAllowsPersonalities,
             'favoritesOnly' => $favoritesOnly,
+            'userProjects' => $userProjects,
         ]);
     }
 
@@ -80,12 +91,12 @@ class HistoryController extends Controller
             exit;
         }
 
-        $sessionId = session_id();
+        $userId = (int)($_SESSION['user_id'] ?? 0);
         $id = isset($_POST['id']) ? (int)$_POST['id'] : 0;
         $title = trim((string)($_POST['title'] ?? ''));
 
         if ($id > 0) {
-            $conv = Conversation::findByIdAndSession($id, $sessionId);
+            $conv = Conversation::findByIdForUser($id, $userId);
             if ($conv) {
                 if ($title === '') {
                     $title = 'Chat com o Tuquinha';
@@ -95,10 +106,92 @@ class HistoryController extends Controller
         }
 
         $q = isset($_GET['q']) ? (string)$_GET['q'] : '';
+        $fav = isset($_GET['fav']) ? (string)$_GET['fav'] : '';
         $redirect = '/historico';
-        if ($q !== '') {
-            $redirect .= '?q=' . urlencode($q);
+        $params = [];
+        if ($q !== '') { $params['q'] = $q; }
+        if ($fav !== '') { $params['fav'] = $fav; }
+        if (!empty($params)) { $redirect .= '?' . http_build_query($params); }
+        header('Location: ' . $redirect);
+        exit;
+    }
+
+    public function favorite(): void
+    {
+        if (empty($_SESSION['user_id'])) {
+            header('Location: /login');
+            exit;
         }
+
+        $currentPlan = Plan::findBySessionSlug($_SESSION['plan_slug'] ?? null);
+        if (!$currentPlan || ($currentPlan['slug'] ?? null) === 'free') {
+            header('Location: /planos');
+            exit;
+        }
+
+        $userId = (int)($_SESSION['user_id'] ?? 0);
+        $id = isset($_POST['id']) ? (int)$_POST['id'] : 0;
+        $isFavorite = isset($_POST['is_favorite']) ? (int)$_POST['is_favorite'] : 0;
+
+        if ($id > 0) {
+            $conv = Conversation::findByIdForUser($id, $userId);
+            if ($conv) {
+                Conversation::updateIsFavorite($id, $isFavorite === 1);
+            }
+        }
+
+        $q = isset($_GET['q']) ? (string)$_GET['q'] : '';
+        $fav = isset($_GET['fav']) ? (string)$_GET['fav'] : '';
+        $redirect = '/historico';
+        $params = [];
+        if ($q !== '') { $params['q'] = $q; }
+        if ($fav !== '') { $params['fav'] = $fav; }
+        if (!empty($params)) { $redirect .= '?' . http_build_query($params); }
+        header('Location: ' . $redirect);
+        exit;
+    }
+
+    public function setProject(): void
+    {
+        if (empty($_SESSION['user_id'])) {
+            header('Location: /login');
+            exit;
+        }
+
+        $currentPlan = Plan::findBySessionSlug($_SESSION['plan_slug'] ?? null);
+        if (!$currentPlan || ($currentPlan['slug'] ?? null) === 'free') {
+            header('Location: /planos');
+            exit;
+        }
+
+        $userId = (int)($_SESSION['user_id'] ?? 0);
+        $id = isset($_POST['id']) ? (int)$_POST['id'] : 0;
+        $projectId = isset($_POST['project_id']) ? (int)$_POST['project_id'] : 0;
+
+        if ($id > 0) {
+            $conv = Conversation::findByIdForUser($id, $userId);
+            if ($conv) {
+                $allowedProjectId = null;
+                if ($projectId > 0) {
+                    $userProjects = Project::allForUser($userId);
+                    foreach ($userProjects as $p) {
+                        if ((int)($p['id'] ?? 0) === $projectId) {
+                            $allowedProjectId = $projectId;
+                            break;
+                        }
+                    }
+                }
+                Conversation::updateProjectId($id, $allowedProjectId);
+            }
+        }
+
+        $q = isset($_GET['q']) ? (string)$_GET['q'] : '';
+        $fav = isset($_GET['fav']) ? (string)$_GET['fav'] : '';
+        $redirect = '/historico';
+        $params = [];
+        if ($q !== '') { $params['q'] = $q; }
+        if ($fav !== '') { $params['fav'] = $fav; }
+        if (!empty($params)) { $redirect .= '?' . http_build_query($params); }
         header('Location: ' . $redirect);
         exit;
     }

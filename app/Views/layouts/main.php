@@ -158,6 +158,9 @@ if (!empty($_SESSION['user_id'])) {
             z-index: 20;
             transition: transform 0.2s ease-out, opacity 0.2s ease-out;
         }
+        body[data-theme="light"] .sidebar {
+            background: var(--bg-main);
+        }
         .brand {
             display: flex;
             align-items: center;
@@ -171,6 +174,9 @@ if (!empty($_SESSION['user_id'])) {
             overflow: hidden;
             background: var(--bg-main);
             box-shadow: 0 0 20px rgba(229, 57, 53, 0.7);
+        }
+        body[data-theme="light"] .brand-logo {
+            box-shadow: none;
         }
         .brand-text-title {
             font-weight: 700;
@@ -213,6 +219,9 @@ if (!empty($_SESSION['user_id'])) {
             justify-content: center;
             font-size: 14px;
         }
+        body[data-theme="light"] .sidebar-button span.icon {
+            background: transparent;
+        }
         .sidebar-button.primary {
             background: linear-gradient(135deg, #e53935, #ff6f60);
             border-color: transparent;
@@ -225,9 +234,9 @@ if (!empty($_SESSION['user_id'])) {
             color: #111827;
         }
         body[data-theme="light"] .sidebar-button.primary {
-            background: linear-gradient(135deg, #fecaca, #fed7d7);
+            background: linear-gradient(135deg, #e53935, #ff6f60);
             border-color: transparent;
-            color: #111827;
+            color: #050509;
         }
         .sidebar-button:hover {
             background: rgba(255, 255, 255, 0.06);

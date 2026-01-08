@@ -80,6 +80,8 @@ $router->get('/', 'HomeController@index');
 $router->get('/planos', 'PlanController@index');
 $router->get('/historico', 'HistoryController@index');
 $router->post('/historico/renomear', 'HistoryController@rename');
+$router->post('/historico/favoritar', 'HistoryController@favorite');
+$router->post('/historico/projeto', 'HistoryController@setProject');
 $router->get('/checkout', 'CheckoutController@show');
 $router->post('/checkout', 'CheckoutController@process');
 $router->get('/debug/asaas', 'CheckoutController@debugLastAsaas');
@@ -219,6 +221,7 @@ $router->post('/comunidades/enquetes/criar', 'CommunitiesController@createPoll')
 $router->post('/comunidades/enquetes/votar', 'CommunitiesController@votePoll');
 $router->post('/comunidades/enquetes/fechar', 'CommunitiesController@closePoll');
 $router->post('/comunidades/enquetes/reabrir', 'CommunitiesController@reopenPoll');
+$router->post('/comunidades/enquetes/excluir', 'CommunitiesController@deletePoll');
 $router->get('/comunidades/convites', 'CommunitiesController@invites');
 $router->post('/comunidades/convites/enviar', 'CommunitiesController@sendInvite');
 $router->get('/comunidades/aceitar-convite', 'CommunitiesController@acceptInvite');

@@ -1,4 +1,4 @@
-<?php
+            <?php
 
 namespace App\Controllers;
 
@@ -301,6 +301,23 @@ class CommunitiesController extends Controller
             }
         }
 
+        // Upload opcional de imagem de perfil
+        $profileImagePath = null;
+        if (!empty($_FILES['profile_image']) && is_array($_FILES['profile_image'])) {
+            $uploadError = (int)($_FILES['profile_image']['error'] ?? UPLOAD_ERR_NO_FILE);
+            if ($uploadError === UPLOAD_ERR_OK) {
+                $tmp = (string)($_FILES['profile_image']['tmp_name'] ?? '');
+                $originalName = (string)($_FILES['profile_image']['name'] ?? '');
+                $type = (string)($_FILES['profile_image']['type'] ?? '');
+                if ($tmp !== '' && is_uploaded_file($tmp)) {
+                    $url = MediaStorageService::uploadFile($tmp, $originalName, $type);
+                    if ($url !== null) {
+                        $profileImagePath = $url;
+                    }
+                }
+            }
+        }
+
         // Upload opcional de imagem de capa
         $coverImagePath = null;
         if (!empty($_FILES['cover_image']) && is_array($_FILES['cover_image'])) {
@@ -328,7 +345,8 @@ class CommunitiesController extends Controller
             'community_type' => $communityType,
             'posting_policy' => $postingPolicy,
             'forum_type' => $forumType,
-            'image_path' => null,
+            'allow_poll_closing' => $allowPollClosing,
+            'image_path' => $profileImagePath,
             'cover_image_path' => $coverImagePath,
             'members_count' => 0,
             'topics_count' => 0,
@@ -438,6 +456,7 @@ class CommunitiesController extends Controller
         $communityType = (string)($_POST['community_type'] ?? 'public');
         $postingPolicy = (string)($_POST['posting_policy'] ?? 'any_member');
         $forumType = (string)($_POST['forum_type'] ?? 'non_anonymous');
+        $allowPollClosing = !empty($_POST['allow_poll_closing']) ? 1 : 0;
 
         if ($communityType !== 'private') {
             $communityType = 'public';
@@ -467,7 +486,23 @@ class CommunitiesController extends Controller
             exit;
         }
 
-        $coverImagePath = (string)($community['cover_image_path'] ?? $community['image_path'] ?? '');
+        $profileImagePath = (string)($community['image_path'] ?? '');
+        if (!empty($_FILES['profile_image']) && is_array($_FILES['profile_image'])) {
+            $uploadError = (int)($_FILES['profile_image']['error'] ?? UPLOAD_ERR_NO_FILE);
+            if ($uploadError === UPLOAD_ERR_OK) {
+                $tmp = (string)($_FILES['profile_image']['tmp_name'] ?? '');
+                $originalName = (string)($_FILES['profile_image']['name'] ?? '');
+                $type = (string)($_FILES['profile_image']['type'] ?? '');
+                if ($tmp !== '' && is_uploaded_file($tmp)) {
+                    $url = MediaStorageService::uploadFile($tmp, $originalName, $type);
+                    if ($url !== null) {
+                        $profileImagePath = $url;
+                    }
+                }
+            }
+        }
+
+        $coverImagePath = (string)($community['cover_image_path'] ?? '');
         if (!empty($_FILES['cover_image']) && is_array($_FILES['cover_image'])) {
             $uploadError = (int)($_FILES['cover_image']['error'] ?? UPLOAD_ERR_NO_FILE);
             if ($uploadError === UPLOAD_ERR_OK) {
@@ -492,6 +527,7 @@ class CommunitiesController extends Controller
             'posting_policy' => $postingPolicy,
             'forum_type' => $forumType,
             'allow_poll_closing' => $allowPollClosing,
+            'image_path' => $profileImagePath !== '' ? $profileImagePath : null,
             'cover_image_path' => $coverImagePath !== '' ? $coverImagePath : null,
         ]);
 
@@ -1156,6 +1192,52 @@ class CommunitiesController extends Controller
         CommunityPoll::close($pollId);
         $_SESSION['communities_success'] = 'Enquete encerrada.';
         header('Location: /comunidades/enquetes?slug=' . urlencode((string)($community['slug'] ?? '')) . '#poll-' . $pollId);
+        exit;
+    }
+
+    public function deletePoll(): void
+    {
+        $user = $this->requireLogin();
+
+        $pollId = isset($_POST['poll_id']) ? (int)$_POST['poll_id'] : 0;
+        if ($pollId <= 0) {
+            $_SESSION['communities_error'] = 'Enquete inválida.';
+            header('Location: /comunidades');
+            exit;
+        }
+
+        $poll = CommunityPoll::findById($pollId);
+        if (!$poll) {
+            $_SESSION['communities_error'] = 'Enquete não encontrada.';
+            header('Location: /comunidades');
+            exit;
+        }
+
+        $community = Community::findById((int)($poll['community_id'] ?? 0));
+        if (!$community || empty($community['is_active'])) {
+            $_SESSION['communities_error'] = 'Comunidade desta enquete não foi encontrada.';
+            header('Location: /comunidades');
+            exit;
+        }
+
+        $course = $this->findCourseForCommunity($community);
+        if ($course && !empty($course['is_active']) && !$this->userCanAccessCourseCommunity($course, $user)) {
+            $_SESSION['communities_error'] = 'Você precisa ter acesso a este curso para moderar esta comunidade.';
+            $courseUrl = CourseController::buildCourseUrl($course);
+            header('Location: ' . $courseUrl);
+            exit;
+        }
+
+        $this->ensureCommunityModerator($community, $user);
+
+        try {
+            CommunityPoll::deleteById($pollId);
+            $_SESSION['communities_success'] = 'Enquete excluída.';
+        } catch (\Throwable $e) {
+            $_SESSION['communities_error'] = 'Não foi possível excluir a enquete.';
+        }
+
+        header('Location: /comunidades/enquetes?slug=' . urlencode((string)($community['slug'] ?? '')));
         exit;
     }
 

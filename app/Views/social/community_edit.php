@@ -17,7 +17,8 @@ $allowPollClosing = !empty($old['allow_poll_closing']);
 
 $communityId = (int)($community['id'] ?? 0);
 $communitySlug = (string)($community['slug'] ?? '');
-$currentCover = (string)($community['cover_image_path'] ?? $community['image_path'] ?? '');
+$currentCover = (string)($community['cover_image_path'] ?? '');
+$currentProfile = (string)($community['image_path'] ?? '');
 
 ?>
 <div style="max-width: 980px; margin: 0 auto; display:flex; flex-direction:column; gap:14px;">
@@ -76,9 +77,23 @@ $currentCover = (string)($community['cover_image_path'] ?? $community['image_pat
 
             <div style="display:flex; flex-wrap:wrap; gap:10px; align-items:flex-start;">
                 <div style="flex:1 1 220px; min-width:0;">
+                    <label for="profile_image" style="display:block; font-size:12px; color:var(--text-secondary); margin-bottom:3px;">Imagem de perfil</label>
+                    <input id="profile_image" type="file" name="profile_image" accept="image/*" style="font-size:12px;">
+                    <div style="font-size:11px; color:var(--text-secondary); margin-top:2px;">Opcional. Dimensões recomendadas: <strong>400×400</strong>.</div>
+                </div>
+                <?php if ($currentProfile !== ''): ?>
+                    <div style="flex:0 0 140px; text-align:center;">
+                        <div style="font-size:11px; color:var(--text-secondary); margin-bottom:4px;">Perfil atual</div>
+                        <img src="<?= htmlspecialchars($currentProfile, ENT_QUOTES, 'UTF-8') ?>" alt="Perfil atual" style="width:64px; height:64px; border-radius:14px; object-fit:cover; border:1px solid var(--border-subtle);">
+                    </div>
+                <?php endif; ?>
+            </div>
+
+            <div style="display:flex; flex-wrap:wrap; gap:10px; align-items:flex-start;">
+                <div style="flex:1 1 220px; min-width:0;">
                     <label for="cover_image" style="display:block; font-size:12px; color:var(--text-secondary); margin-bottom:3px;">Imagem de capa</label>
                     <input id="cover_image" type="file" name="cover_image" accept="image/*" style="font-size:12px;">
-                    <div style="font-size:11px; color:var(--text-secondary); margin-top:2px;">Opcional. Envie uma nova imagem para substituir a atual.</div>
+                    <div style="font-size:11px; color:var(--text-secondary); margin-top:2px;">Opcional. Dimensões recomendadas: <strong>1200×300</strong>. Envie uma nova imagem para substituir a atual.</div>
                 </div>
                 <?php if ($currentCover !== ''): ?>
                     <div style="flex:0 0 180px; text-align:center;">

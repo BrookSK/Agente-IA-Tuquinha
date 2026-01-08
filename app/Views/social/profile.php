@@ -202,17 +202,20 @@ $profileId = (int)($profileUser['id'] ?? 0);
                 <span style="display:inline-block; width:100%; padding:7px 12px; border-radius:999px; background:linear-gradient(135deg,#e53935,#ff6f60); font-weight:650;">Ver portfólio</span>
             </a>
             <?php if ($isOwnProfile): ?>
+                <button type="button" id="openSocialProfileEditBtn" style="
+                    width:100%; border:none; border-radius:999px; padding:7px 12px;
+                    font-size:12px; font-weight:650; cursor:pointer;
+                    background:var(--surface-subtle); border:1px solid var(--border-subtle);
+                    color:var(--text-primary);
+                ">Editar perfil</button>
                 <a href="/perfil/portfolio/gerenciar" style="display:block; text-align:center; font-size:12px; color:var(--text-primary); text-decoration:none;">
-                    <span style="display:inline-block; width:100%; padding:7px 12px; border-radius:999px; background:var(--surface-subtle); border:1px solid var(--border-subtle);">Gerenciar meu portfólio</span>
+                    <span style="display:inline-block; width:100%; padding:7px 12px; border-radius:999px; background:var(--surface-subtle); border:1px solid var(--border-subtle); font-weight:600;">Gerenciar meu portfólio</span>
                 </a>
             <?php endif; ?>
-        </div>
-
-        <?php if (!empty($profile['visits_count'])): ?>
-            <div style="font-size:11px; color:var(--text-secondary); margin-top:4px; text-align:center;">
-                <?= (int)$profile['visits_count'] ?> visita(s) neste perfil.
+            <div style="font-size:11px; color:var(--text-secondary); text-align:center;">
+                <?= (int)($profile['visits_count'] ?? 0) ?> visita(s) neste perfil.
             </div>
-        <?php endif; ?>
+        </div>
     </aside>
 
     <script>
@@ -362,12 +365,7 @@ $profileId = (int)($profileUser['id'] ?? 0);
         </section>
 
         <?php if ($isOwnProfile): ?>
-            <section style="background:var(--surface-card); border-radius:16px; border:1px solid var(--border-subtle); padding:12px 14px;">
-                <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:6px; flex-wrap:wrap;">
-                    <h2 style="font-size:16px; margin:0; color:var(--text-primary);">Editar meu perfil social</h2>
-                    <button type="button" id="toggleSocialProfileEdit" style="border:none; border-radius:999px; padding:6px 12px; background:var(--surface-subtle); border:1px solid var(--border-subtle); color:var(--text-primary); font-size:12px; font-weight:650; cursor:pointer;">Editar</button>
-                </div>
-                <div id="socialProfileEditPanel" style="display:none;">
+            <section id="socialProfileEditSection" style="display:none; background:var(--surface-card); border-radius:16px; border:1px solid var(--border-subtle); padding:12px 14px;">
                 <form action="/perfil/salvar" method="post" enctype="multipart/form-data" style="display:flex; flex-direction:column; gap:10px; font-size:13px; color:var(--text-primary);">
                     <div style="display:flex; flex-wrap:wrap; gap:10px; align-items:center;">
                         <div style="width:72px; height:72px; border-radius:50%; overflow:hidden; background:radial-gradient(circle at 30% 20%, #fff 0, #ff8a65 25%, #e53935 65%, #050509 100%); display:flex; align-items:center; justify-content:center; font-size:28px; font-weight:700; color:#050509;">
@@ -549,30 +547,38 @@ $profileId = (int)($profileUser['id'] ?? 0);
                         <button type="submit" style="border:none; border-radius:999px; padding:6px 12px; background:linear-gradient(135deg,#e53935,#ff6f60); color:#050509; font-size:12px; font-weight:600; cursor:pointer;">Salvar perfil</button>
                     </div>
                 </form>
-                </div>
-
-                <script>
-                (function () {
-                    var btn = document.getElementById('toggleSocialProfileEdit');
-                    var panel = document.getElementById('socialProfileEditPanel');
-                    if (!btn || !panel) return;
-
-                    function setOpen(open) {
-                        panel.style.display = open ? 'block' : 'none';
-                        btn.textContent = open ? 'Fechar' : 'Editar';
-                    }
-
-                    btn.addEventListener('click', function () {
-                        setOpen(panel.style.display === 'none');
-                    });
-
-                    if (window.location && window.location.hash === '#editar-perfil') {
-                        setOpen(true);
-                    }
-                })();
-                </script>
             </section>
         <?php endif; ?>
+
+        <script>
+        (function () {
+            var btn = document.getElementById('openSocialProfileEditBtn');
+            var section = document.getElementById('socialProfileEditSection');
+            if (!section) return;
+
+            function openEdit() {
+                section.style.display = 'block';
+                try { section.scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch (e) { section.scrollIntoView(true); }
+                var first = section.querySelector('input, textarea, select');
+                if (first && first.focus) {
+                    try { first.focus(); } catch (e) {}
+                }
+            }
+
+            if (btn) {
+                btn.addEventListener('click', function () {
+                    openEdit();
+                    if (window.location) {
+                        window.location.hash = '#editar-perfil';
+                    }
+                });
+            }
+
+            if (window.location && window.location.hash === '#editar-perfil') {
+                openEdit();
+            }
+        })();
+        </script>
 
         <section id="scraps" style="background:var(--surface-card); border-radius:16px; border:1px solid var(--border-subtle); padding:12px 14px;">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">

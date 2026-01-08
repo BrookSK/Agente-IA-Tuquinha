@@ -280,6 +280,13 @@
         line-height:1;
     }
 
+    body[data-theme="light"] .projectPersonaNavBtn {
+        background: rgba(255, 255, 255, 0.92);
+        color: #000000;
+        border-color: rgba(15, 23, 42, 0.18);
+        box-shadow: 0 10px 22px rgba(0,0,0,0.10);
+    }
+
     #projectPersonaPicker {
         scrollbar-color: rgba(245,245,245,0.28) transparent;
         scrollbar-width: thin;
@@ -329,6 +336,24 @@
     }
     #projectPersonaScrollbarThumb:active {
         cursor: grabbing;
+    }
+
+    body[data-theme="light"] #projectPersonaPicker {
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+    }
+    body[data-theme="light"] #projectPersonaPicker::-webkit-scrollbar {
+        width: 0;
+        height: 0;
+    }
+    body[data-theme="light"] #projectPersonaScrollbar {
+        background: rgba(15, 23, 42, 0.10);
+        border: 1px solid rgba(15, 23, 42, 0.18);
+    }
+    body[data-theme="light"] #projectPersonaScrollbarThumb {
+        background: rgba(0, 0, 0, 0.85);
+        border: 1px solid rgba(0, 0, 0, 0.25);
+        box-shadow: 0 1px 8px rgba(0,0,0,0.18);
     }
 </style>
 <div style="max-width: 1100px; margin: 0 auto;">

@@ -80,13 +80,31 @@ $canClosePolls = !empty($canClosePolls);
                             </div>
                         <?php endif; ?>
 
-                        <?php if (!empty($canModerate) && $canClosePolls): ?>
-                            <form action="<?= $isClosed ? '/comunidades/enquetes/reabrir' : '/comunidades/enquetes/fechar' ?>" method="post" style="margin:0; display:flex; justify-content:flex-end;">
-                                <input type="hidden" name="poll_id" value="<?= $pollId ?>">
-                                <button type="submit" style="border:none; border-radius:999px; padding:4px 8px; background:var(--surface-card); border:1px solid var(--border-subtle); color:var(--text-primary); font-size:11px; cursor:pointer;">
-                                    <?= $isClosed ? 'Reabrir' : 'Encerrar' ?>
-                                </button>
-                            </form>
+                        <?php if (!empty($canModerate)): ?>
+                            <div style="display:flex; align-items:center; justify-content:flex-end; gap:8px;">
+                                <?php if ($canClosePolls): ?>
+                                    <form action="<?= $isClosed ? '/comunidades/enquetes/reabrir' : '/comunidades/enquetes/fechar' ?>" method="post" style="margin:0; display:inline;">
+                                        <input type="hidden" name="poll_id" value="<?= $pollId ?>">
+                                        <button type="submit" style="border:none; border-radius:999px; padding:4px 8px; background:var(--surface-card); border:1px solid var(--border-subtle); color:var(--text-primary); font-size:11px; cursor:pointer;">
+                                            <?= $isClosed ? 'Reabrir' : 'Encerrar' ?>
+                                        </button>
+                                    </form>
+                                <?php endif; ?>
+
+                                <form action="/comunidades/enquetes/excluir" method="post" style="margin:0; display:inline;">
+                                    <input type="hidden" name="poll_id" value="<?= $pollId ?>">
+                                    <button type="submit" title="Excluir enquete" onclick="return confirm('Excluir esta enquete? Essa ação não pode ser desfeita.');" style="
+                                        border:1px solid var(--border-subtle);
+                                        background:var(--surface-card);
+                                        color:#ff6b6b;
+                                        width:30px; height:30px;
+                                        border-radius:999px;
+                                        cursor:pointer;
+                                        font-size:13px;
+                                        line-height:1;
+                                    ">🗑</button>
+                                </form>
+                            </div>
                         <?php endif; ?>
 
                         <?php if (!empty($isMember)): ?>
@@ -112,7 +130,19 @@ $canClosePolls = !empty($canClosePolls);
                                         </span>
                                     </label>
                                 <?php endforeach; ?>
-                                <button type="submit" <?= $isClosed ? 'disabled' : '' ?> style="margin-top:4px; align-self:flex-end; border:none; border-radius:999px; padding:4px 8px; background:var(--surface-card); border:1px solid var(--border-subtle); color:var(--text-primary); font-size:11px; cursor:pointer;">Votar</button>
+                                <button type="submit" <?= $isClosed ? 'disabled' : '' ?> style="
+                                    margin-top:6px;
+                                    align-self:flex-start;
+                                    border:none;
+                                    border-radius:999px;
+                                    padding:8px 14px;
+                                    background:linear-gradient(135deg,#e53935,#ff6f60);
+                                    color:#050509;
+                                    font-size:12px;
+                                    font-weight:700;
+                                    cursor:pointer;
+                                    box-shadow: 0 10px 22px rgba(229,57,53,0.25);
+                                ">VOTAR</button>
                             </form>
                         <?php else: ?>
                             <p style="font-size:12px; color:var(--text-secondary);">Entre na comunidade para votar nas enquetes.</p>
