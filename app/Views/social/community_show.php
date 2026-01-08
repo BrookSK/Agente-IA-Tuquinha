@@ -89,6 +89,17 @@ $canModerate = !empty($canModerate);
         </div>
     <?php endif; ?>
 
+    <section style="background:var(--surface-card); border-radius:16px; border:1px solid var(--border-subtle); padding:10px 12px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:wrap;">
+            <div style="font-size:13px; color:var(--text-secondary);">
+                <a href="/comunidades" style="color:#ff6f60; text-decoration:none;">Comunidades</a>
+                <span> / </span>
+                <span><?= htmlspecialchars($communityName, ENT_QUOTES, 'UTF-8') ?></span>
+            </div>
+            <a href="/comunidades" style="font-size:12px; color:#ff6f60; text-decoration:none;">Voltar para lista de comunidades</a>
+        </div>
+    </section>
+
     <section style="background:var(--surface-card); border-radius:16px; border:1px solid var(--border-subtle); overflow:hidden;">
         <div style="width:100%; height:220px; background:radial-gradient(circle at 30% 20%, #fff 0, #ff8a65 25%, #e53935 65%, #050509 100%);">
             <?php if ($coverImage !== ''): ?>
@@ -100,17 +111,6 @@ $canModerate = !empty($canModerate);
                     </div>
                 </div>
             <?php endif; ?>
-        </div>
-    </section>
-
-    <section style="background:var(--surface-card); border-radius:16px; border:1px solid var(--border-subtle); padding:10px 12px;">
-        <div style="display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:wrap;">
-            <div style="font-size:13px; color:var(--text-secondary);">
-                <a href="/comunidades" style="color:#ff6f60; text-decoration:none;">Comunidades</a>
-                <span> / </span>
-                <span><?= htmlspecialchars($communityName, ENT_QUOTES, 'UTF-8') ?></span>
-            </div>
-            <a href="/comunidades" style="font-size:12px; color:#ff6f60; text-decoration:none;">Voltar para lista de comunidades</a>
         </div>
     </section>
 
@@ -257,15 +257,27 @@ $canModerate = !empty($canModerate);
             <?php else: ?>
                 <div style="display:flex; flex-direction:column; gap:6px;">
                     <?php foreach ($topics as $t): ?>
+                        <?php
+                        $topicMediaUrl = trim((string)($t['media_url'] ?? ''));
+                        $topicAttachmentsCount = $topicMediaUrl !== '' ? 1 : 0;
+                        $topicAttachmentsLabel = $topicAttachmentsCount === 1 ? '1 anexo' : ($topicAttachmentsCount . ' anexos');
+                        ?>
                         <a href="/comunidades/topicos/ver?topic_id=<?= (int)($t['id'] ?? 0) ?>" style="text-decoration:none;">
                             <div style="background:var(--surface-subtle); border-radius:12px; border:1px solid var(--border-subtle); padding:8px 10px;">
                                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:3px;">
                                     <div style="font-size:13px; font-weight:600; color:var(--text-primary);">
                                         <?= htmlspecialchars((string)($t['title'] ?? 'Tópico'), ENT_QUOTES, 'UTF-8') ?>
                                     </div>
-                                    <div style="font-size:11px; color:var(--text-secondary);">
+                                    <div style="text-align:right;">
                                         <?php if (!empty($t['created_at'])): ?>
-                                            <?= htmlspecialchars(date('d/m/Y H:i', strtotime((string)$t['created_at'])), ENT_QUOTES, 'UTF-8') ?>
+                                            <div style="font-size:11px; color:var(--text-secondary);">
+                                                <?= htmlspecialchars(date('d/m/Y H:i', strtotime((string)$t['created_at'])), ENT_QUOTES, 'UTF-8') ?>
+                                            </div>
+                                        <?php endif; ?>
+                                        <?php if ($topicAttachmentsCount > 0): ?>
+                                            <div style="margin-top:2px; font-size:10px; color:var(--text-secondary); opacity:0.9;">
+                                                <?= htmlspecialchars($topicAttachmentsLabel, ENT_QUOTES, 'UTF-8') ?>
+                                            </div>
                                         <?php endif; ?>
                                     </div>
                                 </div>

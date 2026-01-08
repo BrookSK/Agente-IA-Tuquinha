@@ -131,8 +131,13 @@ function render_markdown_safe(string $text): string {
      padding: 0 14px !important;
      font-size: 13px !important;
      line-height: 1 !important;
-     max-width: 120px !important;
+     min-width: 92px !important;
+     max-width: 140px !important;
      white-space: nowrap !important;
+     display: inline-flex !important;
+     align-items: center !important;
+     justify-content: center !important;
+     gap: 6px !important;
  }
 
 @media (max-width: 640px) {
@@ -146,6 +151,10 @@ function render_markdown_safe(string $text): string {
     #chat-message {
         width: 100%;
         min-height: 72px;
+    }
+    #chat-send-btn {
+        width: 100% !important;
+        max-width: none !important;
     }
 }
 
@@ -843,9 +852,6 @@ if (!empty($currentPlan) && is_array($currentPlan)) {
             <button id="chat-send-btn" type="submit" style="
                 border: none;
                 border-radius: 999px;
-                width: 42px;
-                height: 42px;
-                display: inline-flex;
                 font-weight: 600;
                 font-size: 13px;
                 padding: 8px 14px;

@@ -33,7 +33,7 @@ $slug = (string)($community['slug'] ?? '');
     </section>
 
     <section style="background:#111118; border-radius:16px; border:1px solid #272727; padding:12px 14px; display:flex; flex-direction:column; gap:8px;">
-        <div style="font-size:12px; color:#b0b0b0;">
+        <div style="font-size:12px; color:#b0b0b0; display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
             <?php
                 $topicAuthorName = (string)($topic['user_name'] ?? 'Usuário');
                 $topicAuthorAvatar = trim((string)($topic['user_avatar_path'] ?? ''));
@@ -57,7 +57,8 @@ $slug = (string)($community['slug'] ?? '');
                 <span>por <?= htmlspecialchars($topicAuthorName, ENT_QUOTES, 'UTF-8') ?></span>
             </span>
             <?php if (!empty($topic['created_at'])): ?>
-                · <?= htmlspecialchars(date('d/m/Y H:i', strtotime((string)$topic['created_at'])), ENT_QUOTES, 'UTF-8') ?>
+                <span style="opacity:0.9;">·</span>
+                <span><?= htmlspecialchars(date('d/m/Y H:i', strtotime((string)$topic['created_at'])), ENT_QUOTES, 'UTF-8') ?></span>
             <?php endif; ?>
         </div>
         <h1 style="font-size:18px;">
