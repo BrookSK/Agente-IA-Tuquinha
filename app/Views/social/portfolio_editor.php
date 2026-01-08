@@ -53,6 +53,7 @@ $status = (string)($item['status'] ?? 'draft');
             <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap; justify-content:flex-end;">
                 <a href="/perfil/portfolio/gerenciar?owner_user_id=<?= (int)($item['user_id'] ?? 0) ?>&edit_id=<?= (int)$itemId ?>" style="border-radius:999px; padding:7px 12px; border:1px solid var(--border-subtle); background:var(--surface-subtle); color:var(--text-primary); font-size:12px; text-decoration:none;">Detalhes</a>
                 <a href="/perfil/portfolio/ver?id=<?= (int)$itemId ?>" target="_blank" rel="noopener noreferrer" style="border-radius:999px; padding:7px 12px; border:1px solid var(--border-subtle); background:var(--surface-subtle); color:var(--text-primary); font-size:12px; text-decoration:none;">Preview</a>
+                <span id="peSaveStateBadge" style="display:inline-flex; align-items:center; border-radius:999px; padding:6px 10px; border:1px solid var(--border-subtle); background:var(--surface-subtle); color:var(--text-secondary); font-size:12px; font-weight:800;">Salvo</span>
                 <button type="button" id="peSaveBtn" style="border:none; border-radius:999px; padding:7px 12px; background:linear-gradient(135deg,#e53935,#ff6f60); color:#050509; font-size:12px; font-weight:800; cursor:pointer;">Salvar rascunho</button>
                 <?php if ($status !== 'published'): ?>
                     <form action="/perfil/portfolio/publicar" method="post" style="margin:0;" onsubmit="return confirm('Publicar este projeto? Depois de publicado, ficará visível para todos.');">
@@ -118,6 +119,45 @@ $status = (string)($item['status'] ?? 'draft');
 (function(){
     var itemId = <?= (int)$itemId ?>;
     var initialBlocks = <?= json_encode($blocks ?? [], JSON_UNESCAPED_UNICODE) ?>;
+
+    var dirty = false;
+    var autosaveTimer = null;
+    var saving = false;
+
+    function setBadge(state){
+        var badge = document.getElementById('peSaveStateBadge');
+        if (!badge) return;
+        if (state === 'dirty') {
+            badge.textContent = 'Não salvo';
+            badge.style.color = '#ffe7a1';
+            badge.style.borderColor = 'rgba(255,231,161,0.28)';
+        } else if (state === 'saving') {
+            badge.textContent = 'Salvando...';
+            badge.style.color = '#cfe8ff';
+            badge.style.borderColor = 'rgba(207,232,255,0.22)';
+        } else if (state === 'error') {
+            badge.textContent = 'Erro ao salvar';
+            badge.style.color = '#ffbaba';
+            badge.style.borderColor = 'rgba(255,186,186,0.22)';
+        } else {
+            badge.textContent = 'Salvo';
+            badge.style.color = 'var(--text-secondary)';
+            badge.style.borderColor = 'var(--border-subtle)';
+        }
+    }
+
+    function markDirty(){
+        dirty = true;
+        setBadge('dirty');
+        if (autosaveTimer) {
+            clearTimeout(autosaveTimer);
+        }
+        autosaveTimer = setTimeout(function(){
+            if (!dirty) return;
+            if (saving) return;
+            saveNow(true);
+        }, 1500);
+    }
 
     function normalizeBlocks(serverBlocks){
         if (!Array.isArray(serverBlocks)) return [];
@@ -209,6 +249,15 @@ $status = (string)($item['status'] ?? 'draft');
                 return btn;
             }
 
+            var saveInline = aBtn('Salvar');
+            saveInline.style.background = 'linear-gradient(135deg,#e53935,#ff6f60)';
+            saveInline.style.border = 'none';
+            saveInline.style.color = '#050509';
+            saveInline.style.fontWeight = '800';
+            saveInline.addEventListener('click', function(){
+                saveNow(false);
+            });
+
             var up = aBtn('↑');
             var down = aBtn('↓');
             var del = aBtn('Excluir');
@@ -219,6 +268,7 @@ $status = (string)($item['status'] ?? 'draft');
                 var tmp = state[idx-1];
                 state[idx-1] = state[idx];
                 state[idx] = tmp;
+                markDirty();
                 render();
             });
             down.addEventListener('click', function(){
@@ -226,13 +276,16 @@ $status = (string)($item['status'] ?? 'draft');
                 var tmp = state[idx+1];
                 state[idx+1] = state[idx];
                 state[idx] = tmp;
+                markDirty();
                 render();
             });
             del.addEventListener('click', function(){
                 state.splice(idx, 1);
+                markDirty();
                 render();
             });
 
+            actions.appendChild(saveInline);
             actions.appendChild(up);
             actions.appendChild(down);
             actions.appendChild(del);
@@ -254,7 +307,7 @@ $status = (string)($item['status'] ?? 'draft');
                 ta.style.background = 'var(--surface-card)';
                 ta.style.color = 'var(--text-primary)';
                 ta.style.resize = 'vertical';
-                ta.addEventListener('input', function(){ b.text = ta.value; });
+                ta.addEventListener('input', function(){ b.text = ta.value; markDirty(); });
                 body.appendChild(ta);
             }
 
@@ -300,6 +353,7 @@ $status = (string)($item['status'] ?? 'draft');
                             b.media_url = json.url;
                             b.media_mime = json.mime_type || null;
                             renderImage();
+                            markDirty();
                         }
                     } catch(e) {
                     } finally {
@@ -351,6 +405,7 @@ $status = (string)($item['status'] ?? 'draft');
                         rm.style.fontSize = '12px';
                         rm.addEventListener('click', function(){
                             b.media.splice(midx, 1);
+                            markDirty();
                             renderGrid();
                         });
 
@@ -370,6 +425,7 @@ $status = (string)($item['status'] ?? 'draft');
                             if (json && json.ok && json.url) {
                                 b.media.push({ url: json.url, mime_type: json.mime_type || null, title: json.title || null, size_bytes: json.size_bytes || null });
                                 renderGrid();
+                                markDirty();
                             }
                         }
                         inputG.value = '';
@@ -392,7 +448,7 @@ $status = (string)($item['status'] ?? 'draft');
                 urlIn.style.border = '1px solid var(--border-subtle)';
                 urlIn.style.background = 'var(--surface-card)';
                 urlIn.style.color = 'var(--text-primary)';
-                urlIn.addEventListener('input', function(){ b.media_url = urlIn.value; b.media_mime = null; });
+                urlIn.addEventListener('input', function(){ b.media_url = urlIn.value; b.media_mime = null; markDirty(); });
 
                 var upV = el('input', { type: 'file', accept: 'video/*' });
                 upV.style.fontSize = '12px';
@@ -406,6 +462,7 @@ $status = (string)($item['status'] ?? 'draft');
                             b.media_url = json.url;
                             b.media_mime = json.mime_type || null;
                             urlIn.value = b.media_url;
+                            markDirty();
                         }
                     } catch(e) {
                     } finally {
@@ -448,6 +505,7 @@ $status = (string)($item['status'] ?? 'draft');
                             b.media_url = json.url;
                             b.media_mime = json.mime_type || null;
                             renderAudio();
+                            markDirty();
                         }
                     } catch(e) {
                     } finally {
@@ -471,7 +529,7 @@ $status = (string)($item['status'] ?? 'draft');
                 ta2.style.background = 'var(--surface-card)';
                 ta2.style.color = 'var(--text-primary)';
                 ta2.style.resize = 'vertical';
-                ta2.addEventListener('input', function(){ b.text = ta2.value; });
+                ta2.addEventListener('input', function(){ b.text = ta2.value; markDirty(); });
                 body.appendChild(ta2);
             }
 
@@ -487,6 +545,7 @@ $status = (string)($item['status'] ?? 'draft');
         if (type === 'gallery') b.media = [];
         if (type === 'embed') b.text = '';
         state.push(b);
+        markDirty();
         render();
     }
 
@@ -513,55 +572,79 @@ $status = (string)($item['status'] ?? 'draft');
     var saveBtn = document.getElementById('peSaveBtn');
     var fb = document.getElementById('peFeedback');
 
-    if (saveBtn) {
-        saveBtn.addEventListener('click', async function(){
-            saveBtn.disabled = true;
-            if (fb) fb.style.display = 'none';
-            try {
-                var payload = state.map(function(b){
-                    var out = { type: b.type };
-                    if (b.type === 'text') out.text = b.text || '';
-                    if (b.type === 'image') { out.media_url = b.media_url || ''; out.media_mime = b.media_mime || null; }
-                    if (b.type === 'gallery') { out.media = Array.isArray(b.media) ? b.media : []; }
-                    if (b.type === 'video') { out.media_url = b.media_url || ''; out.media_mime = b.media_mime || null; }
-                    if (b.type === 'audio') { out.media_url = b.media_url || ''; out.media_mime = b.media_mime || null; }
-                    if (b.type === 'embed') { out.text = b.text || ''; }
-                    return out;
-                });
+    async function saveNow(isAuto){
+        if (saving) return;
+        saving = true;
+        setBadge('saving');
+        if (saveBtn) saveBtn.disabled = true;
+        if (fb && !isAuto) fb.style.display = 'none';
 
-                var fd = new FormData();
-                fd.append('item_id', String(itemId));
-                fd.append('blocks_json', JSON.stringify(payload));
+        try {
+            var payload = state.map(function(b){
+                var out = { type: b.type };
+                if (b.type === 'text') out.text = b.text || '';
+                if (b.type === 'image') { out.media_url = b.media_url || ''; out.media_mime = b.media_mime || null; }
+                if (b.type === 'gallery') { out.media = Array.isArray(b.media) ? b.media : []; }
+                if (b.type === 'video') { out.media_url = b.media_url || ''; out.media_mime = b.media_mime || null; }
+                if (b.type === 'audio') { out.media_url = b.media_url || ''; out.media_mime = b.media_mime || null; }
+                if (b.type === 'embed') { out.text = b.text || ''; }
+                return out;
+            });
 
-                var res = await fetch('/perfil/portfolio/blocos/salvar', {
-                    method: 'POST',
-                    body: fd,
-                    credentials: 'same-origin',
-                    headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
-                });
-                var json = await res.json().catch(function(){ return null; });
-                if (fb) {
-                    fb.style.display = 'block';
-                    fb.style.color = (json && json.ok) ? '#c8ffd4' : '#ffbaba';
-                    var msg = (json && json.ok) ? 'Rascunho salvo.' : ((json && json.error) ? json.error : 'Não foi possível salvar.');
-                    if (json && json.ok && Array.isArray(json.warnings) && json.warnings.length) {
-                        msg = msg + ' ' + json.warnings.join(' ');
-                        fb.style.color = '#ffe7a1';
-                    }
-                    fb.textContent = msg;
-                }
-            } catch(e) {
-                if (fb) {
+            var fd = new FormData();
+            fd.append('item_id', String(itemId));
+            fd.append('blocks_json', JSON.stringify(payload));
+
+            var res = await fetch('/perfil/portfolio/blocos/salvar', {
+                method: 'POST',
+                body: fd,
+                credentials: 'same-origin',
+                headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
+            });
+            var json = await res.json().catch(function(){ return null; });
+            if (!json || !json.ok) {
+                setBadge('error');
+                if (fb && !isAuto) {
                     fb.style.display = 'block';
                     fb.style.color = '#ffbaba';
-                    fb.textContent = 'Não foi possível salvar.';
+                    fb.textContent = (json && json.error) ? json.error : 'Não foi possível salvar.';
                 }
-            } finally {
-                saveBtn.disabled = false;
+                return;
             }
+
+            dirty = false;
+            setBadge('saved');
+
+            if (fb && !isAuto) {
+                fb.style.display = 'block';
+                fb.style.color = '#c8ffd4';
+                var msg = 'Rascunho salvo.';
+                if (Array.isArray(json.warnings) && json.warnings.length) {
+                    msg = msg + ' ' + json.warnings.join(' ');
+                    fb.style.color = '#ffe7a1';
+                }
+                fb.textContent = msg;
+            }
+        } catch (e) {
+            setBadge('error');
+            if (fb && !isAuto) {
+                fb.style.display = 'block';
+                fb.style.color = '#ffbaba';
+                fb.textContent = 'Não foi possível salvar.';
+            }
+        } finally {
+            saving = false;
+            if (saveBtn) saveBtn.disabled = false;
+        }
+    }
+
+    if (saveBtn) {
+        saveBtn.addEventListener('click', async function(){
+            saveNow(false);
         });
     }
 
+    setBadge('saved');
     render();
 })();
 </script>

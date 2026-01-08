@@ -28,87 +28,104 @@ class SocialPortfolioController extends Controller
             return '';
         }
 
-        $allowedHosts = [
-            'youtube.com',
-            'www.youtube.com',
-            'youtu.be',
-            'www.youtu.be',
-            'youtube-nocookie.com',
-            'www.youtube-nocookie.com',
-            'player.vimeo.com',
-            'vimeo.com',
-            'www.vimeo.com',
-        ];
-
         $prev = libxml_use_internal_errors(true);
         try {
             $doc = new \DOMDocument();
             $doc->loadHTML('<!doctype html><html><body>' . $html . '</body></html>', LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
 
             $iframes = $doc->getElementsByTagName('iframe');
-            if ($iframes->length <= 0) {
+
+            if ($iframes->length > 0) {
+                $iframe = $iframes->item(0);
+                if (!$iframe) {
+                    return '';
+                }
+
+                $src = trim((string)$iframe->getAttribute('src'));
+                if ($src === '') {
+                    return '';
+                }
+
+                if (strpos($src, '//') === 0) {
+                    $src = 'https:' . $src;
+                }
+
+                if (!preg_match('/^https?:\/\//i', $src)) {
+                    return '';
+                }
+
+                $clean = new \DOMDocument();
+                $cleanIframe = $clean->createElement('iframe');
+                $cleanIframe->setAttribute('src', $src);
+
+                $w = trim((string)$iframe->getAttribute('width'));
+                $h = trim((string)$iframe->getAttribute('height'));
+                if ($w !== '' && preg_match('/^[0-9]{1,4}$/', $w)) {
+                    $cleanIframe->setAttribute('width', $w);
+                }
+                if ($h !== '' && preg_match('/^[0-9]{1,4}$/', $h)) {
+                    $cleanIframe->setAttribute('height', $h);
+                }
+
+                $allow = trim((string)$iframe->getAttribute('allow'));
+                if ($allow !== '') {
+                    $cleanIframe->setAttribute('allow', $allow);
+                }
+                $allowFs = trim((string)$iframe->getAttribute('allowfullscreen'));
+                if ($allowFs !== '') {
+                    $cleanIframe->setAttribute('allowfullscreen', '');
+                }
+
+                $ref = trim((string)$iframe->getAttribute('referrerpolicy'));
+                if ($ref !== '') {
+                    $cleanIframe->setAttribute('referrerpolicy', $ref);
+                }
+
+                $loading = trim((string)$iframe->getAttribute('loading'));
+                if ($loading !== '') {
+                    $cleanIframe->setAttribute('loading', $loading);
+                }
+
+                $clean->appendChild($cleanIframe);
+                $out = $clean->saveHTML($cleanIframe);
+                $out = is_string($out) ? trim($out) : '';
+                return $out;
+            }
+
+            $body = $doc->getElementsByTagName('body')->item(0);
+            if (!$body) {
                 return '';
             }
 
-            $iframe = $iframes->item(0);
-            if (!$iframe) {
-                return '';
+            $allowedTags = [
+                'p', 'br', 'div', 'span',
+                'strong', 'b', 'em', 'i', 'u',
+                'ul', 'ol', 'li',
+                'blockquote', 'code', 'pre',
+                'h1', 'h2', 'h3', 'h4',
+                'a',
+            ];
+
+            $cleanDoc = new \DOMDocument();
+            $container = $cleanDoc->createElement('div');
+            $cleanDoc->appendChild($container);
+
+            foreach (iterator_to_array($body->childNodes) as $child) {
+                $san = $this->sanitizeEmbedNode($cleanDoc, $child, $allowedTags);
+                if ($san) {
+                    $container->appendChild($san);
+                }
             }
 
-            $src = trim((string)$iframe->getAttribute('src'));
-            if ($src === '') {
-                return '';
-            }
-
-            if (strpos($src, '//') === 0) {
-                $src = 'https:' . $src;
-            }
-
-            if (!preg_match('/^https?:\/\//i', $src)) {
-                return '';
-            }
-
-            $host = parse_url($src, PHP_URL_HOST);
-            $host = is_string($host) ? strtolower(trim($host)) : '';
-            if ($host === '' || !in_array($host, $allowedHosts, true)) {
-                return '';
-            }
-
-            $clean = new \DOMDocument();
-            $cleanIframe = $clean->createElement('iframe');
-            $cleanIframe->setAttribute('src', $src);
-
-            $w = trim((string)$iframe->getAttribute('width'));
-            $h = trim((string)$iframe->getAttribute('height'));
-            if ($w !== '' && preg_match('/^[0-9]{1,4}$/', $w)) {
-                $cleanIframe->setAttribute('width', $w);
-            }
-            if ($h !== '' && preg_match('/^[0-9]{1,4}$/', $h)) {
-                $cleanIframe->setAttribute('height', $h);
-            }
-
-            $allow = trim((string)$iframe->getAttribute('allow'));
-            if ($allow !== '') {
-                $cleanIframe->setAttribute('allow', $allow);
-            }
-            $allowFs = trim((string)$iframe->getAttribute('allowfullscreen'));
-            if ($allowFs !== '') {
-                $cleanIframe->setAttribute('allowfullscreen', '');
-            }
-
-            $ref = trim((string)$iframe->getAttribute('referrerpolicy'));
-            if ($ref !== '') {
-                $cleanIframe->setAttribute('referrerpolicy', $ref);
-            }
-
-            $loading = trim((string)$iframe->getAttribute('loading'));
-            if ($loading !== '') {
-                $cleanIframe->setAttribute('loading', $loading);
-            }
-
-            $clean->appendChild($cleanIframe);
-            $out = $clean->saveHTML($cleanIframe);
+            $out = $cleanDoc->saveHTML($container);
             $out = is_string($out) ? trim($out) : '';
+            if ($out === '') {
+                return '';
+            }
+
+            if (preg_match('/^<div>(.*)<\/div>$/s', $out, $m)) {
+                $out = trim((string)($m[1] ?? ''));
+            }
             return $out;
         } catch (\Throwable $e) {
             return '';
@@ -116,6 +133,69 @@ class SocialPortfolioController extends Controller
             libxml_clear_errors();
             libxml_use_internal_errors($prev);
         }
+    }
+
+    private function sanitizeEmbedNode(\DOMDocument $doc, $node, array $allowedTags): ?\DOMNode
+    {
+        if (!$node) {
+            return null;
+        }
+
+        if ($node instanceof \DOMText) {
+            $txt = $node->wholeText;
+            return $doc->createTextNode($txt);
+        }
+
+        if (!($node instanceof \DOMElement)) {
+            return null;
+        }
+
+        $tag = strtolower($node->tagName);
+        if (!in_array($tag, $allowedTags, true)) {
+            return null;
+        }
+
+        if ($tag === 'br') {
+            return $doc->createElement('br');
+        }
+
+        $el = $doc->createElement($tag);
+
+        if ($tag === 'a') {
+            $href = trim((string)$node->getAttribute('href'));
+            if ($href !== '' && $this->isSafeEmbedHref($href)) {
+                $el->setAttribute('href', $href);
+                $el->setAttribute('rel', 'noopener noreferrer');
+                $el->setAttribute('target', '_blank');
+            }
+        }
+
+        foreach (iterator_to_array($node->childNodes) as $child) {
+            $san = $this->sanitizeEmbedNode($doc, $child, $allowedTags);
+            if ($san) {
+                $el->appendChild($san);
+            }
+        }
+
+        return $el;
+    }
+
+    private function isSafeEmbedHref(string $href): bool
+    {
+        $href = trim($href);
+        if ($href === '') {
+            return false;
+        }
+
+        if (preg_match('/^(javascript|data):/i', $href)) {
+            return false;
+        }
+
+        if ($href[0] === '#' || $href[0] === '/') {
+            return true;
+        }
+
+        return (bool)preg_match('/^(https?:\/\/|mailto:|tel:)/i', $href);
     }
 
     private function sanitizeBlocksForSave(array $blocks): array
@@ -153,7 +233,7 @@ class SocialPortfolioController extends Controller
             $raw = $b1 && isset($b1['text']) ? trim((string)$b1['text']) : '';
             $clean = $b2 && isset($b2['text']) ? trim((string)$b2['text']) : '';
             if ($raw !== '' && $clean === '') {
-                $errors[] = 'Um bloco de embed foi recusado. Use apenas iframe (YouTube/Vimeo).';
+                $errors[] = 'Um bloco de embed foi recusado por conter conteúdo não permitido.';
                 break;
             }
         }
