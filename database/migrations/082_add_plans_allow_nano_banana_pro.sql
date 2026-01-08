@@ -1,0 +1,2 @@
+ALTER TABLE plans
+ADD COLUMN allow_nano_banana_pro TINYINT(1) NOT NULL DEFAULT 0;
