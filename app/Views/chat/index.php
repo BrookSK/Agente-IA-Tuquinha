@@ -775,8 +775,12 @@ if (!empty($currentPlan) && is_array($currentPlan)) {
                         font-size: 11px;
                     ">
                         <?php foreach ($allowedModels as $m): ?>
+                            <?php $label = $m; ?>
+                            <?php if ($m === 'gemini-2.5-flash-image' || $m === 'gemini-3-pro-image-preview'): ?>
+                                <?php $label = $m . ' (Nano Banana)'; ?>
+                            <?php endif; ?>
                             <option value="<?= htmlspecialchars($m) ?>" <?= $currentModel === $m ? 'selected' : '' ?>>
-                                <?= htmlspecialchars($m) ?>
+                                <?= htmlspecialchars($label) ?>
                             </option>
                         <?php endforeach; ?>
                     </select>

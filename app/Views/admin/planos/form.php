@@ -168,9 +168,13 @@ if ($slugForCycle !== '') {
             <label style="font-size:13px; color:var(--text-primary); display:block; margin-bottom:4px;">Modelos de IA permitidos neste plano</label>
             <div style="display:flex; flex-wrap:wrap; gap:8px; font-size:13px; color:var(--text-secondary);">
                 <?php foreach ($knownModels as $m): ?>
+                    <?php $label = $m; ?>
+                    <?php if ($m === 'gemini-2.5-flash-image' || $m === 'gemini-3-pro-image-preview'): ?>
+                        <?php $label = $m . ' (Nano Banana)'; ?>
+                    <?php endif; ?>
                     <label style="display:flex; align-items:center; gap:5px;">
                         <input type="checkbox" name="allowed_models[]" value="<?= htmlspecialchars($m) ?>" <?= in_array($m, $selectedAllowed, true) ? 'checked' : '' ?>>
-                        <span><?= htmlspecialchars($m) ?></span>
+                        <span><?= htmlspecialchars($label) ?></span>
                     </label>
                 <?php endforeach; ?>
             </div>
@@ -184,7 +188,11 @@ if ($slugForCycle !== '') {
                 background:var(--surface-subtle); color:var(--text-primary); font-size:13px;">
                 <option value="">Usar modelo padrão global</option>
                 <?php foreach ($knownModels as $m): ?>
-                    <option value="<?= htmlspecialchars($m) ?>" <?= $planDefaultModel === $m ? 'selected' : '' ?>><?= htmlspecialchars($m) ?></option>
+                    <?php $label = $m; ?>
+                    <?php if ($m === 'gemini-2.5-flash-image' || $m === 'gemini-3-pro-image-preview'): ?>
+                        <?php $label = $m . ' (Nano Banana)'; ?>
+                    <?php endif; ?>
+                    <option value="<?= htmlspecialchars($m) ?>" <?= $planDefaultModel === $m ? 'selected' : '' ?>><?= htmlspecialchars($label) ?></option>
                 <?php endforeach; ?>
             </select>
         </div>
@@ -205,10 +213,6 @@ if ($slugForCycle !== '') {
             <label style="display:flex; align-items:center; gap:5px;">
                 <input type="checkbox" name="allow_images" value="1" <?= !empty($plan['allow_images']) ? 'checked' : '' ?>>
                 <span>Permitir imagens</span>
-            </label>
-            <label style="display:flex; align-items:center; gap:5px;">
-                <input type="checkbox" name="allow_nano_banana_pro" value="1" <?= !empty($plan['allow_nano_banana_pro']) ? 'checked' : '' ?>>
-                <span>Permitir Nano Banana Pro (criar imagens)</span>
             </label>
             <label style="display:flex; align-items:center; gap:5px;">
                 <input type="checkbox" name="allow_files" value="1" <?= !empty($plan['allow_files']) ? 'checked' : '' ?>>

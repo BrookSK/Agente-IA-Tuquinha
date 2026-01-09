@@ -74,7 +74,6 @@ class AdminPlanController extends Controller
         $monthlyTokenLimitRaw = trim($_POST['monthly_token_limit'] ?? '');
         $allowAudio = !empty($_POST['allow_audio']) ? 1 : 0;
         $allowImages = !empty($_POST['allow_images']) ? 1 : 0;
-        $allowNanoBananaPro = !empty($_POST['allow_nano_banana_pro']) ? 1 : 0;
         $allowFiles = !empty($_POST['allow_files']) ? 1 : 0;
         $allowPersonalities = !empty($_POST['allow_personalities']) ? 1 : 0;
         $allowCourses = !empty($_POST['allow_courses']) ? 1 : 0;
@@ -87,6 +86,19 @@ class AdminPlanController extends Controller
         $allowedModels = isset($_POST['allowed_models']) && is_array($_POST['allowed_models'])
             ? array_values(array_filter(array_map('trim', $_POST['allowed_models'])))
             : [];
+
+        $nanoAllowedModels = [
+            'nano-banana-pro',
+            'gemini-2.5-flash-image',
+            'gemini-3-pro-image-preview',
+        ];
+        $allowNanoBananaPro = 0;
+        foreach ($nanoAllowedModels as $nm) {
+            if (in_array($nm, $allowedModels, true)) {
+                $allowNanoBananaPro = 1;
+                break;
+            }
+        }
         $defaultModel = trim($_POST['default_model'] ?? '');
         $historyRetentionDays = isset($_POST['history_retention_days']) && $_POST['history_retention_days'] !== ''
             ? max(1, (int)$_POST['history_retention_days'])

@@ -185,8 +185,17 @@ class ChatController extends Controller
             'gemini-2.5-flash-image',
             'gemini-3-pro-image-preview',
         ];
-        $nanoEnabledByPlan = !empty($currentPlan['allow_nano_banana_pro']);
         $nanoKeyConfigured = trim((string)Setting::get('nano_banana_pro_api_key', '')) !== '';
+        $nanoEnabledByPlan = false;
+        foreach ($nanoKnownModels as $nm) {
+            if (in_array($nm, $allowedModels, true)) {
+                $nanoEnabledByPlan = true;
+                break;
+            }
+        }
+        if (!$nanoEnabledByPlan && in_array('nano-banana-pro', $allowedModels, true)) {
+            $nanoEnabledByPlan = true;
+        }
         if ($nanoEnabledByPlan && $nanoKeyConfigured) {
             foreach ($nanoKnownModels as $nm) {
                 if (!in_array($nm, $allowedModels, true)) {
@@ -543,7 +552,14 @@ class ChatController extends Controller
                 'gemini-3-pro-image-preview',
             ];
             $isNanoBanana = in_array($modelToUse, $nanoModels, true);
-            $planAllowsNano = !empty($plan['allow_nano_banana_pro']);
+            $planAllowedModels = Plan::parseAllowedModels($plan['allowed_models'] ?? null);
+            $planAllowsNano = false;
+            foreach ($nanoModels as $nm) {
+                if (in_array($nm, $planAllowedModels, true)) {
+                    $planAllowsNano = true;
+                    break;
+                }
+            }
             $nanoKeyConfigured = trim((string)Setting::get('nano_banana_pro_api_key', '')) !== '';
 
             if ($isNanoBanana && (!$planAllowsNano || !$nanoKeyConfigured)) {
