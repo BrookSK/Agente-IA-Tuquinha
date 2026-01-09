@@ -18,7 +18,10 @@ class NanoBananaProService
             $endpoint = 'https://generativelanguage.googleapis.com';
         }
 
-        $model = trim((string)Setting::get('nano_banana_pro_model', 'nano-banana-pro'));
+        $model = isset($options['model']) ? trim((string)$options['model']) : '';
+        if ($model === '') {
+            $model = trim((string)Setting::get('nano_banana_pro_model', 'nano-banana-pro'));
+        }
         if ($model === '') {
             $model = 'gemini-2.5-flash-image';
         }

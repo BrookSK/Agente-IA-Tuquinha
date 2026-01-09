@@ -181,9 +181,19 @@ class ChatController extends Controller
             }
         }
 
+        $nanoKnownModels = [
+            'gemini-2.5-flash-image',
+            'gemini-3-pro-image-preview',
+        ];
         $nanoEnabledByPlan = !empty($currentPlan['allow_nano_banana_pro']);
         $nanoKeyConfigured = trim((string)Setting::get('nano_banana_pro_api_key', '')) !== '';
         if ($nanoEnabledByPlan && $nanoKeyConfigured) {
+            foreach ($nanoKnownModels as $nm) {
+                if (!in_array($nm, $allowedModels, true)) {
+                    $allowedModels[] = $nm;
+                }
+            }
+            // Compatibilidade com valor antigo armazenado em sessão/plano.
             if (!in_array('nano-banana-pro', $allowedModels, true)) {
                 $allowedModels[] = 'nano-banana-pro';
             }
@@ -527,7 +537,12 @@ class ChatController extends Controller
                 ? (string)$_SESSION['chat_model']
                 : '';
 
-            $isNanoBanana = ($modelToUse === 'nano-banana-pro');
+            $nanoModels = [
+                'nano-banana-pro',
+                'gemini-2.5-flash-image',
+                'gemini-3-pro-image-preview',
+            ];
+            $isNanoBanana = in_array($modelToUse, $nanoModels, true);
             $planAllowsNano = !empty($plan['allow_nano_banana_pro']);
             $nanoKeyConfigured = trim((string)Setting::get('nano_banana_pro_api_key', '')) !== '';
 
@@ -560,7 +575,7 @@ class ChatController extends Controller
                 || (strpos($msgLowerForImage, 'desenhe') !== false);
 
             if (!$isNanoBanana && $looksLikeImageRequest && $planAllowsNano && $nanoKeyConfigured) {
-                $friendly = 'Para gerar imagens, altere o modelo do chat para **nano-banana-pro** (Nano Banana Pro).';
+                $friendly = 'Para gerar imagens, altere o modelo do chat para **gemini-2.5-flash-image** ou **gemini-3-pro-image-preview** (Nano Banana).';
                 Message::create($conversation->id, 'assistant', $friendly);
 
                 if ($isAjax) {
@@ -592,6 +607,7 @@ class ChatController extends Controller
 
             if ($isNanoBanana) {
                 $img = NanoBananaProService::generateImage((string)$message, [
+                    'model' => $modelToUse,
                     'size' => '1024x1024',
                     'n' => 1,
                     'response_format' => 'b64_json',

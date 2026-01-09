@@ -8,6 +8,8 @@ $knownModels = [
     'gpt-4.1',
     'claude-3-5-sonnet-20240620',
     'claude-3-haiku-20240307',
+    'gemini-2.5-flash-image',
+    'gemini-3-pro-image-preview',
 ];
 
 $selectedAllowed = [];
