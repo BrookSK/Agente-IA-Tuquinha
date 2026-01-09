@@ -337,9 +337,9 @@ $profileId = (int)($profileUser['id'] ?? 0);
         </section>
 
         <section style="background:var(--surface-card); border-radius:16px; border:1px solid var(--border-subtle); padding:12px 14px;">
-            <h2 style="font-size:16px; margin:0 0 2px 0; line-height:1.15; color:var(--text-primary);">Detalhes sociais</h2>
-            <div style="font-size:13px; color:var(--text-secondary); margin-top:0;">
-                <div style="display:grid; grid-template-columns: minmax(0, 180px) minmax(0, 1fr); row-gap:1px; column-gap:6px;">
+            <h2 style="font-size:16px; margin:0; line-height:1.1; color:var(--text-primary);">Detalhes sociais</h2>
+            <div style="font-size:13px; color:var(--text-secondary); margin-top:-2px;">
+                <div style="display:grid; grid-template-columns: minmax(0, 180px) minmax(0, 1fr); row-gap:0; column-gap:6px; align-items:start;">
                     <?php
                     $details = [
                         'Idioma' => $profile['language'] ?? null,
