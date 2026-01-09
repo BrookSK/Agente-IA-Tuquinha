@@ -339,7 +339,7 @@ $profileId = (int)($profileUser['id'] ?? 0);
         <section style="background:var(--surface-card); border-radius:16px; border:1px solid var(--border-subtle); padding:12px 14px;">
             <h2 style="font-size:16px; margin-bottom:6px; color:var(--text-primary);">Detalhes sociais</h2>
             <div style="font-size:13px; color:var(--text-secondary);">
-                <div style="display:grid; grid-template-columns: max-content minmax(0, 1fr); row-gap:4px; column-gap:6px;">
+                <div style="display:flex; flex-direction:column; gap:4px;">
                     <?php
                     $details = [
                         'Idioma' => $profile['language'] ?? null,
@@ -367,20 +367,24 @@ $profileId = (int)($profileUser['id'] ?? 0);
                         'Paixões' => $profile['passions'] ?? null,
                         'Atividades' => $profile['activities'] ?? null,
                     ];
+                    $hasAnyDetail = false;
                     foreach ($details as $label => $value):
                         if ($value === null || $value === '') {
                             continue;
                         }
+                        $hasAnyDetail = true;
                         ?>
-                        <div style="font-size:12px; color:var(--text-secondary); text-transform:lowercase;">
-                            <?= htmlspecialchars(mb_strtolower($label, 'UTF-8'), ENT_QUOTES, 'UTF-8') ?>:
-                        </div>
-                        <div>
-                            <?= nl2br(htmlspecialchars((string)$value, ENT_QUOTES, 'UTF-8')) ?>
+                        <div style="display:flex; align-items:baseline; gap:6px;">
+                            <div style="font-size:12px; color:var(--text-secondary); text-transform:lowercase; white-space:nowrap;">
+                                <?= htmlspecialchars(mb_strtolower($label, 'UTF-8'), ENT_QUOTES, 'UTF-8') ?>:
+                            </div>
+                            <div style="min-width:0;">
+                                <?= nl2br(htmlspecialchars((string)$value, ENT_QUOTES, 'UTF-8')) ?>
+                            </div>
                         </div>
                     <?php endforeach; ?>
-                    <?php if (!array_filter($details, static fn($v) => $v !== null && $v !== '')): ?>
-                        <div style="grid-column:1 / -1; font-size:13px;">Nenhum detalhe social preenchido ainda.</div>
+                    <?php if (!$hasAnyDetail): ?>
+                        <div style="font-size:13px;">Nenhum detalhe social preenchido ainda.</div>
                     <?php endif; ?>
                 </div>
             </div>
