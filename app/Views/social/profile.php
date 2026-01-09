@@ -216,10 +216,46 @@ $profileId = (int)($profileUser['id'] ?? 0);
             </div>
         <?php endif; ?>
 
-        <div style="display:flex; flex-direction:column; gap:6px; margin-top:6px;">
-            <a href="/perfil/portfolio?user_id=<?= (int)$profileId ?>" style="display:block; text-align:center; font-size:12px; color:#050509; text-decoration:none;">
-                <span style="display:inline-block; width:100%; padding:7px 12px; border-radius:999px; background:linear-gradient(135deg,#e53935,#ff6f60); font-weight:650;">Ver portfólio</span>
+        <section style="margin-top:6px; background:var(--surface-subtle); border-radius:14px; border:1px solid var(--border-subtle); padding:10px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                <div style="font-size:12px; font-weight:650; color:var(--text-primary);">Portfólio</div>
+                <?php if (!empty($lastPublishedPortfolioItem) && !empty($lastPublishedPortfolioItem['published_at'])): ?>
+                    <div style="font-size:11px; color:var(--text-secondary);">último publicado</div>
+                <?php endif; ?>
+            </div>
+
+            <?php
+                $portfolioCover = '';
+                $portfolioTitle = '';
+                if (!empty($lastPublishedPortfolioItem) && is_array($lastPublishedPortfolioItem)) {
+                    $portfolioCover = trim((string)($lastPublishedPortfolioItem['cover_url'] ?? ''));
+                    $portfolioTitle = trim((string)($lastPublishedPortfolioItem['title'] ?? ''));
+                }
+            ?>
+
+            <a href="/perfil/portfolio?user_id=<?= (int)$profileId ?>" style="display:block; text-decoration:none;">
+                <div style="width:100%; aspect-ratio: 16 / 9; border-radius:12px; overflow:hidden; border:1px solid var(--border-subtle); background:var(--surface-card);">
+                    <?php if ($portfolioCover !== ''): ?>
+                        <img src="<?= htmlspecialchars($portfolioCover, ENT_QUOTES, 'UTF-8') ?>" alt="" style="width:100%; height:100%; object-fit:cover; display:block;">
+                    <?php else: ?>
+                        <div style="width:100%; height:100%; background:radial-gradient(circle at 20% 20%, rgba(255,111,96,0.25) 0, rgba(229,57,53,0.12) 35%, rgba(5,5,9,0.88) 100%);"></div>
+                    <?php endif; ?>
+                </div>
+                <?php if ($portfolioTitle !== ''): ?>
+                    <div style="margin-top:6px; font-size:12px; color:var(--text-primary); font-weight:650; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                        <?= htmlspecialchars($portfolioTitle, ENT_QUOTES, 'UTF-8') ?>
+                    </div>
+                <?php else: ?>
+                    <div style="margin-top:6px; font-size:12px; color:var(--text-secondary);">Veja os projetos publicados</div>
+                <?php endif; ?>
             </a>
+
+            <a href="/perfil/portfolio?user_id=<?= (int)$profileId ?>" style="display:block; text-align:center; font-size:12px; color:#050509; text-decoration:none; margin-top:8px;">
+                <span style="display:inline-block; width:100%; padding:8px 12px; border-radius:999px; background:linear-gradient(135deg,#e53935,#ff6f60); font-weight:650;">Ver portfólio</span>
+            </a>
+        </section>
+
+        <div style="display:flex; flex-direction:column; gap:6px; margin-top:8px;">
             <?php if ($isOwnProfile): ?>
                 <button type="button" id="openSocialProfileEditBtn" style="
                     width:100%; border:none; border-radius:999px; padding:7px 12px;
@@ -301,9 +337,9 @@ $profileId = (int)($profileUser['id'] ?? 0);
         </section>
 
         <section style="background:var(--surface-card); border-radius:16px; border:1px solid var(--border-subtle); padding:12px 14px;">
-            <h2 style="font-size:16px; margin-bottom:6px; color:var(--text-primary);">Detalhes sociais</h2>
+            <h2 style="font-size:16px; margin-bottom:2px; color:var(--text-primary);">Detalhes sociais</h2>
             <div style="font-size:13px; color:var(--text-secondary);">
-                <div style="display:grid; grid-template-columns: minmax(0, 180px) minmax(0, 1fr); row-gap:4px; column-gap:8px;">
+                <div style="display:grid; grid-template-columns: minmax(0, 180px) minmax(0, 1fr); row-gap:2px; column-gap:6px;">
                     <?php
                     $details = [
                         'Idioma' => $profile['language'] ?? null,
