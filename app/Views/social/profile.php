@@ -10,6 +10,8 @@ $baseName = (string)($profileUser['preferred_name'] ?? $profileUser['name'] ?? '
 $initial = mb_strtoupper(mb_substr($baseName, 0, 1, 'UTF-8'), 'UTF-8');
 $avatarPath = isset($profile['avatar_path']) ? trim((string)$profile['avatar_path']) : '';
 
+$coverPath = isset($profile['cover_path']) ? trim((string)$profile['cover_path']) : '';
+
 $nickname = trim((string)($profileUser['nickname'] ?? ''));
 
 $courseBadges = $courseBadges ?? [];
@@ -59,6 +61,23 @@ $profileId = (int)($profileUser['id'] ?? 0);
         }
     }
 </style>
+
+<div style="max-width: 980px; margin: 0 auto 14px;">
+    <div style="position:relative; height:220px; border-radius:18px; overflow:hidden; border:1px solid var(--border-subtle); background:var(--surface-card);">
+        <?php if ($coverPath !== ''): ?>
+            <img src="<?= htmlspecialchars($coverPath, ENT_QUOTES, 'UTF-8') ?>" alt="Capa do perfil" style="width:100%; height:100%; object-fit:cover; display:block;">
+        <?php else: ?>
+            <div style="width:100%; height:100%; background:radial-gradient(circle at 20% 20%, rgba(255,111,96,0.35) 0, rgba(229,57,53,0.15) 30%, rgba(5,5,9,0.92) 100%);"></div>
+        <?php endif; ?>
+
+        <div style="position:absolute; inset:0; background:linear-gradient(180deg, rgba(0,0,0,0.0) 0%, rgba(0,0,0,0.48) 100%);"></div>
+
+        <?php if ($isOwnProfile): ?>
+            <button type="button" id="openSocialProfileEditBtnCover" style="position:absolute; right:12px; bottom:12px; border:none; border-radius:999px; padding:8px 12px; font-size:12px; font-weight:650; cursor:pointer; background:rgba(12,12,18,0.78); color:#fff; border:1px solid rgba(255,255,255,0.14);">Editar capa</button>
+        <?php endif; ?>
+    </div>
+</div>
+
 <div id="socialProfileLayout" style="max-width: 980px; margin: 0 auto; display: flex; gap: 18px; align-items: flex-start; flex-wrap: wrap;">
     <aside id="socialProfileAside" style="flex: 0 0 260px; background:var(--surface-card); border-radius:18px; border:1px solid var(--border-subtle); padding:14px; max-width:100%;">
         <div style="display:flex; flex-direction:column; align-items:center; gap:8px; margin-bottom:10px;">
@@ -352,27 +371,6 @@ $profileId = (int)($profileUser['id'] ?? 0);
             </div>
         </section>
 
-        <section style="background:var(--surface-card); border-radius:16px; border:1px solid var(--border-subtle); padding:12px 14px;">
-            <h2 style="font-size:16px; margin-bottom:6px; color:var(--text-primary);">Redes sociais</h2>
-            <div style="display:flex; flex-wrap:wrap; gap:6px; font-size:12px; color:var(--text-secondary);">
-                <?php if (!empty($profile['website'])): ?>
-                    <a href="<?= htmlspecialchars((string)$profile['website'], ENT_QUOTES, 'UTF-8') ?>" target="_blank" rel="noopener noreferrer" style="background:var(--surface-subtle); border-radius:999px; padding:4px 8px; border:1px solid var(--border-subtle); color:#ff6f60;">Site pessoal</a>
-                <?php endif; ?>
-                <?php if (!empty($profile['instagram'])): ?>
-                    <a href="<?= htmlspecialchars((string)$profile['instagram'], ENT_QUOTES, 'UTF-8') ?>" target="_blank" rel="noopener noreferrer" style="background:var(--surface-subtle); border-radius:999px; padding:4px 8px; border:1px solid var(--border-subtle); color:#ff6f60;">Instagram</a>
-                <?php endif; ?>
-                <?php if (!empty($profile['facebook'])): ?>
-                    <a href="<?= htmlspecialchars((string)$profile['facebook'], ENT_QUOTES, 'UTF-8') ?>" target="_blank" rel="noopener noreferrer" style="background:var(--surface-subtle); border-radius:999px; padding:4px 8px; border:1px solid var(--border-subtle); color:#ff6f60;">Facebook</a>
-                <?php endif; ?>
-                <?php if (!empty($profile['youtube'])): ?>
-                    <a href="<?= htmlspecialchars((string)$profile['youtube'], ENT_QUOTES, 'UTF-8') ?>" target="_blank" rel="noopener noreferrer" style="background:var(--surface-subtle); border-radius:999px; padding:4px 8px; border:1px solid var(--border-subtle); color:#ff6f60;">YouTube</a>
-                <?php endif; ?>
-                <?php if (empty($profile['website']) && empty($profile['instagram']) && empty($profile['facebook']) && empty($profile['youtube'])): ?>
-                    <span>Nenhuma rede social cadastrada ainda.</span>
-                <?php endif; ?>
-            </div>
-        </section>
-
         <?php if ($isOwnProfile): ?>
             <section id="socialProfileEditSection" style="display:none; background:var(--surface-card); border-radius:16px; border:1px solid var(--border-subtle); padding:12px 14px;">
                 <form action="/perfil/salvar" method="post" enctype="multipart/form-data" style="display:flex; flex-direction:column; gap:10px; font-size:13px; color:var(--text-primary);">
@@ -585,6 +583,7 @@ $profileId = (int)($profileUser['id'] ?? 0);
                 btn.addEventListener('click', function () {
                     openEdit();
                 });
+            }
 
             if (btnCover) {
                 btnCover.addEventListener('click', function () {
