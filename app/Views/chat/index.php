@@ -776,6 +776,9 @@ if (!empty($currentPlan) && is_array($currentPlan)) {
                     ">
                         <?php foreach ($allowedModels as $m): ?>
                             <?php $label = $m; ?>
+                            <?php if ($m === 'gpt-5.2-chat-latest'): ?>
+                                <?php $label = 'GPT-5.2 Chat'; ?>
+                            <?php endif; ?>
                             <?php if ($m === 'gemini-2.5-flash-image' || $m === 'gemini-3-pro-image-preview'): ?>
                                 <?php $label = $m . ' (Nano Banana)'; ?>
                             <?php endif; ?>

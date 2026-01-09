@@ -6,6 +6,7 @@ $knownModels = [
     'gpt-4o-mini',
     'gpt-4o',
     'gpt-4.1',
+    'gpt-5.2-chat-latest',
     'claude-3-5-sonnet-20240620',
     'claude-3-haiku-20240307',
     'gemini-2.5-flash-image',
@@ -169,6 +170,9 @@ if ($slugForCycle !== '') {
             <div style="display:flex; flex-wrap:wrap; gap:8px; font-size:13px; color:var(--text-secondary);">
                 <?php foreach ($knownModels as $m): ?>
                     <?php $label = $m; ?>
+                    <?php if ($m === 'gpt-5.2-chat-latest'): ?>
+                        <?php $label = 'GPT-5.2 Chat'; ?>
+                    <?php endif; ?>
                     <?php if ($m === 'gemini-2.5-flash-image' || $m === 'gemini-3-pro-image-preview'): ?>
                         <?php $label = $m . ' (Nano Banana)'; ?>
                     <?php endif; ?>
@@ -189,6 +193,9 @@ if ($slugForCycle !== '') {
                 <option value="">Usar modelo padrão global</option>
                 <?php foreach ($knownModels as $m): ?>
                     <?php $label = $m; ?>
+                    <?php if ($m === 'gpt-5.2-chat-latest'): ?>
+                        <?php $label = 'GPT-5.2 Chat'; ?>
+                    <?php endif; ?>
                     <?php if ($m === 'gemini-2.5-flash-image' || $m === 'gemini-3-pro-image-preview'): ?>
                         <?php $label = $m . ' (Nano Banana)'; ?>
                     <?php endif; ?>
