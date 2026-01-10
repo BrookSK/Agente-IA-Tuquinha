@@ -275,7 +275,7 @@
                                     <span>Abrir chat</span>
                                 </a>
 
-                                <button type="button" class="tuqDotsMenuItemBtn" onclick="return tuqRenameConversation(<?= (int)$convId ?>, <?= json_encode($title, JSON_UNESCAPED_UNICODE) ?>);">
+                                <button type="button" class="tuqDotsMenuItemBtn" data-rename-conv-id="<?= (int)$convId ?>" data-rename-title="<?= htmlspecialchars($title, ENT_QUOTES, 'UTF-8') ?>">
                                     <span style="opacity:0.9;">✏️</span>
                                     <span>Mudar o nome</span>
                                 </button>
@@ -362,9 +362,27 @@
             });
         }
 
+        function handleRenameClick(btn) {
+            try {
+                var id = Number(btn.getAttribute('data-rename-conv-id') || '0') || 0;
+                var title = (btn.getAttribute('data-rename-title') || '').toString();
+                closeAllMenus();
+                return tuqRenameConversation(id, title);
+            } catch (e) {
+                return false;
+            }
+        }
+
         document.addEventListener('click', function (ev) {
             try {
                 var t = ev.target;
+                var renameBtn = t && t.closest ? t.closest('[data-rename-conv-id]') : null;
+                if (renameBtn) {
+                    ev.preventDefault();
+                    ev.stopPropagation();
+                    handleRenameClick(renameBtn);
+                    return;
+                }
                 var btn = t && t.closest ? t.closest('[data-dots]') : null;
 
                 if (btn) {
