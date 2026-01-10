@@ -103,7 +103,8 @@
 
     <div style="
         display:grid;
-        grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+        grid-template-columns: repeat(auto-fit, 130px);
+        justify-content: center;
         gap: 14px;
         max-width: 620px;
         margin: 0 auto 22px auto;

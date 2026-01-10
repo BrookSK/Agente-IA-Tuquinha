@@ -4,7 +4,7 @@
 
 use App\Models\CoursePartner;
 
-$pageTitle = $pageTitle ?? 'Resenha 2.0 - Tuquinha';
+$pageTitle = $pageTitle ?? 'Resenha 2.0';
 
 $menuIconMap = [];
 try {
@@ -43,6 +43,61 @@ $renderMenuIcon = function (string $key, string $fallbackHtml) use ($menuIconMap
 $isCoursePartner = false;
 if (!empty($_SESSION['user_id'])) {
     $isCoursePartner = (bool)CoursePartner::findByUserId((int)$_SESSION['user_id']);
+}
+
+$currentPath = '/';
+try {
+    $req = (string)($_SERVER['REQUEST_URI'] ?? '/');
+    $p = parse_url($req, PHP_URL_PATH);
+    if (is_string($p) && $p !== '') {
+        $currentPath = $p;
+    }
+} catch (\Throwable $e) {
+    $currentPath = '/';
+}
+
+$isActiveNav = function ($hrefOrPaths) use ($currentPath): bool {
+    $paths = is_array($hrefOrPaths) ? $hrefOrPaths : [$hrefOrPaths];
+    foreach ($paths as $href) {
+        $href = (string)$href;
+        if ($href === '') {
+            continue;
+        }
+        $hrefPath = parse_url($href, PHP_URL_PATH);
+        $hrefPath = is_string($hrefPath) && $hrefPath !== '' ? $hrefPath : $href;
+
+        if ($hrefPath === '/') {
+            if ($currentPath === '/') {
+                return true;
+            }
+            continue;
+        }
+
+        if ($currentPath === $hrefPath) {
+            return true;
+        }
+        if (str_starts_with($currentPath, rtrim($hrefPath, '/') . '/')) {
+            return true;
+        }
+    }
+    return false;
+};
+
+$sidebarAvatarPath = '';
+$sidebarInitial = 'U';
+if (!empty($_SESSION['user_id'])) {
+    $sidebarName = trim((string)($_SESSION['user_name'] ?? ''));
+    if ($sidebarName !== '') {
+        $sidebarInitial = mb_strtoupper(mb_substr($sidebarName, 0, 1, 'UTF-8'), 'UTF-8');
+    }
+    try {
+        $sp = \App\Models\UserSocialProfile::findByUserId((int)$_SESSION['user_id']);
+        if (is_array($sp)) {
+            $sidebarAvatarPath = trim((string)($sp['avatar_path'] ?? ''));
+        }
+    } catch (\Throwable $e) {
+        $sidebarAvatarPath = '';
+    }
 }
 ?>
 <!DOCTYPE html>
@@ -158,6 +213,16 @@ if (!empty($_SESSION['user_id'])) {
             z-index: 20;
             transition: transform 0.2s ease-out, opacity 0.2s ease-out;
         }
+
+        /* Esconde a barra de rolagem da sidebar (mantém scroll funcionando) */
+        .sidebar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        .sidebar::-webkit-scrollbar {
+            width: 0;
+            height: 0;
+        }
         body[data-theme="light"] .sidebar {
             background: var(--bg-main);
         }
@@ -165,15 +230,38 @@ if (!empty($_SESSION['user_id'])) {
             display: flex;
             align-items: center;
             gap: 10px;
+        }
+        .sidebar-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
             margin-bottom: 8px;
         }
-        .brand-logo {
-            width: 36px;
-            height: 36px;
+        .sidebar-profile {
+            width: 34px;
+            height: 34px;
             border-radius: 50%;
             overflow: hidden;
-            background: var(--bg-main);
-            box-shadow: 0 0 20px rgba(229, 57, 53, 0.7);
+            background: radial-gradient(circle at 30% 20%, #fff 0, #ff8a65 25%, #e53935 65%, #050509 100%);
+            border: 1px solid rgba(255, 255, 255, 0.10);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            color: #050509;
+            font-weight: 750;
+            font-size: 14px;
+            flex: 0 0 auto;
+        }
+        .sidebar-profile img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+        body[data-theme="light"] .sidebar-profile {
+            border-color: rgba(0, 0, 0, 0.10);
         }
         body[data-theme="light"] .brand-logo {
             box-shadow: none;
@@ -208,6 +296,15 @@ if (!empty($_SESSION['user_id'])) {
             gap: 8px;
             cursor: pointer;
             transition: background 0.15s ease, border-color 0.15s ease, transform 0.1s ease;
+        }
+        .sidebar-button.sidebar-button--active {
+            border-color: rgba(229, 57, 53, 0.35);
+            background: rgba(229, 57, 53, 0.12);
+            box-shadow: 0 0 0 1px rgba(229, 57, 53, 0.16);
+        }
+        body[data-theme="light"] .sidebar-button.sidebar-button--active {
+            border-color: rgba(229, 57, 53, 0.35);
+            background: rgba(229, 57, 53, 0.08);
         }
         .sidebar-button span.icon {
             width: 18px;
@@ -520,12 +617,24 @@ if (!empty($_SESSION['user_id'])) {
     <div class="sidebar-overlay" id="sidebar-overlay"></div>
     <aside class="sidebar" id="sidebar">
         <div>
-            <div class="brand">
-                <div class="brand-logo"><img src="/public/favicon.png" alt="Tuquinha" style="width:100%; height:100%; display:block; object-fit:cover;"></div>
-                <div>
-                    <div class="brand-text-title">Resenha 2.0 - Tuquinha</div>
-                    <div class="brand-text-sub">Branding vivo na veia</div>
+            <div class="sidebar-top">
+                <div class="brand">
+                    <div class="brand-logo"><img src="/public/favicon.png" alt="Tuquinha" style="width:100%; height:100%; display:block; object-fit:cover;"></div>
+                    <div>
+                        <div class="brand-text-title">Resenha 2.0</div>
+                        <div class="brand-text-sub">Branding vivo na veia</div>
+                    </div>
                 </div>
+
+                <?php if (!empty($_SESSION['user_id'])): ?>
+                    <a href="/perfil" class="sidebar-profile" aria-label="Abrir perfil">
+                        <?php if ($sidebarAvatarPath !== ''): ?>
+                            <img src="<?= htmlspecialchars($sidebarAvatarPath, ENT_QUOTES, 'UTF-8') ?>" alt="Avatar">
+                        <?php else: ?>
+                            <?= htmlspecialchars($sidebarInitial, ENT_QUOTES, 'UTF-8') ?>
+                        <?php endif; ?>
+                    </a>
+                <?php endif; ?>
             </div>
             <div style="margin-top: 10px;">
                 <div class="sidebar-section-title">Conversa</div>
@@ -539,7 +648,7 @@ if (!empty($_SESSION['user_id'])) {
                         $newChatHref = '/personalidades';
                     }
                 ?>
-                <a href="<?= htmlspecialchars($newChatHref) ?>" class="sidebar-button primary" data-tour="nav-new-chat" style="margin-bottom: 8px;">
+                <a href="<?= htmlspecialchars($newChatHref) ?>" class="sidebar-button primary<?= $isActiveNav(['/chat', '/personalidades']) ? ' sidebar-button--active' : '' ?>" data-tour="nav-new-chat" style="margin-bottom: 8px;">
                     <span class="icon">+</span>
                     <span>Novo chat com o Tuquinha</span>
                 </a>
@@ -571,21 +680,21 @@ if (!empty($_SESSION['user_id'])) {
                     }
                 ?>
                 <?php if ($canUseProjects): ?>
-                    <a href="/projetos" class="sidebar-button" data-tour="nav-projects">
+                    <a href="/projetos" class="sidebar-button<?= $isActiveNav('/projetos') ? ' sidebar-button--active' : '' ?>" data-tour="nav-projects">
                         <span class="icon" aria-hidden="true"><?php echo $renderMenuIcon('projects_list', '📁'); ?></span>
                         <span>Meus projetos</span>
                     </a>
                 <?php endif; ?>
 
                 <?php if ($canSeeHistory): ?>
-                    <a href="/historico" class="sidebar-button" data-tour="nav-history">
+                    <a href="/historico" class="sidebar-button<?= $isActiveNav('/historico') ? ' sidebar-button--active' : '' ?>" data-tour="nav-history">
                         <span class="icon" aria-hidden="true"><?php echo $renderMenuIcon('chat_history', '�'); ?></span>
                         <span>Histórico de chats</span>
                     </a>
                 <?php endif; ?>
 
                 <div class="sidebar-section-title" style="margin-top: 10px;">Guias rápidos</div>
-                <a href="/" class="sidebar-button" data-tour="nav-home">
+                <a href="/" class="sidebar-button<?= $isActiveNav('/') ? ' sidebar-button--active' : '' ?>" data-tour="nav-home">
                     <span class="icon" aria-hidden="true"><?php
                         echo $renderMenuIcon('quick_home', '<svg class="tuquinha-home-icon tuquinha-home-icon--dark" width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="display:inline-block;">
                             <path d="M3 10.5L12 3l9 7.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
@@ -600,17 +709,17 @@ if (!empty($_SESSION['user_id'])) {
                     ?></span>
                     <span>Quem é o Tuquinha</span>
                 </a>
-                <a href="/planos" class="sidebar-button" data-tour="nav-plans">
+                <a href="/planos" class="sidebar-button<?= $isActiveNav('/planos') ? ' sidebar-button--active' : '' ?>" data-tour="nav-plans">
                     <span class="icon" aria-hidden="true"><?php echo $renderMenuIcon('quick_plans', '💳'); ?></span>
                     <span>Planos e limites</span>
                 </a>
-                <a href="/cursos" class="sidebar-button" data-tour="nav-courses">
+                <a href="/cursos" class="sidebar-button<?= $isActiveNav('/cursos') ? ' sidebar-button--active' : '' ?>" data-tour="nav-courses">
                     <span class="icon" aria-hidden="true"><?php echo $renderMenuIcon('quick_courses', '🎓'); ?></span>
                     <span>Cursos</span>
                 </a>
 
                 <?php if ($canUseNews): ?>
-                    <a href="/noticias" class="sidebar-button">
+                    <a href="/noticias" class="sidebar-button<?= $isActiveNav('/noticias') ? ' sidebar-button--active' : '' ?>">
                         <span class="icon" aria-hidden="true"><?php echo $renderMenuIcon('quick_news', '🗞'); ?></span>
                         <span>Notícias</span>
                     </a>
@@ -618,15 +727,15 @@ if (!empty($_SESSION['user_id'])) {
 
                 <?php if (!empty($_SESSION['user_id'])): ?>
                     <div class="sidebar-section-title" style="margin-top: 10px;">Rede social do Tuquinha</div>
-                    <a href="/perfil" class="sidebar-button">
+                    <a href="/perfil" class="sidebar-button<?= $isActiveNav('/perfil') ? ' sidebar-button--active' : '' ?>">
                         <span class="icon" aria-hidden="true"><?php echo $renderMenuIcon('social_profile', '🧑'); ?></span>
                         <span>Perfil social</span>
                     </a>
-                    <a href="/amigos" class="sidebar-button">
+                    <a href="/amigos" class="sidebar-button<?= $isActiveNav('/amigos') ? ' sidebar-button--active' : '' ?>">
                         <span class="icon" aria-hidden="true"><?php echo $renderMenuIcon('social_friends', '👥'); ?></span>
                         <span>Amigos</span>
                     </a>
-                    <a href="/comunidades" class="sidebar-button">
+                    <a href="/comunidades" class="sidebar-button<?= $isActiveNav('/comunidades') ? ' sidebar-button--active' : '' ?>">
                         <span class="icon" aria-hidden="true"><?php echo $renderMenuIcon('social_communities', '💬'); ?></span>
                         <span>Comunidades</span>
                     </a>
@@ -668,40 +777,40 @@ if (!empty($_SESSION['user_id'])) {
                             $hasCompletedCoursesForMenu = false;
                         }
                     ?>
-                    <a href="/conta" class="sidebar-button" data-tour="nav-account">
+                    <a href="/conta" class="sidebar-button<?= $isActiveNav('/conta') ? ' sidebar-button--active' : '' ?>" data-tour="nav-account">
                         <span class="icon" aria-hidden="true"><?php echo $renderMenuIcon('account_home', '👤'); ?></span>
                         <span>Minha conta</span>
                     </a>
                     <?php if ($hasCompletedCoursesForMenu): ?>
-                        <a href="/certificados" class="sidebar-button">
+                        <a href="/certificados" class="sidebar-button<?= $isActiveNav('/certificados') ? ' sidebar-button--active' : '' ?>">
                             <span class="icon" aria-hidden="true"><?php echo $renderMenuIcon('account_certificates', '🏅'); ?></span>
                             <span>Cursos concluídos</span>
                         </a>
                     <?php endif; ?>
                     <?php if ($canUsePersonalities): ?>
-                        <a href="/conta/personalidade" class="sidebar-button">
+                        <a href="/conta/personalidade" class="sidebar-button<?= $isActiveNav('/conta/personalidade') ? ' sidebar-button--active' : '' ?>">
                             <span class="icon" aria-hidden="true"><?php echo $renderMenuIcon('account_persona', '🎭'); ?></span>
                             <span>Personalidade padrão</span>
                         </a>
                     <?php endif; ?>
                     <?php if ($canBuyExtraTokens): ?>
-                        <a href="/tokens/historico" class="sidebar-button">
+                        <a href="/tokens/historico" class="sidebar-button<?= $isActiveNav('/tokens') ? ' sidebar-button--active' : '' ?>">
                             <span class="icon" aria-hidden="true"><?php echo $renderMenuIcon('account_tokens', '🔋'); ?></span>
                             <span>Histórico de tokens extras</span>
                         </a>
                     <?php endif; ?>
                     <?php if (!empty($_SESSION['is_admin']) || $hasActiveSubscriptionForMenu): ?>
-                        <a href="/suporte" class="sidebar-button" style="margin-top: 6px;">
+                        <a href="/suporte" class="sidebar-button<?= $isActiveNav('/suporte') ? ' sidebar-button--active' : '' ?>" style="margin-top: 6px;">
                             <span class="icon" aria-hidden="true"><?php echo $renderMenuIcon('account_support', '🛟'); ?></span>
                             <span>Suporte</span>
                         </a>
                     <?php endif; ?>
                     <?php if (!empty($isCoursePartner)): ?>
-                        <a href="/parceiro/cursos" class="sidebar-button">
+                        <a href="/parceiro/cursos" class="sidebar-button<?= $isActiveNav('/parceiro/cursos') ? ' sidebar-button--active' : '' ?>">
                             <span class="icon" aria-hidden="true"><?php echo $renderMenuIcon('partner_courses', '🎓'); ?></span>
                             <span>Meus cursos (parceiro)</span>
                         </a>
-                        <a href="/parceiro/comissoes" class="sidebar-button" style="margin-top: 6px;">
+                        <a href="/parceiro/comissoes" class="sidebar-button<?= $isActiveNav('/parceiro/comissoes') ? ' sidebar-button--active' : '' ?>" style="margin-top: 6px;">
                             <span class="icon" aria-hidden="true"><?php echo $renderMenuIcon('partner_commissions', '💰'); ?></span>
                             <span>Minhas comissões</span>
                         </a>

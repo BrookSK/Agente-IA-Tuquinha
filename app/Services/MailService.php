@@ -41,7 +41,7 @@ class MailService
             . '<div style="display:flex; align-items:center; gap:10px; margin-bottom:12px;">'
             . $brandAvatar
             . '<div>'
-            . '<div style="font-weight:700; font-size:15px;">Resenha 2.0 - Tuquinha</div>'
+            . '<div style="font-weight:700; font-size:15px;">Resenha 2.0</div>'
             . '<div style="font-size:11px; color:#b0b0b0;">Branding vivo na veia</div>'
             . '</div>'
             . '</div>'

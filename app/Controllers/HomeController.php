@@ -79,7 +79,7 @@ class HomeController extends Controller
         }
 
         $this->view('home/index', [
-            'pageTitle' => 'Resenha 2.0 - Tuquinha',
+            'pageTitle' => 'Resenha 2.0',
             'tuquinhaAboutVideoUrl' => $tuquinhaAboutVideoUrl,
             'isLogged' => $isLogged,
             'currentPlan' => $currentPlan,

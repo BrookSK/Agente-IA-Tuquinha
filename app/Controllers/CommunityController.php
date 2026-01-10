@@ -465,7 +465,7 @@ class CommunityController extends Controller
       <div style="display:flex; align-items:center; gap:10px; margin-bottom:12px;">
         <div style="width:32px; height:32px; line-height:32px; border-radius:50%; background:radial-gradient(circle at 30% 20%, #fff 0, #ff8a65 25%, #e53935 65%, #050509 100%); text-align:center; font-weight:700; font-size:16px; color:#050509;">T</div>
         <div>
-          <div style="font-weight:700; font-size:15px;">Resenha 2.0 - Tuquinha</div>
+          <div style="font-weight:700; font-size:15px;">Resenha 2.0</div>
           <div style="font-size:11px; color:#b0b0b0;">Branding vivo na veia</div>
         </div>
       </div>
@@ -525,7 +525,7 @@ HTML;
       <div style="display:flex; align-items:center; gap:10px; margin-bottom:12px;">
         <div style="width:32px; height:32px; line-height:32px; border-radius:50%; background:radial-gradient(circle at 30% 20%, #fff 0, #ff8a65 25%, #e53935 65%, #050509 100%); text-align:center; font-weight:700; font-size:16px; color:#050509;">T</div>
         <div>
-          <div style="font-weight:700; font-size:15px;">Resenha 2.0 - Tuquinha</div>
+          <div style="font-weight:700; font-size:15px;">Resenha 2.0</div>
           <div style="font-size:11px; color:#b0b0b0;">Branding vivo na veia</div>
         </div>
       </div>
@@ -611,7 +611,7 @@ HTML;
       <div style="display:flex; align-items:center; gap:10px; margin-bottom:12px;">
         <div style="width:32px; height:32px; line-height:32px; border-radius:50%; background:radial-gradient(circle at 30% 20%, #fff 0, #ff8a65 25%, #e53935 65%, #050509 100%); text-align:center; font-weight:700; font-size:16px; color:#050509;">T</div>
         <div>
-          <div style="font-weight:700; font-size:15px;">Resenha 2.0 - Tuquinha</div>
+          <div style="font-weight:700; font-size:15px;">Resenha 2.0</div>
           <div style="font-size:11px; color:#b0b0b0;">Branding vivo na veia</div>
         </div>
       </div>
