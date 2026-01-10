@@ -6,11 +6,47 @@ use App\Core\Controller;
 use App\Models\Course;
 use App\Models\CourseEnrollment;
 use App\Models\CoursePurchase;
+use App\Models\Plan;
+use App\Models\Subscription;
 use App\Models\User;
 use App\Services\AsaasClient;
 
 class CoursePurchaseController extends Controller
 {
+    private function resolvePlanForUser(?array $user): ?array
+    {
+        $plan = null;
+        if ($user && !empty($user['email'])) {
+            $sub = Subscription::findLastByEmail((string)$user['email']);
+            if ($sub && !empty($sub['plan_id'])) {
+                $plan = Plan::findById((int)$sub['plan_id']);
+            }
+        }
+        if (!$plan) {
+            $plan = Plan::findBySessionSlug($_SESSION['plan_slug'] ?? null) ?: Plan::findBySlug('free');
+        }
+        return $plan;
+    }
+
+    private function applyCoursePlanDiscountCents(int $priceCents, ?array $plan): int
+    {
+        if ($priceCents <= 0) {
+            return 0;
+        }
+        $p = 0.0;
+        if ($plan && isset($plan['course_discount_percent']) && $plan['course_discount_percent'] !== null && $plan['course_discount_percent'] !== '') {
+            $p = (float)$plan['course_discount_percent'];
+        }
+        if ($p <= 0) {
+            return $priceCents;
+        }
+        if ($p > 100) {
+            $p = 100.0;
+        }
+        $final = (int)round($priceCents * (1.0 - ($p / 100.0)));
+        return max(0, $final);
+    }
+
     private function requireLogin(): array
     {
         if (empty($_SESSION['user_id'])) {
@@ -61,6 +97,8 @@ class CoursePurchaseController extends Controller
 
         $user = $this->requireLogin();
 
+        $plan = $this->resolvePlanForUser($user);
+
         if (CourseEnrollment::isEnrolled($courseId, (int)$user['id'])) {
             $_SESSION['courses_success'] = 'Você já está inscrito neste curso.';
             header('Location: ' . CourseController::buildCourseUrl($course));
@@ -69,10 +107,16 @@ class CoursePurchaseController extends Controller
 
         $savedCustomer = $_SESSION['course_checkout_customer'] ?? null;
 
+        $originalPriceCents = isset($course['price_cents']) ? (int)$course['price_cents'] : 0;
+        $finalPriceCents = $this->applyCoursePlanDiscountCents($originalPriceCents, $plan);
+
         $this->view('courses/purchase', [
             'pageTitle' => 'Comprar curso: ' . (string)($course['title'] ?? ''),
             'user' => $user,
             'course' => $course,
+            'plan' => $plan,
+            'originalPriceCents' => $originalPriceCents,
+            'finalPriceCents' => $finalPriceCents,
             'savedCustomer' => $savedCustomer,
             'error' => null,
         ]);
@@ -93,6 +137,8 @@ class CoursePurchaseController extends Controller
         }
 
         $user = $this->requireLogin();
+
+        $plan = $this->resolvePlanForUser($user);
 
         $course = Course::findById($courseId);
         if (!$course || empty($course['is_active'])) {
@@ -159,12 +205,16 @@ class CoursePurchaseController extends Controller
             $customerForSession['state']
         );
 
-        $priceCents = isset($course['price_cents']) ? (int)$course['price_cents'] : 0;
+        $originalPriceCents = isset($course['price_cents']) ? (int)$course['price_cents'] : 0;
+        $priceCents = $this->applyCoursePlanDiscountCents($originalPriceCents, $plan);
         if ($priceCents <= 0) {
             $this->view('courses/purchase', [
                 'pageTitle' => 'Comprar curso: ' . (string)($course['title'] ?? ''),
                 'user' => $user,
                 'course' => $course,
+                'plan' => $plan,
+                'originalPriceCents' => $originalPriceCents,
+                'finalPriceCents' => $priceCents,
                 'savedCustomer' => $customerForSession,
                 'error' => 'Valor inválido para este curso.',
             ]);

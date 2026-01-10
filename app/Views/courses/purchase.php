@@ -1,14 +1,20 @@
 <?php
 /** @var array $user */
 /** @var array $course */
+/** @var array|null $plan */
+/** @var int|null $originalPriceCents */
+/** @var int|null $finalPriceCents */
 /** @var array|null $savedCustomer */
 /** @var string|null $error */
 
 use App\Controllers\CourseController;
 
 $courseTitle = trim((string)($course['title'] ?? ''));
-$priceCents = isset($course['price_cents']) ? (int)$course['price_cents'] : 0;
+$priceCents = isset($finalPriceCents) ? (int)$finalPriceCents : (isset($course['price_cents']) ? (int)$course['price_cents'] : 0);
 $price = number_format(max($priceCents, 0) / 100, 2, ',', '.');
+$originalCents = isset($originalPriceCents) ? (int)$originalPriceCents : (isset($course['price_cents']) ? (int)$course['price_cents'] : 0);
+$hasDiscount = $originalCents > 0 && $priceCents >= 0 && $priceCents < $originalCents;
+$originalPrice = number_format(max($originalCents, 0) / 100, 2, ',', '.');
 
 $prefillName = $savedCustomer['name'] ?? ($user['name'] ?? '');
 $prefillEmail = $savedCustomer['email'] ?? ($user['email'] ?? '');
@@ -26,7 +32,14 @@ $prefillState = $savedCustomer['state'] ?? ($user['billing_state'] ?? '');
 <div style="max-width: 880px; margin: 0 auto;">
     <h1 style="font-size: 24px; margin-bottom: 6px; font-weight: 650;">Comprar curso: <?= htmlspecialchars($courseTitle) ?></h1>
     <p style="color: #b0b0b0; margin-bottom: 14px; font-size: 14px;">
-        Valor da compra avulsa: <strong>R$ <?= $price ?></strong> (pagamento único, sem recorrência).<br>
+        Valor da compra avulsa:
+        <?php if ($hasDiscount): ?>
+            <strong>R$ <?= $price ?></strong>
+            <span style="opacity:0.75; text-decoration:line-through;">R$ <?= $originalPrice ?></span>
+        <?php else: ?>
+            <strong>R$ <?= $price ?></strong>
+        <?php endif; ?>
+        (pagamento único, sem recorrência).<br>
         Preencha seus dados para gerar o pagamento via PIX, boleto ou cartão de crédito pelo Asaas.
     </p>
 

@@ -19,6 +19,24 @@ $description = trim((string)($course['description'] ?? ''));
 $image = trim((string)($course['image_path'] ?? ''));
 $isPaid = !empty($course['is_paid']);
 $priceCents = isset($course['price_cents']) ? (int)$course['price_cents'] : 0;
+$discountPercent = 0.0;
+if (!empty($plan) && isset($plan['course_discount_percent']) && $plan['course_discount_percent'] !== null && $plan['course_discount_percent'] !== '') {
+    $discountPercent = (float)$plan['course_discount_percent'];
+}
+if ($discountPercent < 0) {
+    $discountPercent = 0.0;
+}
+if ($discountPercent > 100) {
+    $discountPercent = 100.0;
+}
+$finalCents = $priceCents;
+if ($isPaid && $priceCents > 0 && $discountPercent > 0) {
+    $finalCents = (int)round($priceCents * (1.0 - ($discountPercent / 100.0)));
+    if ($finalCents < 0) {
+        $finalCents = 0;
+    }
+}
+$hasDiscount = $isPaid && $priceCents > 0 && $finalCents < $priceCents;
 $allowPlanOnly = !empty($course['allow_plan_access_only']);
 $allowPublicPurchase = !empty($course['allow_public_purchase']);
 $courseUrl = CourseController::buildCourseUrl($course);
@@ -119,7 +137,14 @@ if (!empty($user) && !empty($canAccessContent) && !empty($lessons)) {
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-top:4px;">
                     <div style="font-size:11px; color:#ffcc80;">
                         <?php if ($isPaid && $priceCents > 0): ?>
-                            R$ <?= number_format(max($priceCents,0)/100, 2, ',', '.') ?>
+                            <?php if ($hasDiscount): ?>
+                                R$ <?= number_format(max($finalCents,0)/100, 2, ',', '.') ?>
+                                <span style="opacity:0.75; text-decoration:line-through;">
+                                    R$ <?= number_format(max($priceCents,0)/100, 2, ',', '.') ?>
+                                </span>
+                            <?php else: ?>
+                                R$ <?= number_format(max($priceCents,0)/100, 2, ',', '.') ?>
+                            <?php endif; ?>
                         <?php else: ?>
                             Gratuito
                         <?php endif; ?>

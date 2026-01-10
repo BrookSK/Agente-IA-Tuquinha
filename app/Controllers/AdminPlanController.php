@@ -99,6 +99,18 @@ class AdminPlanController extends Controller
                 break;
             }
         }
+
+        $courseDiscountPercent = null;
+        $courseDiscountPercentRaw = trim((string)($_POST['course_discount_percent'] ?? ''));
+        if ($courseDiscountPercentRaw !== '') {
+            $courseDiscountPercent = (float)str_replace([',', ' '], ['.', ''], $courseDiscountPercentRaw);
+            if ($courseDiscountPercent < 0) {
+                $courseDiscountPercent = 0.0;
+            }
+            if ($courseDiscountPercent > 100) {
+                $courseDiscountPercent = 100.0;
+            }
+        }
         $defaultModel = trim($_POST['default_model'] ?? '');
         $historyRetentionDays = isset($_POST['history_retention_days']) && $_POST['history_retention_days'] !== ''
             ? max(1, (int)$_POST['history_retention_days'])
@@ -182,6 +194,7 @@ class AdminPlanController extends Controller
             'allow_files' => $allowFiles,
             'allow_personalities' => $allowPersonalities,
             'allow_courses' => $allowCourses,
+            'course_discount_percent' => $courseDiscountPercent,
             'allow_projects_access' => $allowProjectsAccess,
             'allow_projects_create' => $allowProjectsCreate,
             'allow_projects_edit' => $allowProjectsEdit,

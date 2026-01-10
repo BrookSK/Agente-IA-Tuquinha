@@ -21,6 +21,7 @@ if (!empty($plan['allowed_models'])) {
     }
 }
 $planDefaultModel = $plan['default_model'] ?? '';
+$courseDiscountPercent = $plan['course_discount_percent'] ?? '';
 
 // Detecta ciclo atual a partir do slug (para edição)
 $billingCycle = 'monthly';
@@ -202,6 +203,14 @@ if ($slugForCycle !== '') {
                     <option value="<?= htmlspecialchars($m) ?>" <?= $planDefaultModel === $m ? 'selected' : '' ?>><?= htmlspecialchars($label) ?></option>
                 <?php endforeach; ?>
             </select>
+        </div>
+
+        <div>
+            <label style="font-size:13px; color:var(--text-primary); display:block; margin-bottom:4px;">Desconto em todos os cursos (%)</label>
+            <input type="number" name="course_discount_percent" min="0" max="100" step="0.01" value="<?= htmlspecialchars((string)$courseDiscountPercent) ?>" style="
+                width:160px; padding:8px 10px; border-radius:8px; border:1px solid var(--border-subtle);
+                background:var(--surface-subtle); color:var(--text-primary); font-size:13px;">
+            <div style="font-size:11px; color:#777; margin-top:3px;">Ex.: 15 para dar 15% de desconto em qualquer curso pago da plataforma. Pode ficar 0.</div>
         </div>
 
         <div>
