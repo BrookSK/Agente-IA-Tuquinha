@@ -61,9 +61,15 @@ class CronNewsController extends Controller
 
     private function maybeRefreshNews(): bool
     {
-        $ttlSeconds = (int)Setting::get('news_fetch_ttl_seconds', '600');
+        $timesPerDay = (int)Setting::get('news_fetch_times_per_day', '0');
+        if ($timesPerDay > 0) {
+            $timesPerDay = max(1, min(48, $timesPerDay));
+            $ttlSeconds = (int)floor(86400 / $timesPerDay);
+        } else {
+            $ttlSeconds = (int)Setting::get('news_fetch_ttl_seconds', '600');
+        }
         if ($ttlSeconds < 60) {
-            $ttlSeconds = 600;
+            $ttlSeconds = 60;
         }
 
         $shouldFetch = true;

@@ -4,6 +4,45 @@ namespace App\Services;
 
 class OpenGraphImageService
 {
+    public static function isLikelyValidImageUrl(string $imageUrl, int $timeoutSeconds = 3): bool
+    {
+        $imageUrl = trim($imageUrl);
+        if ($imageUrl === '' || !preg_match('#^https?://#i', $imageUrl)) {
+            return false;
+        }
+
+        $ch = curl_init($imageUrl);
+        curl_setopt_array($ch, [
+            CURLOPT_NOBODY => true,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_FOLLOWLOCATION => true,
+            CURLOPT_MAXREDIRS => 5,
+            CURLOPT_TIMEOUT => max(1, $timeoutSeconds),
+            CURLOPT_CONNECTTIMEOUT => min(2, max(1, $timeoutSeconds)),
+            CURLOPT_USERAGENT => 'TuquinhaNewsBot/1.0',
+        ]);
+
+        $ok = curl_exec($ch);
+        if ($ok === false) {
+            curl_close($ch);
+            return false;
+        }
+
+        $httpCode = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $contentType = (string)curl_getinfo($ch, CURLINFO_CONTENT_TYPE);
+        curl_close($ch);
+
+        if ($httpCode < 200 || $httpCode >= 300) {
+            return false;
+        }
+
+        if ($contentType === '') {
+            return true;
+        }
+
+        return stripos($contentType, 'image/') !== false;
+    }
+
     public static function fetchImageUrl(string $pageUrl, int $timeoutSeconds = 4): ?string
     {
         $pageUrl = trim($pageUrl);
@@ -39,7 +78,9 @@ class OpenGraphImageService
             }
             $abs = self::resolveUrl($pageUrl, $img);
             if ($abs !== null && preg_match('#^https?://#i', $abs)) {
-                return $abs;
+                if (self::isLikelyValidImageUrl($abs, 3)) {
+                    return $abs;
+                }
             }
         }
 

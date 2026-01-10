@@ -30,6 +30,13 @@ class AdminConfigController extends Controller
         $perplexityModel = Setting::get('perplexity_model', 'sonar');
         $newsCronToken = Setting::get('news_cron_token', '');
         $appPublicUrl = Setting::get('app_public_url', '');
+        $newsFetchTimesPerDay = (int)Setting::get('news_fetch_times_per_day', '2');
+        if ($newsFetchTimesPerDay < 1) {
+            $newsFetchTimesPerDay = 1;
+        }
+        if ($newsFetchTimesPerDay > 48) {
+            $newsFetchTimesPerDay = 48;
+        }
         $transcriptionModel = Setting::get('openai_transcription_model', 'whisper-1');
         $systemPrompt = Setting::get('tuquinha_system_prompt', TuquinhaEngine::getDefaultPrompt());
         $systemPromptExtra = Setting::get('tuquinha_system_prompt_extra', '');
@@ -96,6 +103,7 @@ class AdminConfigController extends Controller
             'perplexityModel' => $perplexityModel,
             'newsCronToken' => $newsCronToken,
             'appPublicUrl' => $appPublicUrl,
+            'newsFetchTimesPerDay' => $newsFetchTimesPerDay,
             'transcriptionModel' => $transcriptionModel,
             'systemPrompt' => $systemPrompt,
             'systemPromptExtra' => $systemPromptExtra,
@@ -146,6 +154,13 @@ class AdminConfigController extends Controller
         $perplexityModel = trim((string)($_POST['perplexity_model'] ?? ''));
         $newsCronToken = trim((string)($_POST['news_cron_token'] ?? ''));
         $appPublicUrl = trim((string)($_POST['app_public_url'] ?? ''));
+        $newsFetchTimesPerDay = (int)($_POST['news_fetch_times_per_day'] ?? 2);
+        if ($newsFetchTimesPerDay < 1) {
+            $newsFetchTimesPerDay = 1;
+        }
+        if ($newsFetchTimesPerDay > 48) {
+            $newsFetchTimesPerDay = 48;
+        }
         $transcriptionModel = trim($_POST['transcription_model'] ?? '');
         $systemPrompt = trim($_POST['system_prompt'] ?? '');
         $systemPromptExtra = trim($_POST['system_prompt_extra'] ?? '');
@@ -261,6 +276,7 @@ class AdminConfigController extends Controller
             'perplexity_model' => $perplexityModel !== '' ? $perplexityModel : 'sonar',
             'news_cron_token' => $newsCronToken,
             'app_public_url' => $appPublicUrl,
+            'news_fetch_times_per_day' => (string)$newsFetchTimesPerDay,
             'openai_transcription_model' => $transcriptionModel !== '' ? $transcriptionModel : 'whisper-1',
             'tuquinha_system_prompt' => $systemPrompt !== '' ? $systemPrompt : TuquinhaEngine::getDefaultPrompt(),
             'tuquinha_system_prompt_extra' => $systemPromptExtra,
@@ -322,6 +338,7 @@ class AdminConfigController extends Controller
             'perplexityModel' => $settingsToSave['perplexity_model'],
             'newsCronToken' => $newsCronToken,
             'appPublicUrl' => $appPublicUrl,
+            'newsFetchTimesPerDay' => $newsFetchTimesPerDay,
             'transcriptionModel' => $settingsToSave['openai_transcription_model'],
             'systemPrompt' => $settingsToSave['tuquinha_system_prompt'],
             'systemPromptExtra' => $settingsToSave['tuquinha_system_prompt_extra'],

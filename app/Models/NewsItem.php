@@ -7,6 +7,15 @@ use PDO;
 
 class NewsItem
 {
+    public static function findById(int $id): ?array
+    {
+        $pdo = Database::getConnection();
+        $stmt = $pdo->prepare('SELECT * FROM news_items WHERE id = :id LIMIT 1');
+        $stmt->execute(['id' => $id]);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $row ?: null;
+    }
+
     public static function latest(int $limit = 30): array
     {
         $pdo = Database::getConnection();
@@ -31,6 +40,15 @@ class NewsItem
         $stmt = $pdo->prepare('UPDATE news_items SET image_url = :img WHERE id = :id');
         $stmt->execute([
             'img' => $imageUrl,
+            'id' => $id,
+        ]);
+    }
+
+    public static function clearImageUrl(int $id): void
+    {
+        $pdo = Database::getConnection();
+        $stmt = $pdo->prepare('UPDATE news_items SET image_url = NULL WHERE id = :id');
+        $stmt->execute([
             'id' => $id,
         ]);
     }

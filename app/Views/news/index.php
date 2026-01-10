@@ -40,13 +40,13 @@ if (is_array($news)) {
             <?php if (!empty($hero)): ?>
                 <?php
                     $heroTitle = (string)($hero['title'] ?? '');
-                    $heroUrl = (string)($hero['url'] ?? '');
+                    $heroId = (int)($hero['id'] ?? 0);
                     $heroSummary = (string)($hero['summary'] ?? '');
                     $heroImg = (string)($hero['image_url'] ?? '');
                     $heroSource = (string)($hero['source_name'] ?? '');
                     $heroPublished = (string)($hero['published_at'] ?? '');
                 ?>
-                <a href="<?= htmlspecialchars($heroUrl, ENT_QUOTES, 'UTF-8') ?>" target="_blank" rel="noopener" style="display:block;">
+                <a href="/noticias/ver?id=<?= (int)$heroId ?>" style="display:block;">
                     <div style="display:grid; grid-template-columns: 1.1fr 0.9fr; gap:14px; padding:16px; border-radius:16px; border:1px solid var(--border-subtle); background: var(--bg-secondary);">
                         <div>
                             <div style="font-size: 28px; font-weight: 760; line-height: 1.08; letter-spacing: -0.02em;"><?= htmlspecialchars($heroTitle, ENT_QUOTES, 'UTF-8') ?></div>
@@ -77,13 +77,13 @@ if (is_array($news)) {
                         if (!is_array($it)) {
                             continue;
                         }
+                        $id = (int)($it['id'] ?? 0);
                         $t = (string)($it['title'] ?? '');
-                        $u = (string)($it['url'] ?? '');
                         $img = (string)($it['image_url'] ?? '');
                         $src = (string)($it['source_name'] ?? '');
                         $pub = (string)($it['published_at'] ?? '');
                     ?>
-                    <a href="<?= htmlspecialchars($u, ENT_QUOTES, 'UTF-8') ?>" target="_blank" rel="noopener" style="display:block;">
+                    <a href="/noticias/ver?id=<?= (int)$id ?>" style="display:block;">
                         <div style="border-radius:14px; border:1px solid var(--border-subtle); background: var(--bg-secondary); overflow:hidden;">
                             <div style="height: 130px; background: rgba(255,255,255,0.04);">
                                 <?php if ($img !== ''): ?>

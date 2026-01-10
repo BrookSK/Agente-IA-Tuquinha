@@ -9,6 +9,7 @@
 /** @var string $perplexityModel */
 /** @var string $newsCronToken */
 /** @var string $appPublicUrl */
+/** @var int $newsFetchTimesPerDay */
 /** @var int $historyRetentionDays */
 /** @var int $freeGlobalLimit */
 /** @var int $freeChatLimit */
@@ -130,6 +131,15 @@ $knownModels = [
                         background: #050509; color: #f5f5f5; font-size: 13px;
                     " placeholder="https://tuquinha.seudominio.com.br">
                     <small style="color:#777; font-size:11px;">Se vazio, o botão do e-mail pode ficar sem link correto.</small>
+                </div>
+
+                <div>
+                    <label style="font-size: 12px; color: #b0b0b0;">Atualizar notícias quantas vezes por dia?</label>
+                    <input name="news_fetch_times_per_day" type="number" min="1" max="48" value="<?= htmlspecialchars((string)($newsFetchTimesPerDay ?? 2)) ?>" style="
+                        width: 160px; padding: 8px 10px; border-radius: 8px; border: 1px solid #272727;
+                        background: #050509; color: #f5f5f5; font-size: 13px;
+                    " placeholder="2">
+                    <small style="color:#777; font-size:11px;">Ex.: 2 = atualiza a cada ~12h. 4 = a cada ~6h. Limite: 48/dia.</small>
                 </div>
             </div>
         </div>
