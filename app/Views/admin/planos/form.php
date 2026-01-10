@@ -7,7 +7,7 @@ $knownModels = [
     'gpt-4o',
     'gpt-4.1',
     'gpt-5.2-chat-latest',
-    'claude-3-5-sonnet-20240620',
+    'claude-3-5-sonnet-latest',
     'claude-3-haiku-20240307',
     'gemini-2.5-flash-image',
     'gemini-3-pro-image-preview',

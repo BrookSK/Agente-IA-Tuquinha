@@ -10,6 +10,7 @@ use App\Models\ProjectFileVersion;
 class TuquinhaEngine
 {
     private const BUILD_ID = '2025-12-30-b';
+    private const CLAUDE_DEFAULT_FALLBACK_MODEL = 'claude-3-5-sonnet-latest';
 
     private string $systemPrompt;
     private ?string $lastProviderError;
@@ -47,6 +48,21 @@ class TuquinhaEngine
     private function isClaudeModel(string $model): bool
     {
         return str_starts_with($model, 'claude-');
+    }
+
+    private function normalizeClaudeModel(string $model): string
+    {
+        $m = trim($model);
+        if ($m === '') {
+            return self::CLAUDE_DEFAULT_FALLBACK_MODEL;
+        }
+
+        // Compatibilidade: este id tem causado 404 (modelo não encontrado).
+        if ($m === 'claude-3-5-sonnet-20240620') {
+            return self::CLAUDE_DEFAULT_FALLBACK_MODEL;
+        }
+
+        return $m;
     }
 
     private function openAiModelSupportsVision(string $model): bool
@@ -177,6 +193,7 @@ class TuquinhaEngine
         }
 
         $systemPrompt = $this->buildSystemPromptWithContext($user, $conversationSettings, $persona);
+        $model = $this->normalizeClaudeModel($model);
 
         $claudeMessages = [];
         $lastUserIndex = null;
@@ -246,52 +263,71 @@ class TuquinhaEngine
             }
         }
 
-        $body = json_encode([
-            'model' => $model,
-            'system' => $systemPrompt,
-            'messages' => $claudeMessages,
-            'max_tokens' => 2048,
-            'temperature' => 0.7,
-        ]);
+        $attempts = 0;
+        $maxAttempts = 2;
+        $result = null;
+        $httpCode = 0;
+        $usedModel = $model;
 
-        $ch = curl_init('https://api.anthropic.com/v1/messages');
-        curl_setopt_array($ch, [
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_POST => true,
-            CURLOPT_HTTPHEADER => [
-                'Content-Type: application/json',
-                'x-api-key: ' . $apiKey,
-                'anthropic-version: 2023-06-01',
-            ],
-            CURLOPT_POSTFIELDS => $body,
-            CURLOPT_TIMEOUT => 30,
-        ]);
+        while ($attempts < $maxAttempts) {
+            $attempts++;
 
-        $result = curl_exec($ch);
-        if ($result === false) {
-            $this->lastProviderError = 'anthropic_messages_curl_error=' . (string)curl_error($ch);
-            error_log('[TuquinhaEngine] Anthropic /v1/messages failed: ' . (string)$this->lastProviderError);
+            $body = json_encode([
+                'model' => $usedModel,
+                'system' => $systemPrompt,
+                'messages' => $claudeMessages,
+                'max_tokens' => 2048,
+                'temperature' => 0.7,
+            ]);
+
+            $ch = curl_init('https://api.anthropic.com/v1/messages');
+            curl_setopt_array($ch, [
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_POST => true,
+                CURLOPT_HTTPHEADER => [
+                    'Content-Type: application/json',
+                    'x-api-key: ' . $apiKey,
+                    'anthropic-version: 2023-06-01',
+                ],
+                CURLOPT_POSTFIELDS => $body,
+                CURLOPT_TIMEOUT => 30,
+            ]);
+
+            $result = curl_exec($ch);
+            if ($result === false) {
+                $this->lastProviderError = 'anthropic_messages_curl_error=' . (string)curl_error($ch);
+                error_log('[TuquinhaEngine] Anthropic /v1/messages failed: ' . (string)$this->lastProviderError);
+                curl_close($ch);
+                return [
+                    'content' => $this->fallbackResponse($messages),
+                    'total_tokens' => 0,
+                ];
+            }
+
+            $httpCode = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
             curl_close($ch);
-            return [
-                'content' => $this->fallbackResponse($messages),
-                'total_tokens' => 0,
-            ];
-        }
 
-        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        curl_close($ch);
+            if ($httpCode >= 200 && $httpCode < 300) {
+                break;
+            }
 
-        if ($httpCode < 200 || $httpCode >= 300) {
             $snippet = substr((string)$result, 0, 800);
             $this->lastProviderError = 'anthropic_messages_http=' . (string)$httpCode . '; body=' . $snippet;
             error_log('[TuquinhaEngine] Anthropic /v1/messages http error: ' . (string)$this->lastProviderError);
+
+            // Fallback: se o modelo não existe (404 not_found_error), tenta um modelo "latest".
+            if ($httpCode === 404 && strpos((string)$result, 'not_found_error') !== false && $attempts < $maxAttempts) {
+                $usedModel = self::CLAUDE_DEFAULT_FALLBACK_MODEL;
+                continue;
+            }
+
             return [
                 'content' => $this->fallbackResponse($messages),
                 'total_tokens' => 0,
             ];
         }
 
-        $data = json_decode($result, true);
+        $data = json_decode((string)$result, true);
         $content = null;
         if (!empty($data['content'][0]['text']) && is_string($data['content'][0]['text'])) {
             $content = $data['content'][0]['text'];
