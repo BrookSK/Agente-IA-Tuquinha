@@ -16,6 +16,25 @@ class NewsItem
         return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
     }
 
+    public static function listMissingImages(int $limit = 10): array
+    {
+        $pdo = Database::getConnection();
+        $stmt = $pdo->prepare("SELECT id, url FROM news_items WHERE (image_url IS NULL OR image_url = '') AND url IS NOT NULL AND url <> '' ORDER BY COALESCE(published_at, fetched_at) DESC, id DESC LIMIT :lim");
+        $stmt->bindValue(':lim', max(1, min(50, $limit)), PDO::PARAM_INT);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+    }
+
+    public static function updateImageUrl(int $id, string $imageUrl): void
+    {
+        $pdo = Database::getConnection();
+        $stmt = $pdo->prepare('UPDATE news_items SET image_url = :img WHERE id = :id');
+        $stmt->execute([
+            'img' => $imageUrl,
+            'id' => $id,
+        ]);
+    }
+
     public static function getLastFetchedAt(): ?string
     {
         $pdo = Database::getConnection();

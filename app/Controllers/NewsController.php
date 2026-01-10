@@ -9,6 +9,7 @@ use App\Models\Plan;
 use App\Models\Setting;
 use App\Models\Subscription;
 use App\Models\User;
+use App\Services\OpenGraphImageService;
 use App\Services\PerplexityNewsService;
 
 class NewsController extends Controller
@@ -92,6 +93,28 @@ class NewsController extends Controller
         $emailEnabled = !empty($pref) && !empty($pref['email_enabled']);
 
         $news = NewsItem::latest(30);
+
+        $missing = NewsItem::listMissingImages(6);
+        if ($missing) {
+            foreach ($missing as $row) {
+                if (!is_array($row)) {
+                    continue;
+                }
+                $nid = (int)($row['id'] ?? 0);
+                $url = (string)($row['url'] ?? '');
+                if ($nid <= 0 || trim($url) === '') {
+                    continue;
+                }
+                try {
+                    $img = OpenGraphImageService::fetchImageUrl($url, 4);
+                    if (is_string($img) && trim($img) !== '') {
+                        NewsItem::updateImageUrl($nid, $img);
+                    }
+                } catch (\Throwable $e) {
+                }
+            }
+            $news = NewsItem::latest(30);
+        }
 
         $this->view('news/index', [
             'pageTitle' => 'Notícias - Tuquinha',
