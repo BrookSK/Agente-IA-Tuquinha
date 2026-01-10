@@ -149,7 +149,7 @@ $router->post('/cursos/aulas/comentar', 'CourseController@commentLesson');
 $router->get('/cursos/comprar', 'CoursePurchaseController@show');
 $router->post('/cursos/comprar', 'CoursePurchaseController@process');
 $router->get('/noticias', 'NewsController@index');
-$router->get('/noticias/ver', 'NewsController@view');
+$router->get('/noticias/ver', 'NewsController@show');
 $router->post('/noticias/email', 'NewsController@toggleEmail');
 $router->get('/cron/noticias/enviar', 'CronNewsController@send');
 $router->get('/certificados', 'CertificateController@myCompletedCourses');

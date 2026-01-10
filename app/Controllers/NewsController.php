@@ -177,7 +177,7 @@ class NewsController extends Controller
         exit;
     }
 
-    public function view(): void
+    public function show(): void
     {
         $user = $this->requirePaidSubscriber();
 
