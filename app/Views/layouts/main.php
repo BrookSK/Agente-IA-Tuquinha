@@ -549,8 +549,10 @@ if (!empty($_SESSION['user_id'])) {
                     $canSeeHistory = $hasUser;
 
                     $canUseProjects = false;
+                    $canUseNews = false;
                     if ($hasUser && $isAdmin) {
                         $canUseProjects = true;
+                        $canUseNews = true;
                     } elseif ($hasUser) {
                         $userEmail = (string)($_SESSION['user_email'] ?? '');
                         if ($userEmail !== '') {
@@ -561,6 +563,8 @@ if (!empty($_SESSION['user_id'])) {
                                 if ($isActive) {
                                     $plan = \App\Models\Plan::findById((int)$sub['plan_id']);
                                     $canUseProjects = !empty($plan['allow_projects_access']);
+                                    $slug = (string)($plan['slug'] ?? '');
+                                    $canUseNews = ($slug !== '' && $slug !== 'free');
                                 }
                             }
                         }
@@ -604,6 +608,13 @@ if (!empty($_SESSION['user_id'])) {
                     <span class="icon" aria-hidden="true"><?php echo $renderMenuIcon('quick_courses', '🎓'); ?></span>
                     <span>Cursos</span>
                 </a>
+
+                <?php if ($canUseNews): ?>
+                    <a href="/noticias" class="sidebar-button">
+                        <span class="icon" aria-hidden="true"><?php echo $renderMenuIcon('quick_news', '🗞'); ?></span>
+                        <span>Notícias</span>
+                    </a>
+                <?php endif; ?>
 
                 <?php if (!empty($_SESSION['user_id'])): ?>
                     <div class="sidebar-section-title" style="margin-top: 10px;">Rede social do Tuquinha</div>

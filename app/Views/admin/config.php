@@ -5,6 +5,10 @@
 /** @var string $transcriptionModel */
 /** @var string $systemPrompt */
 /** @var string $systemPromptExtra */
+/** @var string $perplexityApiKey */
+/** @var string $perplexityModel */
+/** @var string $newsCronToken */
+/** @var string $appPublicUrl */
 /** @var int $historyRetentionDays */
 /** @var int $freeGlobalLimit */
 /** @var int $freeChatLimit */
@@ -86,6 +90,48 @@ $knownModels = [
                 background: #050509; color: #f5f5f5; font-size: 13px;
             " placeholder="sk-ant-...">
             <small style="color:#777; font-size:11px;">Opcional. Necessária apenas se você quiser liberar modelos Claude (claude-3-*) nos planos e no chat.</small>
+        </div>
+
+        <div style="margin-top: 8px; padding:10px 12px; border-radius:10px; border:1px solid #272727; background:#0a0a10;">
+            <div style="font-size:13px; color:#b0b0b0; margin-bottom:8px;">
+                <strong>Perplexity (Notícias)</strong><br>
+                Configure a integração usada para buscar notícias de marketing no Brasil.
+            </div>
+            <div style="display:flex; flex-direction:column; gap:10px;">
+                <div>
+                    <label style="font-size: 12px; color: #b0b0b0;">API Key</label>
+                    <input name="perplexity_api_key" type="password" value="<?= htmlspecialchars($perplexityApiKey ?? '') ?>" style="
+                        width: 100%; padding: 8px 10px; border-radius: 8px; border: 1px solid #272727;
+                        background: #050509; color: #f5f5f5; font-size: 13px;
+                    " placeholder="pplx-...">
+                </div>
+                <div>
+                    <label style="font-size: 12px; color: #b0b0b0;">Model</label>
+                    <input name="perplexity_model" value="<?= htmlspecialchars($perplexityModel ?? 'sonar') ?>" style="
+                        width: 100%; padding: 8px 10px; border-radius: 8px; border: 1px solid #272727;
+                        background: #050509; color: #f5f5f5; font-size: 13px;
+                    " placeholder="sonar">
+                    <small style="color:#777; font-size:11px;">Ex.: sonar. Se vazio, o sistema usa sonar.</small>
+                </div>
+
+                <div>
+                    <label style="font-size: 12px; color: #b0b0b0;">Token do cron (envio de e-mail)</label>
+                    <input name="news_cron_token" value="<?= htmlspecialchars($newsCronToken ?? '') ?>" style="
+                        width: 100%; padding: 8px 10px; border-radius: 8px; border: 1px solid #272727;
+                        background: #050509; color: #f5f5f5; font-size: 13px;
+                    " placeholder="defina-um-token-forte">
+                    <small style="color:#777; font-size:11px;">Use na URL: <strong>/cron/noticias/enviar?token=SEU_TOKEN</strong></small>
+                </div>
+
+                <div>
+                    <label style="font-size: 12px; color: #b0b0b0;">URL pública do app (CTA do e-mail)</label>
+                    <input name="app_public_url" value="<?= htmlspecialchars($appPublicUrl ?? '') ?>" style="
+                        width: 100%; padding: 8px 10px; border-radius: 8px; border: 1px solid #272727;
+                        background: #050509; color: #f5f5f5; font-size: 13px;
+                    " placeholder="https://tuquinha.seudominio.com.br">
+                    <small style="color:#777; font-size:11px;">Se vazio, o botão do e-mail pode ficar sem link correto.</small>
+                </div>
+            </div>
         </div>
 
         <div>

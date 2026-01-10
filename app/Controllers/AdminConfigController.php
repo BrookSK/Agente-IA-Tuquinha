@@ -26,6 +26,10 @@ class AdminConfigController extends Controller
         $openaiKey = Setting::get('openai_api_key', '');
         $anthropicKey = Setting::get('anthropic_api_key', ANTHROPIC_API_KEY);
         $defaultModel = Setting::get('openai_default_model', AI_MODEL);
+        $perplexityApiKey = Setting::get('perplexity_api_key', '');
+        $perplexityModel = Setting::get('perplexity_model', 'sonar');
+        $newsCronToken = Setting::get('news_cron_token', '');
+        $appPublicUrl = Setting::get('app_public_url', '');
         $transcriptionModel = Setting::get('openai_transcription_model', 'whisper-1');
         $systemPrompt = Setting::get('tuquinha_system_prompt', TuquinhaEngine::getDefaultPrompt());
         $systemPromptExtra = Setting::get('tuquinha_system_prompt_extra', '');
@@ -88,6 +92,10 @@ class AdminConfigController extends Controller
             'openaiKey' => $openaiKey,
             'anthropicKey' => $anthropicKey,
             'defaultModel' => $defaultModel,
+            'perplexityApiKey' => $perplexityApiKey,
+            'perplexityModel' => $perplexityModel,
+            'newsCronToken' => $newsCronToken,
+            'appPublicUrl' => $appPublicUrl,
             'transcriptionModel' => $transcriptionModel,
             'systemPrompt' => $systemPrompt,
             'systemPromptExtra' => $systemPromptExtra,
@@ -134,6 +142,10 @@ class AdminConfigController extends Controller
         $openaiKey = trim($_POST['openai_key'] ?? '');
         $anthropicKey = trim($_POST['anthropic_key'] ?? '');
         $defaultModel = trim($_POST['default_model'] ?? '');
+        $perplexityApiKey = trim((string)($_POST['perplexity_api_key'] ?? ''));
+        $perplexityModel = trim((string)($_POST['perplexity_model'] ?? ''));
+        $newsCronToken = trim((string)($_POST['news_cron_token'] ?? ''));
+        $appPublicUrl = trim((string)($_POST['app_public_url'] ?? ''));
         $transcriptionModel = trim($_POST['transcription_model'] ?? '');
         $systemPrompt = trim($_POST['system_prompt'] ?? '');
         $systemPromptExtra = trim($_POST['system_prompt_extra'] ?? '');
@@ -245,6 +257,10 @@ class AdminConfigController extends Controller
             'openai_api_key' => $openaiKey,
             'anthropic_api_key' => $anthropicKey,
             'openai_default_model' => $defaultModel !== '' ? $defaultModel : AI_MODEL,
+            'perplexity_api_key' => $perplexityApiKey,
+            'perplexity_model' => $perplexityModel !== '' ? $perplexityModel : 'sonar',
+            'news_cron_token' => $newsCronToken,
+            'app_public_url' => $appPublicUrl,
             'openai_transcription_model' => $transcriptionModel !== '' ? $transcriptionModel : 'whisper-1',
             'tuquinha_system_prompt' => $systemPrompt !== '' ? $systemPrompt : TuquinhaEngine::getDefaultPrompt(),
             'tuquinha_system_prompt_extra' => $systemPromptExtra,
