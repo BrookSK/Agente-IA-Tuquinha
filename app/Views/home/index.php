@@ -1,73 +1,109 @@
-<div data-tour="home-root">
-    <h1 data-tour="home-title" style="font-size: 28px; margin-bottom: 12px; font-weight: 650;">Bem-vindo ao Resenha 2.0 - Tuquinha</h1>
-    <p style="color: var(--text-secondary); margin-bottom: 20px; font-size: 14px;">
-        Seu mentor inteligente em branding e identidade visual, focado em designers que querem criar
-        marcas com alma, estratégia e personalidade de verdade.
-    </p>
+<div data-tour="home-root" style="max-width: 880px; margin: 0 auto; padding: 18px 14px 28px 14px;">
+    <div style="display:flex; flex-direction:column; align-items:center; text-align:center; gap: 10px; margin-bottom: 18px;">
+        <div style="display:inline-flex; align-items:center; gap:8px; padding:6px 12px; border-radius:999px; border:1px solid rgba(229,57,53,0.25); background: rgba(229,57,53,0.10); color:#ffb0a8; font-size: 12px;">
+            <span style="opacity:0.9;">✦</span>
+            <span>Nova versão disponível</span>
+        </div>
+        <h1 data-tour="home-title" style="font-size: 34px; line-height: 1.15; font-weight: 800; letter-spacing: -0.02em;">
+            Bem-vindo ao <span style="color: var(--accent-soft);">Resenha 2.0</span>
+        </h1>
+        <div style="color: var(--text-secondary); font-size: 14px; line-height: 1.5; max-width: 560px;">
+            Seu ecossistema completo para designers que querem ir além<br>
+            do freelance.
+        </div>
+    </div>
 
     <?php
-        $isLogged = !empty($_SESSION['user_id']);
+        $isLogged = !empty($isLogged);
+        $hasPaidActiveSubscription = !empty($hasPaidActiveSubscription);
+        $planAllowsProjects = !empty($planAllowsProjects);
+        $planAllowsCourses = !empty($planAllowsCourses);
+        $hasCourseEnrollment = !empty($hasCourseEnrollment);
+
         $menuHref = function (string $path) use ($isLogged): string {
-            if ($isLogged) {
-                return $path;
-            }
-            return '/login';
+            return $isLogged ? $path : '/login';
         };
-        $menuTiles = [
-            [
-                'label' => 'Novo chat',
-                'href' => $menuHref('/chat?new=1'),
-                'hot' => true,
-                'icon' => '💬',
-            ],
-            [
+
+        $menuTiles = [];
+
+        // Novo chat: sempre disponível (se não logado, cai no /login)
+        $menuTiles[] = [
+            'label' => 'Novo chat',
+            'href' => $menuHref('/chat?new=1'),
+            'hot' => true,
+            'icon' => '💬',
+        ];
+
+        // Projetos: aparece apenas quando tiver assinatura ativa e o plano permitir projetos
+        if ($isLogged && $hasPaidActiveSubscription && $planAllowsProjects) {
+            $menuTiles[] = [
                 'label' => 'Meus projetos',
                 'href' => $menuHref('/projetos'),
                 'hot' => false,
                 'icon' => '🗂',
-            ],
-            [
+            ];
+        }
+
+        // Histórico: controller bloqueia plano free
+        if ($isLogged && $hasPaidActiveSubscription) {
+            $menuTiles[] = [
                 'label' => 'Histórico de chats',
                 'href' => $menuHref('/historico'),
                 'hot' => false,
                 'icon' => '🕘',
-            ],
-            [
+            ];
+        }
+
+        // Cursos: mostra se o plano permite cursos OU se já está matriculado em algum curso
+        if ($isLogged && ($planAllowsCourses || $hasCourseEnrollment)) {
+            $menuTiles[] = [
                 'label' => 'Cursos',
                 'href' => $menuHref('/cursos'),
                 'hot' => false,
                 'icon' => '🎓',
-            ],
-            [
+            ];
+        }
+
+        // Notícias: controller exige assinatura paga (não-free)
+        if ($isLogged && $hasPaidActiveSubscription) {
+            $menuTiles[] = [
                 'label' => 'Notícias',
                 'href' => $menuHref('/noticias'),
                 'hot' => true,
                 'icon' => '📰',
-            ],
-            [
+            ];
+        }
+
+        // Comunidade: CommunityController exige pelo menos 1 curso inscrito
+        if ($isLogged && $hasCourseEnrollment) {
+            $menuTiles[] = [
                 'label' => 'Comunidades',
                 'href' => $menuHref('/comunidades'),
                 'hot' => false,
                 'icon' => '👥',
-            ],
-            [
+            ];
+        }
+
+        // Social: só exige login
+        if ($isLogged) {
+            $menuTiles[] = [
                 'label' => 'Amigos',
                 'href' => $menuHref('/amigos'),
                 'hot' => false,
                 'icon' => '🤝',
-            ],
-            [
+            ];
+            $menuTiles[] = [
                 'label' => 'Perfil Social',
                 'href' => $menuHref('/perfil'),
                 'hot' => false,
                 'icon' => '👤',
-            ],
-        ];
+            ];
+        }
     ?>
 
     <div style="
         display:grid;
-        grid-template-columns: repeat(4, minmax(0, 1fr));
+        grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
         gap: 14px;
         max-width: 620px;
         margin: 0 auto 22px auto;
@@ -122,27 +158,37 @@
         <?php endforeach; ?>
     </div>
 
-    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; margin-bottom: 24px;">
-        <div style="background: var(--surface-card); border-radius: 14px; padding: 14px; border: 1px solid var(--border-subtle);">
-            <div style="font-size: 12px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--text-secondary); margin-bottom: 6px;">Essência</div>
-            <div style="font-size: 14px;">Mentor que une estratégia profunda com linguagem acessível, no estilo amigo que te puxa pra cima.</div>
+    <div style="max-width: 520px; margin: 0 auto 26px auto; display:flex; flex-direction:column; gap: 12px;">
+        <div style="background: rgba(255,255,255,0.04); border-radius: 14px; padding: 14px; border: 1px solid rgba(255,255,255,0.08); box-shadow: 0 14px 34px rgba(0,0,0,0.42);">
+            <div style="font-size: 14px; font-weight: 800; margin-bottom: 8px;">Essência</div>
+            <div style="color: var(--text-secondary); font-size: 13px; line-height: 1.6;">
+                Criado por quem viveu a solidão de freelancer e decidiu:<br>
+                ninguém mais precisa passar por isso sozinho.
+            </div>
         </div>
-        <div style="background: var(--surface-card); border-radius: 14px; padding: 14px; border: 1px solid var(--border-subtle);">
-            <div style="font-size: 12px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--text-secondary); margin-bottom: 6px;">Foco</div>
-            <div style="font-size: 14px;">Branding Vivo: Alma → Voz → Corpo → Vida. Nada de marca vazia, tudo começa na estratégia.</div>
+        <div style="background: rgba(255,255,255,0.04); border-radius: 14px; padding: 14px; border: 1px solid rgba(255,255,255,0.08); box-shadow: 0 14px 34px rgba(0,0,0,0.42);">
+            <div style="font-size: 14px; font-weight: 800; margin-bottom: 8px;">Foco</div>
+            <div style="color: var(--text-secondary); font-size: 13px; line-height: 1.6;">
+                Eliminar os erros que custam anos. Dar as ferramentas certas.<br>
+                Conectar você com quem já passou por isso.
+            </div>
         </div>
-        <div style="background: var(--surface-card); border-radius: 14px; padding: 14px; border: 1px solid var(--border-subtle);">
-            <div style="font-size: 12px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--text-secondary); margin-bottom: 6px;">Para quem</div>
-            <div style="font-size: 14px;">Designers iniciantes ou experientes que querem elevar o nível estratégico dos projetos.</div>
+        <div style="background: rgba(255,255,255,0.04); border-radius: 14px; padding: 14px; border: 1px solid rgba(255,255,255,0.08); box-shadow: 0 14px 34px rgba(0,0,0,0.42);">
+            <div style="font-size: 14px; font-weight: 800; margin-bottom: 8px;">Para quem</div>
+            <div style="color: var(--text-secondary); font-size: 13px; line-height: 1.6;">
+                Para o designer que está cansado de trocar horas por dinheiro e
+                quer construir algo maior, mais sólido, mais seu.
+            </div>
         </div>
     </div>
 
     <div data-tour="home-about" style="
-        margin: 26px 0 18px 0;
-        padding: 22px 0;
+        margin: 0 -14px 0 -14px;
+        padding: 34px 14px;
+        background: radial-gradient(720px 320px at 50% 0%, rgba(229,57,53,0.10), transparent 55%),
+            linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.00));
         border-top: 1px solid rgba(255,255,255,0.06);
         border-bottom: 1px solid rgba(255,255,255,0.06);
-        background: radial-gradient(600px 260px at 50% 100%, rgba(229,57,53,0.14), transparent 60%);
     ">
         <?php
             $videoUrl = (string)($tuquinhaAboutVideoUrl ?? '');
@@ -151,7 +197,7 @@
             $isDirectVideo = $videoUrl !== '' && in_array($ext, ['mp4', 'webm', 'ogg', 'mov'], true);
         ?>
 
-        <div style="text-align:center; font-size: 15px; font-weight: 700; margin-bottom: 14px;">
+        <div style="text-align:center; font-size: 15px; font-weight: 800; margin-bottom: 14px;">
             Quem é o <span style="color:#ff6f60;">Tuquinha</span>?
         </div>
 
@@ -221,12 +267,15 @@
         </div>
     </div>
 
-    <div data-tour="home-guides" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; margin-bottom: 18px;">
-        <div data-tour="home-guide-project" style="background: var(--surface-card); border-radius: 16px; padding: 16px; border: 1px solid var(--border-subtle);">
+    <div style="text-align:center; font-size: 13px; font-weight: 800; margin: 26px 0 14px 0;">Recursos essenciais</div>
+
+    <div data-tour="home-guides" style="max-width: 520px; margin: 0 auto 26px auto; display:flex; flex-direction:column; gap: 12px;">
+        <div data-tour="home-guide-project" style="background: rgba(255,255,255,0.04); border-radius: 14px; padding: 14px; border: 1px solid rgba(255,255,255,0.08); box-shadow: 0 14px 34px rgba(0,0,0,0.42);">
             <div style="font-size: 16px; font-weight: 700; margin-bottom: 6px;">Guia de Projetos</div>
             <div style="color: var(--text-secondary); font-size: 13px; line-height: 1.6; margin-bottom: 12px;">
                 Um guia prático para entregar projetos de branding que impressionam e convertem.
             </div>
+            <div style="height: 1px; background: rgba(255,255,255,0.08); margin: 10px 0 12px 0;"></div>
             <a href="/guias/guia-projeto-de-marca.html" target="_blank" rel="noopener" style="
                 display:inline-flex;
                 align-items:center;
@@ -246,11 +295,12 @@
             </a>
         </div>
 
-        <div data-tour="home-guide-method" style="background: var(--surface-card); border-radius: 16px; padding: 16px; border: 1px solid var(--border-subtle);">
+        <div data-tour="home-guide-method" style="background: rgba(255,255,255,0.04); border-radius: 14px; padding: 14px; border: 1px solid rgba(255,255,255,0.08); box-shadow: 0 14px 34px rgba(0,0,0,0.42);">
             <div style="font-size: 16px; font-weight: 700; margin-bottom: 6px;">Metodologia</div>
             <div style="color: var(--text-secondary); font-size: 13px; line-height: 1.6; margin-bottom: 12px;">
                 Um guia prático com a metodologia do Tuquinha e como aplicar no seu processo.
             </div>
+            <div style="height: 1px; background: rgba(255,255,255,0.08); margin: 10px 0 12px 0;"></div>
             <a href="/guias/metodologia.html" target="_blank" rel="noopener" style="
                 display:inline-flex;
                 align-items:center;
@@ -287,26 +337,37 @@
         </div>
     </div>
 
-    <form data-tour="home-cta-chat" action="/chat" method="get">
-        <input type="hidden" name="new" value="1">
-        <button type="submit" style="
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            padding: 10px 18px;
-            border-radius: 999px;
-            border: none;
-            background: linear-gradient(135deg, #e53935, #ff6f60);
-            color: #050509;
-            font-weight: 600;
-            font-size: 14px;
-            cursor: pointer;
-            box-shadow: 0 8px 20px rgba(229, 57, 53, 0.45);
-        ">
-            <span>Começar um papo com o Tuquinha</span>
-            <span>🚀</span>
-        </button>
-    </form>
+    <div style="
+        margin: 0 -14px;
+        padding: 34px 14px;
+        background: radial-gradient(720px 340px at 50% 0%, rgba(229,57,53,0.10), transparent 60%);
+        border-top: 1px solid rgba(255,255,255,0.06);
+    ">
+        <div style="text-align:center; font-size: 14px; font-weight: 800; margin-bottom: 8px;">Pronto para começar?</div>
+        <div style="text-align:center; color: var(--text-secondary); font-size: 12px; margin-bottom: 14px;">O Tuquinha está esperando para te ajudar.</div>
+
+        <div style="display:flex; justify-content:center;">
+            <form data-tour="home-cta-chat" action="/chat" method="get">
+                <input type="hidden" name="new" value="1">
+                <button type="submit" style="
+                    display: inline-flex;
+                    align-items: center;
+                    gap: 8px;
+                    padding: 10px 18px;
+                    border-radius: 999px;
+                    border: none;
+                    background: linear-gradient(135deg, #e53935, #ff6f60);
+                    color: #050509;
+                    font-weight: 650;
+                    font-size: 13px;
+                    cursor: pointer;
+                    box-shadow: 0 10px 26px rgba(229, 57, 53, 0.35);
+                ">
+                    <span>Começar um papo com o Tuquinha</span>
+                </button>
+            </form>
+        </div>
+    </div>
 </div>
 <script>
 (function () {
