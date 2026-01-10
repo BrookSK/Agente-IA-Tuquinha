@@ -107,7 +107,6 @@ class TuquinhaEngine
         $body = json_encode([
             'model' => $model,
             'messages' => $payloadMessages,
-            'temperature' => 0.7,
         ]);
 
         $ch = curl_init('https://api.openai.com/v1/chat/completions');
@@ -513,7 +512,6 @@ class TuquinhaEngine
         $body = json_encode([
             'model' => $model,
             'input' => $input,
-            'temperature' => 0.7,
         ]);
 
         $ch = curl_init('https://api.openai.com/v1/responses');
@@ -1010,7 +1008,6 @@ PROMPT;
         $body = json_encode([
             'model' => $modelToUse,
             'messages' => $messages,
-            'temperature' => 0.4,
         ]);
 
         $ch = curl_init('https://api.openai.com/v1/chat/completions');
