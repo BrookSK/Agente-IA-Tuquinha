@@ -318,6 +318,10 @@ class AdminConfigController extends Controller
             'openaiKey' => $openaiKey,
             'anthropicKey' => $anthropicKey,
             'defaultModel' => $settingsToSave['openai_default_model'],
+            'perplexityApiKey' => $perplexityApiKey,
+            'perplexityModel' => $settingsToSave['perplexity_model'],
+            'newsCronToken' => $newsCronToken,
+            'appPublicUrl' => $appPublicUrl,
             'transcriptionModel' => $settingsToSave['openai_transcription_model'],
             'systemPrompt' => $settingsToSave['tuquinha_system_prompt'],
             'systemPromptExtra' => $settingsToSave['tuquinha_system_prompt_extra'],
@@ -344,6 +348,8 @@ class AdminConfigController extends Controller
             'nanoBananaProApiKey' => $nanoBananaProApiKey,
             'nanoBananaProEndpoint' => $nanoBananaProEndpoint,
             'nanoBananaProModel' => $nanoBananaProModel !== '' ? $nanoBananaProModel : 'nano-banana-pro',
+            'supportWhatsapp' => $supportWhatsapp,
+            'supportEmail' => $supportEmail,
             'certificateIssuerName' => $certificateIssuerName,
             'certificateSignatureImagePath' => $certificateSignatureImagePath,
             'coursePartnerMinPayoutCents' => $coursePartnerMinPayoutCents,
@@ -365,6 +371,10 @@ class AdminConfigController extends Controller
         $openaiKey = Setting::get('openai_api_key', '');
         $anthropicKey = Setting::get('anthropic_api_key', ANTHROPIC_API_KEY);
         $defaultModel = Setting::get('openai_default_model', AI_MODEL);
+        $perplexityApiKey = Setting::get('perplexity_api_key', '');
+        $perplexityModel = Setting::get('perplexity_model', 'sonar');
+        $newsCronToken = Setting::get('news_cron_token', '');
+        $appPublicUrl = Setting::get('app_public_url', '');
         $transcriptionModel = Setting::get('openai_transcription_model', 'whisper-1');
         $systemPrompt = Setting::get('tuquinha_system_prompt', TuquinhaEngine::getDefaultPrompt());
         $systemPromptExtra = Setting::get('tuquinha_system_prompt_extra', '');
@@ -408,6 +418,9 @@ class AdminConfigController extends Controller
         $certificateIssuerName = Setting::get('certificate_issuer_name', 'Thiago Marques');
         $certificateSignatureImagePath = Setting::get('certificate_signature_image_path', '');
 
+        $supportWhatsapp = Setting::get('support_whatsapp', '5517988093160');
+        $supportEmail = Setting::get('support_email', 'contato@lrvweb.com.br');
+
         $coursePartnerMinPayoutCents = (int)Setting::get('course_partner_min_payout_cents', '5000');
         if ($coursePartnerMinPayoutCents < 0) {
             $coursePartnerMinPayoutCents = 5000;
@@ -436,6 +449,10 @@ class AdminConfigController extends Controller
             'openaiKey' => $openaiKey,
             'anthropicKey' => $anthropicKey,
             'defaultModel' => $defaultModel,
+            'perplexityApiKey' => $perplexityApiKey,
+            'perplexityModel' => $perplexityModel,
+            'newsCronToken' => $newsCronToken,
+            'appPublicUrl' => $appPublicUrl,
             'transcriptionModel' => $transcriptionModel,
             'systemPrompt' => $systemPrompt,
             'systemPromptExtra' => $systemPromptExtra,
@@ -462,6 +479,8 @@ class AdminConfigController extends Controller
             'certificateIssuerName' => $certificateIssuerName,
             'certificateSignatureImagePath' => $certificateSignatureImagePath,
             'coursePartnerMinPayoutCents' => $coursePartnerMinPayoutCents,
+            'supportWhatsapp' => $supportWhatsapp,
+            'supportEmail' => $supportEmail,
             'asaasEnvironment' => $asaas['environment'] ?? 'sandbox',
             'asaasSandboxKey' => $asaas['sandbox_api_key'] ?? '',
             'asaasProdKey' => $asaas['production_api_key'] ?? '',
