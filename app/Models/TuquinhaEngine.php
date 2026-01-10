@@ -11,6 +11,7 @@ class TuquinhaEngine
 {
     private const BUILD_ID = '2025-12-30-b';
     private const CLAUDE_DEFAULT_FALLBACK_MODEL = 'claude-3-5-sonnet-latest';
+    private const CLAUDE_SAFE_FALLBACK_MODEL = 'claude-3-haiku-20240307';
 
     private string $systemPrompt;
     private ?string $lastProviderError;
@@ -63,6 +64,25 @@ class TuquinhaEngine
         }
 
         return $m;
+    }
+
+    private function getClaudeFallbackCandidates(string $requestedModel): array
+    {
+        $candidates = [];
+        $requestedModel = trim($requestedModel);
+        if ($requestedModel !== '') {
+            $candidates[] = $requestedModel;
+        }
+
+        // Prioriza um "latest" (quando disponível) e, por fim, um modelo mais comum.
+        if (!in_array(self::CLAUDE_DEFAULT_FALLBACK_MODEL, $candidates, true)) {
+            $candidates[] = self::CLAUDE_DEFAULT_FALLBACK_MODEL;
+        }
+        if (!in_array(self::CLAUDE_SAFE_FALLBACK_MODEL, $candidates, true)) {
+            $candidates[] = self::CLAUDE_SAFE_FALLBACK_MODEL;
+        }
+
+        return $candidates;
     }
 
     private function openAiModelSupportsVision(string $model): bool
@@ -264,10 +284,11 @@ class TuquinhaEngine
         }
 
         $attempts = 0;
-        $maxAttempts = 2;
+        $fallbackCandidates = $this->getClaudeFallbackCandidates($model);
+        $maxAttempts = max(1, min(5, count($fallbackCandidates)));
         $result = null;
         $httpCode = 0;
-        $usedModel = $model;
+        $usedModel = $fallbackCandidates[0] ?? $model;
 
         while ($attempts < $maxAttempts) {
             $attempts++;
@@ -317,7 +338,7 @@ class TuquinhaEngine
 
             // Fallback: se o modelo não existe (404 not_found_error), tenta um modelo "latest".
             if ($httpCode === 404 && strpos((string)$result, 'not_found_error') !== false && $attempts < $maxAttempts) {
-                $usedModel = self::CLAUDE_DEFAULT_FALLBACK_MODEL;
+                $usedModel = $fallbackCandidates[$attempts] ?? self::CLAUDE_SAFE_FALLBACK_MODEL;
                 continue;
             }
 
