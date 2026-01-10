@@ -3,13 +3,40 @@
 namespace App\Controllers;
 
 use App\Core\Controller;
+use App\Models\Plan;
 use App\Models\User;
 use App\Models\UserFriend;
 use App\Models\SocialConversation;
 use App\Models\SocialMessage;
+use App\Models\Subscription;
 
 class SocialChatController extends Controller
 {
+    private function getActivePlanForUser(array $user): ?array
+    {
+        if (!empty($_SESSION['is_admin'])) {
+            return Plan::findTopActive();
+        }
+
+        $email = trim((string)($user['email'] ?? ''));
+        if ($email === '') {
+            return null;
+        }
+
+        $subscription = Subscription::findLastByEmail($email);
+        if (!$subscription || empty($subscription['plan_id'])) {
+            return null;
+        }
+
+        $status = strtolower((string)($subscription['status'] ?? ''));
+        if (in_array($status, ['canceled', 'expired'], true)) {
+            return null;
+        }
+
+        $plan = Plan::findById((int)$subscription['plan_id']);
+        return $plan ?: null;
+    }
+
     private function requireLogin(): array
     {
         if (empty($_SESSION['user_id'])) {
@@ -177,12 +204,16 @@ class SocialChatController extends Controller
         $messages = SocialMessage::allForConversation($conversationId, 200);
         SocialMessage::markAsRead($conversationId, $currentId);
 
+        $plan = $this->getActivePlanForUser($currentUser);
+        $canStartVideoCall = !empty($_SESSION['is_admin']) || (!empty($plan) && !empty($plan['allow_video_chat']));
+
         $this->view('social/chat_thread', [
             'pageTitle' => 'Chat social',
             'user' => $currentUser,
             'otherUser' => $otherUser,
             'conversation' => $conversation,
             'messages' => $messages,
+            'canStartVideoCall' => $canStartVideoCall,
         ]);
     }
 

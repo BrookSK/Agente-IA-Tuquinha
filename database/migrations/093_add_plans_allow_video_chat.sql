@@ -1,0 +1,2 @@
+ALTER TABLE plans
+    ADD COLUMN allow_video_chat TINYINT(1) NOT NULL DEFAULT 0;

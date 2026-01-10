@@ -4,6 +4,7 @@
 /** @var array $otherUser */
 /** @var array $conversation */
 /** @var array $messages */
+/** @var bool $canStartVideoCall */
 
 $currentId = (int)($user['id'] ?? 0);
 $currentName = trim((string)($user['preferred_name'] ?? ''));
@@ -162,6 +163,21 @@ if (!empty($messages)) {
 </style>
 
 <div id="socialChatLayout" style="max-width: 1040px; margin: 0 auto; display:flex; gap:16px; align-items:flex-start; flex-wrap:wrap;">
+    <div id="videoPlanModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.65); z-index:9999; align-items:center; justify-content:center; padding:18px;">
+        <div style="width:100%; max-width:420px; border-radius:14px; border:1px solid #272727; background:#111118; padding:14px 14px 12px 14px; box-shadow: 0 10px 32px rgba(0,0,0,0.5);">
+            <div style="font-size:15px; font-weight:650; color:#f5f5f5; margin-bottom:6px;">Chat de vídeo indisponível</div>
+            <div style="font-size:13px; color:#b0b0b0; line-height:1.45;">
+                Seu plano atual não permite <strong>iniciar</strong> chamadas de vídeo.
+                <br>
+                Para usar, contrate um plano que inclua chat de vídeo.
+            </div>
+            <div style="display:flex; gap:8px; margin-top:12px; justify-content:flex-end; flex-wrap:wrap;">
+                <a href="/planos" style="text-decoration:none; border:none; border-radius:999px; padding:7px 12px; font-size:12px; font-weight:650; cursor:pointer; background:linear-gradient(135deg,#e53935,#ff6f60); color:#050509;">Ver planos</a>
+                <button type="button" id="videoPlanModalClose" style="border:1px solid #272727; border-radius:999px; padding:7px 12px; font-size:12px; cursor:pointer; background:#0b0b10; color:#f5f5f5;">Fechar</button>
+            </div>
+        </div>
+    </div>
+
     <aside id="socialChatCallPane" style="flex:1 1 520px; max-width:100%; border-radius:18px; border:1px solid #272727; background:#111118; padding:10px 12px;">
         <div style="font-size:13px; font-weight:600; color:#f5f5f5; margin-bottom:6px;">
             Chamada com <?= htmlspecialchars($otherName, ENT_QUOTES, 'UTF-8') ?>
@@ -342,6 +358,7 @@ if (!empty($messages)) {
     var currentUserName = <?= json_encode($currentName, JSON_UNESCAPED_UNICODE) ?>;
     var currentUserId = <?= (int)$currentId ?>;
     var autoJoinCall = <?= $autoJoinCall ? 'true' : 'false' ?>;
+    var canStartVideoCall = <?= !empty($canStartVideoCall) ? 'true' : 'false' ?>;
     var otherUserId = <?= (int)($otherUser['id'] ?? 0) ?>;
     var conversationId = <?= (int)$conversationId ?>;
     var pc = null;
@@ -1272,7 +1289,24 @@ if (!empty($messages)) {
                 acceptIncomingCall();
                 return;
             }
+            if (!canStartVideoCall) {
+                var m = document.getElementById('videoPlanModal');
+                if (m) {
+                    m.style.display = 'flex';
+                } else {
+                    alert('Seu plano não permite iniciar chat de vídeo. Veja os planos disponíveis.');
+                }
+                return;
+            }
             startCall();
+        });
+    }
+
+    var videoPlanModalClose = document.getElementById('videoPlanModalClose');
+    if (videoPlanModalClose) {
+        videoPlanModalClose.addEventListener('click', function () {
+            var m = document.getElementById('videoPlanModal');
+            if (m) m.style.display = 'none';
         });
     }
     if (toggleMicBtn) {

@@ -4,13 +4,40 @@ namespace App\Controllers;
 
 use App\Core\Controller;
 use App\Core\Database;
+use App\Models\Plan;
 use App\Models\SocialConversation;
+use App\Models\Subscription;
 use App\Models\User;
 use App\Models\UserFriend;
 use PDO;
 
 class SocialWebRtcController extends Controller
 {
+    private function getActivePlanForUser(array $user): ?array
+    {
+        if (!empty($_SESSION['is_admin'])) {
+            return Plan::findTopActive();
+        }
+
+        $email = trim((string)($user['email'] ?? ''));
+        if ($email === '') {
+            return null;
+        }
+
+        $subscription = Subscription::findLastByEmail($email);
+        if (!$subscription || empty($subscription['plan_id'])) {
+            return null;
+        }
+
+        $status = strtolower((string)($subscription['status'] ?? ''));
+        if (in_array($status, ['canceled', 'expired'], true)) {
+            return null;
+        }
+
+        $plan = Plan::findById((int)$subscription['plan_id']);
+        return $plan ?: null;
+    }
+
     private function requireLogin(): array
     {
         if (empty($_SESSION['user_id'])) {
@@ -93,6 +120,22 @@ class SocialWebRtcController extends Controller
         }
 
         [$conversation, $otherUserId] = $this->ensureParticipantAndFriends($currentId, $conversationId);
+
+        // Regra: apenas quem tem plano com allow_video_chat pode INICIAR (offer).
+        // Receber/aceitar (answer) continua permitido.
+        if ($kind === 'offer' && empty($_SESSION['is_admin'])) {
+            $plan = $this->getActivePlanForUser($currentUser);
+            if (!$plan || empty($plan['allow_video_chat'])) {
+                http_response_code(403);
+                header('Content-Type: application/json; charset=utf-8');
+                echo json_encode([
+                    'ok' => false,
+                    'error' => 'Seu plano não permite iniciar chat de vídeo. Faça upgrade para um plano que inclua chamadas de vídeo.',
+                    'code' => 'video_chat_not_allowed',
+                ], JSON_UNESCAPED_UNICODE);
+                return;
+            }
+        }
 
         if (function_exists('session_write_close')) {
             @session_write_close();
