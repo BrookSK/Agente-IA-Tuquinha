@@ -127,10 +127,6 @@ if (is_array($news)) {
                         Última busca: <?= htmlspecialchars($lastFetchedAt ?? '—', ENT_QUOTES, 'UTF-8') ?>
                     </div>
                 </div>
-
-                <div style="margin-top: 12px; color: var(--text-secondary); font-size: 11px; line-height: 1.35;">
-                    Dica: se estiver vazio, peça ao admin configurar a API key da Perplexity em /admin/config.
-                </div>
             </div>
         </div>
     </div>

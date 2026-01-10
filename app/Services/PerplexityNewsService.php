@@ -20,7 +20,7 @@ class PerplexityNewsService
 
         $system = 'Você é um agregador de notícias. Sua tarefa é retornar APENAS um JSON válido (sem markdown) com uma lista de notícias recentes sobre marketing, branding, publicidade, social media, e-commerce e comportamento do consumidor no Brasil. Evite política geral e notícias fora do tema.';
 
-        $user = 'Busque as notícias mais recentes e relevantes (Brasil) para profissionais de marketing. Retorne exatamente neste formato JSON: {"items":[{"title":"...","summary":"...","url":"...","source_name":"...","published_at":"YYYY-MM-DD HH:MM:SS"}]}. Regras: (1) no máximo ' . (int)$limit . ' itens; (2) title e url obrigatórios; (3) summary curto (1-2 frases); (4) published_at pode ser null se não souber.';
+        $user = 'Busque as notícias mais recentes e relevantes (Brasil) para profissionais de marketing. Retorne exatamente neste formato JSON: {"items":[{"title":"...","summary":"...","url":"...","source_name":"...","published_at":"YYYY-MM-DD HH:MM:SS","image_url":"..."}]}. Regras: (1) no máximo ' . (int)$limit . ' itens; (2) title e url obrigatórios; (3) summary curto (1-2 frases); (4) published_at pode ser null se não souber; (5) image_url deve ser uma URL direta de imagem quando possível, caso contrário null.';
 
         $payload = json_encode([
             'model' => $model,
@@ -67,6 +67,7 @@ class PerplexityNewsService
         }
 
         $items = [];
+        $missingImageUrls = 0;
         foreach ($parsed['items'] as $it) {
             if (!is_array($it)) {
                 continue;
@@ -76,14 +77,50 @@ class PerplexityNewsService
             if ($title === '' || $url === '') {
                 continue;
             }
+
+            $imageUrl = isset($it['image_url']) ? trim((string)$it['image_url']) : '';
+            if ($imageUrl === '') {
+                $imageUrl = null;
+                $missingImageUrls++;
+            }
+
             $items[] = [
                 'title' => $title,
                 'summary' => isset($it['summary']) ? (string)$it['summary'] : null,
                 'url' => $url,
                 'source_name' => isset($it['source_name']) ? (string)$it['source_name'] : null,
                 'published_at' => isset($it['published_at']) ? (string)$it['published_at'] : null,
-                'image_url' => isset($it['image_url']) ? (string)$it['image_url'] : null,
+                'image_url' => $imageUrl,
             ];
+        }
+
+        // Fallback: algumas fontes não retornam image_url. Tentamos extrair og:image/twitter:image do link.
+        // Para não travar a request, limitamos o número de tentativas.
+        if ($items && $missingImageUrls > 0) {
+            $maxAttempts = min(6, $missingImageUrls);
+            $attempted = 0;
+            foreach ($items as $idx => $row) {
+                if ($attempted >= $maxAttempts) {
+                    break;
+                }
+                if (!is_array($row)) {
+                    continue;
+                }
+                $existingImg = (string)($row['image_url'] ?? '');
+                $pageUrl = (string)($row['url'] ?? '');
+                if (trim($existingImg) !== '' || trim($pageUrl) === '') {
+                    continue;
+                }
+
+                $attempted++;
+                try {
+                    $og = OpenGraphImageService::fetchImageUrl($pageUrl, 4);
+                    if (is_string($og) && trim($og) !== '') {
+                        $items[$idx]['image_url'] = $og;
+                    }
+                } catch (\Throwable $e) {
+                }
+            }
         }
 
         return $items;

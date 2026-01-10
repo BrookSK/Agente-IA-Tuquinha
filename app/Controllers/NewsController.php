@@ -83,6 +83,7 @@ class NewsController extends Controller
             if ($items) {
                 NewsItem::upsertMany($items);
                 $fetchedNow = true;
+                $lastFetchedAt = NewsItem::getLastFetchedAt();
             }
         }
 
