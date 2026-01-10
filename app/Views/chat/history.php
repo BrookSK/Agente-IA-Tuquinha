@@ -94,6 +94,83 @@
         flex-wrap: wrap;
         justify-content: flex-end;
     }
+    .tuqDotsBtn {
+        border: 1px solid var(--border-subtle);
+        background: var(--surface-subtle);
+        color: var(--text-primary);
+        width: 34px;
+        height: 34px;
+        border-radius: 999px;
+        cursor: pointer;
+        font-size: 18px;
+        line-height: 1;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .tuqDotsMenuWrap {
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+        justify-content: flex-end;
+    }
+    .tuqDotsMenu {
+        position: absolute;
+        right: 0;
+        top: calc(100% + 8px);
+        min-width: 220px;
+        background: #0b0b10;
+        border: 1px solid var(--border-subtle);
+        border-radius: 12px;
+        padding: 6px;
+        box-shadow: 0 12px 34px rgba(0,0,0,0.55);
+        display: none;
+        z-index: 50;
+    }
+    .tuqDotsMenuItemBtn {
+        width: 100%;
+        text-align: left;
+        border: none;
+        background: transparent;
+        color: var(--text-primary);
+        padding: 10px 10px;
+        border-radius: 10px;
+        cursor: pointer;
+        font-size: 13px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    .tuqDotsMenuItemBtn:hover {
+        background: rgba(255,255,255,0.06);
+    }
+    .tuqDotsMenuItemDanger {
+        color: #ff6b6b;
+    }
+    .tuqDotsMenuDivider {
+        height: 1px;
+        background: rgba(255,255,255,0.08);
+        margin: 6px 6px;
+        border-radius: 999px;
+    }
+    .tuqDotsMenuSelect {
+        width: 100%;
+        padding: 8px 10px;
+        border-radius: 10px;
+        border: 1px solid var(--border-subtle);
+        background: var(--surface-subtle);
+        color: var(--text-primary);
+        font-size: 12px;
+    }
+    .tuqChatCardLink {
+        display: block;
+        color: inherit;
+        text-decoration: none;
+        min-width: 0;
+    }
+    .tuqChatCardLink:hover {
+        text-decoration: none;
+    }
     @media (max-width: 640px) {
         .tuqPersonaBadge {
             padding: 5px 8px;
@@ -151,7 +228,9 @@
     </form>
 
     <?php if (empty($conversations)): ?>
-        <p style="color:var(--text-secondary); font-size:14px;">Nenhum histórico encontrado para esta sessão.</p>
+        <div style="background:var(--surface-card); border-radius:12px; padding:12px 14px; border:1px solid var(--border-subtle); color:var(--text-secondary); font-size:13px;">
+            Nenhuma conversa encontrada.
+        </div>
     <?php else: ?>
         <div style="display:flex; flex-direction:column; gap:8px;">
             <?php foreach ($conversations as $conv): ?>
@@ -174,120 +253,68 @@
                 ?>
                 <div style="background:var(--surface-card); border-radius:12px; padding:10px 12px; border:1px solid var(--border-subtle);" class="tuqChatListItem">
                     <div class="tuqChatListItemMain">
-                        <div class="tuqChatTitleRow">
-                            <div class="tuqChatTitleRowTitle" style="font-size:14px; font-weight:500;">
-                                <?= htmlspecialchars($title) ?>
+                        <a class="tuqChatCardLink" href="/chat?c=<?= (int)$conv['id'] ?>">
+                            <div class="tuqChatTitleRow">
+                                <div class="tuqChatTitleRowTitle" style="font-size:14px; font-weight:500;">
+                                    <?= htmlspecialchars($title) ?>
+                                </div>
                             </div>
-                        </div>
-                        <?php if ($created): ?>
-                            <div style="font-size:11px; color:var(--text-secondary); margin-bottom:4px;">
-                                Iniciado em <?= htmlspecialchars(date('d/m/Y H:i', strtotime($created))) ?>
-                            </div>
-                        <?php endif; ?>
+                            <?php if ($created): ?>
+                                <div style="font-size:11px; color:var(--text-secondary); margin-bottom:4px;">
+                                    Iniciado em <?= htmlspecialchars(date('d/m/Y H:i', strtotime($created))) ?>
+                                </div>
+                            <?php endif; ?>
+                        </a>
                     </div>
                     <div class="tuqChatListItemActions">
-                        <button type="button" title="Renomear chat" onclick="return tuqRenameConversation(<?= (int)$convId ?>, <?= json_encode($title, JSON_UNESCAPED_UNICODE) ?>);" style="
-                            border:1px solid var(--border-subtle);
-                            background:var(--surface-subtle);
-                            color:var(--text-primary);
-                            width:34px; height:34px;
-                            border-radius:999px;
-                            cursor:pointer;
-                            font-size:14px;
-                            line-height:1;
-                        ">✏️</button>
+                        <div class="tuqDotsMenuWrap">
+                            <button type="button" class="tuqDotsBtn" aria-label="Abrir menu" data-dots="<?= (int)$convId ?>">⋯</button>
+                            <div class="tuqDotsMenu" id="tuqDotsMenu<?= (int)$convId ?>">
+                                <a class="tuqDotsMenuItemBtn" href="/chat?c=<?= (int)$convId ?>" style="text-decoration:none;">
+                                    <span style="opacity:0.9;">➜</span>
+                                    <span>Abrir chat</span>
+                                </a>
 
-                        <form method="post" action="/historico/favoritar<?= htmlspecialchars($querySuffix) ?>" style="display:inline;">
-                            <input type="hidden" name="id" value="<?= (int)$convId ?>">
-                            <input type="hidden" name="is_favorite" value="<?= $isFav ? '0' : '1' ?>">
-                            <button type="submit" title="<?= $isFav ? 'Remover dos favoritos' : 'Favoritar' ?>" style="
-                                border:1px solid var(--border-subtle);
-                                background:var(--surface-subtle);
-                                color:<?= $isFav ? '#ffd166' : 'var(--text-primary)' ?>;
-                                width:34px; height:34px;
-                                border-radius:999px;
-                                cursor:pointer;
-                                font-size:14px;
-                                line-height:1;
-                            "><?= $isFav ? '★' : '☆' ?></button>
-                        </form>
+                                <button type="button" class="tuqDotsMenuItemBtn" onclick="return tuqRenameConversation(<?= (int)$convId ?>, <?= json_encode($title, JSON_UNESCAPED_UNICODE) ?>);">
+                                    <span style="opacity:0.9;">✏️</span>
+                                    <span>Mudar o nome</span>
+                                </button>
 
-                        <?php if (!empty($userProjects) && is_array($userProjects)): ?>
-                            <form method="post" action="/historico/projeto<?= htmlspecialchars($querySuffix) ?>" style="display:inline;">
-                                <input type="hidden" name="id" value="<?= (int)$convId ?>">
-                                <select name="project_id" title="Adicionar a projeto" onchange="this.form.submit()" style="
-                                    max-width:180px;
-                                    padding:7px 10px;
-                                    border-radius:999px;
-                                    border:1px solid var(--border-subtle);
-                                    background:var(--surface-subtle);
-                                    color:var(--text-primary);
-                                    font-size:12px;
-                                ">
-                                    <option value="0" <?= $currentProjectId <= 0 ? 'selected' : '' ?>>Adicionar a projeto</option>
-                                    <?php foreach ($userProjects as $p): ?>
-                                        <?php $pid = (int)($p['id'] ?? 0); if ($pid <= 0) { continue; } ?>
-                                        <option value="<?= (int)$pid ?>" <?= $currentProjectId === $pid ? 'selected' : '' ?>><?= htmlspecialchars((string)($p['name'] ?? ('Projeto #' . $pid))) ?></option>
-                                    <?php endforeach; ?>
-                                </select>
-                            </form>
-                        <?php endif; ?>
+                                <form method="post" action="/historico/favoritar<?= htmlspecialchars($querySuffix) ?>" style="margin:0;">
+                                    <input type="hidden" name="id" value="<?= (int)$convId ?>">
+                                    <input type="hidden" name="is_favorite" value="<?= $isFav ? '0' : '1' ?>">
+                                    <button type="submit" class="tuqDotsMenuItemBtn">
+                                        <span style="opacity:0.9;"><?= $isFav ? '★' : '☆' ?></span>
+                                        <span><?= $isFav ? 'Remover dos favoritos' : 'Favoritar' ?></span>
+                                    </button>
+                                </form>
 
-                        <div style="display:inline-flex; align-items:center; gap:8px;">
-                            <?php if ($personaName !== ''): ?>
-                                <span class="tuqPersonaBadge tuqPersonaBadgeInline" title="<?= htmlspecialchars($personaName . ($personaArea !== '' ? ' · ' . $personaArea : '')) ?>">
-                                    <span class="tuqPersonaBadgeAvatar">
-                                        <?php if ($personaImg !== ''): ?>
-                                            <img src="<?= htmlspecialchars($personaImg) ?>" alt="">
-                                        <?php else: ?>
-                                            <span style="font-size:11px; color:var(--text-secondary); font-weight:800; line-height:1;">T</span>
-                                        <?php endif; ?>
-                                    </span>
-                                    <span class="tuqPersonaBadgeText">
-                                        <span class="tuqPersonaBadgeName"><?= htmlspecialchars($personaName) ?></span>
-                                        <?php if ($personaArea !== ''): ?>
-                                            <span class="tuqPersonaBadgeArea"><?= htmlspecialchars($personaArea) ?></span>
-                                        <?php endif; ?>
-                                    </span>
-                                </span>
-                            <?php else: ?>
-                                <span class="tuqPersonaBadge tuqPersonaBadgeInline" title="Padrão do Tuquinha / da conta">
-                                    <span class="tuqPersonaBadgeAvatar">
-                                        <img src="/public/favicon.png" alt="">
-                                    </span>
-                                    <span class="tuqPersonaBadgeText">
-                                        <span class="tuqPersonaBadgeName">Padrão do Tuquinha</span>
-                                        <span class="tuqPersonaBadgeArea">Padrão da conta</span>
-                                    </span>
-                                </span>
-                            <?php endif; ?>
+                                <?php if (!empty($userProjects) && is_array($userProjects)): ?>
+                                    <div class="tuqDotsMenuDivider"></div>
+                                    <div style="padding:6px 8px; font-size:12px; color:var(--text-secondary);">Mudar projeto</div>
+                                    <form method="post" action="/historico/projeto<?= htmlspecialchars($querySuffix) ?>" style="margin:0; padding:0 8px 8px 8px;">
+                                        <input type="hidden" name="id" value="<?= (int)$convId ?>">
+                                        <select name="project_id" onchange="this.form.submit()" class="tuqDotsMenuSelect">
+                                            <option value="0" <?= $currentProjectId <= 0 ? 'selected' : '' ?>>Sem projeto</option>
+                                            <?php foreach ($userProjects as $p): ?>
+                                                <?php $pid = (int)($p['id'] ?? 0); if ($pid <= 0) { continue; } ?>
+                                                <option value="<?= (int)$pid ?>" <?= $currentProjectId === $pid ? 'selected' : '' ?>><?= htmlspecialchars((string)($p['name'] ?? ('Projeto #' . $pid))) ?></option>
+                                            <?php endforeach; ?>
+                                        </select>
+                                    </form>
+                                <?php endif; ?>
 
-                            <a href="/chat?c=<?= (int)$conv['id'] ?>" style="
-                                display:inline-flex; align-items:center; gap:6px;
-                                border-radius:999px; padding:6px 12px;
-                                border:1px solid var(--border-subtle); background:var(--surface-subtle); color:var(--text-primary);
-                                font-size:12px; text-decoration:none;
-                                white-space:nowrap;
-                            ">
-                                <span>Abrir chat</span>
-                                <span>➜</span>
-                            </a>
+                                <div class="tuqDotsMenuDivider"></div>
+                                <form method="post" action="/chat/excluir" style="margin:0;">
+                                    <input type="hidden" name="conversation_id" value="<?= (int)$convId ?>">
+                                    <input type="hidden" name="redirect" value="/historico">
+                                    <button type="submit" class="tuqDotsMenuItemBtn tuqDotsMenuItemDanger" onclick="return confirm('Excluir este chat do histórico? Essa ação não pode ser desfeita.');">
+                                        <span style="opacity:0.9;">🗑</span>
+                                        <span>Apagar</span>
+                                    </button>
+                                </form>
+                            </div>
                         </div>
-
-                        <form method="post" action="/chat/excluir" style="display:inline; margin-left:6px;">
-                            <input type="hidden" name="conversation_id" value="<?= (int)$conv['id'] ?>">
-                            <input type="hidden" name="redirect" value="/historico">
-                            <button type="submit" title="Excluir chat" onclick="return confirm('Excluir este chat do histórico? Essa ação não pode ser desfeita.');" style="
-                                border:1px solid var(--border-subtle);
-                                background:var(--surface-subtle);
-                                color:#ff6b6b;
-                                width:34px; height:34px;
-                                border-radius:999px;
-                                cursor:pointer;
-                                font-size:14px;
-                                line-height:1;
-                            ">🗑</button>
-                        </form>
 
                         <form method="post" action="/historico/renomear<?= htmlspecialchars($querySuffix) ?>" id="tuqRenameForm<?= (int)$convId ?>" style="display:none;">
                             <input type="hidden" name="id" value="<?= (int)$convId ?>">
@@ -326,4 +353,47 @@
             return false;
         }
     }
+
+    (function () {
+        function closeAllMenus() {
+            var menus = document.querySelectorAll('.tuqDotsMenu');
+            menus.forEach(function (m) {
+                m.style.display = 'none';
+            });
+        }
+
+        document.addEventListener('click', function (ev) {
+            try {
+                var t = ev.target;
+                var btn = t && t.closest ? t.closest('[data-dots]') : null;
+
+                if (btn) {
+                    ev.preventDefault();
+                    var id = btn.getAttribute('data-dots');
+                    var menu = document.getElementById('tuqDotsMenu' + id);
+                    if (!menu) {
+                        return;
+                    }
+
+                    var isOpen = menu.style.display === 'block';
+                    closeAllMenus();
+                    menu.style.display = isOpen ? 'none' : 'block';
+                    return;
+                }
+
+                var inside = t && t.closest ? t.closest('.tuqDotsMenu') : null;
+                if (!inside) {
+                    closeAllMenus();
+                }
+            } catch (e) {
+                // noop
+            }
+        });
+
+        window.addEventListener('keydown', function (ev) {
+            if (ev.key === 'Escape') {
+                closeAllMenus();
+            }
+        });
+    })();
 </script>
