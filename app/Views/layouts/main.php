@@ -231,38 +231,6 @@ if (!empty($_SESSION['user_id'])) {
             align-items: center;
             gap: 10px;
         }
-        .sidebar-top {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 10px;
-            margin-bottom: 8px;
-        }
-        .sidebar-profile {
-            width: 34px;
-            height: 34px;
-            border-radius: 50%;
-            overflow: hidden;
-            background: radial-gradient(circle at 30% 20%, #fff 0, #ff8a65 25%, #e53935 65%, #050509 100%);
-            border: 1px solid rgba(255, 255, 255, 0.10);
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            text-decoration: none;
-            color: #050509;
-            font-weight: 750;
-            font-size: 14px;
-            flex: 0 0 auto;
-        }
-        .sidebar-profile img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            display: block;
-        }
-        body[data-theme="light"] .sidebar-profile {
-            border-color: rgba(0, 0, 0, 0.10);
-        }
         body[data-theme="light"] .brand-logo {
             box-shadow: none;
         }
@@ -429,6 +397,33 @@ if (!empty($_SESSION['user_id'])) {
             border-radius: 999px;
             border: 1px solid rgba(255, 255, 255, 0.18);
             color: var(--text-secondary);
+        }
+
+        .env-pill.env-pill--user {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+        }
+        .env-pill-avatar {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            overflow: hidden;
+            background: radial-gradient(circle at 30% 20%, #fff 0, #ff8a65 25%, #e53935 65%, #050509 100%);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: #050509;
+            font-weight: 800;
+            font-size: 11px;
+            flex: 0 0 auto;
+        }
+        .env-pill-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
         }
 
         .main-content {
@@ -617,24 +612,12 @@ if (!empty($_SESSION['user_id'])) {
     <div class="sidebar-overlay" id="sidebar-overlay"></div>
     <aside class="sidebar" id="sidebar">
         <div>
-            <div class="sidebar-top">
-                <div class="brand">
-                    <div class="brand-logo"><img src="/public/favicon.png" alt="Tuquinha" style="width:100%; height:100%; display:block; object-fit:cover;"></div>
-                    <div>
-                        <div class="brand-text-title">Resenha 2.0</div>
-                        <div class="brand-text-sub">Branding vivo na veia</div>
-                    </div>
+            <div class="brand">
+                <div class="brand-logo"><img src="/public/favicon.png" alt="Tuquinha" style="width:100%; height:100%; display:block; object-fit:cover;"></div>
+                <div>
+                    <div class="brand-text-title">Resenha 2.0</div>
+                    <div class="brand-text-sub">Branding vivo na veia</div>
                 </div>
-
-                <?php if (!empty($_SESSION['user_id'])): ?>
-                    <a href="/perfil" class="sidebar-profile" aria-label="Abrir perfil">
-                        <?php if ($sidebarAvatarPath !== ''): ?>
-                            <img src="<?= htmlspecialchars($sidebarAvatarPath, ENT_QUOTES, 'UTF-8') ?>" alt="Avatar">
-                        <?php else: ?>
-                            <?= htmlspecialchars($sidebarInitial, ENT_QUOTES, 'UTF-8') ?>
-                        <?php endif; ?>
-                    </a>
-                <?php endif; ?>
             </div>
             <div style="margin-top: 10px;">
                 <div class="sidebar-section-title">Conversa</div>
@@ -903,10 +886,17 @@ if (!empty($_SESSION['user_id'])) {
                     <span id="theme-toggle-label">Tema escuro</span>
                 </button>
                 <?php if (!empty($_SESSION['user_id'])): ?>
-                    <div class="env-pill">
+                    <a href="/perfil" class="env-pill env-pill--user" style="text-decoration:none;">
+                        <span class="env-pill-avatar" aria-hidden="true">
+                            <?php if ($sidebarAvatarPath !== ''): ?>
+                                <img src="<?= htmlspecialchars($sidebarAvatarPath, ENT_QUOTES, 'UTF-8') ?>" alt="">
+                            <?php else: ?>
+                                <?= htmlspecialchars($sidebarInitial, ENT_QUOTES, 'UTF-8') ?>
+                            <?php endif; ?>
+                        </span>
                         <?php $nomeSaudacao = $_SESSION['user_name'] ?? 'designer'; ?>
-                        Olá, <?= htmlspecialchars($nomeSaudacao) ?>
-                    </div>
+                        <span>Olá, <?= htmlspecialchars($nomeSaudacao) ?></span>
+                    </a>
                 <?php else: ?>
                     <a href="/login" class="env-pill" style="text-decoration:none; display:inline-flex; align-items:center; gap:6px;">
                         <span>Entrar</span>

@@ -19,6 +19,38 @@
         // Constrói lista na ordem vinda do banco (sort_order) e identifica destaque (Expert)
         $displayPlans = is_array($plans) ? $plans : [];
 
+        $cycleKeyForSlug = function (string $slug): string {
+            if ($slug === 'free') return 'free';
+            if (substr($slug, -11) === '-semestral') return 'semestral';
+            if (substr($slug, -6) === '-anual') return 'anual';
+            return 'mensal';
+        };
+
+        $cycleLabelForKey = function (string $key): string {
+            if ($key === 'mensal') return 'Mensal';
+            if ($key === 'semestral') return 'Semestral';
+            if ($key === 'anual') return 'Anual';
+            return 'Todos';
+        };
+
+        $availableCycles = [];
+        foreach ($displayPlans as $p) {
+            $slugTmp = (string)($p['slug'] ?? '');
+            $isFreeTmp = $slugTmp === 'free' || (int)($p['price_cents'] ?? 0) <= 0;
+            if ($isFreeTmp) {
+                continue;
+            }
+            $availableCycles[$cycleKeyForSlug($slugTmp)] = true;
+        }
+
+        $cycleTabs = ['todos'];
+        foreach (['mensal', 'semestral', 'anual'] as $k) {
+            if (!empty($availableCycles[$k])) {
+                $cycleTabs[] = $k;
+            }
+        }
+        $defaultCycleTab = in_array('mensal', $cycleTabs, true) ? 'mensal' : ($cycleTabs[1] ?? 'todos');
+
         $prettyCycle = function (string $slug): string {
             if (substr($slug, -11) === '-semestral') return 'sem';
             if (substr($slug, -6) === '-anual') return 'ano';
@@ -69,6 +101,55 @@
 
     <div style="font-size: 12px; font-weight: 800; margin: 14px 0 10px 0; opacity: 0.9;">Planos disponíveis</div>
 
+    <div style="display:flex; justify-content:center; margin: 0 0 12px 0;">
+        <div id="plan-cycle-tabs" style="display:inline-flex; gap:8px; padding:6px; border-radius:999px; border:1px solid rgba(255,255,255,0.10); background:rgba(255,255,255,0.04);">
+            <?php foreach ($cycleTabs as $tabKey): ?>
+                <button
+                    type="button"
+                    class="plan-cycle-tab"
+                    data-cycle="<?= htmlspecialchars($tabKey, ENT_QUOTES, 'UTF-8') ?>"
+                    style="border:none; border-radius:999px; padding:7px 10px; font-size:12px; font-weight:800; cursor:pointer; background:transparent; color: rgba(255,255,255,0.70);"
+                >
+                    <?= htmlspecialchars($cycleLabelForKey($tabKey), ENT_QUOTES, 'UTF-8') ?>
+                </button>
+            <?php endforeach; ?>
+        </div>
+    </div>
+
+    <script>
+        (function () {
+            var root = document.getElementById('plan-cycle-tabs');
+            if (!root) return;
+
+            var buttons = Array.prototype.slice.call(root.querySelectorAll('.plan-cycle-tab'));
+            var cards = Array.prototype.slice.call(document.querySelectorAll('[data-plan-cycle]'));
+            var defaultCycle = <?php echo json_encode($defaultCycleTab); ?>;
+
+            function setActive(cycle) {
+                buttons.forEach(function (b) {
+                    var isActive = (String(b.getAttribute('data-cycle')) === String(cycle));
+                    b.style.background = isActive ? 'linear-gradient(135deg,#e53935,#ff6f60)' : 'transparent';
+                    b.style.color = isActive ? '#050509' : 'rgba(255,255,255,0.70)';
+                });
+
+                cards.forEach(function (c) {
+                    var cardCycle = String(c.getAttribute('data-plan-cycle') || 'mensal');
+                    var show = (cycle === 'todos') || (cardCycle === cycle) || (cardCycle === 'free');
+                    c.style.display = show ? '' : 'none';
+                });
+            }
+
+            root.addEventListener('click', function (e) {
+                var btn = e.target && e.target.closest ? e.target.closest('.plan-cycle-tab') : null;
+                if (!btn) return;
+                var cycle = String(btn.getAttribute('data-cycle') || 'todos');
+                setActive(cycle);
+            });
+
+            setActive(defaultCycle);
+        })();
+    </script>
+
     <div style="display:flex; flex-direction:column; gap: 12px;">
         <?php foreach ($displayPlans as $plan): ?>
             <?php
@@ -77,6 +158,8 @@
                 $benefits = array_filter(array_map('trim', explode("\n", (string)($plan['benefits'] ?? ''))));
                 $isCurrent = $currentPlan && ($currentPlan['id'] ?? null) === ($plan['id'] ?? null);
                 $isFree = $slug === 'free' || (int)($plan['price_cents'] ?? 0) <= 0;
+
+                $cycleKey = $cycleKeyForSlug($slug);
 
                 $isFeatured = false;
                 if (!$isFree) {
@@ -92,6 +175,11 @@
                 $ctaColor = $isFeatured ? '#050509' : 'rgba(255,255,255,0.85)';
                 $ctaBorder = $isFeatured ? 'none' : '1px solid rgba(255,255,255,0.10)';
 
+                if ($isCurrent) {
+                    $cardBorder = 'rgba(229,57,53,0.70)';
+                    $cardShadow = '0 0 0 2px rgba(229,57,53,0.22), 0 18px 44px rgba(0,0,0,0.62)';
+                }
+
                 $planIcon = '⭐';
                 if ($isFree) {
                     $planIcon = '🌱';
@@ -106,17 +194,17 @@
                 $iconBg = $isFeatured ? 'rgba(229,57,53,0.92)' : 'rgba(255,255,255,0.06)';
                 $iconColor = $isFeatured ? '#050509' : 'rgba(255,255,255,0.92)';
             ?>
-            <div style="
+            <div data-plan-cycle="<?= htmlspecialchars($cycleKey, ENT_QUOTES, 'UTF-8') ?>" style="
                 position: relative;
-                background: rgba(255,255,255,0.04);
+                background: <?= $isCurrent ? 'rgba(229,57,53,0.08)' : 'rgba(255,255,255,0.04)' ?>;
                 border: 1px solid <?= $cardBorder ?>;
                 border-radius: 16px;
-                padding: 14px;
+                padding: 18px 14px 14px 14px;
                 box-shadow: <?= $cardShadow ?>;
-                overflow: hidden;
+                overflow: visible;
             ">
                 <?php if ($isFeatured): ?>
-                    <div style="position:absolute; left:50%; top:-10px; transform:translateX(-50%);">
+                    <div style="position:absolute; left:50%; top:-12px; transform:translateX(-50%);">
                         <div style="background:#e53935; color:#050509; font-size:11px; font-weight:800; padding:5px 10px; border-radius:999px; box-shadow: 0 10px 24px rgba(229,57,53,0.28);">
                             Mais popular
                         </div>
@@ -142,7 +230,7 @@
                         <div style="font-size: 13px; font-weight: 800;"><?= htmlspecialchars($name) ?></div>
                     </div>
                     <?php if ($isCurrent): ?>
-                        <div style="font-size:10px; padding:2px 8px; border-radius:999px; background:rgba(229,57,53,0.18); border:1px solid rgba(229,57,53,0.28); color:#ffb0a8; font-weight:800;">
+                        <div style="font-size:10px; padding:3px 9px; border-radius:999px; background:linear-gradient(135deg, rgba(229,57,53,0.35), rgba(255,111,96,0.18)); border:1px solid rgba(229,57,53,0.45); color:#ffd2cd; font-weight:900;">
                             Seu plano atual
                         </div>
                     <?php endif; ?>
