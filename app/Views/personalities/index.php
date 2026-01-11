@@ -230,7 +230,7 @@ $conversationId = isset($conversationId) ? (int)$conversationId : 0;
                         ">
                     <?php endif; ?>
                         <div class="persona-card-image">
-                            <img src="<?= htmlspecialchars($imagePath) ?>" alt="<?= htmlspecialchars($name) ?>" style="width:100%; height:100%; object-fit:cover; display:block;">
+                            <img src="<?= htmlspecialchars($imagePath) ?>" alt="<?= htmlspecialchars($name) ?>" onerror="this.onerror=null;this.src='/public/favicon.png';" style="width:100%; height:100%; object-fit:cover; display:block;">
                         </div>
                         <div style="padding:10px 12px 12px 12px;">
                             <div style="display:flex; align-items:center; justify-content:space-between; gap:6px; margin-bottom:4px;">

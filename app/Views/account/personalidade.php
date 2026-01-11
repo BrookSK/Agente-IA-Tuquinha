@@ -174,7 +174,7 @@ $successMessage = $success ?? null;
                 <div id="persona-default-list" class="persona-stage-items">
                 <button type="button" class="persona-card-btn persona-default-card<?= $currentDefaultPersonaId === 0 ? ' persona-default-card--active' : '' ?>" data-persona-id="0">
                     <div class="persona-default-card-image">
-                        <img src="<?= htmlspecialchars($defaultPersonaImage) ?>" alt="Padrão do Tuquinha" style="width:100%; height:100%; object-fit:cover; display:block;">
+                        <img src="<?= htmlspecialchars($defaultPersonaImage) ?>" alt="Padrão do Tuquinha" onerror="this.onerror=null;this.src='/public/favicon.png';" style="width:100%; height:100%; object-fit:cover; display:block;">
                     </div>
                     <div style="padding:10px 12px 12px 12px;">
                         <div style="font-size:16px; font-weight:650; margin-bottom:4px;">Padrão do Tuquinha</div>
@@ -197,7 +197,7 @@ $successMessage = $success ?? null;
                     ?>
                     <button type="button" class="persona-card-btn persona-default-card<?= $currentDefaultPersonaId === $pid ? ' persona-default-card--active' : '' ?>" data-persona-id="<?= $pid ?>" <?= $isComingSoon ? 'disabled' : '' ?> style="cursor:<?= $isComingSoon ? 'not-allowed' : 'pointer' ?>;">
                         <div class="persona-default-card-image">
-                            <img src="<?= htmlspecialchars($imagePath) ?>" alt="<?= htmlspecialchars($pname) ?>" style="width:100%; height:100%; object-fit:cover; display:block;">
+                            <img src="<?= htmlspecialchars($imagePath) ?>" alt="<?= htmlspecialchars($pname) ?>" onerror="this.onerror=null;this.src='/public/favicon.png';" style="width:100%; height:100%; object-fit:cover; display:block;">
                         </div>
                         <div style="padding:10px 12px 12px 12px;">
                             <div style="display:flex; align-items:center; justify-content:space-between; gap:6px; margin-bottom:4px;">

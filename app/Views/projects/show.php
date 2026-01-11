@@ -566,7 +566,7 @@
                                         <?php else: ?>
                                             <span class="tuqPersonaBadge" title="Padrão do Tuquinha / da conta">
                                                 <span class="tuqPersonaBadgeAvatar">
-                                                    <img src="/public/perso_padrao.png" alt="">
+                                                    <img src="/public/perso_padrao.png" alt="" onerror="this.onerror=null;this.src='/public/favicon.png';">
                                                 </span>
                                                 <span class="tuqPersonaBadgeText">
                                                     <span class="tuqPersonaBadgeName">Padrão do Tuquinha</span>
