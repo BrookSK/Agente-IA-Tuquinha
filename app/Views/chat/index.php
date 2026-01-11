@@ -884,6 +884,7 @@ if (!empty($currentPlan) && is_array($currentPlan)) {
 </div>
 <script>
     const CURRENT_CONVERSATION_ID = <?= isset($conversationId) ? (int)$conversationId : 0 ?>;
+    const TUQ_CHAT_AVATAR_URL = <?= json_encode($tuqChatAvatarUrl, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) ?> || '/public/perso_padrao.png';
 
     (function () {
         const renameBtn = document.getElementById('tuqChatRenameBtn');
