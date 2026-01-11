@@ -586,6 +586,10 @@ if (!empty($_SESSION['user_id'])) {
             display: none;
         }
 
+        .sidebar-close {
+            display: none;
+        }
+
         @media (max-width: 900px) {
             .sidebar {
                 position: fixed;
@@ -642,6 +646,25 @@ if (!empty($_SESSION['user_id'])) {
                 color: #ffffff;
                 font-weight: 800;
             }
+
+            .sidebar-close {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                position: absolute;
+                top: 10px;
+                right: 10px;
+                width: 38px;
+                height: 38px;
+                border-radius: 999px;
+                border: 1px solid rgba(255,255,255,0.12);
+                background: rgba(255,255,255,0.06);
+                color: rgba(255,255,255,0.92);
+                font-size: 18px;
+                cursor: pointer;
+                z-index: 30;
+                -webkit-tap-highlight-color: transparent;
+            }
             .sidebar-overlay {
                 display: none;
             }
@@ -667,6 +690,7 @@ if (!empty($_SESSION['user_id'])) {
     <div class="sidebar-overlay" id="sidebar-overlay"></div>
     <aside class="sidebar" id="sidebar">
         <div>
+            <button type="button" class="sidebar-close" id="sidebar-close" aria-label="Fechar menu">×</button>
             <div class="brand">
                 <div class="brand-logo"><img src="/public/favicon.png" alt="Tuquinha" style="width:100%; height:100%; display:block; object-fit:cover;"></div>
                 <div>
@@ -766,15 +790,6 @@ if (!empty($_SESSION['user_id'])) {
                     'active' => $isActiveNav('/perfil'),
                 ];
             ?>
-            <div class="mobile-quick-nav">
-                <?php foreach ($mobileQuickLinks as $lk): ?>
-                    <?php if (!empty($lk['show'])): ?>
-                        <a href="<?= htmlspecialchars((string)($lk['href'] ?? '#')) ?>" class="<?= !empty($lk['primary']) ? 'is-primary' : '' ?><?= !empty($lk['active']) ? ' is-active' : '' ?>">
-                            <?= htmlspecialchars((string)($lk['label'] ?? '')) ?>
-                        </a>
-                    <?php endif; ?>
-                <?php endforeach; ?>
-            </div>
             <div style="margin-top: 10px;">
                 <div class="sidebar-section-title">Conversa</div>
                 <a href="<?= htmlspecialchars($newChatHref) ?>" class="sidebar-button primary<?= $isActiveNav(['/chat', '/personalidades']) ? ' sidebar-button--active' : '' ?>" data-tour="nav-new-chat" style="margin-bottom: 8px;">
@@ -1027,6 +1042,15 @@ if (!empty($_SESSION['user_id'])) {
                 <?php endif; ?>
             </div>
         </header>
+        <div class="mobile-quick-nav">
+            <?php foreach ($mobileQuickLinks as $lk): ?>
+                <?php if (!empty($lk['show'])): ?>
+                    <a href="<?= htmlspecialchars((string)($lk['href'] ?? '#')) ?>" class="<?= !empty($lk['primary']) ? 'is-primary' : '' ?><?= !empty($lk['active']) ? ' is-active' : '' ?>">
+                        <?= htmlspecialchars((string)($lk['label'] ?? '')) ?>
+                    </a>
+                <?php endif; ?>
+            <?php endforeach; ?>
+        </div>
         <section class="main-content">
             <?php include $viewFile; ?>
         </section>
@@ -1056,6 +1080,7 @@ if (!empty($_SESSION['user_id'])) {
         var sidebar = document.getElementById('sidebar');
         var toggle = document.getElementById('menu-toggle');
         var overlay = document.getElementById('sidebar-overlay');
+        var closeBtn = document.getElementById('sidebar-close');
         if (!sidebar || !toggle || !overlay) return;
 
         function closeSidebar() {
@@ -1073,6 +1098,9 @@ if (!empty($_SESSION['user_id'])) {
         });
 
         overlay.addEventListener('click', closeSidebar);
+        if (closeBtn) {
+            closeBtn.addEventListener('click', closeSidebar);
+        }
     })();
 
     // Tema claro/escuro com persistência em localStorage
