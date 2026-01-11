@@ -115,6 +115,26 @@ $publicUrl = ($isPublished && $publicToken !== '') ? ('/caderno/publico?token=' 
         line-height: 1.75;
         color: var(--text-primary);
     }
+    .notion-editor-wrap ::selection {
+        background: rgba(229,57,53,0.35);
+        color: #ffffff;
+    }
+    body[data-theme="light"] .notion-editor-wrap ::selection {
+        background: rgba(229,57,53,0.25);
+        color: #0f172a;
+    }
+
+    .notion-editor-wrap .ce-block--selected .ce-block__content,
+    .notion-editor-wrap .ce-block--selected .ce-block__content * {
+        color: var(--text-primary) !important;
+    }
+    .notion-editor-wrap .ce-block--selected .ce-block__content {
+        background: rgba(255,255,255,0.04);
+        border-radius: 10px;
+    }
+    body[data-theme="light"] .notion-editor-wrap .ce-block--selected .ce-block__content {
+        background: rgba(15,23,42,0.04);
+    }
     .notion-editor-wrap .ce-header {
         padding: 0.6em 0 0.2em;
     }
@@ -140,6 +160,98 @@ $publicUrl = ($isPublished && $publicToken !== '') ? ('/caderno/publico?token=' 
     }
     body[data-theme="light"] .notion-editor-wrap .ce-code__textarea {
         background: rgba(15, 23, 42, 0.04);
+    }
+
+    /* Editor.js toolbars/popovers - melhorar legibilidade no tema */
+    .notion-editor-wrap .ce-inline-toolbar,
+    .notion-editor-wrap .ce-conversion-toolbar,
+    .notion-editor-wrap .ce-popover,
+    .notion-editor-wrap .cdx-settings-button,
+    .notion-editor-wrap .cdx-search-field {
+        font-family: inherit;
+    }
+    .notion-editor-wrap .ce-inline-toolbar,
+    .notion-editor-wrap .ce-conversion-toolbar,
+    .notion-editor-wrap .ce-popover {
+        background: rgba(17,17,24,0.94) !important;
+        border: 1px solid var(--border-subtle) !important;
+        box-shadow: 0 18px 46px rgba(0,0,0,0.55) !important;
+        backdrop-filter: blur(10px);
+    }
+    body[data-theme="light"] .notion-editor-wrap .ce-inline-toolbar,
+    body[data-theme="light"] .notion-editor-wrap .ce-conversion-toolbar,
+    body[data-theme="light"] .notion-editor-wrap .ce-popover {
+        background: rgba(255,255,255,0.98) !important;
+        box-shadow: 0 18px 46px rgba(15,23,42,0.16) !important;
+    }
+
+    .notion-editor-wrap .ce-inline-tool,
+    .notion-editor-wrap .ce-toolbox__button,
+    .notion-editor-wrap .ce-popover__item,
+    .notion-editor-wrap .ce-popover__item-icon,
+    .notion-editor-wrap .ce-popover__item-label,
+    .notion-editor-wrap .ce-conversion-tool {
+        color: var(--text-primary) !important;
+    }
+    .notion-editor-wrap .ce-inline-tool,
+    .notion-editor-wrap .ce-toolbox__button,
+    .notion-editor-wrap .ce-popover__item,
+    .notion-editor-wrap .ce-conversion-tool {
+        border-radius: 10px !important;
+    }
+    .notion-editor-wrap .ce-inline-tool:hover,
+    .notion-editor-wrap .ce-toolbox__button:hover,
+    .notion-editor-wrap .ce-popover__item:hover,
+    .notion-editor-wrap .ce-conversion-tool:hover {
+        background: rgba(255,255,255,0.08) !important;
+    }
+    body[data-theme="light"] .notion-editor-wrap .ce-inline-tool:hover,
+    body[data-theme="light"] .notion-editor-wrap .ce-toolbox__button:hover,
+    body[data-theme="light"] .notion-editor-wrap .ce-popover__item:hover,
+    body[data-theme="light"] .notion-editor-wrap .ce-conversion-tool:hover {
+        background: rgba(15,23,42,0.06) !important;
+    }
+
+    .notion-editor-wrap .ce-inline-tool--active,
+    .notion-editor-wrap .ce-toolbox__button--active,
+    .notion-editor-wrap .ce-popover__item--active {
+        background: rgba(229,57,53,0.16) !important;
+        color: var(--text-primary) !important;
+    }
+
+    .notion-editor-wrap .ce-inline-tool svg,
+    .notion-editor-wrap .ce-toolbox__button svg,
+    .notion-editor-wrap .ce-popover__item-icon svg {
+        fill: currentColor !important;
+        color: var(--text-primary) !important;
+    }
+
+    .notion-editor-wrap .cdx-search-field {
+        background: rgba(255,255,255,0.06) !important;
+        border: 1px solid var(--border-subtle) !important;
+        border-radius: 10px !important;
+        color: var(--text-primary) !important;
+    }
+    body[data-theme="light"] .notion-editor-wrap .cdx-search-field {
+        background: rgba(15,23,42,0.04) !important;
+    }
+    .notion-editor-wrap .cdx-search-field__input {
+        color: var(--text-primary) !important;
+    }
+    .notion-editor-wrap .cdx-search-field__input::placeholder {
+        color: var(--text-secondary) !important;
+        opacity: 0.85;
+    }
+
+    .notion-editor-wrap .ce-popover__item-label,
+    .notion-editor-wrap .ce-popover__item-description,
+    .notion-editor-wrap .ce-conversion-tool__label,
+    .notion-editor-wrap .ce-conversion-tool__description {
+        color: var(--text-primary) !important;
+    }
+    .notion-editor-wrap .ce-popover__item-description,
+    .notion-editor-wrap .ce-conversion-tool__description {
+        color: var(--text-secondary) !important;
     }
     .notion-editor-hint {
         margin-top: 10px;
@@ -184,6 +296,8 @@ $publicUrl = ($isPublished && $publicToken !== '') ? ('/caderno/publico?token=' 
         backdrop-filter: blur(10px);
         box-shadow: 0 18px 46px rgba(0,0,0,0.55);
         padding: 8px;
+        max-height: min(520px, calc(100vh - 24px));
+        overflow: hidden;
         display: none;
     }
     body[data-theme="light"] .tuq-ctx {
@@ -200,6 +314,9 @@ $publicUrl = ($isPublished && $publicToken !== '') ? ('/caderno/publico?token=' 
         font-size: 13px;
         outline: none;
         margin-bottom: 8px;
+        position: sticky;
+        top: 0;
+        z-index: 2;
     }
     .tuq-ctx .tuq-ctx-item {
         display: flex;
@@ -211,6 +328,60 @@ $publicUrl = ($isPublished && $publicToken !== '') ? ('/caderno/publico?token=' 
         cursor: pointer;
         color: var(--text-primary);
         font-size: 13px;
+    }
+    .tuq-ctx .tuq-ctx-item-left {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        min-width: 0;
+        flex: 1;
+    }
+    .tuq-ctx .tuq-ctx-swatch {
+        width: 14px;
+        height: 14px;
+        border-radius: 4px;
+        border: 1px solid rgba(255,255,255,0.18);
+        background: rgba(255,255,255,0.16);
+        flex: 0 0 14px;
+    }
+    body[data-theme="light"] .tuq-ctx .tuq-ctx-swatch {
+        border: 1px solid rgba(15,23,42,0.18);
+        background: rgba(15,23,42,0.10);
+    }
+    .tuq-ctx .tuq-ctx-swatch[data-swatch="t-gray"] { background: rgba(255,255,255,0.55); }
+    .tuq-ctx .tuq-ctx-swatch[data-swatch="t-red"] { background: #ff8a80; }
+    .tuq-ctx .tuq-ctx-swatch[data-swatch="t-yellow"] { background: #ffe082; }
+    .tuq-ctx .tuq-ctx-swatch[data-swatch="t-green"] { background: #a5d6a7; }
+    .tuq-ctx .tuq-ctx-swatch[data-swatch="t-blue"] { background: #90caf9; }
+    body[data-theme="light"] .tuq-ctx .tuq-ctx-swatch[data-swatch="t-gray"] { background: rgba(15,23,42,0.40); }
+
+    .tuq-ctx .tuq-ctx-swatch[data-swatch="bg-gray"] { background: rgba(255,255,255,0.12); }
+    .tuq-ctx .tuq-ctx-swatch[data-swatch="bg-brown"] { background: rgba(141,110,99,0.34); }
+    .tuq-ctx .tuq-ctx-swatch[data-swatch="bg-yellow"] { background: rgba(255,238,88,0.26); }
+    .tuq-ctx .tuq-ctx-swatch[data-swatch="bg-blue"] { background: rgba(66,165,245,0.26); }
+    body[data-theme="light"] .tuq-ctx .tuq-ctx-swatch[data-swatch="bg-gray"] { background: rgba(15,23,42,0.10); }
+
+    .tuq-ctx .tuq-ctx-icon {
+        width: 16px;
+        height: 16px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 11px;
+        line-height: 1;
+        border-radius: 4px;
+        border: 1px solid rgba(255,255,255,0.16);
+        background: rgba(255,255,255,0.08);
+        color: var(--text-secondary);
+        flex: 0 0 16px;
+    }
+    body[data-theme="light"] .tuq-ctx .tuq-ctx-icon {
+        border: 1px solid rgba(15,23,42,0.14);
+        background: rgba(15,23,42,0.06);
+    }
+    .tuq-ctx .tuq-ctx-icon--mono {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+        font-size: 10px;
     }
     .tuq-ctx .tuq-ctx-item:hover {
         background: rgba(255,255,255,0.06);
@@ -227,6 +398,61 @@ $publicUrl = ($isPublished && $publicToken !== '') ? ('/caderno/publico?token=' 
         margin-top: 6px;
         padding-top: 6px;
         border-top: 1px solid var(--border-subtle);
+    }
+
+    .tuq-ctx .tuq-ctx-flyout {
+        position: absolute;
+        top: 44px;
+        left: calc(100% + 10px);
+        width: 320px;
+        max-height: min(520px, calc(100vh - 24px));
+        overflow: hidden;
+        border-radius: 12px;
+        border: 1px solid var(--border-subtle);
+        background: rgba(17,17,24,0.94);
+        backdrop-filter: blur(10px);
+        box-shadow: 0 18px 46px rgba(0,0,0,0.55);
+        padding: 8px;
+        display: none;
+    }
+    body[data-theme="light"] .tuq-ctx .tuq-ctx-flyout {
+        background: rgba(255,255,255,0.98);
+        box-shadow: 0 18px 46px rgba(15,23,42,0.16);
+    }
+    .tuq-ctx .tuq-ctx-flyout .tuq-ctx-flyout-scroll {
+        overflow-y: auto;
+        max-height: calc(min(520px, calc(100vh - 24px)) - 16px);
+        padding-right: 4px;
+    }
+    .tuq-ctx .tuq-ctx-flyout .tuq-ctx-flyout-scroll::-webkit-scrollbar { width: 10px; }
+    .tuq-ctx .tuq-ctx-flyout .tuq-ctx-flyout-scroll::-webkit-scrollbar-thumb {
+        background: rgba(255,255,255,0.12);
+        border-radius: 999px;
+        border: 3px solid transparent;
+        background-clip: padding-box;
+    }
+    body[data-theme="light"] .tuq-ctx .tuq-ctx-flyout .tuq-ctx-flyout-scroll::-webkit-scrollbar-thumb {
+        background: rgba(15,23,42,0.16);
+        border: 3px solid transparent;
+        background-clip: padding-box;
+    }
+
+    .tuq-ctx .tuq-ctx-scroll {
+        overflow-y: auto;
+        max-height: calc(min(520px, calc(100vh - 24px)) - 54px);
+        padding-right: 4px;
+    }
+    .tuq-ctx .tuq-ctx-scroll::-webkit-scrollbar { width: 10px; }
+    .tuq-ctx .tuq-ctx-scroll::-webkit-scrollbar-thumb {
+        background: rgba(255,255,255,0.12);
+        border-radius: 999px;
+        border: 3px solid transparent;
+        background-clip: padding-box;
+    }
+    body[data-theme="light"] .tuq-ctx .tuq-ctx-scroll::-webkit-scrollbar-thumb {
+        background: rgba(15,23,42,0.16);
+        border: 3px solid transparent;
+        background-clip: padding-box;
     }
 </style>
 
@@ -378,47 +604,62 @@ $publicUrl = ($isPublished && $publicToken !== '') ? ('/caderno/publico?token=' 
 
 <div class="tuq-ctx" id="tuq-ctx">
     <input class="tuq-ctx-search" id="tuq-ctx-search" type="text" placeholder="Pesquisar ações..." />
-    <div class="tuq-ctx-item" data-action="toggle-transform">
-        <span>Transformar em</span>
-        <small>›</small>
-    </div>
-    <div class="tuq-ctx-item" data-action="toggle-color">
-        <span>Cor</span>
-        <small>›</small>
-    </div>
-    <div class="tuq-ctx-item" data-action="duplicate">
-        <span>Duplicar</span>
-        <small>Ctrl+D</small>
-    </div>
-    <div class="tuq-ctx-item" data-action="delete">
-        <span>Excluir</span>
-        <small>Del</small>
+    <div class="tuq-ctx-scroll" id="tuq-ctx-scroll">
+        <div class="tuq-ctx-item" data-action="toggle-transform">
+            <span>Transformar em</span>
+            <small>›</small>
+        </div>
+        <div class="tuq-ctx-item" data-action="toggle-color">
+            <span>Cor</span>
+            <small>›</small>
+        </div>
+        <div class="tuq-ctx-item" data-action="insert-image">
+            <span class="tuq-ctx-item-left"><span class="tuq-ctx-icon">🖼</span><span>Imagem</span></span>
+            <small>Upload</small>
+        </div>
+        <div class="tuq-ctx-item" data-action="insert-file">
+            <span class="tuq-ctx-item-left"><span class="tuq-ctx-icon">📎</span><span>Arquivo</span></span>
+            <small>Upload</small>
+        </div>
+        <div class="tuq-ctx-item" data-action="duplicate">
+            <span>Duplicar</span>
+            <small>Ctrl+D</small>
+        </div>
+        <div class="tuq-ctx-item" data-action="delete">
+            <span>Excluir</span>
+            <small>Del</small>
+        </div>
+
     </div>
 
-    <div class="tuq-ctx-sub" id="tuq-ctx-sub-transform">
-        <div class="tuq-ctx-item" data-action="transform" data-to="header" data-level="1"><span>Título 1</span></div>
-        <div class="tuq-ctx-item" data-action="transform" data-to="header" data-level="2"><span>Título 2</span></div>
-        <div class="tuq-ctx-item" data-action="transform" data-to="header" data-level="3"><span>Título 3</span></div>
-        <div class="tuq-ctx-item" data-action="transform" data-to="list" data-style="unordered"><span>Lista com marcadores</span></div>
-        <div class="tuq-ctx-item" data-action="transform" data-to="list" data-style="ordered"><span>Lista numerada</span></div>
-        <div class="tuq-ctx-item" data-action="transform" data-to="checklist"><span>Lista de tarefas</span></div>
-        <div class="tuq-ctx-item" data-action="transform" data-to="quote"><span>Citação</span></div>
-        <div class="tuq-ctx-item" data-action="transform" data-to="code"><span>Código</span></div>
+    <div class="tuq-ctx-flyout" id="tuq-ctx-flyout-transform">
+        <div class="tuq-ctx-flyout-scroll">
+            <div class="tuq-ctx-item" data-action="transform" data-to="header" data-level="1"><span class="tuq-ctx-item-left"><span class="tuq-ctx-icon">H1</span><span>Título 1</span></span></div>
+            <div class="tuq-ctx-item" data-action="transform" data-to="header" data-level="2"><span class="tuq-ctx-item-left"><span class="tuq-ctx-icon">H2</span><span>Título 2</span></span></div>
+            <div class="tuq-ctx-item" data-action="transform" data-to="header" data-level="3"><span class="tuq-ctx-item-left"><span class="tuq-ctx-icon">H3</span><span>Título 3</span></span></div>
+            <div class="tuq-ctx-item" data-action="transform" data-to="list" data-style="unordered"><span class="tuq-ctx-item-left"><span class="tuq-ctx-icon">•</span><span>Lista com marcadores</span></span></div>
+            <div class="tuq-ctx-item" data-action="transform" data-to="list" data-style="ordered"><span class="tuq-ctx-item-left"><span class="tuq-ctx-icon">1.</span><span>Lista numerada</span></span></div>
+            <div class="tuq-ctx-item" data-action="transform" data-to="checklist"><span class="tuq-ctx-item-left"><span class="tuq-ctx-icon">☑</span><span>Lista de tarefas</span></span></div>
+            <div class="tuq-ctx-item" data-action="transform" data-to="quote"><span class="tuq-ctx-item-left"><span class="tuq-ctx-icon">❝</span><span>Citação</span></span></div>
+            <div class="tuq-ctx-item" data-action="transform" data-to="code"><span class="tuq-ctx-item-left"><span class="tuq-ctx-icon tuq-ctx-icon--mono">&lt;/&gt;</span><span>Código</span></span></div>
+        </div>
     </div>
 
-    <div class="tuq-ctx-sub" id="tuq-ctx-sub-color">
-        <div style="font-size:12px; color:var(--text-secondary); padding: 6px 10px 4px 10px;">Cor do texto</div>
-        <div class="tuq-ctx-item" data-action="color" data-kind="text" data-value="gray"><span>Texto cinza</span></div>
-        <div class="tuq-ctx-item" data-action="color" data-kind="text" data-value="red"><span>Texto vermelho</span></div>
-        <div class="tuq-ctx-item" data-action="color" data-kind="text" data-value="yellow"><span>Texto amarelo</span></div>
-        <div class="tuq-ctx-item" data-action="color" data-kind="text" data-value="green"><span>Texto verde</span></div>
-        <div class="tuq-ctx-item" data-action="color" data-kind="text" data-value="blue"><span>Texto azul</span></div>
+    <div class="tuq-ctx-flyout" id="tuq-ctx-flyout-color">
+        <div class="tuq-ctx-flyout-scroll">
+            <div style="font-size:12px; color:var(--text-secondary); padding: 6px 10px 4px 10px;">Cor do texto</div>
+            <div class="tuq-ctx-item" data-action="color" data-kind="text" data-value="gray"><span class="tuq-ctx-item-left"><span class="tuq-ctx-swatch" data-swatch="t-gray"></span><span>Texto cinza</span></span></div>
+            <div class="tuq-ctx-item" data-action="color" data-kind="text" data-value="red"><span class="tuq-ctx-item-left"><span class="tuq-ctx-swatch" data-swatch="t-red"></span><span>Texto vermelho</span></span></div>
+            <div class="tuq-ctx-item" data-action="color" data-kind="text" data-value="yellow"><span class="tuq-ctx-item-left"><span class="tuq-ctx-swatch" data-swatch="t-yellow"></span><span>Texto amarelo</span></span></div>
+            <div class="tuq-ctx-item" data-action="color" data-kind="text" data-value="green"><span class="tuq-ctx-item-left"><span class="tuq-ctx-swatch" data-swatch="t-green"></span><span>Texto verde</span></span></div>
+            <div class="tuq-ctx-item" data-action="color" data-kind="text" data-value="blue"><span class="tuq-ctx-item-left"><span class="tuq-ctx-swatch" data-swatch="t-blue"></span><span>Texto azul</span></span></div>
 
-        <div style="font-size:12px; color:var(--text-secondary); padding: 10px 10px 4px 10px;">Cor de fundo</div>
-        <div class="tuq-ctx-item" data-action="color" data-kind="bg" data-value="gray"><span>Fundo cinza</span></div>
-        <div class="tuq-ctx-item" data-action="color" data-kind="bg" data-value="brown"><span>Fundo marrom</span></div>
-        <div class="tuq-ctx-item" data-action="color" data-kind="bg" data-value="yellow"><span>Fundo amarelo</span></div>
-        <div class="tuq-ctx-item" data-action="color" data-kind="bg" data-value="blue"><span>Fundo azul</span></div>
+            <div style="font-size:12px; color:var(--text-secondary); padding: 10px 10px 4px 10px;">Cor de fundo</div>
+            <div class="tuq-ctx-item" data-action="color" data-kind="bg" data-value="gray"><span class="tuq-ctx-item-left"><span class="tuq-ctx-swatch" data-swatch="bg-gray"></span><span>Fundo cinza</span></span></div>
+            <div class="tuq-ctx-item" data-action="color" data-kind="bg" data-value="brown"><span class="tuq-ctx-item-left"><span class="tuq-ctx-swatch" data-swatch="bg-brown"></span><span>Fundo marrom</span></span></div>
+            <div class="tuq-ctx-item" data-action="color" data-kind="bg" data-value="yellow"><span class="tuq-ctx-item-left"><span class="tuq-ctx-swatch" data-swatch="bg-yellow"></span><span>Fundo amarelo</span></span></div>
+            <div class="tuq-ctx-item" data-action="color" data-kind="bg" data-value="blue"><span class="tuq-ctx-item-left"><span class="tuq-ctx-swatch" data-swatch="bg-blue"></span><span>Fundo azul</span></span></div>
+        </div>
     </div>
 </div>
 
@@ -428,6 +669,8 @@ $publicUrl = ($isPublished && $publicToken !== '') ? ('/caderno/publico?token=' 
 <script src="https://unpkg.com/@editorjs/checklist@1.6.0/dist/checklist.umd.js"></script>
 <script src="https://unpkg.com/@editorjs/quote@2.5.0/dist/bundle.js"></script>
 <script src="https://unpkg.com/@editorjs/code@2.8.0/dist/bundle.js"></script>
+<script src="https://unpkg.com/@editorjs/image@2.10.1/dist/image.umd.js"></script>
+<script src="https://unpkg.com/@editorjs/attaches@1.3.0/dist/bundle.js"></script>
 <script>
 (function () {
     var pageId = <?= (int)$currentId ?>;
@@ -488,7 +731,63 @@ $publicUrl = ($isPublished && $publicToken !== '') ? ('/caderno/publico?token=' 
         if (typeof Checklist === 'undefined') missing.push('Checklist');
         if (typeof Quote === 'undefined') missing.push('Quote');
         if (typeof CodeTool === 'undefined') missing.push('CodeTool');
+        if (typeof ImageTool === 'undefined') missing.push('ImageTool');
+        if (typeof AttachesTool === 'undefined') missing.push('AttachesTool');
         return missing;
+    }
+
+    function uploadMediaFile(file) {
+        var fd = new FormData();
+        fd.append('page_id', String(pageId));
+        fd.append('file', file);
+        return fetch('/caderno/midia/upload', {
+            method: 'POST',
+            body: fd,
+            credentials: 'same-origin',
+            headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
+        }).then(function (res) {
+            return res.json().then(function (j) {
+                return { ok: res.ok, status: res.status, json: j };
+            });
+        }).catch(function (e) {
+            return { ok: false, status: 0, json: { success: 0, message: String(e || 'Erro') } };
+        });
+    }
+
+    function insertImageByUrl(url) {
+        if (!editor || !url) return;
+        try {
+            var idx = (editor.blocks && typeof editor.blocks.getCurrentBlockIndex === 'function') ? editor.blocks.getCurrentBlockIndex() : null;
+            var at = (typeof idx === 'number' && idx >= 0) ? idx + 1 : undefined;
+            editor.blocks.insert('image', { file: { url: url }, caption: '' }, {}, at, true);
+            debounceSave();
+        } catch (e) {}
+    }
+
+    function insertFileByMeta(fileMeta) {
+        if (!editor || !fileMeta) return;
+        try {
+            var idx = (editor.blocks && typeof editor.blocks.getCurrentBlockIndex === 'function') ? editor.blocks.getCurrentBlockIndex() : null;
+            var at = (typeof idx === 'number' && idx >= 0) ? idx + 1 : undefined;
+            editor.blocks.insert('attaches', { file: fileMeta, title: fileMeta.title || fileMeta.name || '' }, {}, at, true);
+            debounceSave();
+        } catch (e) {}
+    }
+
+    function pickFile(accept) {
+        return new Promise(function (resolve) {
+            var input = document.createElement('input');
+            input.type = 'file';
+            if (accept) input.accept = accept;
+            input.style.display = 'none';
+            document.body.appendChild(input);
+            input.addEventListener('change', function () {
+                var f = input.files && input.files[0] ? input.files[0] : null;
+                try { document.body.removeChild(input); } catch (e) {}
+                resolve(f);
+            });
+            input.click();
+        });
     }
 
     var editorInitError = false;
@@ -511,7 +810,30 @@ $publicUrl = ($isPublished && $publicToken !== '') ? ('/caderno/publico?token=' 
                         list: { class: List, inlineToolbar: true },
                         checklist: { class: Checklist, inlineToolbar: true },
                         quote: { class: Quote, inlineToolbar: true },
-                        code: { class: CodeTool }
+                        code: { class: CodeTool },
+                        image: {
+                            class: ImageTool,
+                            inlineToolbar: true,
+                            config: {
+                                field: 'file',
+                                endpoints: { byFile: '/caderno/midia/upload', byUrl: '/caderno/midia/upload' },
+                                additionalRequestData: { page_id: String(pageId) },
+                                captionPlaceholder: 'Legenda',
+                                buttonContent: 'Enviar imagem'
+                            }
+                        },
+                        attaches: {
+                            class: AttachesTool,
+                            config: {
+                                endpoint: '/caderno/midia/upload',
+                                field: 'file',
+                                types: '*/*',
+                                buttonText: 'Enviar arquivo',
+                                errorMessage: 'Falha ao enviar arquivo',
+                                additionalRequestHeaders: { 'X-Requested-With': 'XMLHttpRequest' },
+                                additionalRequestData: { page_id: String(pageId) }
+                            }
+                        }
                     }
                 });
             } catch (e) {
@@ -589,8 +911,8 @@ $publicUrl = ($isPublished && $publicToken !== '') ? ('/caderno/publico?token=' 
     // Context menu (MVP): aplica ações no bloco atual
     var ctx = $('tuq-ctx');
     var ctxSearch = $('tuq-ctx-search');
-    var subTransform = $('tuq-ctx-sub-transform');
-    var subColor = $('tuq-ctx-sub-color');
+    var subTransform = $('tuq-ctx-flyout-transform');
+    var subColor = $('tuq-ctx-flyout-color');
     var currentBlockIndex = null;
 
     function hideCtx() {
@@ -602,6 +924,36 @@ $publicUrl = ($isPublished && $publicToken !== '') ? ('/caderno/publico?token=' 
         currentBlockIndex = null;
     }
 
+    function positionFlyout(flyout) {
+        if (!ctx || !flyout) return;
+        try {
+            var ctxRect = ctx.getBoundingClientRect();
+            var w = flyout.offsetWidth || 320;
+            var gap = 10;
+            var openRight = (ctxRect.right + gap + w) <= (window.innerWidth || 1200);
+            if (openRight) {
+                flyout.style.left = (ctxRect.width + gap) + 'px';
+                flyout.style.right = '';
+            } else {
+                flyout.style.left = '';
+                flyout.style.right = (ctxRect.width + gap) + 'px';
+            }
+            flyout.style.top = '44px';
+        } catch (e) {}
+    }
+
+    function showFlyout(which) {
+        if (!ctx) return;
+        if (subTransform) subTransform.style.display = 'none';
+        if (subColor) subColor.style.display = 'none';
+        var fly = null;
+        if (which === 'transform') fly = subTransform;
+        if (which === 'color') fly = subColor;
+        if (!fly) return;
+        positionFlyout(fly);
+        fly.style.display = 'block';
+    }
+
     function clamp(v, min, max) {
         return Math.min(max, Math.max(min, v));
     }
@@ -609,7 +961,7 @@ $publicUrl = ($isPublished && $publicToken !== '') ? ('/caderno/publico?token=' 
     function showCtx(x, y) {
         if (!ctx) return;
         var w = 280;
-        var h = 360;
+        var h = Math.min(520, (window.innerHeight || 800) - 24);
         var vx = clamp(x, 8, (window.innerWidth || 1200) - w - 8);
         var vy = clamp(y, 8, (window.innerHeight || 800) - h - 8);
         ctx.style.left = vx + 'px';
@@ -699,24 +1051,102 @@ $publicUrl = ($isPublished && $publicToken !== '') ? ('/caderno/publico?token=' 
         } catch (e) {}
     }
 
-    function duplicateBlock() {
-        if (!editor || currentBlockIndex === null) return;
-        var idx = currentBlockIndex;
-        var cur = null;
-        try { cur = editor.blocks.getBlockByIndex(idx); } catch (e) { cur = null; }
-        if (!cur) return;
+    function resolveBlockIndex() {
+        if (currentBlockIndex !== null) return currentBlockIndex;
         try {
-            editor.blocks.insert(cur.type, cur.data || {}, cur.tunes || {}, idx + 1, true);
+            if (editor && editor.blocks && typeof editor.blocks.getCurrentBlockIndex === 'function') {
+                var i = editor.blocks.getCurrentBlockIndex();
+                if (typeof i === 'number' && i >= 0) return i;
+            }
         } catch (e) {}
+        return null;
+    }
+
+    function duplicateBlock() {
+        if (!editor) return;
+        var idx = resolveBlockIndex();
+        if (idx === null) return;
+
+        // Maneira mais confiável: duplicar a partir do state salvo
+        editor.save().then(function (data) {
+            var blocks = (data && data.blocks) ? data.blocks : [];
+            var b = blocks[idx];
+            if (!b || !b.type) return;
+            try {
+                editor.blocks.insert(b.type, b.data || {}, {}, idx + 1, true);
+                currentBlockIndex = idx + 1;
+                debounceSave();
+            } catch (e) {
+                setHint('Não foi possível duplicar o bloco.');
+                try { console.error('duplicateBlock failed', e); } catch (err) {}
+            }
+        }).catch(function (e) {
+            setHint('Não foi possível duplicar o bloco.');
+            try { console.error('duplicateBlock save failed', e); } catch (err) {}
+        });
     }
 
     function deleteBlock() {
-        if (!editor || currentBlockIndex === null) return;
-        try { editor.blocks.delete(currentBlockIndex); } catch (e) {}
+        if (!editor) return;
+        var idx = resolveBlockIndex();
+        if (idx === null) return;
+        try { editor.blocks.delete(idx); } catch (e) {}
         currentBlockIndex = null;
+        debounceSave();
     }
 
     if (editor && canEdit) {
+        // Traduzir UI padrão do Editor.js (itens do menu de configurações) para PT-BR
+        function translateEditorUi(root) {
+            var map = {
+                'Filter': 'Filtrar',
+                'Search': 'Pesquisar',
+                'Move up': 'Mover para cima',
+                'Move down': 'Mover para baixo',
+                'Delete': 'Excluir',
+                'Delete block': 'Excluir',
+                'Convert to': 'Transformar em',
+                'Add': 'Adicionar'
+            };
+
+            try {
+                var nodes = (root || document).querySelectorAll('button, div, span, input');
+                for (var i = 0; i < nodes.length; i++) {
+                    var el = nodes[i];
+                    if (!el) continue;
+
+                    if (el.tagName && el.tagName.toLowerCase() === 'input') {
+                        var ph = el.getAttribute('placeholder') || '';
+                        if (map[ph]) el.setAttribute('placeholder', map[ph]);
+                        continue;
+                    }
+
+                    var txt = (el.textContent || '').trim();
+                    if (map[txt]) {
+                        el.textContent = map[txt];
+                    }
+                }
+            } catch (e) {}
+        }
+
+        translateEditorUi(document);
+        try {
+            var obs = new MutationObserver(function (mutations) {
+                for (var i = 0; i < mutations.length; i++) {
+                    var m = mutations[i];
+                    if (m && m.addedNodes && m.addedNodes.length) {
+                        for (var j = 0; j < m.addedNodes.length; j++) {
+                            var n = m.addedNodes[j];
+                            if (n && n.nodeType === 1) {
+                                translateEditorUi(n);
+                            }
+                        }
+                    }
+                }
+            });
+            obs.observe(document.body, { childList: true, subtree: true });
+        } catch (e) {}
+
         document.addEventListener('contextmenu', function (e) {
             var target = e && e.target ? e.target : null;
             if (!target) return;
@@ -729,6 +1159,117 @@ $publicUrl = ($isPublished && $publicToken !== '') ? ('/caderno/publico?token=' 
             currentBlockIndex = getBlockIndexFromTarget(target);
             showCtx(e.clientX, e.clientY);
         });
+
+        function getCaretPositionForMenu() {
+            try {
+                var sel = window.getSelection ? window.getSelection() : null;
+                if (!sel || !sel.rangeCount) return null;
+                var range = sel.getRangeAt(0);
+                if (!range) return null;
+                var rect = range.getBoundingClientRect ? range.getBoundingClientRect() : null;
+                if (rect && rect.left && rect.top) {
+                    return { x: rect.left, y: rect.bottom + 8 };
+                }
+            } catch (e) {}
+            return null;
+        }
+
+        // Slash command: abrir menu estilo Notion
+        document.addEventListener('keydown', function (e) {
+            if (!e) return;
+            if (e.key !== '/') return;
+            if (e.ctrlKey || e.metaKey || e.altKey) return;
+
+            var t = e.target || null;
+            if (!t) return;
+            var tag = (t.tagName || '').toLowerCase();
+            if (tag === 'input' || tag === 'textarea') return;
+
+            var inside = false;
+            try { inside = !!(t.closest && t.closest('#editorjs')); } catch (err) { inside = false; }
+            if (!inside) return;
+
+            e.preventDefault();
+            currentBlockIndex = getBlockIndexFromTarget(t);
+            var pos = getCaretPositionForMenu();
+            if (pos) {
+                showCtx(pos.x, pos.y);
+            } else {
+                showCtx((window.innerWidth || 1200) / 2 - 120, (window.innerHeight || 800) / 2 - 120);
+            }
+            if (ctxSearch) {
+                ctxSearch.value = '';
+                try {
+                    ctxSearch.dispatchEvent(new Event('input'));
+                } catch (err2) {}
+            }
+        }, true);
+
+        // Paste image (clipboard)
+        document.addEventListener('paste', function (e) {
+            if (!e || !e.clipboardData || !e.clipboardData.items) return;
+            var t = e.target || null;
+            var inside = false;
+            try { inside = !!(t && t.closest && t.closest('#editorjs')); } catch (err) { inside = false; }
+            if (!inside) return;
+
+            var items = e.clipboardData.items;
+            for (var i = 0; i < items.length; i++) {
+                var it = items[i];
+                if (!it) continue;
+                if (it.kind === 'file') {
+                    var f = it.getAsFile ? it.getAsFile() : null;
+                    if (f && f.type && f.type.indexOf('image/') === 0) {
+                        e.preventDefault();
+                        setHint('Enviando imagem...');
+                        uploadMediaFile(f).then(function (res) {
+                            if (res.json && res.json.success === 1 && res.json.file && res.json.file.url) {
+                                insertImageByUrl(res.json.file.url);
+                                setHint('Imagem enviada');
+                            } else {
+                                showActionError({ json: { error: (res.json && res.json.message) ? res.json.message : 'Falha ao enviar imagem' }, status: res.status }, 'Falha ao enviar imagem');
+                            }
+                        });
+                        return;
+                    }
+                }
+            }
+        }, true);
+
+        // Drop image/file
+        document.addEventListener('drop', function (e) {
+            if (!e || !e.dataTransfer || !e.dataTransfer.files || !e.dataTransfer.files.length) return;
+            var t = e.target || null;
+            var inside = false;
+            try { inside = !!(t && t.closest && t.closest('#editorjs')); } catch (err) { inside = false; }
+            if (!inside) return;
+
+            e.preventDefault();
+            var f = e.dataTransfer.files[0];
+            if (!f) return;
+            setHint('Enviando arquivo...');
+            uploadMediaFile(f).then(function (res) {
+                if (res.json && res.json.success === 1 && res.json.file) {
+                    if (f.type && f.type.indexOf('image/') === 0 && res.json.file.url) {
+                        insertImageByUrl(res.json.file.url);
+                        setHint('Imagem enviada');
+                    } else {
+                        insertFileByMeta(res.json.file);
+                        setHint('Arquivo enviado');
+                    }
+                } else {
+                    showActionError({ json: { error: (res.json && res.json.message) ? res.json.message : 'Falha ao enviar arquivo' }, status: res.status }, 'Falha ao enviar arquivo');
+                }
+            });
+        }, true);
+
+        document.addEventListener('dragover', function (e) {
+            var t = e && e.target ? e.target : null;
+            var inside = false;
+            try { inside = !!(t && t.closest && t.closest('#editorjs')); } catch (err) { inside = false; }
+            if (!inside) return;
+            e.preventDefault();
+        }, true);
 
         document.addEventListener('click', function (e) {
             if (!ctx || ctx.style.display !== 'block') return;
@@ -762,13 +1303,43 @@ $publicUrl = ($isPublished && $publicToken !== '') ? ('/caderno/publico?token=' 
 
                 var action = item.getAttribute('data-action');
                 if (action === 'toggle-transform') {
-                    if (subTransform) subTransform.style.display = (subTransform.style.display === 'block') ? 'none' : 'block';
-                    if (subColor) subColor.style.display = 'none';
+                    showFlyout('transform');
                     return;
                 }
                 if (action === 'toggle-color') {
-                    if (subColor) subColor.style.display = (subColor.style.display === 'block') ? 'none' : 'block';
-                    if (subTransform) subTransform.style.display = 'none';
+                    showFlyout('color');
+                    return;
+                }
+                if (action === 'insert-image') {
+                    hideCtx();
+                    pickFile('image/*').then(function (f) {
+                        if (!f) return;
+                        setHint('Enviando imagem...');
+                        uploadMediaFile(f).then(function (res) {
+                            if (res.json && res.json.success === 1 && res.json.file && res.json.file.url) {
+                                insertImageByUrl(res.json.file.url);
+                                setHint('Imagem enviada');
+                            } else {
+                                showActionError({ json: { error: (res.json && res.json.message) ? res.json.message : 'Falha ao enviar imagem' }, status: res.status }, 'Falha ao enviar imagem');
+                            }
+                        });
+                    });
+                    return;
+                }
+                if (action === 'insert-file') {
+                    hideCtx();
+                    pickFile('*/*').then(function (f) {
+                        if (!f) return;
+                        setHint('Enviando arquivo...');
+                        uploadMediaFile(f).then(function (res) {
+                            if (res.json && res.json.success === 1 && res.json.file) {
+                                insertFileByMeta(res.json.file);
+                                setHint('Arquivo enviado');
+                            } else {
+                                showActionError({ json: { error: (res.json && res.json.message) ? res.json.message : 'Falha ao enviar arquivo' }, status: res.status }, 'Falha ao enviar arquivo');
+                            }
+                        });
+                    });
                     return;
                 }
                 if (action === 'duplicate') {

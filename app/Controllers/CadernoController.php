@@ -8,6 +8,7 @@ use App\Models\PageShare;
 use App\Models\Plan;
 use App\Models\Subscription;
 use App\Models\User;
+use App\Services\MediaStorageService;
 
 class CadernoController extends Controller
 {
@@ -295,6 +296,73 @@ class CadernoController extends Controller
         PageShare::upsert($pageId, $targetId, $role);
         $shares = PageShare::listForPage($pageId);
         $this->json(['ok' => true, 'shares' => $shares]);
+    }
+
+    public function uploadMedia(): void
+    {
+        $user = $this->requireLogin();
+        $this->requireCadernoAccess($user);
+
+        $uid = (int)($user['id'] ?? 0);
+        $pageId = (int)($_POST['page_id'] ?? 0);
+        if ($pageId <= 0) {
+            $this->json(['success' => 0, 'message' => 'Página inválida.'], 400);
+        }
+
+        $page = Page::findAccessibleById($pageId, $uid);
+        if (!$page) {
+            $this->json(['success' => 0, 'message' => 'Sem acesso à página.'], 403);
+        }
+        if (!$this->canEditPage($page, $uid)) {
+            $this->json(['success' => 0, 'message' => 'Sem permissão para editar.'], 403);
+        }
+
+        if (empty($_FILES['file']) || !is_array($_FILES['file'])) {
+            $this->json(['success' => 0, 'message' => 'Envie um arquivo.'], 422);
+        }
+
+        $err = (int)($_FILES['file']['error'] ?? UPLOAD_ERR_NO_FILE);
+        if ($err !== UPLOAD_ERR_OK) {
+            $this->json(['success' => 0, 'message' => 'Erro no upload.'], 422);
+        }
+
+        $tmp = (string)($_FILES['file']['tmp_name'] ?? '');
+        $originalName = (string)($_FILES['file']['name'] ?? 'arquivo');
+        $type = (string)($_FILES['file']['type'] ?? '');
+        $size = (int)($_FILES['file']['size'] ?? 0);
+        if (!is_file($tmp) || $size <= 0) {
+            $this->json(['success' => 0, 'message' => 'Arquivo inválido.'], 422);
+        }
+
+        $remoteUrl = MediaStorageService::uploadFile($tmp, $originalName, $type);
+        if (!is_string($remoteUrl) || trim($remoteUrl) === '') {
+            $this->json(['success' => 0, 'message' => 'Não foi possível enviar a mídia para o servidor.'], 500);
+        }
+
+        $mimeLower = strtolower($type);
+        $isImage = $mimeLower !== '' && str_starts_with($mimeLower, 'image/');
+
+        if ($isImage) {
+            // Formato esperado pelo ImageTool
+            $this->json([
+                'success' => 1,
+                'file' => [
+                    'url' => $remoteUrl,
+                ],
+            ]);
+        }
+
+        // Formato esperado pelo AttachesTool
+        $this->json([
+            'success' => 1,
+            'file' => [
+                'url' => $remoteUrl,
+                'name' => $originalName,
+                'title' => $originalName,
+                'size' => $size,
+                'extension' => (string)pathinfo($originalName, PATHINFO_EXTENSION),
+            ],
+        ]);
     }
 
     public function shareRemove(): void

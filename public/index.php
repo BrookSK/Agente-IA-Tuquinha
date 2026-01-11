@@ -157,6 +157,7 @@ $router->post('/caderno/salvar', 'CadernoController@save');
 $router->post('/caderno/renomear', 'CadernoController@rename');
 $router->post('/caderno/excluir', 'CadernoController@delete');
 $router->post('/caderno/publicar', 'CadernoController@publish');
+$router->post('/caderno/midia/upload', 'CadernoController@uploadMedia');
 $router->post('/caderno/compartilhar/adicionar', 'CadernoController@shareAdd');
 $router->post('/caderno/compartilhar/remover', 'CadernoController@shareRemove');
 $router->get('/caderno/publico', 'CadernoController@publico');
