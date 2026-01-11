@@ -198,8 +198,8 @@ class CadernoController extends Controller
             $this->json(['ok' => false, 'error' => 'Sem acesso à página.'], 403);
         }
 
-        if ((int)($page['owner_user_id'] ?? 0) !== $uid) {
-            $this->json(['ok' => false, 'error' => 'Apenas o dono pode renomear.'], 403);
+        if (!$this->canEditPage($page, $uid)) {
+            $this->json(['ok' => false, 'error' => 'Sem permissão para renomear.'], 403);
         }
 
         Page::rename($pageId, $title, $icon !== '' ? $icon : null);

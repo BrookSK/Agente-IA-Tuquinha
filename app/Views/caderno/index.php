@@ -283,6 +283,13 @@ $publicUrl = ($isPublished && $publicToken !== '') ? ('/caderno/publico?token=' 
                 </div>
             </div>
             <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap; justify-content:flex-end;">
+                <?php if ($current && $canEdit): ?>
+                    <button type="button" id="btn-save" style="
+                        border:1px solid var(--border-subtle); border-radius:999px; padding:7px 12px;
+                        background:var(--surface-subtle); color:var(--text-primary); font-size:12px; cursor:pointer;">
+                        Salvar
+                    </button>
+                <?php endif; ?>
                 <?php if ($current && $isOwner): ?>
                     <button type="button" id="btn-publish" style="
                         border:1px solid var(--border-subtle); border-radius:999px; padding:7px 12px;
@@ -425,6 +432,7 @@ $publicUrl = ($isPublished && $publicToken !== '') ? ('/caderno/publico?token=' 
 (function () {
     var pageId = <?= (int)$currentId ?>;
     var canEdit = <?= $canEdit ? 'true' : 'false' ?>;
+    var isOwner = <?= $isOwner ? 'true' : 'false' ?>;
     var initialJson = <?= json_encode($contentJson !== '' ? $contentJson : '') ?>;
 
     var $ = function (id) { return document.getElementById(id); };
@@ -436,7 +444,27 @@ $publicUrl = ($isPublished && $publicToken !== '') ? ('/caderno/publico?token=' 
             method: 'POST',
             headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' },
             body: fd
-        }).then(function (r) { return r.json().then(function (j) { return { ok: r.ok, status: r.status, json: j }; }); });
+        }).then(function (r) {
+            var ct = (r.headers && r.headers.get) ? (r.headers.get('content-type') || '') : '';
+            if (ct.toLowerCase().indexOf('application/json') >= 0) {
+                return r.json().then(function (j) { return { ok: r.ok, status: r.status, json: j, text: null }; });
+            }
+            return r.text().then(function (t) {
+                return { ok: r.ok, status: r.status, json: null, text: t || '' };
+            });
+        }).catch(function (err) {
+            return { ok: false, status: 0, json: null, text: String(err || 'Erro') };
+        });
+    }
+
+    function showActionError(res, fallback) {
+        var msg = fallback || 'Falha ao executar ação.';
+        if (res && res.json && res.json.error) msg = String(res.json.error);
+        else if (res && res.status === 403) msg = 'Sem permissão ou sem assinatura ativa.';
+        else if (res && res.status === 401) msg = 'Você precisa estar logado.';
+        else if (res && res.status && res.status >= 500) msg = 'Erro no servidor.';
+        setHint(msg);
+        try { alert(msg); } catch (e) {}
     }
 
     function safeJsonParse(text) {
@@ -521,7 +549,16 @@ $publicUrl = ($isPublished && $publicToken !== '') ? ('/caderno/publico?token=' 
         }, true);
         document.addEventListener('mouseup', function () { debounceSave(); }, true);
     } else {
-        setHint('Somente leitura');
+        if (pageId) {
+            setHint('Somente leitura (sem permissão de edição).');
+        }
+    }
+
+    var btnSave = $('btn-save');
+    if (btnSave && canEdit && pageId) {
+        btnSave.addEventListener('click', function () {
+            scheduleSave();
+        });
     }
 
     // Context menu (MVP): aplica ações no bloco atual
@@ -768,7 +805,7 @@ $publicUrl = ($isPublished && $publicToken !== '') ? ('/caderno/publico?token=' 
         var icon = $('page-icon');
         if (!title || !icon) return;
         if (!pageId) return;
-        if (!<?= $isOwner ? 'true' : 'false' ?>) return;
+        if (!canEdit) return;
 
         var timer = null;
         function doRename() {
@@ -776,6 +813,15 @@ $publicUrl = ($isPublished && $publicToken !== '') ? ('/caderno/publico?token=' 
                 page_id: String(pageId),
                 title: title.value || 'Sem título',
                 icon: icon.value || ''
+            }).then(function (res) {
+                if (res && res.json && res.json.ok) return;
+                if (res && res.text && res.text !== '') {
+                    showActionError(res, 'Falha ao renomear.');
+                    return;
+                }
+                if (res && res.json && res.json.error) {
+                    showActionError(res, 'Falha ao renomear.');
+                }
             });
         }
         function schedule() {
@@ -794,6 +840,8 @@ $publicUrl = ($isPublished && $publicToken !== '') ? ('/caderno/publico?token=' 
             postForm('/caderno/excluir', { page_id: String(pageId) }).then(function (res) {
                 if (res.json && res.json.ok) {
                     window.location.href = '/caderno';
+                } else {
+                    showActionError(res, 'Falha ao excluir.');
                 }
             });
         });
@@ -888,8 +936,8 @@ $publicUrl = ($isPublished && $publicToken !== '') ? ('/caderno/publico?token=' 
                 if (res.json && res.json.ok) {
                     email.value = '';
                     renderShares(res.json.shares || []);
-                } else if (res.json && res.json.error) {
-                    alert(res.json.error);
+                } else {
+                    showActionError(res, 'Falha ao compartilhar.');
                 }
             });
         });
@@ -902,6 +950,8 @@ $publicUrl = ($isPublished && $publicToken !== '') ? ('/caderno/publico?token=' 
             postForm('/caderno/publicar', { page_id: String(pageId), publish: willPublish ? '1' : '' }).then(function (res) {
                 if (res.json && res.json.ok) {
                     window.location.reload();
+                } else {
+                    showActionError(res, 'Falha ao publicar.');
                 }
             });
         });
