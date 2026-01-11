@@ -231,6 +231,15 @@ if (!empty($_SESSION['user_id'])) {
             align-items: center;
             gap: 10px;
         }
+        .brand-logo {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            overflow: hidden;
+            flex: 0 0 auto;
+            background: #050509;
+            box-shadow: 0 0 18px rgba(229, 57, 53, 0.8);
+        }
         body[data-theme="light"] .brand-logo {
             box-shadow: none;
         }
