@@ -1,6 +1,6 @@
 <div data-tour="home-root" style="max-width: 880px; margin: 0 auto; padding: 18px 14px 28px 14px;">
     <div style="display:flex; flex-direction:column; align-items:center; text-align:center; gap: 10px; margin-bottom: 18px;">
-        <div style="display:inline-flex; align-items:center; gap:8px; padding:6px 12px; border-radius:999px; border:1px solid rgba(229,57,53,0.25); background: rgba(229,57,53,0.10); color:#ffb0a8; font-size: 12px;">
+        <div style="display:inline-flex; align-items:center; gap:8px; padding:6px 12px; border-radius:999px; border:1px solid rgba(229,57,53,0.25); background: rgba(229,57,53,0.10); color: var(--accent-soft); font-size: 12px;">
             <span style="opacity:0.9;">✦</span>
             <span>Nova versão disponível</span>
         </div>
@@ -31,7 +31,7 @@
             'label' => 'Novo chat',
             'href' => $menuHref('/chat?new=1'),
             'hot' => true,
-            'icon' => '💬',
+            'icon_html' => '<span style="font-size:18px; font-weight:900; line-height:1;">+</span>',
         ];
 
         // Projetos: aparece apenas quando tiver assinatura ativa e o plano permitir projetos
@@ -40,7 +40,7 @@
                 'label' => 'Meus projetos',
                 'href' => $menuHref('/projetos'),
                 'hot' => false,
-                'icon' => '🗂',
+                'icon_html' => isset($renderMenuIcon) ? $renderMenuIcon('projects_list', '📁') : '📁',
             ];
         }
 
@@ -50,7 +50,7 @@
                 'label' => 'Histórico de chats',
                 'href' => $menuHref('/historico'),
                 'hot' => false,
-                'icon' => '🕘',
+                'icon_html' => isset($renderMenuIcon) ? $renderMenuIcon('chat_history', '🕘') : '🕘',
             ];
         }
 
@@ -60,7 +60,7 @@
                 'label' => 'Cursos',
                 'href' => $menuHref('/cursos'),
                 'hot' => false,
-                'icon' => '🎓',
+                'icon_html' => isset($renderMenuIcon) ? $renderMenuIcon('quick_courses', '🎓') : '🎓',
             ];
         }
 
@@ -70,7 +70,7 @@
                 'label' => 'Notícias',
                 'href' => $menuHref('/noticias'),
                 'hot' => true,
-                'icon' => '📰',
+                'icon_html' => isset($renderMenuIcon) ? $renderMenuIcon('quick_news', '🗞') : '🗞',
             ];
         }
 
@@ -80,7 +80,7 @@
                 'label' => 'Comunidades',
                 'href' => $menuHref('/comunidades'),
                 'hot' => false,
-                'icon' => '👥',
+                'icon_html' => isset($renderMenuIcon) ? $renderMenuIcon('social_communities', '💬') : '💬',
             ];
         }
 
@@ -90,13 +90,13 @@
                 'label' => 'Amigos',
                 'href' => $menuHref('/amigos'),
                 'hot' => false,
-                'icon' => '🤝',
+                'icon_html' => isset($renderMenuIcon) ? $renderMenuIcon('social_friends', '👥') : '👥',
             ];
             $menuTiles[] = [
                 'label' => 'Perfil Social',
                 'href' => $menuHref('/perfil'),
                 'hot' => false,
-                'icon' => '👤',
+                'icon_html' => isset($renderMenuIcon) ? $renderMenuIcon('social_profile', '🧑') : '🧑',
             ];
         }
     ?>
@@ -112,11 +112,11 @@
         <?php foreach ($menuTiles as $tile): ?>
             <?php
                 $hot = !empty($tile['hot']);
-                $bg = $hot ? 'rgba(229,57,53,0.12)' : 'rgba(255,255,255,0.04)';
-                $border = $hot ? 'rgba(229,57,53,0.26)' : 'rgba(255,255,255,0.08)';
+                $bg = $hot ? 'rgba(229,57,53,0.12)' : 'var(--surface-card)';
+                $border = $hot ? 'rgba(229,57,53,0.26)' : 'var(--border-subtle)';
                 $iconBg = $hot ? 'rgba(229,57,53,0.92)' : 'rgba(255,255,255,0.06)';
-                $iconColor = $hot ? '#050509' : 'rgba(255,255,255,0.92)';
-                $labelColor = $hot ? '#ff6f60' : 'rgba(255,255,255,0.82)';
+                $iconColor = $hot ? '#050509' : 'var(--text-primary)';
+                $labelColor = $hot ? 'var(--accent)' : 'var(--text-primary)';
             ?>
             <a href="<?= htmlspecialchars((string)($tile['href'] ?? '#')) ?>" style="text-decoration:none;">
                 <div style="
@@ -127,7 +127,7 @@
                     display:flex;
                     align-items:center;
                     justify-content:center;
-                    box-shadow: 0 16px 34px rgba(0,0,0,0.38);
+                    box-shadow: var(--shadow-tile);
                     position: relative;
                 ">
                     <div style="
@@ -140,9 +140,9 @@
                         align-items:center;
                         justify-content:center;
                         font-size: 18px;
-                        border: 1px solid rgba(255,255,255,0.10);
+                        border: 1px solid var(--border-subtle);
                     ">
-                        <?= htmlspecialchars((string)($tile['icon'] ?? '')) ?>
+                        <?php echo (string)($tile['icon_html'] ?? ''); ?>
                     </div>
                 </div>
                 <div style="
@@ -160,21 +160,21 @@
     </div>
 
     <div style="max-width: 520px; margin: 0 auto 26px auto; display:flex; flex-direction:column; gap: 12px;">
-        <div style="background: rgba(255,255,255,0.04); border-radius: 14px; padding: 14px; border: 1px solid rgba(255,255,255,0.08); box-shadow: 0 14px 34px rgba(0,0,0,0.42);">
+        <div style="background: var(--surface-card); border-radius: 14px; padding: 14px; border: 1px solid var(--border-subtle); box-shadow: var(--shadow-card);">
             <div style="font-size: 14px; font-weight: 800; margin-bottom: 8px;">Essência</div>
             <div style="color: var(--text-secondary); font-size: 13px; line-height: 1.6;">
                 Criado por quem viveu a solidão de freelancer e decidiu:<br>
                 ninguém mais precisa passar por isso sozinho.
             </div>
         </div>
-        <div style="background: rgba(255,255,255,0.04); border-radius: 14px; padding: 14px; border: 1px solid rgba(255,255,255,0.08); box-shadow: 0 14px 34px rgba(0,0,0,0.42);">
+        <div style="background: var(--surface-card); border-radius: 14px; padding: 14px; border: 1px solid var(--border-subtle); box-shadow: var(--shadow-card);">
             <div style="font-size: 14px; font-weight: 800; margin-bottom: 8px;">Foco</div>
             <div style="color: var(--text-secondary); font-size: 13px; line-height: 1.6;">
                 Eliminar os erros que custam anos. Dar as ferramentas certas.<br>
                 Conectar você com quem já passou por isso.
             </div>
         </div>
-        <div style="background: rgba(255,255,255,0.04); border-radius: 14px; padding: 14px; border: 1px solid rgba(255,255,255,0.08); box-shadow: 0 14px 34px rgba(0,0,0,0.42);">
+        <div style="background: var(--surface-card); border-radius: 14px; padding: 14px; border: 1px solid var(--border-subtle); box-shadow: var(--shadow-card);">
             <div style="font-size: 14px; font-weight: 800; margin-bottom: 8px;">Para quem</div>
             <div style="color: var(--text-secondary); font-size: 13px; line-height: 1.6;">
                 Para o designer que está cansado de trocar horas por dinheiro e
@@ -188,8 +188,8 @@
         padding: 34px 14px;
         background: radial-gradient(720px 320px at 50% 0%, rgba(229,57,53,0.10), transparent 55%),
             linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.00));
-        border-top: 1px solid rgba(255,255,255,0.06);
-        border-bottom: 1px solid rgba(255,255,255,0.06);
+        border-top: 1px solid var(--border-subtle);
+        border-bottom: 1px solid var(--border-subtle);
     ">
         <?php
             $videoUrl = (string)($tuquinhaAboutVideoUrl ?? '');
@@ -206,11 +206,11 @@
             <div id="tuq-about-video-card" style="
                 position: relative;
                 border-radius: 16px;
-                border: 1px solid rgba(255,255,255,0.10);
+                border: 1px solid var(--border-subtle);
                 overflow: hidden;
                 background: linear-gradient(135deg, rgba(229,57,53,0.22), rgba(0,0,0,0.35));
                 min-height: 220px;
-                box-shadow: 0 16px 34px rgba(0,0,0,0.55);
+                box-shadow: var(--shadow-card-strong);
                 display:flex;
                 align-items:center;
                 justify-content:center;
@@ -223,7 +223,7 @@
                         border: none;
                         cursor: pointer;
                         background: rgba(229,57,53,0.95);
-                        box-shadow: 0 10px 26px rgba(229,57,53,0.35);
+                        box-shadow: var(--shadow-accent);
                         display:flex;
                         align-items:center;
                         justify-content:center;
@@ -231,11 +231,11 @@
                         <span style="display:inline-block; width:0; height:0; border-top:8px solid transparent; border-bottom:8px solid transparent; border-left:12px solid #050509; margin-left:2px;"></span>
                     </button>
                 <?php else: ?>
-                    <div style="color: rgba(255,255,255,0.72); font-size: 13px;">Vídeo em breve</div>
+                    <div style="color: var(--text-secondary); font-size: 13px;">Vídeo em breve</div>
                 <?php endif; ?>
             </div>
 
-            <div style="margin-top: 10px; font-size: 11px; color: rgba(255,255,255,0.55);">
+            <div style="margin-top: 10px; font-size: 11px; color: var(--text-secondary);">
                 Conheça a plataforma e o Tuquinha
             </div>
 
@@ -243,7 +243,7 @@
                 O Tuquinha é seu parceiro de jornada. Ele entende <strong style="color: var(--text-primary);">branding, vendas, gestão, redes sociais</strong> e tudo mais que você precisa para tocar seu negócio.
                 <br>
                 É como ter uma equipe inteira de especialistas, só que mais gente boa!
-                <span style="display:inline-flex; align-items:center; gap:6px; padding:4px 10px; border-radius:999px; background:rgba(229,57,53,0.14); border:1px solid rgba(229,57,53,0.22); color:#ffb0a8; font-size:11px; margin-top:10px;">
+                <span style="display:inline-flex; align-items:center; gap:6px; padding:4px 10px; border-radius:999px; background:rgba(229,57,53,0.14); border:1px solid rgba(229,57,53,0.22); color: var(--accent-soft); font-size:11px; margin-top:10px;">
                     (e com um bico colorido)
                 </span>
             </div>

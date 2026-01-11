@@ -16,15 +16,63 @@ if (is_array($news)) {
 }
 ?>
 
+<style>
+    @media (max-width: 900px) {
+        #news-page-header {
+            flex-direction: column;
+            align-items: stretch !important;
+        }
+        #news-email-form {
+            width: 100%;
+            justify-content: space-between;
+            flex-wrap: wrap;
+        }
+        #news-email-form button {
+            width: 100%;
+        }
+        #news-layout {
+            grid-template-columns: 1fr !important;
+        }
+        #news-hero {
+            grid-template-columns: 1fr !important;
+        }
+        #news-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        }
+        #news-sidebar {
+            margin-top: 14px;
+        }
+    }
+
+    @media (max-width: 520px) {
+        #news-grid {
+            grid-template-columns: 1fr !important;
+        }
+        #news-title {
+            font-size: 26px !important;
+        }
+        #news-hero-title {
+            font-size: 20px !important;
+            line-height: 1.15 !important;
+        }
+        #news-hero-img {
+            min-height: 160px !important;
+        }
+        #news-email-form {
+            gap: 8px !important;
+        }
+    }
+</style>
+
 <div style="max-width: 1200px; margin: 0 auto;">
-    <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:14px; margin-bottom: 14px;">
+    <div id="news-page-header" style="display:flex; align-items:flex-start; justify-content:space-between; gap:14px; margin-bottom: 14px;">
         <div>
-            <div style="font-size: 34px; font-weight: 750; letter-spacing: -0.02em;">Discover</div>
+            <div id="news-title" style="font-size: 34px; font-weight: 750; letter-spacing: -0.02em;">Discover</div>
             <div style="color: var(--text-secondary); font-size: 13px; margin-top: 4px;">Notícias de marketing no Brasil, atualizadas pela IA.</div>
         </div>
 
         <div style="display:flex; gap:10px; align-items:center;">
-            <form action="/noticias/email" method="post" style="display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:12px; border:1px solid var(--border-subtle); background: var(--bg-secondary);">
+            <form id="news-email-form" action="/noticias/email" method="post" style="display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:12px; border:1px solid var(--border-subtle); background: var(--bg-secondary);">
                 <div style="font-size:12px; color: var(--text-secondary);">Notificar por e-mail</div>
                 <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
                     <input type="checkbox" name="email_enabled" value="1" <?= !empty($emailEnabled) ? 'checked' : '' ?> style="transform: translateY(1px);">
@@ -35,7 +83,7 @@ if (is_array($news)) {
         </div>
     </div>
 
-    <div style="display:grid; grid-template-columns: 1fr 330px; gap: 18px; align-items:start;">
+    <div id="news-layout" style="display:grid; grid-template-columns: 1fr 330px; gap: 18px; align-items:start;">
         <div>
             <?php if (!empty($hero)): ?>
                 <?php
@@ -47,9 +95,9 @@ if (is_array($news)) {
                     $heroPublished = (string)($hero['published_at'] ?? '');
                 ?>
                 <a href="/noticias/ver?id=<?= (int)$heroId ?>" style="display:block;">
-                    <div style="display:grid; grid-template-columns: 1.1fr 0.9fr; gap:14px; padding:16px; border-radius:16px; border:1px solid var(--border-subtle); background: var(--bg-secondary);">
+                    <div id="news-hero" style="display:grid; grid-template-columns: 1.1fr 0.9fr; gap:14px; padding:16px; border-radius:16px; border:1px solid var(--border-subtle); background: var(--bg-secondary);">
                         <div>
-                            <div style="font-size: 28px; font-weight: 760; line-height: 1.08; letter-spacing: -0.02em;"><?= htmlspecialchars($heroTitle, ENT_QUOTES, 'UTF-8') ?></div>
+                            <div id="news-hero-title" style="font-size: 28px; font-weight: 760; line-height: 1.08; letter-spacing: -0.02em;"><?= htmlspecialchars($heroTitle, ENT_QUOTES, 'UTF-8') ?></div>
                             <?php if ($heroPublished !== ''): ?>
                                 <div style="margin-top:10px; color: var(--text-secondary); font-size: 12px;">Publicado em <?= htmlspecialchars($heroPublished, ENT_QUOTES, 'UTF-8') ?></div>
                             <?php endif; ?>
@@ -60,7 +108,7 @@ if (is_array($news)) {
                                 <div style="margin-top:12px; color: var(--text-secondary); font-size: 12px;">Fonte: <?= htmlspecialchars($heroSource, ENT_QUOTES, 'UTF-8') ?></div>
                             <?php endif; ?>
                         </div>
-                        <div style="border-radius:14px; overflow:hidden; border:1px solid rgba(255,255,255,0.06); background: rgba(255,255,255,0.04); min-height: 180px;">
+                        <div id="news-hero-img" style="border-radius:14px; overflow:hidden; border:1px solid rgba(255,255,255,0.06); background: rgba(255,255,255,0.04); min-height: 180px;">
                             <?php if ($heroImg !== ''): ?>
                                 <img src="<?= htmlspecialchars($heroImg, ENT_QUOTES, 'UTF-8') ?>" alt="" style="width:100%; height:100%; display:block; object-fit:cover;">
                             <?php else: ?>
@@ -71,7 +119,7 @@ if (is_array($news)) {
                 </a>
             <?php endif; ?>
 
-            <div style="margin-top:14px; display:grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px;">
+            <div id="news-grid" style="margin-top:14px; display:grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px;">
                 <?php foreach ($grid as $it): ?>
                     <?php
                         if (!is_array($it)) {

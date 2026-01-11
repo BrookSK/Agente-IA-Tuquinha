@@ -123,6 +123,10 @@ if (!empty($_SESSION['user_id'])) {
             --input-bg: #050509;
             --scrollbar-track: #050509;
             --scrollbar-thumb: rgba(255, 255, 255, 0.18);
+            --shadow-card: 0 14px 34px rgba(0,0,0,0.42);
+            --shadow-card-strong: 0 18px 44px rgba(0,0,0,0.62);
+            --shadow-tile: 0 16px 34px rgba(0,0,0,0.38);
+            --shadow-accent: 0 10px 26px rgba(229,57,53,0.35);
         }
 
         /* Tema claro (hot / cold) controlado via atributo data-theme="light" no body */
@@ -139,6 +143,10 @@ if (!empty($_SESSION['user_id'])) {
             --input-bg: #fff5f5;
             --scrollbar-track: #f3f4f6;
             --scrollbar-thumb: rgba(148, 163, 184, 0.9);
+            --shadow-card: 0 10px 24px rgba(15, 23, 42, 0.10);
+            --shadow-card-strong: 0 14px 30px rgba(15, 23, 42, 0.16);
+            --shadow-tile: 0 10px 20px rgba(15, 23, 42, 0.10);
+            --shadow-accent: 0 10px 22px rgba(229,57,53,0.22);
         }
         * {
             margin: 0;
@@ -242,6 +250,10 @@ if (!empty($_SESSION['user_id'])) {
         }
         body[data-theme="light"] .brand-logo {
             box-shadow: none;
+        }
+
+        body[data-theme="light"] #tuq-about-video-card {
+            background: linear-gradient(135deg, rgba(229,57,53,0.10), rgba(255,255,255,0.92)) !important;
         }
         .brand-text-title {
             font-weight: 700;
@@ -634,10 +646,22 @@ if (!empty($_SESSION['user_id'])) {
                 white-space: nowrap;
             }
 
+            body[data-theme="light"] .mobile-quick-nav a {
+                border-color: rgba(15, 23, 42, 0.18);
+                background: rgba(15, 23, 42, 0.04);
+                color: rgba(15, 23, 42, 0.92);
+            }
+
             .mobile-quick-nav a.is-active {
                 border-color: rgba(229,57,53,0.45);
                 background: rgba(229,57,53,0.18);
                 color: #ff6f60;
+            }
+
+            body[data-theme="light"] .mobile-quick-nav a.is-active {
+                border-color: rgba(220, 38, 38, 0.35);
+                background: rgba(220, 38, 38, 0.10);
+                color: #b91c1c;
             }
 
             .mobile-quick-nav a.is-primary {
@@ -645,6 +669,11 @@ if (!empty($_SESSION['user_id'])) {
                 background: #e50914;
                 color: #ffffff;
                 font-weight: 800;
+            }
+
+            body[data-theme="light"] .mobile-quick-nav a.is-primary {
+                background: #e50914;
+                color: #ffffff;
             }
 
             .sidebar-close {
@@ -664,6 +693,12 @@ if (!empty($_SESSION['user_id'])) {
                 cursor: pointer;
                 z-index: 30;
                 -webkit-tap-highlight-color: transparent;
+            }
+
+            body[data-theme="light"] .sidebar-close {
+                border-color: rgba(15, 23, 42, 0.22);
+                background: rgba(15, 23, 42, 0.06);
+                color: rgba(15, 23, 42, 0.92);
             }
             .sidebar-overlay {
                 display: none;

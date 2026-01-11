@@ -20,9 +20,20 @@
         $displayPlans = is_array($plans) ? $plans : [];
 
         $cycleKeyForSlug = function (string $slug): string {
-            if ($slug === 'free') return 'free';
-            if (substr($slug, -11) === '-semestral') return 'semestral';
-            if (substr($slug, -6) === '-anual') return 'anual';
+            $s = strtolower(trim($slug));
+            if ($s === 'free') return 'free';
+
+            // Detecção por sufixos mais comuns
+            if (substr($s, -11) === '-semestral') return 'semestral';
+            if (substr($s, -6) === '-anual') return 'anual';
+
+            // Detecção por “contains” (slugs variam muito em bases reais)
+            if (strpos($s, 'semestral') !== false || strpos($s, 'semiannual') !== false || strpos($s, 'semi-annual') !== false || strpos($s, '6m') !== false || strpos($s, '6-m') !== false) {
+                return 'semestral';
+            }
+            if (strpos($s, 'anual') !== false || strpos($s, 'annual') !== false || strpos($s, 'year') !== false || strpos($s, '12m') !== false || strpos($s, '12-m') !== false) {
+                return 'anual';
+            }
             return 'mensal';
         };
 
@@ -70,11 +81,11 @@
     <?php if ($isPaidPlanWithLimit): ?>
         <div style="
             margin: 0 auto 16px auto;
-            background: rgba(255,255,255,0.04);
-            border: 1px solid rgba(255,255,255,0.08);
+            background: var(--surface-card);
+            border: 1px solid var(--border-subtle);
             border-radius: 16px;
             padding: 14px;
-            box-shadow: 0 14px 34px rgba(0,0,0,0.42);
+            box-shadow: var(--shadow-card);
         ">
             <div style="font-size: 13px; font-weight: 800; margin-bottom: 6px;">Precisa de mais tokens?</div>
             <div style="color: var(--text-secondary); font-size: 12px; line-height: 1.55; margin-bottom: 10px;">
@@ -102,13 +113,13 @@
     <div style="font-size: 12px; font-weight: 800; margin: 14px 0 10px 0; opacity: 0.9;">Planos disponíveis</div>
 
     <div style="display:flex; justify-content:center; margin: 0 0 12px 0;">
-        <div id="plan-cycle-tabs" style="display:inline-flex; gap:8px; padding:6px; border-radius:999px; border:1px solid rgba(255,255,255,0.10); background:rgba(255,255,255,0.04);">
+        <div id="plan-cycle-tabs" style="display:inline-flex; gap:8px; padding:6px; border-radius:999px; border:1px solid var(--border-subtle); background:var(--surface-card);">
             <?php foreach ($cycleTabs as $tabKey): ?>
                 <button
                     type="button"
                     class="plan-cycle-tab"
                     data-cycle="<?= htmlspecialchars($tabKey, ENT_QUOTES, 'UTF-8') ?>"
-                    style="border:none; border-radius:999px; padding:7px 10px; font-size:12px; font-weight:800; cursor:pointer; background:transparent; color: rgba(255,255,255,0.70);"
+                    style="border:none; border-radius:999px; padding:7px 10px; font-size:12px; font-weight:800; cursor:pointer; background:transparent; color: var(--text-secondary);"
                 >
                     <?= htmlspecialchars($cycleLabelForKey($tabKey), ENT_QUOTES, 'UTF-8') ?>
                 </button>
@@ -121,15 +132,23 @@
             var root = document.getElementById('plan-cycle-tabs');
             if (!root) return;
 
+            var isLight = false;
+            try {
+                isLight = (document.body && document.body.getAttribute && document.body.getAttribute('data-theme') === 'light');
+            } catch (e) { isLight = false; }
+
             var buttons = Array.prototype.slice.call(root.querySelectorAll('.plan-cycle-tab'));
             var cards = Array.prototype.slice.call(document.querySelectorAll('[data-plan-cycle]'));
             var defaultCycle = <?php echo json_encode($defaultCycleTab); ?>;
+
+            var activeText = isLight ? '#ffffff' : '#050509';
+            var inactiveText = isLight ? 'rgba(15, 23, 42, 0.70)' : 'rgba(255,255,255,0.70)';
 
             function setActive(cycle) {
                 buttons.forEach(function (b) {
                     var isActive = (String(b.getAttribute('data-cycle')) === String(cycle));
                     b.style.background = isActive ? 'linear-gradient(135deg,#e53935,#ff6f60)' : 'transparent';
-                    b.style.color = isActive ? '#050509' : 'rgba(255,255,255,0.70)';
+                    b.style.color = isActive ? activeText : inactiveText;
                 });
 
                 cards.forEach(function (c) {
@@ -140,7 +159,11 @@
             }
 
             root.addEventListener('click', function (e) {
-                var btn = e.target && e.target.closest ? e.target.closest('.plan-cycle-tab') : null;
+                var t = e && e.target ? e.target : null;
+                if (t && t.nodeType === 3) {
+                    t = t.parentElement;
+                }
+                var btn = t && t.closest ? t.closest('.plan-cycle-tab') : null;
                 if (!btn) return;
                 var cycle = String(btn.getAttribute('data-cycle') || 'todos');
                 setActive(cycle);
@@ -169,15 +192,15 @@
                 $cycleLabel = $prettyCycle($slug);
                 $priceNumber = number_format(((int)($plan['price_cents'] ?? 0)) / 100, 2, ',', '.');
 
-                $cardBorder = $isFeatured ? 'rgba(229,57,53,0.55)' : 'rgba(255,255,255,0.08)';
-                $cardShadow = $isFeatured ? '0 0 0 1px rgba(229,57,53,0.25), 0 18px 40px rgba(0,0,0,0.55)' : '0 14px 34px rgba(0,0,0,0.42)';
-                $ctaBg = $isFeatured ? 'linear-gradient(135deg,#e53935,#ff6f60)' : 'rgba(255,255,255,0.06)';
-                $ctaColor = $isFeatured ? '#050509' : 'rgba(255,255,255,0.85)';
-                $ctaBorder = $isFeatured ? 'none' : '1px solid rgba(255,255,255,0.10)';
+                $cardBorder = $isFeatured ? 'rgba(229,57,53,0.55)' : 'var(--border-subtle)';
+                $cardShadow = $isFeatured ? '0 0 0 1px rgba(229,57,53,0.25), ' . 'var(--shadow-card-strong)' : 'var(--shadow-card)';
+                $ctaBg = $isFeatured ? 'linear-gradient(135deg,#e53935,#ff6f60)' : 'var(--surface-subtle)';
+                $ctaColor = $isFeatured ? '#050509' : 'var(--text-primary)';
+                $ctaBorder = $isFeatured ? 'none' : '1px solid var(--border-subtle)';
 
                 if ($isCurrent) {
                     $cardBorder = 'rgba(229,57,53,0.70)';
-                    $cardShadow = '0 0 0 2px rgba(229,57,53,0.22), 0 18px 44px rgba(0,0,0,0.62)';
+                    $cardShadow = '0 0 0 2px rgba(229,57,53,0.22), ' . 'var(--shadow-card-strong)';
                 }
 
                 $planIcon = '⭐';
@@ -191,13 +214,13 @@
                     $planIcon = '🔥';
                 }
 
-                $iconBg = $isFeatured ? 'rgba(229,57,53,0.92)' : 'rgba(255,255,255,0.06)';
-                $iconColor = $isFeatured ? '#050509' : 'rgba(255,255,255,0.92)';
+                $iconBg = $isFeatured ? 'rgba(229,57,53,0.92)' : 'var(--surface-subtle)';
+                $iconColor = $isFeatured ? '#050509' : 'var(--text-primary)';
             ?>
             <div data-plan-cycle="<?= htmlspecialchars($cycleKey, ENT_QUOTES, 'UTF-8') ?>" style="
                 position: relative;
-                background: <?= $isCurrent ? 'rgba(229,57,53,0.08)' : 'rgba(255,255,255,0.04)' ?>;
-                border: 1px solid <?= $cardBorder ?>;
+                background: <?= $isCurrent ? 'rgba(229,57,53,0.08)' : 'var(--surface-card)' ?>;
+                border: 1px solid <?= $isFeatured ? $cardBorder : 'var(--border-subtle)' ?>;
                 border-radius: 16px;
                 padding: 18px 14px 14px 14px;
                 box-shadow: <?= $cardShadow ?>;
@@ -223,14 +246,14 @@
                             align-items:center;
                             justify-content:center;
                             font-size: 16px;
-                            border: 1px solid rgba(255,255,255,0.10);
+                            border: 1px solid var(--border-subtle);
                         ">
                             <?= htmlspecialchars((string)$planIcon) ?>
                         </div>
                         <div style="font-size: 13px; font-weight: 800;"><?= htmlspecialchars($name) ?></div>
                     </div>
                     <?php if ($isCurrent): ?>
-                        <div style="font-size:10px; padding:3px 9px; border-radius:999px; background:linear-gradient(135deg, rgba(229,57,53,0.35), rgba(255,111,96,0.18)); border:1px solid rgba(229,57,53,0.45); color:#ffd2cd; font-weight:900;">
+                        <div style="font-size:10px; padding:3px 9px; border-radius:999px; background:rgba(229,57,53,0.12); border:1px solid rgba(229,57,53,0.28); color: var(--accent); font-weight:900;">
                             Seu plano atual
                         </div>
                     <?php endif; ?>
@@ -241,7 +264,7 @@
                         <div style="font-size: 24px; font-weight: 900;">Grátis</div>
                     <?php else: ?>
                         <div style="font-size: 18px; font-weight: 900; color: #e53935;">R$ <?= htmlspecialchars($priceNumber) ?></div>
-                        <div style="font-size: 11px; color: rgba(255,255,255,0.55); padding-bottom: 2px;">/ <?= htmlspecialchars($cycleLabel) ?></div>
+                        <div style="font-size: 11px; color: var(--text-secondary); padding-bottom: 2px;">/ <?= htmlspecialchars($cycleLabel) ?></div>
                     <?php endif; ?>
                 </div>
 
@@ -267,10 +290,10 @@
                     <button type="submit" <?= $isCurrent ? 'disabled' : '' ?> style="
                         width: 100%;
                         border-radius: 12px;
-                        border: <?= $isCurrent ? '1px solid rgba(255,255,255,0.10)' : $ctaBorder ?>;
+                        border: <?= $isCurrent ? '1px solid var(--border-subtle)' : $ctaBorder ?>;
                         padding: 10px 12px;
-                        background: <?= $isCurrent ? 'rgba(255,255,255,0.06)' : $ctaBg ?>;
-                        color: <?= $isCurrent ? 'rgba(255,255,255,0.55)' : $ctaColor ?>;
+                        background: <?= $isCurrent ? 'var(--surface-subtle)' : $ctaBg ?>;
+                        color: <?= $isCurrent ? 'var(--text-secondary)' : $ctaColor ?>;
                         font-weight: 900;
                         font-size: 12px;
                         cursor: <?= $isCurrent ? 'default' : 'pointer' ?>;
@@ -289,7 +312,7 @@
         <?php endforeach; ?>
     </div>
 
-    <div style="text-align:center; margin-top: 16px; color: rgba(255,255,255,0.45); font-size: 11px; line-height: 1.5;">
+    <div style="text-align:center; margin-top: 16px; color: var(--text-secondary); font-size: 11px; line-height: 1.5;">
         Você pode cancelar a qualquer momento.
         <br>
         O histórico de conversas é mantido por até <strong><?= htmlspecialchars((string)$days) ?> dias</strong>.
