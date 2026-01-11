@@ -262,6 +262,15 @@ $currentPersonaData = $currentPersona ?? null;
 $personaOptions = $personalities ?? [];
 $planAllowsPersonalitiesFlag = !empty($planAllowsPersonalities);
 
+$tuqChatAvatarUrl = '/public/perso_padrao.png';
+if ($currentPersonaData) {
+    $pImage = trim((string)($currentPersonaData['image_path'] ?? ''));
+    if ($pImage !== '') {
+        $tuqChatAvatarUrl = $pImage;
+    }
+}
+$tuqChatAvatarUrlSafe = htmlspecialchars($tuqChatAvatarUrl, ENT_QUOTES, 'UTF-8');
+
 $conversationTitleText = trim((string)($conversationTitle ?? ''));
 if ($conversationTitleText === '') {
     $conversationTitleText = 'Chat sem título';
@@ -686,7 +695,7 @@ if (!empty($currentPlan) && is_array($currentPlan)) {
                             align-items:center;
                             justify-content:center;
                         ">
-                            <img src="/public/favicon.png" alt="Tuquinha" style="width:100%; height:100%; display:block; object-fit:cover;">
+                            <img src="<?= $tuqChatAvatarUrlSafe ?>" alt="Tuquinha" onerror="this.onerror=null;this.src='/public/favicon.png';" style="width:100%; height:100%; display:block; object-fit:cover;">
                         </div>
                         <div style="
                             max-width: 80%;
@@ -1462,12 +1471,13 @@ if (!empty($currentPlan) && is_array($currentPlan)) {
                 avatar.style.background = 'var(--surface-subtle)';
 
                 var logoImg = document.createElement('img');
-                logoImg.src = '/public/favicon.png';
+                logoImg.src = TUQ_CHAT_AVATAR_URL;
                 logoImg.alt = 'Tuquinha';
                 logoImg.style.width = '100%';
                 logoImg.style.height = '100%';
                 logoImg.style.display = 'block';
                 logoImg.style.objectFit = 'cover';
+                logoImg.onerror = function () { this.onerror = null; this.src = '/public/favicon.png'; };
 
                 avatar.appendChild(logoImg);
 
@@ -1555,12 +1565,13 @@ if (!empty($currentPlan) && is_array($currentPlan)) {
             avatar.style.background = 'var(--surface-subtle)';
 
             const logoImg = document.createElement('img');
-            logoImg.src = '/public/favicon.png';
+            logoImg.src = TUQ_CHAT_AVATAR_URL;
             logoImg.alt = 'Tuquinha';
             logoImg.style.width = '100%';
             logoImg.style.height = '100%';
             logoImg.style.display = 'block';
             logoImg.style.objectFit = 'cover';
+            logoImg.onerror = function () { this.onerror = null; this.src = '/public/favicon.png'; };
             avatar.appendChild(logoImg);
 
             const bubble = document.createElement('div');
