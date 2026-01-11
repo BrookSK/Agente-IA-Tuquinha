@@ -422,12 +422,12 @@ $publicUrl = ($isPublished && $publicToken !== '') ? ('/caderno/publico?token=' 
     </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/@editorjs/editorjs@latest"></script>
-<script src="https://cdn.jsdelivr.net/npm/@editorjs/header@latest"></script>
-<script src="https://cdn.jsdelivr.net/npm/@editorjs/list@latest"></script>
-<script src="https://cdn.jsdelivr.net/npm/@editorjs/checklist@latest"></script>
-<script src="https://cdn.jsdelivr.net/npm/@editorjs/quote@latest"></script>
-<script src="https://cdn.jsdelivr.net/npm/@editorjs/code@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/@editorjs/editorjs@2.28.2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@editorjs/header@2.8.1/dist/bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@editorjs/list@1.9.0/dist/bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@editorjs/checklist@1.6.0/dist/bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@editorjs/quote@2.5.0/dist/bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@editorjs/code@2.8.0/dist/bundle.min.js"></script>
 <script>
 (function () {
     var pageId = <?= (int)$currentId ?>;
@@ -480,21 +480,37 @@ $publicUrl = ($isPublished && $publicToken !== '') ? ('/caderno/publico?token=' 
         editorData = { time: Date.now(), blocks: [] };
     }
 
+    function getMissingEditorTools() {
+        var missing = [];
+        if (typeof EditorJS === 'undefined') missing.push('EditorJS');
+        if (typeof Header === 'undefined') missing.push('Header');
+        if (typeof List === 'undefined') missing.push('List');
+        if (typeof Checklist === 'undefined') missing.push('Checklist');
+        if (typeof Quote === 'undefined') missing.push('Quote');
+        if (typeof CodeTool === 'undefined') missing.push('CodeTool');
+        return missing;
+    }
+
     var editor = null;
     if (pageId) {
-        editor = new EditorJS({
-            holder: 'editorjs',
-            readOnly: !canEdit,
-            data: editorData,
-            autofocus: true,
-            tools: {
-                header: { class: Header, inlineToolbar: true, config: { levels: [1,2,3], defaultLevel: 2 } },
-                list: { class: List, inlineToolbar: true },
-                checklist: { class: Checklist, inlineToolbar: true },
-                quote: { class: Quote, inlineToolbar: true },
-                code: { class: CodeTool }
-            }
-        });
+        var missingTools = getMissingEditorTools();
+        if (missingTools.length) {
+            setHint('Erro ao carregar editor: ' + missingTools.join(', ') + '. Recarregue a página.');
+        } else {
+            editor = new EditorJS({
+                holder: 'editorjs',
+                readOnly: !canEdit,
+                data: editorData,
+                autofocus: true,
+                tools: {
+                    header: { class: Header, inlineToolbar: true, config: { levels: [1,2,3], defaultLevel: 2 } },
+                    list: { class: List, inlineToolbar: true },
+                    checklist: { class: Checklist, inlineToolbar: true },
+                    quote: { class: Quote, inlineToolbar: true },
+                    code: { class: CodeTool }
+                }
+            });
+        }
     }
 
     var saving = false;
