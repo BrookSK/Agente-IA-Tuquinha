@@ -423,11 +423,11 @@ $publicUrl = ($isPublished && $publicToken !== '') ? ('/caderno/publico?token=' 
 </div>
 
 <script src="https://unpkg.com/@editorjs/editorjs@2.28.2"></script>
-<script src="https://unpkg.com/@editorjs/header@2.8.1/dist/bundle.js"></script>
-<script src="https://unpkg.com/@editorjs/list@1.9.0/dist/bundle.js"></script>
-<script src="https://unpkg.com/@editorjs/checklist@1.6.0/dist/bundle.js"></script>
-<script src="https://unpkg.com/@editorjs/quote@2.5.0/dist/bundle.js"></script>
-<script src="https://unpkg.com/@editorjs/code@2.8.0/dist/bundle.js"></script>
+<script src="https://unpkg.com/@editorjs/header@2.8.1/dist/header.umd.js"></script>
+<script src="https://unpkg.com/@editorjs/list@1.9.0/dist/list.umd.js"></script>
+<script src="https://unpkg.com/@editorjs/checklist@1.6.0/dist/checklist.umd.js"></script>
+<script src="https://unpkg.com/@editorjs/quote@2.5.0/dist/quote.umd.js"></script>
+<script src="https://unpkg.com/@editorjs/code@2.8.0/dist/code.umd.js"></script>
 <script>
 (function () {
     var pageId = <?= (int)$currentId ?>;
