@@ -65,7 +65,7 @@
         }
 
         // Notícias: controller exige assinatura paga (não-free)
-        if ($isLogged && $hasPaidActiveSubscription) {
+        if ($isLogged) {
             $menuTiles[] = [
                 'label' => 'Notícias',
                 'href' => $menuHref('/noticias'),

@@ -29,29 +29,6 @@ class NewsController extends Controller
             exit;
         }
 
-        if (!empty($_SESSION['is_admin'])) {
-            return $user;
-        }
-
-        $sub = Subscription::findLastByEmail((string)$user['email']);
-        if (!$sub || empty($sub['plan_id'])) {
-            header('Location: /planos');
-            exit;
-        }
-
-        $status = strtolower((string)($sub['status'] ?? ''));
-        if (in_array($status, ['canceled', 'expired'], true)) {
-            header('Location: /planos');
-            exit;
-        }
-
-        $plan = Plan::findById((int)$sub['plan_id']);
-        $slug = is_array($plan) ? (string)($plan['slug'] ?? '') : '';
-        if ($slug === '' || $slug === 'free') {
-            header('Location: /planos');
-            exit;
-        }
-
         return $user;
     }
 

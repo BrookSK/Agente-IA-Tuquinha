@@ -582,19 +582,65 @@ if (!empty($_SESSION['user_id'])) {
             border-color: rgba(148, 163, 184, 0.7);
         }
 
+        .mobile-quick-nav {
+            display: none;
+        }
+
         @media (max-width: 900px) {
             .sidebar {
                 position: fixed;
                 left: 0;
                 top: 0;
                 bottom: 0;
-                width: 260px;
+                width: 100vw;
+                max-width: 100vw;
+                border-radius: 0;
+                overflow-y: auto;
                 transform: translateX(-100%);
                 opacity: 0;
             }
             .sidebar--open {
                 transform: translateX(0);
                 opacity: 1;
+            }
+            .mobile-quick-nav {
+                display: flex;
+                gap: 10px;
+                overflow-x: auto;
+                padding: 8px 12px 2px 12px;
+                margin: 6px 0 8px 0;
+                -webkit-overflow-scrolling: touch;
+                scrollbar-width: none;
+            }
+            .mobile-quick-nav::-webkit-scrollbar { display: none; }
+
+            .mobile-quick-nav a {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                height: 34px;
+                padding: 0 14px;
+                border-radius: 999px;
+                text-decoration: none;
+                border: 1px solid rgba(255,255,255,0.10);
+                background: rgba(255,255,255,0.06);
+                color: rgba(255,255,255,0.90);
+                font-size: 13px;
+                font-weight: 650;
+                white-space: nowrap;
+            }
+
+            .mobile-quick-nav a.is-active {
+                border-color: rgba(229,57,53,0.45);
+                background: rgba(229,57,53,0.18);
+                color: #ff6f60;
+            }
+
+            .mobile-quick-nav a.is-primary {
+                border: none;
+                background: #e50914;
+                color: #ffffff;
+                font-weight: 800;
             }
             .sidebar-overlay {
                 display: none;
@@ -628,48 +674,115 @@ if (!empty($_SESSION['user_id'])) {
                     <div class="brand-text-sub">Branding vivo na veia</div>
                 </div>
             </div>
+            <?php
+                $hasUser = !empty($_SESSION['user_id']);
+                $defaultPersonaId = $_SESSION['default_persona_id'] ?? null;
+                // Convidados vão direto para um chat novo padrão; seleção de personalidade só é usada para usuários logados
+                $newChatHref = '/chat?new=1';
+                if ($hasUser && empty($defaultPersonaId)) {
+                    // Usuário logado sem personalidade padrão definida pode passar pela tela de personalidades
+                    $newChatHref = '/personalidades';
+                }
+
+                $isAdmin = !empty($_SESSION['is_admin']);
+                $canSeeHistory = $hasUser;
+                $canUseProjects = false;
+                $canUseNews = false;
+                if ($hasUser && $isAdmin) {
+                    $canUseProjects = true;
+                    $canUseNews = true;
+                } elseif ($hasUser) {
+                    $canUseNews = true;
+
+                    $userEmail = (string)($_SESSION['user_email'] ?? '');
+                    if ($userEmail !== '') {
+                        $sub = \App\Models\Subscription::findLastByEmail($userEmail);
+                        if ($sub && !empty($sub['plan_id'])) {
+                            $status = strtolower((string)($sub['status'] ?? ''));
+                            $isActive = !in_array($status, ['canceled', 'expired'], true);
+                            if ($isActive) {
+                                $plan = \App\Models\Plan::findById((int)$sub['plan_id']);
+                                $canUseProjects = !empty($plan['allow_projects_access']);
+                            }
+                        }
+                    }
+                }
+
+                $mobileQuickLinks = [];
+                $mobileQuickLinks[] = [
+                    'label' => 'Novo chat',
+                    'href' => $newChatHref,
+                    'primary' => true,
+                    'show' => true,
+                    'active' => $isActiveNav(['/chat', '/personalidades']),
+                ];
+                $mobileQuickLinks[] = [
+                    'label' => 'Meus projetos',
+                    'href' => '/projetos',
+                    'primary' => false,
+                    'show' => $canUseProjects,
+                    'active' => $isActiveNav('/projetos'),
+                ];
+                $mobileQuickLinks[] = [
+                    'label' => 'Histórico',
+                    'href' => '/historico',
+                    'primary' => false,
+                    'show' => $canSeeHistory,
+                    'active' => $isActiveNav('/historico'),
+                ];
+                $mobileQuickLinks[] = [
+                    'label' => 'Cursos',
+                    'href' => '/cursos',
+                    'primary' => false,
+                    'show' => true,
+                    'active' => $isActiveNav('/cursos'),
+                ];
+                $mobileQuickLinks[] = [
+                    'label' => 'Notícias',
+                    'href' => '/noticias',
+                    'primary' => false,
+                    'show' => $canUseNews,
+                    'active' => $isActiveNav('/noticias'),
+                ];
+                $mobileQuickLinks[] = [
+                    'label' => 'Comunidades',
+                    'href' => '/comunidades',
+                    'primary' => false,
+                    'show' => $hasUser,
+                    'active' => $isActiveNav('/comunidades'),
+                ];
+                $mobileQuickLinks[] = [
+                    'label' => 'Amigos',
+                    'href' => '/amigos',
+                    'primary' => false,
+                    'show' => $hasUser,
+                    'active' => $isActiveNav('/amigos'),
+                ];
+                $mobileQuickLinks[] = [
+                    'label' => 'Perfil social',
+                    'href' => '/perfil',
+                    'primary' => false,
+                    'show' => $hasUser,
+                    'active' => $isActiveNav('/perfil'),
+                ];
+            ?>
+            <div class="mobile-quick-nav">
+                <?php foreach ($mobileQuickLinks as $lk): ?>
+                    <?php if (!empty($lk['show'])): ?>
+                        <a href="<?= htmlspecialchars((string)($lk['href'] ?? '#')) ?>" class="<?= !empty($lk['primary']) ? 'is-primary' : '' ?><?= !empty($lk['active']) ? ' is-active' : '' ?>">
+                            <?= htmlspecialchars((string)($lk['label'] ?? '')) ?>
+                        </a>
+                    <?php endif; ?>
+                <?php endforeach; ?>
+            </div>
             <div style="margin-top: 10px;">
                 <div class="sidebar-section-title">Conversa</div>
-                <?php
-                    $hasUser = !empty($_SESSION['user_id']);
-                    $defaultPersonaId = $_SESSION['default_persona_id'] ?? null;
-                    // Convidados vão direto para um chat novo padrão; seleção de personalidade só é usada para usuários logados
-                    $newChatHref = '/chat?new=1';
-                    if ($hasUser && empty($defaultPersonaId)) {
-                        // Usuário logado sem personalidade padrão definida pode passar pela tela de personalidades
-                        $newChatHref = '/personalidades';
-                    }
-                ?>
                 <a href="<?= htmlspecialchars($newChatHref) ?>" class="sidebar-button primary<?= $isActiveNav(['/chat', '/personalidades']) ? ' sidebar-button--active' : '' ?>" data-tour="nav-new-chat" style="margin-bottom: 8px;">
                     <span class="icon">+</span>
                     <span>Novo chat com o Tuquinha</span>
                 </a>
                 <?php
                     $currentSlug = $_SESSION['plan_slug'] ?? null;
-                    $isAdmin = !empty($_SESSION['is_admin']);
-                    $canSeeHistory = $hasUser;
-
-                    $canUseProjects = false;
-                    $canUseNews = false;
-                    if ($hasUser && $isAdmin) {
-                        $canUseProjects = true;
-                        $canUseNews = true;
-                    } elseif ($hasUser) {
-                        $userEmail = (string)($_SESSION['user_email'] ?? '');
-                        if ($userEmail !== '') {
-                            $sub = \App\Models\Subscription::findLastByEmail($userEmail);
-                            if ($sub && !empty($sub['plan_id'])) {
-                                $status = strtolower((string)($sub['status'] ?? ''));
-                                $isActive = !in_array($status, ['canceled', 'expired'], true);
-                                if ($isActive) {
-                                    $plan = \App\Models\Plan::findById((int)$sub['plan_id']);
-                                    $canUseProjects = !empty($plan['allow_projects_access']);
-                                    $slug = (string)($plan['slug'] ?? '');
-                                    $canUseNews = ($slug !== '' && $slug !== 'free');
-                                }
-                            }
-                        }
-                    }
                 ?>
                 <?php if ($canUseProjects): ?>
                     <a href="/projetos" class="sidebar-button<?= $isActiveNav('/projetos') ? ' sidebar-button--active' : '' ?>" data-tour="nav-projects">
