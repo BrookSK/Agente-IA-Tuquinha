@@ -746,9 +746,11 @@ if (!empty($_SESSION['user_id'])) {
                 $isAdmin = !empty($_SESSION['is_admin']);
                 $canSeeHistory = $hasUser;
                 $canUseProjects = false;
+                $canUseCaderno = false;
                 $canUseNews = false;
                 if ($hasUser && $isAdmin) {
                     $canUseProjects = true;
+                    $canUseCaderno = true;
                     $canUseNews = true;
                 } elseif ($hasUser) {
                     $canUseNews = true;
@@ -762,6 +764,7 @@ if (!empty($_SESSION['user_id'])) {
                             if ($isActive) {
                                 $plan = \App\Models\Plan::findById((int)$sub['plan_id']);
                                 $canUseProjects = !empty($plan['allow_projects_access']);
+                                $canUseCaderno = !empty($plan['allow_pages']);
                             }
                         }
                     }
@@ -781,6 +784,13 @@ if (!empty($_SESSION['user_id'])) {
                     'primary' => false,
                     'show' => $canUseProjects,
                     'active' => $isActiveNav('/projetos'),
+                ];
+                $mobileQuickLinks[] = [
+                    'label' => 'Caderno',
+                    'href' => '/caderno',
+                    'primary' => false,
+                    'show' => $canUseCaderno,
+                    'active' => $isActiveNav('/caderno'),
                 ];
                 $mobileQuickLinks[] = [
                     'label' => 'Histórico',
@@ -838,6 +848,13 @@ if (!empty($_SESSION['user_id'])) {
                     <a href="/projetos" class="sidebar-button<?= $isActiveNav('/projetos') ? ' sidebar-button--active' : '' ?>" data-tour="nav-projects">
                         <span class="icon" aria-hidden="true"><?php echo $renderMenuIcon('projects_list', '📁'); ?></span>
                         <span>Meus projetos</span>
+                    </a>
+                <?php endif; ?>
+
+                <?php if ($canUseCaderno): ?>
+                    <a href="/caderno" class="sidebar-button<?= $isActiveNav('/caderno') ? ' sidebar-button--active' : '' ?>">
+                        <span class="icon" aria-hidden="true"><?php echo $renderMenuIcon('quick_notebook', '📝'); ?></span>
+                        <span>Caderno</span>
                     </a>
                 <?php endif; ?>
 
