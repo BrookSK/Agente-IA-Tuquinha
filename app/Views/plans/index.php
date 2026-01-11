@@ -4,6 +4,22 @@
 /** @var int $retentionDays */
 /** @var bool $hasPaidActiveSubscription */
 ?>
+
+<style>
+    #plan-cycle-tabs .plan-cycle-tab {
+        line-height: 1;
+    }
+    body[data-theme="light"] #plan-cycle-tabs {
+        background: var(--surface-card) !important;
+        border-color: var(--border-subtle) !important;
+    }
+    body[data-theme="light"] #plan-cycle-tabs .plan-cycle-tab {
+        color: rgba(15, 23, 42, 0.70) !important;
+    }
+    body[data-theme="light"] #plan-cycle-tabs .plan-cycle-tab.is-active {
+        color: #ffffff !important;
+    }
+</style>
 <div style="max-width: 520px; margin: 0 auto; padding: 18px 14px 26px 14px;">
     <?php
         $hasCurrentPlan = !empty($currentPlan) && is_array($currentPlan);
@@ -138,7 +154,6 @@
             } catch (e) { isLight = false; }
 
             var buttons = Array.prototype.slice.call(root.querySelectorAll('.plan-cycle-tab'));
-            var cards = Array.prototype.slice.call(document.querySelectorAll('[data-plan-cycle]'));
             var defaultCycle = <?php echo json_encode($defaultCycleTab); ?>;
 
             var activeText = isLight ? '#ffffff' : '#050509';
@@ -147,10 +162,14 @@
             function setActive(cycle) {
                 buttons.forEach(function (b) {
                     var isActive = (String(b.getAttribute('data-cycle')) === String(cycle));
+                    if (b.classList) {
+                        b.classList.toggle('is-active', isActive);
+                    }
                     b.style.background = isActive ? 'linear-gradient(135deg,#e53935,#ff6f60)' : 'transparent';
                     b.style.color = isActive ? activeText : inactiveText;
                 });
 
+                var cards = Array.prototype.slice.call(document.querySelectorAll('[data-plan-cycle]'));
                 cards.forEach(function (c) {
                     var cardCycle = String(c.getAttribute('data-plan-cycle') || 'mensal');
                     var show = (cycle === 'todos') || (cardCycle === cycle) || (cardCycle === 'free');
