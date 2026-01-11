@@ -178,6 +178,7 @@ $conversationId = isset($conversationId) ? (int)$conversationId : 0;
                         $imagePath = trim((string)($persona['image_path'] ?? ''));
                         $isDefault = !empty($persona['is_default']);
                         $isComingSoon = !empty($persona['coming_soon']);
+                        $defaultPersonaImage = '/public/perso_padrao.png';
                         $prompt = trim((string)($persona['prompt'] ?? ''));
                         $desc = '';
                         if ($prompt !== '') {
@@ -209,7 +210,7 @@ $conversationId = isset($conversationId) ? (int)$conversationId : 0;
                             }
                         }
                         if ($imagePath === '') {
-                            $imagePath = '/public/favicon.png';
+                            $imagePath = $isDefault ? $defaultPersonaImage : '/public/favicon.png';
                         }
                     ?>
                     <?php if ($conversationId > 0): ?>

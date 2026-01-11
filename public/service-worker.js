@@ -1,10 +1,13 @@
-const CACHE_NAME = 'tuquinha-pwa-v1';
+const CACHE_NAME = 'tuquinha-pwa-v2';
 const OFFLINE_URLS = [
   '/',
   '/chat',
   '/planos',
   '/conta',
-  '/public/favicon.png'
+  '/public/favicon.png',
+  '/public/manifest.webmanifest',
+  '/public/icons/icon-192.png',
+  '/public/icons/icon-512.png'
 ];
 
 self.addEventListener('install', (event) => {

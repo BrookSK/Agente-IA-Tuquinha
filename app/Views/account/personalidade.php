@@ -155,6 +155,8 @@ $successMessage = $success ?? null;
         </div>
     <?php endif; ?>
 
+    <?php $defaultPersonaImage = '/public/perso_padrao.png'; ?>
+
     <div style="font-size:12px; color:#8d8d8d; margin-bottom:10px;">
         Plano atual: <strong><?= htmlspecialchars($plan['name'] ?? '') ?></strong>
     </div>
@@ -172,7 +174,7 @@ $successMessage = $success ?? null;
                 <div id="persona-default-list" class="persona-stage-items">
                 <button type="button" class="persona-card-btn persona-default-card<?= $currentDefaultPersonaId === 0 ? ' persona-default-card--active' : '' ?>" data-persona-id="0">
                     <div class="persona-default-card-image">
-                        <img src="/public/favicon.png" alt="Padrão do Tuquinha" style="width:100%; height:100%; object-fit:cover; display:block;">
+                        <img src="<?= htmlspecialchars($defaultPersonaImage) ?>" alt="Padrão do Tuquinha" style="width:100%; height:100%; object-fit:cover; display:block;">
                     </div>
                     <div style="padding:10px 12px 12px 12px;">
                         <div style="font-size:16px; font-weight:650; margin-bottom:4px;">Padrão do Tuquinha</div>
@@ -188,8 +190,9 @@ $successMessage = $success ?? null;
                         $parea = trim((string)($persona['area'] ?? ''));
                         $imagePath = trim((string)($persona['image_path'] ?? ''));
                         $isComingSoon = !empty($persona['coming_soon']);
+                        $isDefault = !empty($persona['is_default']);
                         if ($imagePath === '') {
-                            $imagePath = '/public/favicon.png';
+                            $imagePath = $isDefault ? $defaultPersonaImage : '/public/favicon.png';
                         }
                     ?>
                     <button type="button" class="persona-card-btn persona-default-card<?= $currentDefaultPersonaId === $pid ? ' persona-default-card--active' : '' ?>" data-persona-id="<?= $pid ?>" <?= $isComingSoon ? 'disabled' : '' ?> style="cursor:<?= $isComingSoon ? 'not-allowed' : 'pointer' ?>;">

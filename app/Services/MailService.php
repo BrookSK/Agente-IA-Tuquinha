@@ -9,8 +9,16 @@ class MailService
     public static function buildDefaultTemplate(string $greetingName, string $contentHtml, ?string $ctaText = null, ?string $ctaUrl = null, ?string $logoUrl = null): string
     {
         $safeGreeting = htmlspecialchars($greetingName, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
-        $safeLogoUrl = $logoUrl !== null && trim($logoUrl) !== ''
-            ? htmlspecialchars($logoUrl, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')
+        $resolvedLogoUrl = $logoUrl;
+        if ($resolvedLogoUrl === null || trim($resolvedLogoUrl) === '') {
+            $publicUrl = trim((string)Setting::get('app_public_url', ''));
+            if ($publicUrl !== '') {
+                $resolvedLogoUrl = rtrim($publicUrl, '/') . '/public/favicon.png';
+            }
+        }
+
+        $safeLogoUrl = $resolvedLogoUrl !== null && trim($resolvedLogoUrl) !== ''
+            ? htmlspecialchars($resolvedLogoUrl, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')
             : '';
 
         $brandAvatar = '<div style="width:32px; height:32px; line-height:32px; border-radius:50%; background:radial-gradient(circle at 30% 20%, #fff 0, #ff8a65 25%, #e53935 65%, #050509 100%); text-align:center; font-weight:700; font-size:16px; color:#050509;">T</div>';
