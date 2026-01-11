@@ -253,6 +253,35 @@ $publicUrl = ($isPublished && $publicToken !== '') ? ('/caderno/publico?token=' 
     .notion-editor-wrap .ce-conversion-tool__description {
         color: var(--text-secondary) !important;
     }
+
+    /* Conversion popover (Convert to) */
+    .notion-editor-wrap .ce-conversion-toolbar__label,
+    .notion-editor-wrap .ce-conversion-toolbar__label * {
+        color: var(--text-secondary) !important;
+    }
+    .notion-editor-wrap .ce-conversion-tool__icon {
+        background: rgba(255,255,255,0.08) !important;
+        border: 1px solid rgba(255,255,255,0.10) !important;
+        border-radius: 10px !important;
+    }
+    body[data-theme="light"] .notion-editor-wrap .ce-conversion-tool__icon {
+        background: rgba(15,23,42,0.06) !important;
+        border: 1px solid rgba(15,23,42,0.10) !important;
+    }
+    .notion-editor-wrap .ce-conversion-tool__icon svg {
+        fill: currentColor !important;
+        color: var(--text-primary) !important;
+        opacity: 0.9;
+    }
+    .notion-editor-wrap .ce-conversion-tool {
+        background: transparent !important;
+    }
+    .notion-editor-wrap .ce-conversion-tool:hover {
+        background: rgba(255,255,255,0.08) !important;
+    }
+    body[data-theme="light"] .notion-editor-wrap .ce-conversion-tool:hover {
+        background: rgba(15,23,42,0.06) !important;
+    }
     .notion-editor-hint {
         margin-top: 10px;
         font-size: 12px;
@@ -297,7 +326,7 @@ $publicUrl = ($isPublished && $publicToken !== '') ? ('/caderno/publico?token=' 
         box-shadow: 0 18px 46px rgba(0,0,0,0.55);
         padding: 8px;
         max-height: min(520px, calc(100vh - 24px));
-        overflow: hidden;
+        overflow: visible;
         display: none;
     }
     body[data-theme="light"] .tuq-ctx {
@@ -577,11 +606,21 @@ $publicUrl = ($isPublished && $publicToken !== '') ? ('/caderno/publico?token=' 
                 </div>
 
                 <?php if ($current && $isPublished && $publicUrl !== ''): ?>
+                    <?php
+                        $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+                        $host = (string)($_SERVER['HTTP_HOST'] ?? '');
+                        $absPublicUrl = $host !== '' ? ($scheme . '://' . $host . $publicUrl) : $publicUrl;
+                    ?>
                     <div style="margin-top:10px; border-top:1px dashed var(--border-subtle); padding-top:10px;">
                         <div style="font-size:12px; color:var(--text-secondary); margin-bottom:4px;">Link público (somente leitura)</div>
-                        <input type="text" readonly value="<?= htmlspecialchars($publicUrl) ?>" style="
-                            width:100%; padding:8px 10px; border-radius:10px; border:1px solid var(--border-subtle);
-                            background:var(--surface-subtle); color:var(--text-primary); font-size:13px;">
+                        <div style="display:flex; gap:8px; align-items:center;">
+                            <input type="text" id="public-link" readonly value="<?= htmlspecialchars($absPublicUrl) ?>" style="
+                                flex:1 1 auto; width:100%; padding:8px 10px; border-radius:10px; border:1px solid var(--border-subtle);
+                                background:var(--surface-subtle); color:var(--text-primary); font-size:13px;">
+                            <button type="button" id="btn-copy-public-link" style="
+                                border:1px solid var(--border-subtle); border-radius:10px; padding:9px 12px;
+                                background:transparent; color:var(--text-primary); font-size:12px; cursor:pointer; white-space:nowrap;">Copiar link</button>
+                        </div>
                     </div>
                 <?php endif; ?>
             </div>
@@ -908,6 +947,34 @@ $publicUrl = ($isPublished && $publicToken !== '') ? ('/caderno/publico?token=' 
         });
     }
 
+    var btnCopyPublic = $('btn-copy-public-link');
+    var publicLinkInput = $('public-link');
+    if (btnCopyPublic && publicLinkInput) {
+        btnCopyPublic.addEventListener('click', function () {
+            var text = String(publicLinkInput.value || '');
+            if (!text) return;
+            if (navigator && navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(text).then(function () {
+                    setHint('Link copiado');
+                }).catch(function () {
+                    try {
+                        publicLinkInput.focus();
+                        publicLinkInput.select();
+                        document.execCommand('copy');
+                        setHint('Link copiado');
+                    } catch (e) {}
+                });
+                return;
+            }
+            try {
+                publicLinkInput.focus();
+                publicLinkInput.select();
+                document.execCommand('copy');
+                setHint('Link copiado');
+            } catch (e) {}
+        });
+    }
+
     // Context menu (MVP): aplica ações no bloco atual
     var ctx = $('tuq-ctx');
     var ctxSearch = $('tuq-ctx-search');
@@ -1106,6 +1173,11 @@ $publicUrl = ($isPublished && $publicToken !== '') ? ('/caderno/publico?token=' 
                 'Delete': 'Excluir',
                 'Delete block': 'Excluir',
                 'Convert to': 'Transformar em',
+                'Heading': 'Título',
+                'List': 'Lista',
+                'Checklist': 'Lista de tarefas',
+                'Quote': 'Citação',
+                'Code': 'Código',
                 'Add': 'Adicionar'
             };
 
