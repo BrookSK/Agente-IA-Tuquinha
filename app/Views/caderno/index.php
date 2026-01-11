@@ -491,25 +491,34 @@ $publicUrl = ($isPublished && $publicToken !== '') ? ('/caderno/publico?token=' 
         return missing;
     }
 
+    var editorInitError = false;
     var editor = null;
     if (pageId) {
         var missingTools = getMissingEditorTools();
         if (missingTools.length) {
+            editorInitError = true;
             setHint('Erro ao carregar editor: ' + missingTools.join(', ') + '. Recarregue a página.');
+            try { console.error('Editor tools missing:', missingTools); } catch (e) {}
         } else {
-            editor = new EditorJS({
-                holder: 'editorjs',
-                readOnly: !canEdit,
-                data: editorData,
-                autofocus: true,
-                tools: {
-                    header: { class: Header, inlineToolbar: true, config: { levels: [1,2,3], defaultLevel: 2 } },
-                    list: { class: List, inlineToolbar: true },
-                    checklist: { class: Checklist, inlineToolbar: true },
-                    quote: { class: Quote, inlineToolbar: true },
-                    code: { class: CodeTool }
-                }
-            });
+            try {
+                editor = new EditorJS({
+                    holder: 'editorjs',
+                    readOnly: !canEdit,
+                    data: editorData,
+                    autofocus: true,
+                    tools: {
+                        header: { class: Header, inlineToolbar: true, config: { levels: [1,2,3], defaultLevel: 2 } },
+                        list: { class: List, inlineToolbar: true },
+                        checklist: { class: Checklist, inlineToolbar: true },
+                        quote: { class: Quote, inlineToolbar: true },
+                        code: { class: CodeTool }
+                    }
+                });
+            } catch (e) {
+                editorInitError = true;
+                setHint('Erro ao iniciar editor. Recarregue a página.');
+                try { console.error('Editor init error:', e); } catch (err) {}
+            }
         }
     }
 
@@ -558,20 +567,20 @@ $publicUrl = ($isPublished && $publicToken !== '') ? ('/caderno/publico?token=' 
         debounceTimer = setTimeout(scheduleSave, 650);
     }
 
-    if (canEdit && editor) {
+    if (!editorInitError && canEdit && editor) {
         document.addEventListener('keyup', function (e) {
             if (!e) return;
             debounceSave();
         }, true);
         document.addEventListener('mouseup', function () { debounceSave(); }, true);
     } else {
-        if (pageId) {
+        if (!editorInitError && pageId && !canEdit) {
             setHint('Somente leitura (sem permissão de edição).');
         }
     }
 
     var btnSave = $('btn-save');
-    if (btnSave && canEdit && pageId) {
+    if (btnSave && !editorInitError && canEdit && pageId) {
         btnSave.addEventListener('click', function () {
             scheduleSave();
         });
