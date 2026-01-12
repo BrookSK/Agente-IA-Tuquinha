@@ -185,7 +185,9 @@ class NewsController extends Controller
             $desiredCount = 10;
         }
         $candidates = NewsItem::latest(200);
+        $minCount = 10;
         $final = [];
+        $fallbackNoImage = [];
         $attemptedOg = 0;
         $validated = 0;
         $seenUrls = [];
@@ -239,7 +241,7 @@ class NewsController extends Controller
             }
 
             // Se não tiver imagem (ou foi invalidada), tenta backfill via OpenGraph
-            if ($img === '' && $attemptedOg < 8) {
+            if ($img === '' && $attemptedOg < 25) {
                 $attemptedOg++;
                 try {
                     $og = OpenGraphImageService::fetchImageUrl($url, 4);
@@ -252,17 +254,26 @@ class NewsController extends Controller
                 }
             }
 
-            // Só exibe se tiver imagem válida
+            // Prioriza itens com imagem, mas guarda os sem imagem para completar o mínimo.
             if (trim($img) === '') {
-                continue;
+                $fallbackNoImage[] = $row;
+            } else {
+                $final[] = $row;
             }
-
-            $final[] = $row;
             if ($urlKey !== '') {
                 $seenUrls[$urlKey] = true;
             }
             if ($titleKey !== '') {
                 $seenTitles[$titleKey] = true;
+            }
+        }
+
+        if (count($final) < $desiredCount && !empty($fallbackNoImage)) {
+            foreach ($fallbackNoImage as $row) {
+                if (count($final) >= $desiredCount) {
+                    break;
+                }
+                $final[] = $row;
             }
         }
 

@@ -176,12 +176,10 @@ if (is_array($news)) {
                         $src = (string)($it['source_name'] ?? '');
                         $pub = (string)($it['published_at'] ?? '');
 
-                        $cyclePos = ((int)$idx) % 9;
+                        $cyclePos = ((int)$idx) % 10;
                         $spanClass = 'span-4';
                         $isFull = false;
-                        if ($cyclePos >= 3 && $cyclePos <= 4) {
-                            $spanClass = 'span-6';
-                        } elseif ($cyclePos === 8) {
+                        if ($cyclePos === 0) {
                             $spanClass = 'span-12';
                             $isFull = true;
                         }
