@@ -282,6 +282,38 @@ $publicUrl = ($isPublished && $publicToken !== '') ? ('/caderno/publico?token=' 
     body[data-theme="light"] .notion-editor-wrap .ce-conversion-tool:hover {
         background: rgba(15,23,42,0.06) !important;
     }
+
+    .notion-editor-wrap .tuq-ce-action-btn {
+        height: 28px;
+        min-width: 28px;
+        padding: 0 8px;
+        border-radius: 10px;
+        border: 1px solid rgba(255,255,255,0.12);
+        background: rgba(255,255,255,0.06);
+        color: var(--text-primary);
+        font-size: 12px;
+        line-height: 1;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        user-select: none;
+    }
+    .notion-editor-wrap .tuq-ce-action-btn:hover {
+        background: rgba(255,255,255,0.10);
+    }
+    body[data-theme="light"] .notion-editor-wrap .tuq-ce-action-btn {
+        border: 1px solid rgba(15,23,42,0.12);
+        background: rgba(15,23,42,0.06);
+    }
+    body[data-theme="light"] .notion-editor-wrap .tuq-ce-action-btn:hover {
+        background: rgba(15,23,42,0.10);
+    }
+    .notion-editor-wrap .tuq-ce-action-btn span {
+        color: var(--text-secondary);
+        font-size: 11px;
+    }
     .notion-editor-hint {
         margin-top: 10px;
         font-size: 12px;
@@ -806,11 +838,19 @@ $publicUrl = ($isPublished && $publicToken !== '') ? ('/caderno/publico?token=' 
     function insertFileByMeta(fileMeta) {
         if (!editor || !fileMeta) return;
         try {
+            if (!fileMeta.url) {
+                setHint('Falha ao inserir arquivo: URL inválida.');
+                try { console.error('insertFileByMeta missing url', fileMeta); } catch (e) {}
+                return;
+            }
             var idx = (editor.blocks && typeof editor.blocks.getCurrentBlockIndex === 'function') ? editor.blocks.getCurrentBlockIndex() : null;
             var at = (typeof idx === 'number' && idx >= 0) ? idx + 1 : undefined;
             editor.blocks.insert('attaches', { file: fileMeta, title: fileMeta.title || fileMeta.name || '' }, {}, at, true);
             debounceSave();
-        } catch (e) {}
+        } catch (e) {
+            setHint('Não foi possível inserir o arquivo no editor.');
+            try { console.error('insertFileByMeta failed', e, fileMeta); } catch (err) {}
+        }
     }
 
     function pickFile(accept) {
@@ -1021,6 +1061,57 @@ $publicUrl = ($isPublished && $publicToken !== '') ? ('/caderno/publico?token=' 
         fly.style.display = 'block';
     }
 
+    function showCtxAtRect(rect) {
+        if (!rect) return;
+        var x = (rect.left || 0);
+        var y = (rect.bottom || 0) + 8;
+        showCtx(x, y);
+    }
+
+    function ensureToolbarButtons(toolbarRoot) {
+        if (!toolbarRoot) return;
+        if (toolbarRoot.querySelector('.tuq-ce-action-btn[data-tuq="transform"]')) return;
+
+        var btnTransform = document.createElement('button');
+        btnTransform.type = 'button';
+        btnTransform.className = 'tuq-ce-action-btn';
+        btnTransform.setAttribute('data-tuq', 'transform');
+        btnTransform.innerHTML = '↺<span>Transformar</span>';
+
+        var btnColor = document.createElement('button');
+        btnColor.type = 'button';
+        btnColor.className = 'tuq-ce-action-btn';
+        btnColor.setAttribute('data-tuq', 'color');
+        btnColor.innerHTML = 'A<span>Cor</span>';
+
+        btnTransform.addEventListener('click', function (e) {
+            try { if (e) e.preventDefault(); } catch (err) {}
+            currentBlockIndex = resolveBlockIndex();
+            var r = toolbarRoot.getBoundingClientRect();
+            showCtxAtRect(r);
+            showFlyout('transform');
+        });
+        btnColor.addEventListener('click', function (e) {
+            try { if (e) e.preventDefault(); } catch (err) {}
+            currentBlockIndex = resolveBlockIndex();
+            var r = toolbarRoot.getBoundingClientRect();
+            showCtxAtRect(r);
+            showFlyout('color');
+        });
+
+        toolbarRoot.appendChild(btnTransform);
+        toolbarRoot.appendChild(btnColor);
+    }
+
+    function wireInlineToolbarButtons() {
+        try {
+            var roots = document.querySelectorAll('.ce-inline-toolbar__actions, .ce-inline-toolbar__buttons');
+            for (var i = 0; i < roots.length; i++) {
+                ensureToolbarButtons(roots[i]);
+            }
+        } catch (e) {}
+    }
+
     function clamp(v, min, max) {
         return Math.min(max, Math.max(min, v));
     }
@@ -1108,7 +1199,7 @@ $publicUrl = ($isPublished && $publicToken !== '') ? ('/caderno/publico?token=' 
         } else if (to === 'list') {
             data = { style: (opts && opts.style) ? opts.style : 'unordered', items: txt ? [txt] : [] };
         } else if (to === 'checklist') {
-            data = { items: txt ? [{ text: txt, checked: false }] : [] };
+            data = { items: txt ? [{ text: txt, checked: false }] : [{ text: '', checked: false }] };
         }
 
         try {
@@ -1202,21 +1293,25 @@ $publicUrl = ($isPublished && $publicToken !== '') ? ('/caderno/publico?token=' 
         }
 
         translateEditorUi(document);
+        wireInlineToolbarButtons();
         try {
-            var obs = new MutationObserver(function (mutations) {
-                for (var i = 0; i < mutations.length; i++) {
-                    var m = mutations[i];
-                    if (m && m.addedNodes && m.addedNodes.length) {
-                        for (var j = 0; j < m.addedNodes.length; j++) {
-                            var n = m.addedNodes[j];
-                            if (n && n.nodeType === 1) {
+            var mo = new MutationObserver(function (mutations) {
+                try {
+                    for (var i = 0; i < mutations.length; i++) {
+                        var m = mutations[i];
+                        if (!m) continue;
+                        if (m.addedNodes && m.addedNodes.length) {
+                            for (var j = 0; j < m.addedNodes.length; j++) {
+                                var n = m.addedNodes[j];
+                                if (!n || !n.querySelectorAll) continue;
                                 translateEditorUi(n);
                             }
                         }
                     }
-                }
+                    wireInlineToolbarButtons();
+                } catch (e) {}
             });
-            obs.observe(document.body, { childList: true, subtree: true });
+            mo.observe(document.body, { childList: true, subtree: true });
         } catch (e) {}
 
         document.addEventListener('contextmenu', function (e) {
@@ -1326,6 +1421,10 @@ $publicUrl = ($isPublished && $publicToken !== '') ? ('/caderno/publico?token=' 
                         insertImageByUrl(res.json.file.url);
                         setHint('Imagem enviada');
                     } else {
+                        if (!res.json.file.url) {
+                            showActionError({ json: { error: (res.json && res.json.message) ? res.json.message : 'Upload retornou sem URL' }, status: res.status }, 'Falha ao enviar arquivo');
+                            return;
+                        }
                         insertFileByMeta(res.json.file);
                         setHint('Arquivo enviado');
                     }
@@ -1405,6 +1504,10 @@ $publicUrl = ($isPublished && $publicToken !== '') ? ('/caderno/publico?token=' 
                         setHint('Enviando arquivo...');
                         uploadMediaFile(f).then(function (res) {
                             if (res.json && res.json.success === 1 && res.json.file) {
+                                if (!res.json.file.url) {
+                                    showActionError({ json: { error: (res.json && res.json.message) ? res.json.message : 'Upload retornou sem URL' }, status: res.status }, 'Falha ao enviar arquivo');
+                                    return;
+                                }
                                 insertFileByMeta(res.json.file);
                                 setHint('Arquivo enviado');
                             } else {
