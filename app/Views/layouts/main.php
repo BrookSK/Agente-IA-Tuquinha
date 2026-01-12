@@ -851,13 +851,6 @@ if (!empty($_SESSION['user_id'])) {
                     </a>
                 <?php endif; ?>
 
-                <?php if ($canUseCaderno): ?>
-                    <a href="/caderno" class="sidebar-button<?= $isActiveNav('/caderno') ? ' sidebar-button--active' : '' ?>">
-                        <span class="icon" aria-hidden="true"><?php echo $renderMenuIcon('quick_notebook', '📝'); ?></span>
-                        <span>Caderno</span>
-                    </a>
-                <?php endif; ?>
-
                 <?php if ($canSeeHistory): ?>
                     <a href="/historico" class="sidebar-button<?= $isActiveNav('/historico') ? ' sidebar-button--active' : '' ?>" data-tour="nav-history">
                         <span class="icon" aria-hidden="true"><?php echo $renderMenuIcon('chat_history', '�'); ?></span>
@@ -881,6 +874,13 @@ if (!empty($_SESSION['user_id'])) {
                     ?></span>
                     <span>Quem é o Tuquinha</span>
                 </a>
+
+                <?php if ($canUseCaderno): ?>
+                    <a href="/caderno" class="sidebar-button<?= $isActiveNav('/caderno') ? ' sidebar-button--active' : '' ?>">
+                        <span class="icon" aria-hidden="true"><?php echo $renderMenuIcon('quick_notebook', '📝'); ?></span>
+                        <span>Caderno</span>
+                    </a>
+                <?php endif; ?>
                 <a href="/planos" class="sidebar-button<?= $isActiveNav('/planos') ? ' sidebar-button--active' : '' ?>" data-tour="nav-plans">
                     <span class="icon" aria-hidden="true"><?php echo $renderMenuIcon('quick_plans', '💳'); ?></span>
                     <span>Planos e limites</span>

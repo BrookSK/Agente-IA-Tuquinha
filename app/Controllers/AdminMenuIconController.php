@@ -21,6 +21,7 @@ class AdminMenuIconController extends Controller
         return [
             'chat_history' => 'Histórico de chats',
             'quick_home' => 'Quem é o Tuquinha',
+            'quick_notebook' => 'Caderno',
             'quick_plans' => 'Planos e limites',
             'quick_courses' => 'Cursos',
             'quick_news' => 'Notícias',
