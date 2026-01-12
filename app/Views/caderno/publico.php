@@ -22,11 +22,11 @@ $contentJson = (string)($page['content_json'] ?? '');
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@editorjs/editorjs@latest"></script>
-<script src="https://cdn.jsdelivr.net/npm/@editorjs/header@latest"></script>
-<script src="https://cdn.jsdelivr.net/npm/@editorjs/list@latest"></script>
-<script src="https://cdn.jsdelivr.net/npm/@editorjs/checklist@latest"></script>
-<script src="https://cdn.jsdelivr.net/npm/@editorjs/quote@latest"></script>
-<script src="https://cdn.jsdelivr.net/npm/@editorjs/code@latest"></script>
+<script src="https://unpkg.com/@editorjs/header@2.8.1/dist/bundle.js"></script>
+<script src="https://unpkg.com/@editorjs/list@1.9.0/dist/bundle.js"></script>
+<script src="https://unpkg.com/@editorjs/checklist@1.6.0/dist/bundle.js"></script>
+<script src="https://unpkg.com/@editorjs/quote@2.5.0/dist/bundle.js"></script>
+<script src="https://unpkg.com/@editorjs/code@2.8.0/dist/bundle.js"></script>
 <script src="https://unpkg.com/@editorjs/image@2.10.1/dist/image.umd.js"></script>
 <script src="https://unpkg.com/@editorjs/attaches@1.3.0/dist/bundle.js"></script>
 <script>
