@@ -276,6 +276,7 @@ $publicUrl = ($isPublished && $publicToken !== '') ? ('/caderno/publico?token=' 
     .ce-conversion-tool__icon svg {
         fill: currentColor !important;
         color: var(--text-primary) !important;
+        stroke: currentColor !important;
         opacity: 0.95;
     }
 
@@ -301,6 +302,26 @@ $publicUrl = ($isPublished && $publicToken !== '') ? ('/caderno/publico?token=' 
         background: rgba(15,23,42,0.16);
         border: 3px solid transparent;
         background-clip: padding-box;
+    }
+
+    /* Tema escuro: força texto branco no popover/toolbox (mais contraste) */
+    body:not([data-theme="light"]) .ce-popover,
+    body:not([data-theme="light"]) .ce-toolbox,
+    body:not([data-theme="light"]) .ce-popover__item,
+    body:not([data-theme="light"]) .ce-popover__item-label,
+    body:not([data-theme="light"]) .ce-popover__item-description,
+    body:not([data-theme="light"]) .ce-toolbox__button,
+    body:not([data-theme="light"]) .ce-inline-tool,
+    body:not([data-theme="light"]) .ce-conversion-tool {
+        color: #ffffff !important;
+    }
+    body:not([data-theme="light"]) .ce-toolbox__button svg,
+    body:not([data-theme="light"]) .ce-inline-tool svg,
+    body:not([data-theme="light"]) .ce-popover__item-icon svg,
+    body:not([data-theme="light"]) .ce-conversion-tool__icon svg {
+        color: #ffffff !important;
+        fill: currentColor !important;
+        stroke: currentColor !important;
     }
 
     .ce-popover__item-icon {
@@ -333,6 +354,16 @@ $publicUrl = ($isPublished && $publicToken !== '') ? ('/caderno/publico?token=' 
     body[data-theme="light"] .ce-toolbar__plus:hover,
     body[data-theme="light"] .ce-toolbar__settings-btn:hover {
         background: rgba(15,23,42,0.10) !important;
+    }
+
+    /* Desktop: dá respiro à esquerda para o + não ficar colado */
+    @media (min-width: 721px) {
+        .notion-editor-wrap .codex-editor__redactor {
+            padding-left: 46px;
+        }
+        .notion-editor-wrap .ce-toolbar {
+            left: 10px;
+        }
     }
 
     .notion-editor-wrap .ce-inline-tool,
@@ -788,6 +819,21 @@ $publicUrl = ($isPublished && $publicToken !== '') ? ('/caderno/publico?token=' 
             left: 0;
             top: 44px;
             width: 100%;
+        }
+
+        /* Popover do '+' no mobile: não ficar gigante / não cortar em cima */
+        .ce-popover {
+            position: fixed !important;
+            left: 10px !important;
+            right: 10px !important;
+            top: 92px !important;
+            bottom: auto !important;
+            width: auto !important;
+            max-height: calc(100vh - 112px) !important;
+            overflow: hidden !important;
+        }
+        .ce-popover__items {
+            max-height: calc(100vh - 170px) !important;
         }
     }
 </style>
