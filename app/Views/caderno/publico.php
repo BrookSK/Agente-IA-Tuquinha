@@ -21,10 +21,10 @@ $contentJson = (string)($page['content_json'] ?? '');
     </div>
 </div>
 
-<script src="https://unpkg.com/@editorjs/editorjs@2.28.2/dist/editorjs.umd.js"></script>
-<script src="https://unpkg.com/@editorjs/header@2.8.1/dist/bundle.js"></script>
-<script src="https://unpkg.com/@editorjs/list@1.9.0/dist/bundle.js"></script>
-<script src="https://unpkg.com/@editorjs/checklist@1.6.0/dist/bundle.js"></script>
+<script src="https://unpkg.com/@editorjs/editorjs@2.28.2"></script>
+<script src="https://unpkg.com/@editorjs/header@2.8.1/dist/header.umd.js"></script>
+<script src="https://unpkg.com/@editorjs/list@1.9.0/dist/list.umd.js"></script>
+<script src="https://unpkg.com/@editorjs/checklist@1.6.0/dist/checklist.umd.js"></script>
 <script src="https://unpkg.com/@editorjs/quote@2.5.0/dist/bundle.js"></script>
 <script src="https://unpkg.com/@editorjs/code@2.8.0/dist/bundle.js"></script>
 <script src="https://unpkg.com/@editorjs/image@2.10.1/dist/image.umd.js"></script>
@@ -48,13 +48,13 @@ $contentJson = (string)($page['content_json'] ?? '');
         readOnly: true,
         data: data,
         tools: {
-            header: { class: Header, inlineToolbar: false, config: { levels: [1,2,3], defaultLevel: 2 } },
-            list: { class: List, inlineToolbar: false },
-            checklist: { class: Checklist, inlineToolbar: false },
-            quote: { class: Quote, inlineToolbar: false },
-            code: { class: CodeTool },
-            image: { class: ImageTool, inlineToolbar: false },
-            attaches: { class: AttachesTool, inlineToolbar: false }
+            header: { class: (window.Header || null), inlineToolbar: false, config: { levels: [1,2,3], defaultLevel: 2 } },
+            list: { class: (window.List || null), inlineToolbar: false },
+            checklist: { class: (window.Checklist || null), inlineToolbar: false },
+            quote: { class: (window.Quote || null), inlineToolbar: false },
+            code: { class: (window.CodeTool || null) },
+            image: { class: (window.ImageTool || null), inlineToolbar: false },
+            attaches: { class: (window.AttachesTool || null), inlineToolbar: false }
         }
     });
 })();
