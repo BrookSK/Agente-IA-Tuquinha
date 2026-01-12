@@ -304,24 +304,28 @@ $publicUrl = ($isPublished && $publicToken !== '') ? ('/caderno/publico?token=' 
         background-clip: padding-box;
     }
 
-    /* Tema escuro: força texto branco no popover/toolbox (mais contraste) */
+    /* Tema escuro: força texto branco no menu do + (Editor.js às vezes seta cor escura) */
     body:not([data-theme="light"]) .ce-popover,
-    body:not([data-theme="light"]) .ce-toolbox,
-    body:not([data-theme="light"]) .ce-popover__item,
-    body:not([data-theme="light"]) .ce-popover__item-label,
-    body:not([data-theme="light"]) .ce-popover__item-description,
-    body:not([data-theme="light"]) .ce-toolbox__button,
-    body:not([data-theme="light"]) .ce-inline-tool,
-    body:not([data-theme="light"]) .ce-conversion-tool {
+    body:not([data-theme="light"]) .ce-popover * {
         color: #ffffff !important;
     }
-    body:not([data-theme="light"]) .ce-toolbox__button svg,
-    body:not([data-theme="light"]) .ce-inline-tool svg,
-    body:not([data-theme="light"]) .ce-popover__item-icon svg,
-    body:not([data-theme="light"]) .ce-conversion-tool__icon svg {
-        color: #ffffff !important;
+    body:not([data-theme="light"]) .ce-popover svg,
+    body:not([data-theme="light"]) .ce-popover svg * {
         fill: currentColor !important;
         stroke: currentColor !important;
+        color: #ffffff !important;
+    }
+    body:not([data-theme="light"]) .ce-popover__item-description {
+        color: rgba(255,255,255,0.72) !important;
+    }
+
+    /* Tema claro: garante que o popover não herde branco forçado */
+    body[data-theme="light"] .ce-popover,
+    body[data-theme="light"] .ce-popover * {
+        color: var(--text-primary) !important;
+    }
+    body[data-theme="light"] .ce-popover__item-description {
+        color: var(--text-secondary) !important;
     }
 
     .ce-popover__item-icon {
@@ -354,16 +358,6 @@ $publicUrl = ($isPublished && $publicToken !== '') ? ('/caderno/publico?token=' 
     body[data-theme="light"] .ce-toolbar__plus:hover,
     body[data-theme="light"] .ce-toolbar__settings-btn:hover {
         background: rgba(15,23,42,0.10) !important;
-    }
-
-    /* Desktop: dá respiro à esquerda para o + não ficar colado */
-    @media (min-width: 721px) {
-        .notion-editor-wrap .codex-editor__redactor {
-            padding-left: 46px;
-        }
-        .notion-editor-wrap .ce-toolbar {
-            left: 10px;
-        }
     }
 
     .notion-editor-wrap .ce-inline-tool,
@@ -821,19 +815,12 @@ $publicUrl = ($isPublished && $publicToken !== '') ? ('/caderno/publico?token=' 
             width: 100%;
         }
 
-        /* Popover do '+' no mobile: não ficar gigante / não cortar em cima */
+        /* Mobile: evita popover sair da tela, mas sem mudar posicionamento padrão */
         .ce-popover {
-            position: fixed !important;
-            left: 10px !important;
-            right: 10px !important;
-            top: 92px !important;
-            bottom: auto !important;
-            width: auto !important;
-            max-height: calc(100vh - 112px) !important;
-            overflow: hidden !important;
+            max-height: calc(100vh - 96px) !important;
         }
         .ce-popover__items {
-            max-height: calc(100vh - 170px) !important;
+            max-height: calc(100vh - 150px) !important;
         }
     }
 </style>
