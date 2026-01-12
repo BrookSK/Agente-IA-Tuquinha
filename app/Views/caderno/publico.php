@@ -21,7 +21,7 @@ $contentJson = (string)($page['content_json'] ?? '');
     </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/@editorjs/editorjs@latest"></script>
+<script src="https://unpkg.com/@editorjs/editorjs@2.28.2/dist/editorjs.umd.js"></script>
 <script src="https://unpkg.com/@editorjs/header@2.8.1/dist/bundle.js"></script>
 <script src="https://unpkg.com/@editorjs/list@1.9.0/dist/bundle.js"></script>
 <script src="https://unpkg.com/@editorjs/checklist@1.6.0/dist/bundle.js"></script>
