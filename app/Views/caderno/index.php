@@ -785,6 +785,7 @@ $publicUrl = ($isPublished && $publicToken !== '') ? ('/caderno/publico?token=' 
 <script src="https://unpkg.com/@editorjs/code@2.8.0/dist/bundle.js"></script>
 <script src="https://unpkg.com/@editorjs/image@2.10.1/dist/image.umd.js"></script>
 <script src="https://unpkg.com/@editorjs/attaches@1.3.0/dist/bundle.js"></script>
+<script src="https://unpkg.com/editorjs-undo@2.0.0/dist/bundle.js"></script>
 <script>
 (function () {
     var pageId = <?= (int)$currentId ?>;
@@ -933,6 +934,13 @@ $publicUrl = ($isPublished && $publicToken !== '') ? ('/caderno/publico?token=' 
                     readOnly: !canEdit,
                     data: editorData,
                     autofocus: true,
+                    onReady: function () {
+                        try {
+                            if (canEdit && typeof Undo !== 'undefined') {
+                                new Undo({ editor: editor });
+                            }
+                        } catch (e) {}
+                    },
                     tools: {
                         header: { class: Header, inlineToolbar: true, config: { levels: [1,2,3], defaultLevel: 2 } },
                         list: { class: List, inlineToolbar: true },
@@ -1134,6 +1142,8 @@ $publicUrl = ($isPublished && $publicToken !== '') ? ('/caderno/publico?token=' 
     var subTransform = $('tuq-ctx-flyout-transform');
     var subColor = $('tuq-ctx-flyout-color');
     var currentBlockIndex = null;
+    var lastSelectionRange = null;
+    var lastSelectionBlockIndex = null;
 
     function hideCtx() {
         if (!ctx) return;
@@ -1265,6 +1275,74 @@ $publicUrl = ($isPublished && $publicToken !== '') ? ('/caderno/publico?token=' 
         return idx >= 0 ? idx : null;
     }
 
+    function captureSelectionState() {
+        try {
+            var sel = window.getSelection ? window.getSelection() : null;
+            if (!sel || !sel.rangeCount) return;
+            var r = sel.getRangeAt(0);
+            if (!r) return;
+
+            var container = r.startContainer || null;
+            var inside = false;
+            try {
+                var el = (container && container.nodeType === 3) ? container.parentElement : container;
+                inside = !!(el && el.closest && el.closest('#editorjs'));
+            } catch (e) { inside = false; }
+            if (!inside) return;
+
+            lastSelectionRange = r.cloneRange ? r.cloneRange() : r;
+            lastSelectionBlockIndex = getBlockIndexFromTarget(container);
+        } catch (e) {}
+    }
+
+    try {
+        document.addEventListener('selectionchange', function () {
+            captureSelectionState();
+        });
+    } catch (e) {}
+
+    function restoreSelectionRange() {
+        try {
+            if (!lastSelectionRange) return false;
+            var sel = window.getSelection ? window.getSelection() : null;
+            if (!sel) return false;
+            sel.removeAllRanges();
+            sel.addRange(lastSelectionRange);
+            return true;
+        } catch (e) {
+            return false;
+        }
+    }
+
+    function getSelectionIsExpanded() {
+        try {
+            if (!lastSelectionRange) return false;
+            return !!(lastSelectionRange && !lastSelectionRange.collapsed);
+        } catch (e) { return false; }
+    }
+
+    function applyInlineTextColor(value) {
+        if (!value) return false;
+        if (!restoreSelectionRange()) return false;
+        var map = {
+            gray: '#94a3b8',
+            red: '#ef4444',
+            yellow: '#eab308',
+            green: '#22c55e',
+            blue: '#3b82f6'
+        };
+        var color = map[value] || value;
+        try {
+            document.execCommand('styleWithCSS', false, true);
+        } catch (e) {}
+        try {
+            document.execCommand('foreColor', false, color);
+            return true;
+        } catch (e) {
+            return false;
+        }
+    }
+
     function applyVisualColorToBlock(kind, value) {
         if (currentBlockIndex === null) return;
         var blocks = Array.prototype.slice.call(document.querySelectorAll('.ce-block'));
@@ -1286,20 +1364,36 @@ $publicUrl = ($isPublished && $publicToken !== '') ? ('/caderno/publico?token=' 
     function getBlockText(block) {
         if (!block) return '';
         try {
-            if (block.type === 'header') {
+            var t = (block.type || block.name || '');
+            if (t === 'header') {
                 return (block.data && block.data.text) ? String(block.data.text) : '';
             }
-            if (block.type === 'paragraph') {
+            if (t === 'paragraph') {
                 return (block.data && block.data.text) ? String(block.data.text) : '';
             }
-            if (block.type === 'quote') {
+            if (t === 'quote') {
                 return (block.data && block.data.text) ? String(block.data.text) : '';
             }
-            if (block.type === 'code') {
+            if (t === 'code') {
                 return (block.data && block.data.code) ? String(block.data.code) : '';
             }
         } catch (e) {}
         return '';
+    }
+
+    function getBlockTextFromDomByIndex(idx) {
+        try {
+            if (typeof idx !== 'number' || idx < 0) return '';
+            var blocks = Array.prototype.slice.call(document.querySelectorAll('.ce-block'));
+            var block = blocks[idx];
+            if (!block) return '';
+            var content = block.querySelector('.ce-block__content');
+            if (!content) content = block;
+            var txt = (content.innerText || '').trim();
+            return txt;
+        } catch (e) {
+            return '';
+        }
     }
 
     function transformBlock(to, opts) {
@@ -1312,6 +1406,10 @@ $publicUrl = ($isPublished && $publicToken !== '') ? ('/caderno/publico?token=' 
         if (!cur) return;
 
         var txt = getBlockText(cur);
+        if (!txt) {
+            var domTxt = getBlockTextFromDomByIndex(idx);
+            if (domTxt) txt = domTxt;
+        }
         var data = {};
         if (to === 'header') {
             data = { text: txt, level: parseInt((opts && opts.level) || '2', 10) || 2 };
@@ -1320,20 +1418,26 @@ $publicUrl = ($isPublished && $publicToken !== '') ? ('/caderno/publico?token=' 
         } else if (to === 'code') {
             data = { code: txt };
         } else if (to === 'list') {
-            data = { style: (opts && opts.style) ? opts.style : 'unordered', items: txt ? [txt] : [] };
+            var items = [];
+            if (txt) {
+                items = String(txt).split(/\n+/).map(function (s) { return (s || '').trim(); }).filter(Boolean);
+                if (!items.length) items = [String(txt)];
+            }
+            data = { style: (opts && opts.style) ? opts.style : 'unordered', items: items };
         } else if (to === 'checklist') {
             data = { items: txt ? [{ text: txt, checked: false }] : [{ text: '', checked: false }] };
         }
 
         try {
             editor.blocks.insert(to, data, {}, idx, true);
-            editor.blocks.delete(idx + 1);
+            try { editor.blocks.delete(idx + 1); } catch (e2) {}
             currentBlockIndex = idx;
         } catch (e) {}
     }
 
     function resolveBlockIndex() {
         if (currentBlockIndex !== null) return currentBlockIndex;
+        if (typeof lastSelectionBlockIndex === 'number' && lastSelectionBlockIndex >= 0) return lastSelectionBlockIndex;
         try {
             if (editor && editor.blocks && typeof editor.blocks.getCurrentBlockIndex === 'function') {
                 var i = editor.blocks.getCurrentBlockIndex();
@@ -1681,8 +1785,19 @@ $publicUrl = ($isPublished && $publicToken !== '') ? ('/caderno/publico?token=' 
                     return;
                 }
                 if (action === 'color') {
-                    applyVisualColorToBlock(item.getAttribute('data-kind'), item.getAttribute('data-value'));
+                    var kind = item.getAttribute('data-kind');
+                    var value = item.getAttribute('data-value');
+                    if (kind === 'text' && getSelectionIsExpanded()) {
+                        var ok = applyInlineTextColor(value);
+                        if (ok) {
+                            hideCtx();
+                            debounceSave();
+                            return;
+                        }
+                    }
+                    applyVisualColorToBlock(kind, value);
                     hideCtx();
+                    debounceSave();
                     return;
                 }
             });
