@@ -27,12 +27,19 @@ $contentJson = (string)($page['content_json'] ?? '');
 <script src="https://cdn.jsdelivr.net/npm/@editorjs/checklist@latest"></script>
 <script src="https://cdn.jsdelivr.net/npm/@editorjs/quote@latest"></script>
 <script src="https://cdn.jsdelivr.net/npm/@editorjs/code@latest"></script>
+<script src="https://unpkg.com/@editorjs/image@2.10.1/dist/image.umd.js"></script>
+<script src="https://unpkg.com/@editorjs/attaches@1.3.0/dist/bundle.js"></script>
 <script>
 (function () {
     var raw = <?= json_encode($contentJson !== '' ? $contentJson : '') ?>;
     var data = null;
     try {
-        if (raw && typeof raw === 'string') data = JSON.parse(raw);
+        if (raw && typeof raw === 'string') {
+            data = JSON.parse(raw);
+            if (data && typeof data === 'string') {
+                data = JSON.parse(data);
+            }
+        }
     } catch (e) {}
     if (!data) data = { time: Date.now(), blocks: [] };
 
@@ -45,7 +52,9 @@ $contentJson = (string)($page['content_json'] ?? '');
             list: { class: List, inlineToolbar: false },
             checklist: { class: Checklist, inlineToolbar: false },
             quote: { class: Quote, inlineToolbar: false },
-            code: { class: CodeTool }
+            code: { class: CodeTool },
+            image: { class: ImageTool, inlineToolbar: false },
+            attaches: { class: AttachesTool, inlineToolbar: false }
         }
     });
 })();

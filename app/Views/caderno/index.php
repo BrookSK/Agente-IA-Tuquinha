@@ -150,6 +150,49 @@ $publicUrl = ($isPublished && $publicToken !== '') ? ('/caderno/publico?token=' 
         font-size: 15px;
         line-height: 1.7;
     }
+    .notion-editor-wrap .cdx-attaches {
+        border: 1px solid var(--border-subtle);
+        border-radius: 12px;
+        background: rgba(255,255,255,0.06);
+        color: var(--text-primary);
+        box-shadow: none;
+    }
+    body[data-theme="light"] .notion-editor-wrap .cdx-attaches {
+        background: rgba(15,23,42,0.04);
+    }
+    .notion-editor-wrap .cdx-attaches__title {
+        color: var(--text-primary) !important;
+        font-weight: 650;
+    }
+    .notion-editor-wrap .cdx-attaches__size {
+        color: var(--text-secondary) !important;
+        opacity: 0.95;
+    }
+    .notion-editor-wrap .cdx-attaches__download-button {
+        border-radius: 10px;
+        background: rgba(255,255,255,0.08) !important;
+        border: 1px solid var(--border-subtle) !important;
+        color: var(--text-primary) !important;
+    }
+    body[data-theme="light"] .notion-editor-wrap .cdx-attaches__download-button {
+        background: rgba(15,23,42,0.06) !important;
+    }
+    .notion-editor-wrap .cdx-attaches__download-button:hover {
+        background: rgba(255,255,255,0.14) !important;
+    }
+    body[data-theme="light"] .notion-editor-wrap .cdx-attaches__download-button:hover {
+        background: rgba(15,23,42,0.10) !important;
+    }
+    .notion-editor-wrap .cdx-attaches__download-button svg {
+        fill: currentColor !important;
+        color: var(--text-primary) !important;
+        opacity: 0.95;
+    }
+    .notion-editor-wrap .cdx-attaches__file-icon {
+        border-radius: 12px;
+        border: 1px solid var(--border-subtle);
+        box-shadow: none;
+    }
     .notion-editor-wrap .ce-code__textarea {
         background: rgba(0,0,0,0.25);
         border: 1px solid var(--border-subtle);
@@ -825,17 +868,20 @@ $publicUrl = ($isPublished && $publicToken !== '') ? ('/caderno/publico?token=' 
         });
     }
 
-    function insertImageByUrl(url) {
+    function insertImageByUrl(url, atIndex) {
         if (!editor || !url) return;
         try {
-            var idx = (editor.blocks && typeof editor.blocks.getCurrentBlockIndex === 'function') ? editor.blocks.getCurrentBlockIndex() : null;
-            var at = (typeof idx === 'number' && idx >= 0) ? idx + 1 : undefined;
+            var at = (typeof atIndex === 'number' && atIndex >= 0) ? atIndex : undefined;
+            if (typeof at === 'undefined') {
+                var idx = (editor.blocks && typeof editor.blocks.getCurrentBlockIndex === 'function') ? editor.blocks.getCurrentBlockIndex() : null;
+                at = (typeof idx === 'number' && idx >= 0) ? idx + 1 : undefined;
+            }
             editor.blocks.insert('image', { file: { url: url }, caption: '' }, {}, at, true);
             debounceSave();
         } catch (e) {}
     }
 
-    function insertFileByMeta(fileMeta) {
+    function insertFileByMeta(fileMeta, atIndex) {
         if (!editor || !fileMeta) return;
         try {
             if (!fileMeta.url) {
@@ -843,8 +889,11 @@ $publicUrl = ($isPublished && $publicToken !== '') ? ('/caderno/publico?token=' 
                 try { console.error('insertFileByMeta missing url', fileMeta); } catch (e) {}
                 return;
             }
-            var idx = (editor.blocks && typeof editor.blocks.getCurrentBlockIndex === 'function') ? editor.blocks.getCurrentBlockIndex() : null;
-            var at = (typeof idx === 'number' && idx >= 0) ? idx + 1 : undefined;
+            var at = (typeof atIndex === 'number' && atIndex >= 0) ? atIndex : undefined;
+            if (typeof at === 'undefined') {
+                var idx = (editor.blocks && typeof editor.blocks.getCurrentBlockIndex === 'function') ? editor.blocks.getCurrentBlockIndex() : null;
+                at = (typeof idx === 'number' && idx >= 0) ? idx + 1 : undefined;
+            }
             editor.blocks.insert('attaches', { file: fileMeta, title: fileMeta.title || fileMeta.name || '' }, {}, at, true);
             debounceSave();
         } catch (e) {
@@ -937,6 +986,37 @@ $publicUrl = ($isPublished && $publicToken !== '') ? ('/caderno/publico?token=' 
         if (saving) { pending = true; return; }
         saving = true;
         setHint('Salvando...');
+
+        var manualSave = false;
+        try { manualSave = !!(btnSave && btnSave.getAttribute && btnSave.getAttribute('data-manual-save') === '1'); } catch (e) { manualSave = false; }
+        var prevSaveLabel = null;
+        function setSaveBtnState(state) {
+            if (!btnSave || !manualSave) return;
+            try {
+                if (!prevSaveLabel) prevSaveLabel = btnSave.textContent || 'Salvar';
+                if (state === 'saving') {
+                    btnSave.disabled = true;
+                    btnSave.textContent = 'Salvando…';
+                    return;
+                }
+                if (state === 'ok') {
+                    btnSave.disabled = false;
+                    btnSave.textContent = 'Salvo!';
+                } else if (state === 'error') {
+                    btnSave.disabled = false;
+                    btnSave.textContent = 'Falhou';
+                }
+                setTimeout(function () {
+                    try {
+                        btnSave.textContent = prevSaveLabel || 'Salvar';
+                        btnSave.disabled = false;
+                        btnSave.setAttribute('data-manual-save', '0');
+                    } catch (e2) {}
+                }, 2000);
+            } catch (e) {}
+        }
+
+        setSaveBtnState('saving');
         if (!editor) {
             saving = false;
             return;
@@ -951,13 +1031,16 @@ $publicUrl = ($isPublished && $publicToken !== '') ? ('/caderno/publico?token=' 
             lastSaved = Date.now();
             if (!res.json || res.json.ok !== true) {
                 setHint((res.json && res.json.error) ? res.json.error : 'Falha ao salvar.');
+                setSaveBtnState('error');
                 return;
             }
             setHint('Salvo agora');
+            setSaveBtnState('ok');
             if (pending) { pending = false; setTimeout(scheduleSave, 250); }
         }).catch(function () {
             saving = false;
             setHint('Falha ao salvar.');
+            setSaveBtnState('error');
         });
     }
 
@@ -983,6 +1066,15 @@ $publicUrl = ($isPublished && $publicToken !== '') ? ('/caderno/publico?token=' 
     var btnSave = $('btn-save');
     if (btnSave && !editorInitError && canEdit && pageId) {
         btnSave.addEventListener('click', function () {
+            try { btnSave.setAttribute('data-manual-save', '1'); } catch (e) {}
+            if (saving) {
+                pending = true;
+                try {
+                    btnSave.disabled = true;
+                    btnSave.textContent = 'Salvando…';
+                } catch (e2) {}
+                return;
+            }
             scheduleSave();
         });
     }
@@ -991,17 +1083,37 @@ $publicUrl = ($isPublished && $publicToken !== '') ? ('/caderno/publico?token=' 
     var publicLinkInput = $('public-link');
     if (btnCopyPublic && publicLinkInput) {
         btnCopyPublic.addEventListener('click', function () {
+            if (btnCopyPublic.getAttribute('data-copying') === '1') return;
             var text = String(publicLinkInput.value || '');
             if (!text) return;
+
+            var prevLabel = btnCopyPublic.textContent;
+            function setBtnState(ok) {
+                try {
+                    btnCopyPublic.setAttribute('data-copying', '1');
+                    btnCopyPublic.disabled = true;
+                    btnCopyPublic.textContent = ok ? 'Copiado!' : 'Falhou';
+                    setTimeout(function () {
+                        try {
+                            btnCopyPublic.disabled = false;
+                            btnCopyPublic.setAttribute('data-copying', '0');
+                            btnCopyPublic.textContent = prevLabel || 'Copiar link';
+                        } catch (e2) {}
+                    }, 2000);
+                } catch (e) {}
+            }
+
             if (navigator && navigator.clipboard && navigator.clipboard.writeText) {
                 navigator.clipboard.writeText(text).then(function () {
                     setHint('Link copiado');
+                    setBtnState(true);
                 }).catch(function () {
                     try {
                         publicLinkInput.focus();
                         publicLinkInput.select();
                         document.execCommand('copy');
                         setHint('Link copiado');
+                        setBtnState(true);
                     } catch (e) {}
                 });
                 return;
@@ -1011,6 +1123,7 @@ $publicUrl = ($isPublished && $publicToken !== '') ? ('/caderno/publico?token=' 
                 publicLinkInput.select();
                 document.execCommand('copy');
                 setHint('Link copiado');
+                setBtnState(true);
             } catch (e) {}
         });
     }
@@ -1070,6 +1183,11 @@ $publicUrl = ($isPublished && $publicToken !== '') ? ('/caderno/publico?token=' 
 
     function ensureToolbarButtons(toolbarRoot) {
         if (!toolbarRoot) return;
+        try {
+            var toolbar = toolbarRoot.closest ? toolbarRoot.closest('.ce-inline-toolbar') : null;
+            if (toolbar && toolbar.querySelector && toolbar.querySelector('.tuq-ce-action-btn')) return;
+        } catch (e) {}
+
         if (toolbarRoot.querySelector('.tuq-ce-action-btn[data-tuq="transform"]')) return;
 
         var btnTransform = document.createElement('button');
@@ -1086,6 +1204,7 @@ $publicUrl = ($isPublished && $publicToken !== '') ? ('/caderno/publico?token=' 
 
         btnTransform.addEventListener('click', function (e) {
             try { if (e) e.preventDefault(); } catch (err) {}
+            try { if (e) e.stopPropagation(); } catch (err2) {}
             currentBlockIndex = resolveBlockIndex();
             var r = toolbarRoot.getBoundingClientRect();
             showCtxAtRect(r);
@@ -1093,6 +1212,7 @@ $publicUrl = ($isPublished && $publicToken !== '') ? ('/caderno/publico?token=' 
         });
         btnColor.addEventListener('click', function (e) {
             try { if (e) e.preventDefault(); } catch (err) {}
+            try { if (e) e.stopPropagation(); } catch (err2) {}
             currentBlockIndex = resolveBlockIndex();
             var r = toolbarRoot.getBoundingClientRect();
             showCtxAtRect(r);
@@ -1105,9 +1225,12 @@ $publicUrl = ($isPublished && $publicToken !== '') ? ('/caderno/publico?token=' 
 
     function wireInlineToolbarButtons() {
         try {
-            var roots = document.querySelectorAll('.ce-inline-toolbar__actions, .ce-inline-toolbar__buttons');
-            for (var i = 0; i < roots.length; i++) {
-                ensureToolbarButtons(roots[i]);
+            var toolbars = document.querySelectorAll('.ce-inline-toolbar');
+            for (var i = 0; i < toolbars.length; i++) {
+                var tb = toolbars[i];
+                if (!tb || !tb.querySelector) continue;
+                var root = tb.querySelector('.ce-inline-toolbar__actions') || tb.querySelector('.ce-inline-toolbar__buttons');
+                ensureToolbarButtons(root);
             }
         } catch (e) {}
     }
@@ -1380,6 +1503,12 @@ $publicUrl = ($isPublished && $publicToken !== '') ? ('/caderno/publico?token=' 
             try { inside = !!(t && t.closest && t.closest('#editorjs')); } catch (err) { inside = false; }
             if (!inside) return;
 
+            var atIndex = undefined;
+            try {
+                currentBlockIndex = getBlockIndexFromTarget(t);
+                if (typeof currentBlockIndex === 'number' && currentBlockIndex >= 0) atIndex = currentBlockIndex + 1;
+            } catch (err0) {}
+
             var items = e.clipboardData.items;
             for (var i = 0; i < items.length; i++) {
                 var it = items[i];
@@ -1391,7 +1520,7 @@ $publicUrl = ($isPublished && $publicToken !== '') ? ('/caderno/publico?token=' 
                         setHint('Enviando imagem...');
                         uploadMediaFile(f).then(function (res) {
                             if (res.json && res.json.success === 1 && res.json.file && res.json.file.url) {
-                                insertImageByUrl(res.json.file.url);
+                                insertImageByUrl(res.json.file.url, atIndex);
                                 setHint('Imagem enviada');
                             } else {
                                 showActionError({ json: { error: (res.json && res.json.message) ? res.json.message : 'Falha ao enviar imagem' }, status: res.status }, 'Falha ao enviar imagem');
@@ -1412,20 +1541,25 @@ $publicUrl = ($isPublished && $publicToken !== '') ? ('/caderno/publico?token=' 
             if (!inside) return;
 
             e.preventDefault();
+            var atIndex = undefined;
+            try {
+                currentBlockIndex = getBlockIndexFromTarget(t);
+                if (typeof currentBlockIndex === 'number' && currentBlockIndex >= 0) atIndex = currentBlockIndex + 1;
+            } catch (err0) {}
             var f = e.dataTransfer.files[0];
             if (!f) return;
             setHint('Enviando arquivo...');
             uploadMediaFile(f).then(function (res) {
                 if (res.json && res.json.success === 1 && res.json.file) {
                     if (f.type && f.type.indexOf('image/') === 0 && res.json.file.url) {
-                        insertImageByUrl(res.json.file.url);
+                        insertImageByUrl(res.json.file.url, atIndex);
                         setHint('Imagem enviada');
                     } else {
                         if (!res.json.file.url) {
                             showActionError({ json: { error: (res.json && res.json.message) ? res.json.message : 'Upload retornou sem URL' }, status: res.status }, 'Falha ao enviar arquivo');
                             return;
                         }
-                        insertFileByMeta(res.json.file);
+                        insertFileByMeta(res.json.file, atIndex);
                         setHint('Arquivo enviado');
                     }
                 } else {
@@ -1482,13 +1616,18 @@ $publicUrl = ($isPublished && $publicToken !== '') ? ('/caderno/publico?token=' 
                     return;
                 }
                 if (action === 'insert-image') {
+                    var atIndex = undefined;
+                    try {
+                        var idx = resolveBlockIndex();
+                        if (typeof idx === 'number' && idx >= 0) atIndex = idx + 1;
+                    } catch (e0) {}
                     hideCtx();
                     pickFile('image/*').then(function (f) {
                         if (!f) return;
                         setHint('Enviando imagem...');
                         uploadMediaFile(f).then(function (res) {
                             if (res.json && res.json.success === 1 && res.json.file && res.json.file.url) {
-                                insertImageByUrl(res.json.file.url);
+                                insertImageByUrl(res.json.file.url, atIndex);
                                 setHint('Imagem enviada');
                             } else {
                                 showActionError({ json: { error: (res.json && res.json.message) ? res.json.message : 'Falha ao enviar imagem' }, status: res.status }, 'Falha ao enviar imagem');
@@ -1498,6 +1637,11 @@ $publicUrl = ($isPublished && $publicToken !== '') ? ('/caderno/publico?token=' 
                     return;
                 }
                 if (action === 'insert-file') {
+                    var atIndex = undefined;
+                    try {
+                        var idx = resolveBlockIndex();
+                        if (typeof idx === 'number' && idx >= 0) atIndex = idx + 1;
+                    } catch (e0) {}
                     hideCtx();
                     pickFile('*/*').then(function (f) {
                         if (!f) return;
@@ -1508,7 +1652,7 @@ $publicUrl = ($isPublished && $publicToken !== '') ? ('/caderno/publico?token=' 
                                     showActionError({ json: { error: (res.json && res.json.message) ? res.json.message : 'Upload retornou sem URL' }, status: res.status }, 'Falha ao enviar arquivo');
                                     return;
                                 }
-                                insertFileByMeta(res.json.file);
+                                insertFileByMeta(res.json.file, atIndex);
                                 setHint('Arquivo enviado');
                             } else {
                                 showActionError({ json: { error: (res.json && res.json.message) ? res.json.message : 'Falha ao enviar arquivo' }, status: res.status }, 'Falha ao enviar arquivo');
