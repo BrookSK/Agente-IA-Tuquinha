@@ -193,6 +193,13 @@ $publicUrl = ($isPublished && $publicToken !== '') ? ('/caderno/publico?token=' 
         border: 1px solid var(--border-subtle);
         box-shadow: none;
     }
+
+    .notion-editor-wrap .cdx-quote__caption {
+        display: none !important;
+    }
+    .notion-editor-wrap .image-tool__caption {
+        display: none !important;
+    }
     .notion-editor-wrap .ce-code__textarea {
         background: rgba(0,0,0,0.25);
         border: 1px solid var(--border-subtle);
