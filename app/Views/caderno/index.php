@@ -237,6 +237,104 @@ $publicUrl = ($isPublished && $publicToken !== '') ? ('/caderno/publico?token=' 
         box-shadow: 0 18px 46px rgba(15,23,42,0.16) !important;
     }
 
+    /* Toolbox/popover no mobile pode ser renderizado fora de .notion-editor-wrap */
+    .ce-popover,
+    .ce-toolbox,
+    .ce-conversion-toolbar,
+    .ce-inline-toolbar {
+        background: rgba(17,17,24,0.94) !important;
+        border: 1px solid var(--border-subtle) !important;
+        box-shadow: 0 18px 46px rgba(0,0,0,0.55) !important;
+        backdrop-filter: blur(10px);
+        z-index: 99999 !important;
+        color: var(--text-primary) !important;
+    }
+    body[data-theme="light"] .ce-popover,
+    body[data-theme="light"] .ce-toolbox,
+    body[data-theme="light"] .ce-conversion-toolbar,
+    body[data-theme="light"] .ce-inline-toolbar {
+        background: rgba(255,255,255,0.98) !important;
+        box-shadow: 0 18px 46px rgba(15,23,42,0.16) !important;
+        color: var(--text-primary) !important;
+    }
+    .ce-popover__item,
+    .ce-popover__item-label,
+    .ce-popover__item-description,
+    .ce-toolbox__button,
+    .ce-inline-tool,
+    .ce-conversion-tool {
+        color: var(--text-primary) !important;
+    }
+    .ce-popover__item-description,
+    .ce-conversion-tool__description {
+        color: var(--text-secondary) !important;
+        opacity: 0.95;
+    }
+    .ce-toolbox__button svg,
+    .ce-inline-tool svg,
+    .ce-popover__item-icon svg,
+    .ce-conversion-tool__icon svg {
+        fill: currentColor !important;
+        color: var(--text-primary) !important;
+        opacity: 0.95;
+    }
+
+    /* Popover do '+' (toolbox): scroll e ícones visíveis */
+    .ce-popover {
+        max-height: min(520px, calc(100vh - 24px)) !important;
+        overflow: hidden !important;
+    }
+    .ce-popover__items {
+        overflow-y: auto !important;
+        max-height: calc(min(520px, calc(100vh - 24px)) - 54px) !important;
+        padding-right: 4px;
+        -webkit-overflow-scrolling: touch;
+    }
+    .ce-popover__items::-webkit-scrollbar { width: 10px; }
+    .ce-popover__items::-webkit-scrollbar-thumb {
+        background: rgba(255,255,255,0.12);
+        border-radius: 999px;
+        border: 3px solid transparent;
+        background-clip: padding-box;
+    }
+    body[data-theme="light"] .ce-popover__items::-webkit-scrollbar-thumb {
+        background: rgba(15,23,42,0.16);
+        border: 3px solid transparent;
+        background-clip: padding-box;
+    }
+
+    .ce-popover__item-icon {
+        background: rgba(255,255,255,0.08) !important;
+        border: 1px solid rgba(255,255,255,0.10) !important;
+        border-radius: 10px !important;
+    }
+    body[data-theme="light"] .ce-popover__item-icon {
+        background: rgba(15,23,42,0.06) !important;
+        border: 1px solid rgba(15,23,42,0.10) !important;
+    }
+
+    /* Botão + e engrenagem do Editor.js (estavam apagados) */
+    .ce-toolbar__plus,
+    .ce-toolbar__settings-btn {
+        opacity: 1 !important;
+        background: rgba(255,255,255,0.06) !important;
+        border: 1px solid var(--border-subtle) !important;
+        border-radius: 10px !important;
+        color: var(--text-primary) !important;
+    }
+    .ce-toolbar__plus:hover,
+    .ce-toolbar__settings-btn:hover {
+        background: rgba(255,255,255,0.10) !important;
+    }
+    body[data-theme="light"] .ce-toolbar__plus,
+    body[data-theme="light"] .ce-toolbar__settings-btn {
+        background: rgba(15,23,42,0.06) !important;
+    }
+    body[data-theme="light"] .ce-toolbar__plus:hover,
+    body[data-theme="light"] .ce-toolbar__settings-btn:hover {
+        background: rgba(15,23,42,0.10) !important;
+    }
+
     .notion-editor-wrap .ce-inline-tool,
     .notion-editor-wrap .ce-toolbox__button,
     .notion-editor-wrap .ce-popover__item,
@@ -648,7 +746,12 @@ $publicUrl = ($isPublished && $publicToken !== '') ? ('/caderno/publico?token=' 
             width: 100%;
         }
         .notion-page-header {
+            flex-direction: column;
+            align-items: stretch;
             padding: 12px 12px 10px 12px;
+        }
+        .notion-title-wrap {
+            width: 100%;
         }
         .notion-page-body {
             padding: 10px 12px 18px 12px;
@@ -668,6 +771,11 @@ $publicUrl = ($isPublished && $publicToken !== '') ? ('/caderno/publico?token=' 
             width: 100%;
             justify-content: flex-start !important;
             gap: 6px !important;
+            flex-wrap: wrap !important;
+        }
+
+        .notion-page-header > div:last-child > button {
+            flex: 0 0 auto;
         }
 
         /* Menus/contexto no mobile: não estourar lateral */
