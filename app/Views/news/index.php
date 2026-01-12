@@ -5,18 +5,77 @@
 /** @var bool $fetchedNow */
 /** @var string|null $lastFetchedAt */
 
-$hero = null;
-if (!empty($news) && is_array($news[0] ?? null)) {
-    $hero = $news[0];
-}
-
 $grid = [];
 if (is_array($news)) {
-    $grid = array_slice($news, 1, 12);
+    $grid = array_slice($news, 0, 30);
 }
 ?>
 
 <style>
+    #news-grid {
+        display: grid;
+        grid-template-columns: repeat(12, minmax(0, 1fr));
+        gap: 12px;
+    }
+    .news-grid-item {
+        grid-column: span 4;
+        min-width: 0;
+    }
+    .news-grid-item.span-6 {
+        grid-column: span 6;
+    }
+    .news-grid-item.span-12 {
+        grid-column: span 12;
+    }
+
+    .news-card {
+        border-radius: 14px;
+        border: 1px solid var(--border-subtle);
+        background: var(--bg-secondary);
+        overflow: hidden;
+        height: 230px;
+        display: flex;
+        flex-direction: column;
+    }
+    .news-card-img {
+        height: 130px;
+        background: rgba(255,255,255,0.04);
+        flex: 0 0 130px;
+    }
+    .news-card-body {
+        padding: 10px 10px 12px 10px;
+        display: flex;
+        flex-direction: column;
+        flex: 1 1 auto;
+        min-height: 0;
+    }
+    .news-card-title {
+        font-size: 13px;
+        font-weight: 700;
+        line-height: 1.25;
+        display: -webkit-box;
+        -webkit-box-orient: vertical;
+        line-clamp: 3;
+        -webkit-line-clamp: 3;
+        overflow: hidden;
+        min-height: 49px;
+    }
+    .news-card.news-card-full {
+        height: 290px;
+    }
+    .news-card.news-card-full .news-card-img {
+        height: 180px;
+        flex: 0 0 180px;
+    }
+    .news-card-meta {
+        margin-top: auto;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        color: var(--text-secondary);
+        font-size: 11px;
+    }
     @media (max-width: 900px) {
         #news-page-header {
             flex-direction: column;
@@ -42,6 +101,20 @@ if (is_array($news)) {
         #news-sidebar {
             margin-top: 14px;
         }
+
+        .news-grid-item,
+        .news-grid-item.span-6,
+        .news-grid-item.span-12 {
+            grid-column: span 1;
+        }
+        .news-card,
+        .news-card.news-card-full {
+            height: 230px;
+        }
+        .news-card.news-card-full .news-card-img {
+            height: 130px;
+            flex: 0 0 130px;
+        }
     }
 
     @media (max-width: 520px) {
@@ -60,6 +133,12 @@ if (is_array($news)) {
         }
         #news-email-form {
             gap: 8px !important;
+        }
+
+        .news-grid-item,
+        .news-grid-item.span-6,
+        .news-grid-item.span-12 {
+            grid-column: span 1;
         }
     }
 </style>
@@ -85,42 +164,8 @@ if (is_array($news)) {
 
     <div id="news-layout" style="display:grid; grid-template-columns: 1fr 330px; gap: 18px; align-items:start;">
         <div>
-            <?php if (!empty($hero)): ?>
-                <?php
-                    $heroTitle = (string)($hero['title'] ?? '');
-                    $heroId = (int)($hero['id'] ?? 0);
-                    $heroSummary = (string)($hero['summary'] ?? '');
-                    $heroImg = (string)($hero['image_url'] ?? '');
-                    $heroSource = (string)($hero['source_name'] ?? '');
-                    $heroPublished = (string)($hero['published_at'] ?? '');
-                ?>
-                <a href="/noticias/ver?id=<?= (int)$heroId ?>" style="display:block;">
-                    <div id="news-hero" style="display:grid; grid-template-columns: 1.1fr 0.9fr; gap:14px; padding:16px; border-radius:16px; border:1px solid var(--border-subtle); background: var(--bg-secondary);">
-                        <div>
-                            <div id="news-hero-title" style="font-size: 28px; font-weight: 760; line-height: 1.08; letter-spacing: -0.02em;"><?= htmlspecialchars($heroTitle, ENT_QUOTES, 'UTF-8') ?></div>
-                            <?php if ($heroPublished !== ''): ?>
-                                <div style="margin-top:10px; color: var(--text-secondary); font-size: 12px;">Publicado em <?= htmlspecialchars($heroPublished, ENT_QUOTES, 'UTF-8') ?></div>
-                            <?php endif; ?>
-                            <?php if ($heroSummary !== ''): ?>
-                                <div style="margin-top:10px; color: var(--text-secondary); font-size: 13px; line-height: 1.45;"><?= htmlspecialchars($heroSummary, ENT_QUOTES, 'UTF-8') ?></div>
-                            <?php endif; ?>
-                            <?php if ($heroSource !== ''): ?>
-                                <div style="margin-top:12px; color: var(--text-secondary); font-size: 12px;">Fonte: <?= htmlspecialchars($heroSource, ENT_QUOTES, 'UTF-8') ?></div>
-                            <?php endif; ?>
-                        </div>
-                        <div id="news-hero-img" style="border-radius:14px; overflow:hidden; border:1px solid rgba(255,255,255,0.06); background: rgba(255,255,255,0.04); min-height: 180px;">
-                            <?php if ($heroImg !== ''): ?>
-                                <img src="<?= htmlspecialchars($heroImg, ENT_QUOTES, 'UTF-8') ?>" alt="" style="width:100%; height:100%; display:block; object-fit:cover;">
-                            <?php else: ?>
-                                <div style="height:100%; display:flex; align-items:center; justify-content:center; color: var(--text-secondary); font-size: 12px;">Sem imagem</div>
-                            <?php endif; ?>
-                        </div>
-                    </div>
-                </a>
-            <?php endif; ?>
-
-            <div id="news-grid" style="margin-top:14px; display:grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px;">
-                <?php foreach ($grid as $it): ?>
+            <div id="news-grid">
+                <?php foreach ($grid as $idx => $it): ?>
                     <?php
                         if (!is_array($it)) {
                             continue;
@@ -130,19 +175,29 @@ if (is_array($news)) {
                         $img = (string)($it['image_url'] ?? '');
                         $src = (string)($it['source_name'] ?? '');
                         $pub = (string)($it['published_at'] ?? '');
+
+                        $cyclePos = ((int)$idx) % 9;
+                        $spanClass = 'span-4';
+                        $isFull = false;
+                        if ($cyclePos >= 3 && $cyclePos <= 4) {
+                            $spanClass = 'span-6';
+                        } elseif ($cyclePos === 8) {
+                            $spanClass = 'span-12';
+                            $isFull = true;
+                        }
                     ?>
-                    <a href="/noticias/ver?id=<?= (int)$id ?>" style="display:block;">
-                        <div style="border-radius:14px; border:1px solid var(--border-subtle); background: var(--bg-secondary); overflow:hidden;">
-                            <div style="height: 130px; background: rgba(255,255,255,0.04);">
+                    <a href="/noticias/ver?id=<?= (int)$id ?>" class="news-grid-item <?= htmlspecialchars($spanClass, ENT_QUOTES, 'UTF-8') ?>" style="display:block;">
+                        <div class="news-card<?= $isFull ? ' news-card-full' : '' ?>">
+                            <div class="news-card-img">
                                 <?php if ($img !== ''): ?>
                                     <img src="<?= htmlspecialchars($img, ENT_QUOTES, 'UTF-8') ?>" alt="" style="width:100%; height:100%; display:block; object-fit:cover;">
                                 <?php else: ?>
                                     <div style="height:100%; display:flex; align-items:center; justify-content:center; color: var(--text-secondary); font-size: 12px;">Sem imagem</div>
                                 <?php endif; ?>
                             </div>
-                            <div style="padding: 10px 10px 12px 10px;">
-                                <div style="font-size: 13px; font-weight: 700; line-height: 1.25; min-height: 34px;"><?= htmlspecialchars($t, ENT_QUOTES, 'UTF-8') ?></div>
-                                <div style="margin-top: 8px; display:flex; align-items:center; justify-content:space-between; gap: 10px; color: var(--text-secondary); font-size: 11px;">
+                            <div class="news-card-body">
+                                <div class="news-card-title"><?= htmlspecialchars($t, ENT_QUOTES, 'UTF-8') ?></div>
+                                <div class="news-card-meta">
                                     <div style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width: 70%;"><?= htmlspecialchars($src !== '' ? $src : 'Fonte', ENT_QUOTES, 'UTF-8') ?></div>
                                     <div style="white-space:nowrap;"><?= htmlspecialchars($pub !== '' ? $pub : 'Agora', ENT_QUOTES, 'UTF-8') ?></div>
                                 </div>

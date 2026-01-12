@@ -180,13 +180,19 @@ class NewsController extends Controller
         $emailEnabled = !empty($pref) && !empty($pref['email_enabled']);
 
         // Busca mais itens para conseguir preencher o grid apenas com notícias que tenham imagem válida.
-        $candidates = NewsItem::latest(80);
+        $desiredCount = 30;
+        if ($desiredCount < 10) {
+            $desiredCount = 10;
+        }
+        $candidates = NewsItem::latest(200);
         $final = [];
         $attemptedOg = 0;
         $validated = 0;
+        $seenUrls = [];
+        $seenTitles = [];
 
         foreach ($candidates as $row) {
-            if (count($final) >= 30) {
+            if (count($final) >= $desiredCount) {
                 break;
             }
             if (!is_array($row)) {
@@ -199,6 +205,15 @@ class NewsController extends Controller
             $sourceName = isset($row['source_name']) ? (string)$row['source_name'] : null;
             $summary = isset($row['summary']) ? (string)$row['summary'] : '';
             if ($nid <= 0 || trim($url) === '') {
+                continue;
+            }
+
+            $urlKey = strtolower(trim($url));
+            if ($urlKey !== '' && isset($seenUrls[$urlKey])) {
+                continue;
+            }
+            $titleKey = strtolower(trim((string)($row['title'] ?? '')));
+            if ($titleKey !== '' && isset($seenTitles[$titleKey])) {
                 continue;
             }
 
@@ -243,6 +258,12 @@ class NewsController extends Controller
             }
 
             $final[] = $row;
+            if ($urlKey !== '') {
+                $seenUrls[$urlKey] = true;
+            }
+            if ($titleKey !== '') {
+                $seenTitles[$titleKey] = true;
+            }
         }
 
         $news = $final;
