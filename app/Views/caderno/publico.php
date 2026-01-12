@@ -5,6 +5,55 @@ $icon = trim((string)($page['icon'] ?? ''));
 $contentJson = (string)($page['content_json'] ?? '');
 ?>
 
+<style>
+    #public-editor .cdx-attaches {
+        border: 1px solid var(--border-subtle);
+        border-radius: 12px;
+        background: rgba(255,255,255,0.06);
+        color: var(--text-primary);
+        box-shadow: none;
+    }
+    body[data-theme="light"] #public-editor .cdx-attaches {
+        background: rgba(15,23,42,0.04);
+    }
+    #public-editor .cdx-attaches__title {
+        color: var(--text-primary) !important;
+        font-weight: 650;
+    }
+    #public-editor .cdx-attaches__size {
+        color: var(--text-secondary) !important;
+        opacity: 0.95;
+    }
+    #public-editor .cdx-attaches__download-button {
+        border-radius: 10px;
+        background: rgba(255,255,255,0.08) !important;
+        border: 1px solid var(--border-subtle) !important;
+        color: var(--text-primary) !important;
+    }
+    body[data-theme="light"] #public-editor .cdx-attaches__download-button {
+        background: rgba(15,23,42,0.06) !important;
+    }
+    #public-editor .cdx-attaches__download-button:hover {
+        background: rgba(255,255,255,0.14) !important;
+    }
+    body[data-theme="light"] #public-editor .cdx-attaches__download-button:hover {
+        background: rgba(15,23,42,0.10) !important;
+    }
+    #public-editor .cdx-attaches__download-button svg {
+        fill: currentColor !important;
+        color: var(--text-primary) !important;
+        opacity: 0.95;
+    }
+    #public-editor .cdx-attaches__file-icon {
+        border-radius: 12px;
+        border: 1px solid var(--border-subtle);
+        box-shadow: none;
+    }
+
+    #public-editor .cdx-quote__caption { display:none !important; }
+    #public-editor .image-tool__caption { display:none !important; }
+</style>
+
 <div style="max-width: 880px; margin: 0 auto;">
     <div style="display:flex; align-items:center; gap:10px; margin-bottom:10px;">
         <div style="width:42px; height:42px; border-radius:12px; display:flex; align-items:center; justify-content:center; background:var(--surface-subtle); border:1px solid var(--border-subtle); font-size:18px;">
