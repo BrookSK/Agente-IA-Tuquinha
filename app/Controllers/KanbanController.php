@@ -6,10 +6,12 @@ use App\Core\Controller;
 use App\Core\Database;
 use App\Models\KanbanBoard;
 use App\Models\KanbanCard;
+use App\Models\KanbanCardAttachment;
 use App\Models\KanbanList;
 use App\Models\Plan;
 use App\Models\Subscription;
 use App\Models\User;
+use App\Services\MediaStorageService;
 
 class KanbanController extends Controller
 {
@@ -112,6 +114,26 @@ class KanbanController extends Controller
             exit;
         }
         return $board;
+    }
+
+    private function loadCardContextOrDeny(int $cardId, int $userId): array
+    {
+        $card = KanbanCard::findById($cardId);
+        if (!$card) {
+            $this->json(['ok' => false, 'error' => 'Cartão não encontrado.'], 404);
+        }
+
+        $list = KanbanList::findById((int)($card['list_id'] ?? 0));
+        if (!$list) {
+            $this->json(['ok' => false, 'error' => 'Lista não encontrada.'], 404);
+        }
+
+        $board = KanbanBoard::findOwnedById((int)($list['board_id'] ?? 0), $userId);
+        if (!$board) {
+            $this->json(['ok' => false, 'error' => 'Sem acesso ao cartão.'], 403);
+        }
+
+        return ['card' => $card, 'list' => $list, 'board' => $board];
     }
 
     public function index(): void
@@ -369,6 +391,84 @@ class KanbanController extends Controller
         $this->loadBoardOrDeny((int)$list['board_id'], (int)$user['id']);
 
         KanbanCard::delete($cardId);
+        $this->json(['ok' => true]);
+    }
+
+    public function listCardAttachments(): void
+    {
+        $user = $this->requireLogin();
+        $this->requireKanbanAccess($user);
+
+        $cardId = (int)($_POST['card_id'] ?? 0);
+        if ($cardId <= 0) {
+            $this->json(['ok' => false, 'error' => 'card_id inválido.'], 400);
+        }
+
+        $this->loadCardContextOrDeny($cardId, (int)$user['id']);
+        $attachments = KanbanCardAttachment::listForCard($cardId);
+        $this->json(['ok' => true, 'attachments' => $attachments]);
+    }
+
+    public function uploadCardAttachment(): void
+    {
+        $user = $this->requireLogin();
+        $this->requireKanbanAccess($user);
+
+        $cardId = (int)($_POST['card_id'] ?? 0);
+        if ($cardId <= 0) {
+            $this->json(['ok' => false, 'error' => 'card_id inválido.'], 400);
+        }
+        $this->loadCardContextOrDeny($cardId, (int)$user['id']);
+
+        if (empty($_FILES['file']) || !is_array($_FILES['file'])) {
+            $this->json(['ok' => false, 'error' => 'Envie um arquivo.'], 422);
+        }
+
+        $err = (int)($_FILES['file']['error'] ?? UPLOAD_ERR_NO_FILE);
+        if ($err !== UPLOAD_ERR_OK) {
+            $this->json(['ok' => false, 'error' => 'Erro no upload.'], 422);
+        }
+
+        $tmp = (string)($_FILES['file']['tmp_name'] ?? '');
+        $originalName = (string)($_FILES['file']['name'] ?? 'arquivo');
+        $type = (string)($_FILES['file']['type'] ?? '');
+        $size = (int)($_FILES['file']['size'] ?? 0);
+        if (!is_file($tmp) || $size <= 0) {
+            $this->json(['ok' => false, 'error' => 'Arquivo inválido.'], 422);
+        }
+
+        $remoteUrl = MediaStorageService::uploadFile($tmp, $originalName, $type);
+        if (!is_string($remoteUrl) || trim($remoteUrl) === '') {
+            $this->json(['ok' => false, 'error' => 'Não foi possível enviar a mídia para o servidor.'], 500);
+        }
+
+        $id = KanbanCardAttachment::create($cardId, $remoteUrl, $originalName, $type !== '' ? $type : null, $size);
+        $row = KanbanCardAttachment::findById($id);
+        $this->json(['ok' => true, 'attachment' => $row]);
+    }
+
+    public function deleteCardAttachment(): void
+    {
+        $user = $this->requireLogin();
+        $this->requireKanbanAccess($user);
+
+        $attachmentId = (int)($_POST['attachment_id'] ?? 0);
+        if ($attachmentId <= 0) {
+            $this->json(['ok' => false, 'error' => 'attachment_id inválido.'], 400);
+        }
+
+        $att = KanbanCardAttachment::findById($attachmentId);
+        if (!$att) {
+            $this->json(['ok' => false, 'error' => 'Anexo não encontrado.'], 404);
+        }
+
+        $cardId = (int)($att['card_id'] ?? 0);
+        if ($cardId <= 0) {
+            $this->json(['ok' => false, 'error' => 'Anexo inválido.'], 400);
+        }
+
+        $this->loadCardContextOrDeny($cardId, (int)$user['id']);
+        KanbanCardAttachment::deleteById($attachmentId);
         $this->json(['ok' => true]);
     }
 

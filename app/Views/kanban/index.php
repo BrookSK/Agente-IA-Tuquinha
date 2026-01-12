@@ -19,6 +19,10 @@ $currentBoardTitle = $currentBoard ? (string)($currentBoard['title'] ?? 'Sem tí
         gap: 12px;
         min-height: calc(100vh - 64px);
     }
+
+    body.kb-sidebar-collapsed .kb-shell {
+        gap: 0;
+    }
     .kb-sidebar {
         width: 300px;
         flex: 0 0 300px;
@@ -28,6 +32,16 @@ $currentBoardTitle = $currentBoard ? (string)($currentBoard['title'] ?? 'Sem tí
         overflow: hidden;
         display: flex;
         flex-direction: column;
+        transition: width 160ms ease, flex-basis 160ms ease, opacity 160ms ease;
+    }
+
+    body.kb-sidebar-collapsed .kb-sidebar {
+        width: 0;
+        flex: 0 0 0;
+        opacity: 0;
+        border: none;
+        margin: 0;
+        padding: 0;
     }
     .kb-sidebar-head {
         padding: 12px;
@@ -128,6 +142,23 @@ $currentBoardTitle = $currentBoard ? (string)($currentBoard['title'] ?? 'Sem tí
         gap: 10px;
         flex-wrap: wrap;
     }
+    .kb-main-head-left {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        min-width: 0;
+    }
+    .kb-toggle-sidebar {
+        width: 36px;
+        height: 36px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 10px;
+        padding: 0;
+        font-size: 16px;
+        line-height: 1;
+    }
     .kb-main-title {
         font-size: 18px;
         font-weight: 800;
@@ -142,6 +173,61 @@ $currentBoardTitle = $currentBoard ? (string)($currentBoard['title'] ?? 'Sem tí
         display: flex;
         align-items: flex-start;
         gap: 12px;
+    }
+
+    /* Scrollbars (Kanban) */
+    .kb-board,
+    .kb-sidebar-list,
+    .kb-cards {
+        scrollbar-width: thin;
+        scrollbar-color: rgba(255,255,255,0.28) rgba(0,0,0,0.45);
+    }
+    body[data-theme="light"] .kb-board,
+    body[data-theme="light"] .kb-sidebar-list,
+    body[data-theme="light"] .kb-cards {
+        scrollbar-color: rgba(15,23,42,0.35) rgba(15,23,42,0.10);
+    }
+
+    .kb-board::-webkit-scrollbar,
+    .kb-sidebar-list::-webkit-scrollbar,
+    .kb-cards::-webkit-scrollbar {
+        width: 10px;
+        height: 10px;
+    }
+    .kb-board::-webkit-scrollbar-track,
+    .kb-sidebar-list::-webkit-scrollbar-track,
+    .kb-cards::-webkit-scrollbar-track {
+        background: rgba(0,0,0,0.55);
+        border-radius: 999px;
+    }
+    .kb-board::-webkit-scrollbar-thumb,
+    .kb-sidebar-list::-webkit-scrollbar-thumb,
+    .kb-cards::-webkit-scrollbar-thumb {
+        background: rgba(0,0,0,0.95);
+        border-radius: 999px;
+        border: 2px solid rgba(0,0,0,0.55);
+    }
+    .kb-board::-webkit-scrollbar-thumb:hover,
+    .kb-sidebar-list::-webkit-scrollbar-thumb:hover,
+    .kb-cards::-webkit-scrollbar-thumb:hover {
+        background: rgba(20,20,20,0.98);
+    }
+
+    body[data-theme="light"] .kb-board::-webkit-scrollbar-track,
+    body[data-theme="light"] .kb-sidebar-list::-webkit-scrollbar-track,
+    body[data-theme="light"] .kb-cards::-webkit-scrollbar-track {
+        background: rgba(15,23,42,0.10);
+    }
+    body[data-theme="light"] .kb-board::-webkit-scrollbar-thumb,
+    body[data-theme="light"] .kb-sidebar-list::-webkit-scrollbar-thumb,
+    body[data-theme="light"] .kb-cards::-webkit-scrollbar-thumb {
+        background: rgba(15,23,42,0.28);
+        border: 2px solid rgba(15,23,42,0.10);
+    }
+    body[data-theme="light"] .kb-board::-webkit-scrollbar-thumb:hover,
+    body[data-theme="light"] .kb-sidebar-list::-webkit-scrollbar-thumb:hover,
+    body[data-theme="light"] .kb-cards::-webkit-scrollbar-thumb:hover {
+        background: rgba(15,23,42,0.38);
     }
 
     .kb-list {
@@ -209,6 +295,8 @@ $currentBoardTitle = $currentBoard ? (string)($currentBoard['title'] ?? 'Sem tí
         gap: 8px;
         overflow-y: auto;
         padding-right: 3px;
+        padding-bottom: 6px;
+        min-height: 28px;
         flex: 1;
     }
 
@@ -303,10 +391,90 @@ $currentBoardTitle = $currentBoard ? (string)($currentBoard['title'] ?? 'Sem tí
         box-shadow: 0 18px 50px rgba(0,0,0,0.6);
         padding: 14px;
     }
+
+    .kb-attachments {
+        margin-top: 10px;
+        border-top: 1px solid var(--border-subtle);
+        padding-top: 10px;
+    }
+    .kb-attachments-title {
+        font-size: 12px;
+        font-weight: 800;
+        color: var(--text-secondary);
+        letter-spacing: 0.02em;
+        text-transform: uppercase;
+        margin-bottom: 8px;
+    }
+    .kb-attachments-row {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+    .kb-attachments-list {
+        margin-top: 10px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        max-height: 180px;
+        overflow: auto;
+        padding-right: 2px;
+    }
+    .kb-attachment-item {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        justify-content: space-between;
+        border: 1px solid var(--border-subtle);
+        background: var(--surface-subtle);
+        border-radius: 12px;
+        padding: 10px;
+    }
+    .kb-attachment-left {
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+    }
+    .kb-attachment-name {
+        font-size: 13px;
+        color: var(--text-primary);
+        font-weight: 650;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        max-width: 360px;
+    }
+    .kb-attachment-actions {
+        flex: 0 0 auto;
+        display: flex;
+        gap: 8px;
+        align-items: center;
+    }
+    @media (max-width: 720px) {
+        .kb-attachment-name { max-width: 220px; }
+    }
     .kb-modal-title {
         font-size: 14px;
         font-weight: 800;
         color: var(--text-primary);
+    }
+    .kb-modal-field-label {
+        font-size: 12px;
+        color: var(--text-secondary);
+        font-weight: 750;
+        margin-top: 10px;
+        margin-bottom: 6px;
+    }
+    .kb-select {
+        width: 100%;
+        padding: 10px 12px;
+        border-radius: 10px;
+        border: 1px solid var(--border-subtle);
+        background: var(--surface-subtle);
+        color: var(--text-primary);
+        font-size: 13px;
+        outline: none;
     }
     .kb-modal-actions {
         margin-top: 10px;
@@ -319,6 +487,10 @@ $currentBoardTitle = $currentBoard ? (string)($currentBoard['title'] ?? 'Sem tí
     @media (max-width: 720px) {
         .kb-shell { display: block; }
         .kb-sidebar { width: 100%; flex: 0 0 auto; }
+        body.kb-sidebar-collapsed .kb-sidebar {
+            width: 0;
+            flex: 0 0 0;
+        }
         .kb-sidebar-head {
             position: sticky;
             top: 0;
@@ -360,7 +532,10 @@ $currentBoardTitle = $currentBoard ? (string)($currentBoard['title'] ?? 'Sem tí
     <aside class="kb-sidebar">
         <div class="kb-sidebar-head">
             <div class="kb-sidebar-title">Kanban</div>
-            <button type="button" class="kb-btn kb-btn--primary" id="kb-new-board">+ Quadro</button>
+            <div style="display:flex; gap:8px; align-items:center;">
+                <button type="button" class="kb-btn kb-toggle-sidebar" id="kb-toggle-sidebar" title="Minimizar painel">❮</button>
+                <button type="button" class="kb-btn kb-btn--primary" id="kb-new-board">+ Quadro</button>
+            </div>
         </div>
         <div class="kb-sidebar-list" id="kb-board-list">
             <?php if (empty($boards)): ?>
@@ -383,7 +558,10 @@ $currentBoardTitle = $currentBoard ? (string)($currentBoard['title'] ?? 'Sem tí
 
     <main class="kb-main">
         <div class="kb-main-head">
-            <div class="kb-main-title" id="kb-board-title"><?= htmlspecialchars($currentBoardTitle) ?></div>
+            <div class="kb-main-head-left">
+                <button type="button" class="kb-btn kb-toggle-sidebar" id="kb-toggle-sidebar-alt" title="Mostrar/ocultar painel">☰</button>
+                <div class="kb-main-title" id="kb-board-title"><?= htmlspecialchars($currentBoardTitle) ?></div>
+            </div>
             <div style="display:flex; gap:8px; flex-wrap:wrap;">
                 <?php if ($currentBoardId > 0): ?>
                     <button type="button" class="kb-btn" id="kb-rename-board">Renomear</button>
@@ -442,10 +620,24 @@ $currentBoardTitle = $currentBoard ? (string)($currentBoard['title'] ?? 'Sem tí
     <div class="kb-modal-backdrop" id="kb-modal-backdrop"></div>
     <div class="kb-modal-card">
         <div class="kb-modal-title" id="kb-modal-title">Editar</div>
+        <div id="kb-move-row" style="display:none;">
+            <div class="kb-modal-field-label">Lista</div>
+            <select class="kb-select" id="kb-move-list"></select>
+        </div>
         <div style="margin-top:10px; display:flex; flex-direction:column; gap:8px;">
             <input class="kb-input" id="kb-modal-input" placeholder="Título" />
             <textarea class="kb-input" id="kb-modal-textarea" placeholder="Descrição" style="min-height:110px; resize:vertical;"></textarea>
         </div>
+
+        <div class="kb-attachments" id="kb-attachments" style="display:none;">
+            <div class="kb-attachments-title">Anexos</div>
+            <div class="kb-attachments-row">
+                <input type="file" class="kb-input" id="kb-attach-file" style="flex:1; min-width: 220px;" />
+                <button type="button" class="kb-btn kb-btn--primary" id="kb-attach-upload">Enviar</button>
+            </div>
+            <div class="kb-attachments-list" id="kb-attach-list"></div>
+        </div>
+
         <div class="kb-modal-actions">
             <button type="button" class="kb-btn" id="kb-modal-cancel">Cancelar</button>
             <button type="button" class="kb-btn kb-btn--danger" id="kb-modal-delete" style="display:none;">Excluir</button>
@@ -458,12 +650,45 @@ $currentBoardTitle = $currentBoard ? (string)($currentBoard['title'] ?? 'Sem tí
 (function () {
     var boardId = <?= (int)$currentBoardId ?>;
 
+    var SIDEBAR_KEY = 'kanban.sidebarCollapsed';
+
     function $(id) { return document.getElementById(id); }
+
+    function setSidebarCollapsed(collapsed) {
+        if (collapsed) {
+            document.body.classList.add('kb-sidebar-collapsed');
+        } else {
+            document.body.classList.remove('kb-sidebar-collapsed');
+        }
+        try {
+            localStorage.setItem(SIDEBAR_KEY, collapsed ? '1' : '0');
+        } catch (e) {}
+
+        var btn = $('kb-toggle-sidebar');
+        if (btn) {
+            btn.textContent = collapsed ? '❯' : '❮';
+            btn.title = collapsed ? 'Expandir painel' : 'Minimizar painel';
+        }
+    }
+
+    function getSidebarCollapsed() {
+        try {
+            return localStorage.getItem(SIDEBAR_KEY) === '1';
+        } catch (e) {
+            return false;
+        }
+    }
 
     function postForm(url, data) {
         var fd = new FormData();
         Object.keys(data || {}).forEach(function (k) { fd.append(k, data[k]); });
         return fetch(url, { method: 'POST', body: fd, headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' } })
+            .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, status: r.status, json: j }; }); })
+            .catch(function (e) { return { ok: false, status: 0, json: { ok: false, error: String(e || 'Erro') } }; });
+    }
+
+    function postFile(url, formData) {
+        return fetch(url, { method: 'POST', body: formData, headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' } })
             .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, status: r.status, json: j }; }); })
             .catch(function (e) { return { ok: false, status: 0, json: { ok: false, error: String(e || 'Erro') } }; });
     }
@@ -597,6 +822,170 @@ $currentBoardTitle = $currentBoard ? (string)($currentBoard['title'] ?? 'Sem tí
         modal.dataset.cardId = '';
         modal.dataset.listId = '';
         modal.dataset.boardId = '';
+
+        var moveRow = $('kb-move-row');
+        if (moveRow) moveRow.style.display = 'none';
+        var moveSel = $('kb-move-list');
+        if (moveSel) moveSel.innerHTML = '';
+
+        var att = $('kb-attachments');
+        if (att) att.style.display = 'none';
+        var file = $('kb-attach-file');
+        if (file) file.value = '';
+        var list = $('kb-attach-list');
+        if (list) list.innerHTML = '';
+    }
+
+    function buildListOptions(selectEl, selectedListId) {
+        if (!selectEl) return;
+        selectEl.innerHTML = '';
+        var lists = document.querySelectorAll('.kb-list[data-list-id]');
+        for (var i = 0; i < lists.length; i++) {
+            var lid = lists[i].getAttribute('data-list-id');
+            if (!lid) continue;
+            var titleEl = lists[i].querySelector('.kb-list-title');
+            var label = titleEl ? (titleEl.textContent || '') : ('Lista ' + lid);
+            var opt = document.createElement('option');
+            opt.value = String(lid);
+            opt.textContent = label.trim() || ('Lista ' + lid);
+            if (String(lid) === String(selectedListId)) {
+                opt.selected = true;
+            }
+            selectEl.appendChild(opt);
+        }
+    }
+
+    function moveCardToList(cardId, fromListId, toListId) {
+        var cardEl = getCardEl(cardId);
+        if (!cardEl) return;
+
+        var fromContainer = getCardsContainer(fromListId);
+        var toContainer = getCardsContainer(toListId);
+        if (!toContainer) return;
+
+        // Move visual: coloca no final da lista destino
+        if (cardEl.parentNode) {
+            cardEl.parentNode.removeChild(cardEl);
+        }
+        toContainer.appendChild(cardEl);
+        cardEl.setAttribute('data-list-id', String(toListId));
+
+        var payload = { board_id: boardId, cards_by_list: {} };
+        payload.cards_by_list[String(toListId)] = serializeCardOrder(toListId);
+        if (fromListId && String(fromListId) !== String(toListId)) {
+            payload.cards_by_list[String(fromListId)] = serializeCardOrder(fromListId);
+        }
+        postSync(payload);
+    }
+
+    function renderAttachments(items) {
+        var list = $('kb-attach-list');
+        if (!list) return;
+        list.innerHTML = '';
+
+        if (!items || !items.length) {
+            list.innerHTML = '<div style="color:var(--text-secondary); font-size:12px; padding:6px 2px;">Nenhum anexo.</div>';
+            return;
+        }
+
+        items.forEach(function (a) {
+            var id = a && a.id ? String(a.id) : '';
+            var url = a && a.url ? String(a.url) : '';
+            var name = (a && a.original_name ? String(a.original_name) : (url ? url.split('/').pop() : 'Arquivo'));
+
+            var row = document.createElement('div');
+            row.className = 'kb-attachment-item';
+            row.setAttribute('data-attachment-id', id);
+
+            var left = document.createElement('div');
+            left.className = 'kb-attachment-left';
+            left.innerHTML = '<div class="kb-attachment-name">' + esc(name) + '</div>';
+
+            var actions = document.createElement('div');
+            actions.className = 'kb-attachment-actions';
+            actions.innerHTML = ''
+                + '<a class="kb-btn" href="' + esc(url) + '" target="_blank" rel="noopener">Abrir</a>'
+                + '<button type="button" class="kb-btn kb-btn--danger" data-action="delete-attachment" data-attachment-id="' + esc(id) + '">Remover</button>';
+
+            row.appendChild(left);
+            row.appendChild(actions);
+            list.appendChild(row);
+        });
+    }
+
+    function loadAttachments(cardId) {
+        return postForm('/kanban/cartao/anexos/listar', { card_id: String(cardId) }).then(function (res) {
+            if (res.json && res.json.ok) {
+                renderAttachments(res.json.attachments || []);
+                return;
+            }
+            renderAttachments([]);
+        });
+    }
+
+    // Sidebar collapse init
+    setSidebarCollapsed(getSidebarCollapsed());
+    var toggleBtn = $('kb-toggle-sidebar');
+    if (toggleBtn) {
+        toggleBtn.addEventListener('click', function () {
+            setSidebarCollapsed(!document.body.classList.contains('kb-sidebar-collapsed'));
+        });
+    }
+
+    var toggleBtnAlt = $('kb-toggle-sidebar-alt');
+    if (toggleBtnAlt) {
+        toggleBtnAlt.addEventListener('click', function () {
+            setSidebarCollapsed(!document.body.classList.contains('kb-sidebar-collapsed'));
+        });
+    }
+
+    document.addEventListener('click', function (e) {
+        var t = e.target;
+        if (!t) return;
+        var act = t.getAttribute && t.getAttribute('data-action');
+        if (act === 'delete-attachment') {
+            var attId = t.getAttribute('data-attachment-id');
+            if (!attId) return;
+            if (!confirm('Remover este anexo?')) return;
+            postForm('/kanban/cartao/anexos/excluir', { attachment_id: String(attId) }).then(function (res) {
+                if (res.json && res.json.ok) {
+                    var row = document.querySelector('.kb-attachment-item[data-attachment-id="' + String(attId) + '"]');
+                    if (row && row.parentNode) row.parentNode.removeChild(row);
+                } else {
+                    alert((res.json && res.json.error) ? res.json.error : 'Falha ao remover anexo.');
+                }
+            });
+        }
+    });
+
+    var uploadBtn = $('kb-attach-upload');
+    if (uploadBtn) {
+        uploadBtn.addEventListener('click', function () {
+            var modal = $('kb-modal');
+            if (!modal) return;
+            var cardId = modal.dataset.cardId;
+            if (!cardId) return;
+            var input = $('kb-attach-file');
+            if (!input || !input.files || !input.files[0]) {
+                alert('Selecione um arquivo.');
+                return;
+            }
+            var fd = new FormData();
+            fd.append('card_id', String(cardId));
+            fd.append('file', input.files[0]);
+            uploadBtn.disabled = true;
+            uploadBtn.textContent = 'Enviando...';
+            postFile('/kanban/cartao/anexos/upload', fd).then(function (res) {
+                uploadBtn.disabled = false;
+                uploadBtn.textContent = 'Enviar';
+                if (res.json && res.json.ok && res.json.attachment) {
+                    input.value = '';
+                    loadAttachments(cardId);
+                } else {
+                    alert((res.json && res.json.error) ? res.json.error : 'Falha ao enviar anexo.');
+                }
+            });
+        });
     }
 
     var backdrop = $('kb-modal-backdrop');
@@ -786,6 +1175,30 @@ $currentBoardTitle = $currentBoard ? (string)($currentBoard['title'] ?? 'Sem tí
                     });
                 }
             });
+
+            var att = $('kb-attachments');
+            if (att) {
+                att.style.display = 'block';
+            }
+            loadAttachments(cardId);
+
+            var moveRow = $('kb-move-row');
+            var moveSel = $('kb-move-list');
+            if (moveRow && moveSel) {
+                moveRow.style.display = 'block';
+                buildListOptions(moveSel, listId3);
+                moveSel.onchange = function () {
+                    var modal = $('kb-modal');
+                    if (!modal) return;
+                    var currentListId = modal.dataset.listId;
+                    var toListId = this.value;
+                    if (!toListId || String(toListId) === String(currentListId)) {
+                        return;
+                    }
+                    moveCardToList(cardId, currentListId, toListId);
+                    modal.dataset.listId = String(toListId);
+                };
+            }
         }
 
         if (t.classList && t.classList.contains('kb-list-title')) {
@@ -930,6 +1343,12 @@ $currentBoardTitle = $currentBoard ? (string)($currentBoard['title'] ?? 'Sem tí
             if (!dnd.cardPlaceholder) return;
 
             var listContainer = e.target && e.target.closest ? e.target.closest('.kb-cards[data-cards-list-id]') : null;
+            if (!listContainer) {
+                var overList2 = e.target && e.target.closest ? e.target.closest('.kb-list[data-list-id]') : null;
+                if (overList2) {
+                    listContainer = overList2.querySelector('.kb-cards[data-cards-list-id]');
+                }
+            }
             if (!listContainer) return;
 
             var overCard = e.target && e.target.closest ? e.target.closest('.kb-card[data-card-id]') : null;
@@ -972,6 +1391,12 @@ $currentBoardTitle = $currentBoard ? (string)($currentBoard['title'] ?? 'Sem tí
 
         if (drag.type === 'card') {
             var listContainer = e.target && e.target.closest ? e.target.closest('.kb-cards[data-cards-list-id]') : null;
+            if (!listContainer) {
+                var overList3 = e.target && e.target.closest ? e.target.closest('.kb-list[data-list-id]') : null;
+                if (overList3) {
+                    listContainer = overList3.querySelector('.kb-cards[data-cards-list-id]');
+                }
+            }
             if (!listContainer) { drag.type=''; return; }
 
             var toListId = parseInt(listContainer.getAttribute('data-cards-list-id') || '0', 10);

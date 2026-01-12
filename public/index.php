@@ -167,6 +167,9 @@ $router->post('/kanban/cartao/excluir', 'KanbanController@deleteCard');
 $router->post('/kanban/cartao/mover', 'KanbanController@moveCard');
 $router->post('/kanban/cartao/reordenar', 'KanbanController@reorderCards');
 $router->post('/kanban/sync', 'KanbanController@sync');
+$router->post('/kanban/cartao/anexos/listar', 'KanbanController@listCardAttachments');
+$router->post('/kanban/cartao/anexos/upload', 'KanbanController@uploadCardAttachment');
+$router->post('/kanban/cartao/anexos/excluir', 'KanbanController@deleteCardAttachment');
 
 $router->get('/caderno', 'CadernoController@index');
 $router->post('/caderno/criar', 'CadernoController@create');
