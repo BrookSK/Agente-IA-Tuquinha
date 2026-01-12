@@ -781,10 +781,12 @@ if (!empty($_SESSION['user_id'])) {
                 $canSeeHistory = $hasUser;
                 $canUseProjects = false;
                 $canUseCaderno = false;
+                $canUseKanban = false;
                 $canUseNews = false;
                 if ($hasUser && $isAdmin) {
                     $canUseProjects = true;
                     $canUseCaderno = true;
+                    $canUseKanban = true;
                     $canUseNews = true;
                 } elseif ($hasUser) {
                     $canUseNews = true;
@@ -799,6 +801,7 @@ if (!empty($_SESSION['user_id'])) {
                                 $plan = \App\Models\Plan::findById((int)$sub['plan_id']);
                                 $canUseProjects = !empty($plan['allow_projects_access']);
                                 $canUseCaderno = !empty($plan['allow_pages']);
+                                $canUseKanban = !empty($plan['allow_kanban']);
                             }
                         }
                     }
@@ -825,6 +828,13 @@ if (!empty($_SESSION['user_id'])) {
                     'primary' => false,
                     'show' => $canUseCaderno,
                     'active' => $isActiveNav('/caderno'),
+                ];
+                $mobileQuickLinks[] = [
+                    'label' => 'Kanban',
+                    'href' => '/kanban',
+                    'primary' => false,
+                    'show' => $canUseKanban,
+                    'active' => $isActiveNav('/kanban'),
                 ];
                 $mobileQuickLinks[] = [
                     'label' => 'Histórico',
@@ -913,6 +923,13 @@ if (!empty($_SESSION['user_id'])) {
                     <a href="/caderno" class="sidebar-button<?= $isActiveNav('/caderno') ? ' sidebar-button--active' : '' ?>">
                         <span class="icon" aria-hidden="true"><?php echo $renderMenuIcon('quick_notebook', '📝'); ?></span>
                         <span>Caderno</span>
+                    </a>
+                <?php endif; ?>
+
+                <?php if ($canUseKanban): ?>
+                    <a href="/kanban" class="sidebar-button<?= $isActiveNav('/kanban') ? ' sidebar-button--active' : '' ?>">
+                        <span class="icon" aria-hidden="true"><?php echo $renderMenuIcon('quick_kanban', '🗂'); ?></span>
+                        <span>Kanban</span>
                     </a>
                 <?php endif; ?>
                 <a href="/planos" class="sidebar-button<?= $isActiveNav('/planos') ? ' sidebar-button--active' : '' ?>" data-tour="nav-plans">

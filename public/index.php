@@ -151,6 +151,23 @@ $router->post('/cursos/comprar', 'CoursePurchaseController@process');
 $router->get('/noticias', 'NewsController@index');
 $router->get('/noticias/ver', 'NewsController@show');
 $router->post('/noticias/email', 'NewsController@toggleEmail');
+
+// Kanban (Trello-like)
+$router->get('/kanban', 'KanbanController@index');
+$router->post('/kanban/quadro/criar', 'KanbanController@createBoard');
+$router->post('/kanban/quadro/renomear', 'KanbanController@renameBoard');
+$router->post('/kanban/quadro/excluir', 'KanbanController@deleteBoard');
+$router->post('/kanban/lista/criar', 'KanbanController@createList');
+$router->post('/kanban/lista/renomear', 'KanbanController@renameList');
+$router->post('/kanban/lista/excluir', 'KanbanController@deleteList');
+$router->post('/kanban/lista/reordenar', 'KanbanController@reorderLists');
+$router->post('/kanban/cartao/criar', 'KanbanController@createCard');
+$router->post('/kanban/cartao/atualizar', 'KanbanController@updateCard');
+$router->post('/kanban/cartao/excluir', 'KanbanController@deleteCard');
+$router->post('/kanban/cartao/mover', 'KanbanController@moveCard');
+$router->post('/kanban/cartao/reordenar', 'KanbanController@reorderCards');
+$router->post('/kanban/sync', 'KanbanController@sync');
+
 $router->get('/caderno', 'CadernoController@index');
 $router->post('/caderno/criar', 'CadernoController@create');
 $router->post('/caderno/salvar', 'CadernoController@save');
