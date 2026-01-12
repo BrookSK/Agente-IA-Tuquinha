@@ -6,6 +6,106 @@ use App\Models\Setting;
 
 class PerplexityNewsService
 {
+    private function parseListSetting(string $key, string $fallback = ''): array
+    {
+        $raw = (string)Setting::get($key, $fallback);
+        $raw = str_replace(["\r\n", "\r"], "\n", $raw);
+        $parts = preg_split('/[\n,;]+/', $raw) ?: [];
+        $out = [];
+        foreach ($parts as $p) {
+            $p = strtolower(trim((string)$p));
+            if ($p === '') {
+                continue;
+            }
+            $out[$p] = true;
+        }
+        return array_keys($out);
+    }
+
+    private function getHost(string $url): string
+    {
+        $host = (string)(parse_url($url, PHP_URL_HOST) ?? '');
+        $host = strtolower(trim($host));
+        if ($host === '') {
+            return '';
+        }
+        if (str_starts_with($host, 'www.')) {
+            $host = substr($host, 4);
+        }
+        return $host;
+    }
+
+    private function isBlockedByDomain(string $url, array $blockedDomains): bool
+    {
+        $host = $this->getHost($url);
+        if ($host === '' || !$blockedDomains) {
+            return false;
+        }
+        foreach ($blockedDomains as $d) {
+            $d = strtolower(trim((string)$d));
+            if ($d === '') {
+                continue;
+            }
+            if ($host === $d) {
+                return true;
+            }
+            if (str_ends_with($host, '.' . $d)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private function isBlockedBySource(?string $sourceName, array $blockedSources): bool
+    {
+        $s = strtolower(trim((string)($sourceName ?? '')));
+        if ($s === '' || !$blockedSources) {
+            return false;
+        }
+        foreach ($blockedSources as $b) {
+            $b = strtolower(trim((string)$b));
+            if ($b === '') {
+                continue;
+            }
+            if ($s === $b) {
+                return true;
+            }
+            if (strpos($s, $b) !== false) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private function looksLikePaywallText(string $text): bool
+    {
+        $t = strtolower(trim($text));
+        if ($t === '') {
+            return false;
+        }
+        $markers = [
+            'assine',
+            'assinatura',
+            'conteúdo exclusivo',
+            'conteudo exclusivo',
+            'para continuar lendo',
+            'continue lendo',
+            'faça login',
+            'faca login',
+            'cadastre-se',
+            'cadastro',
+            'acesso livre',
+            'seja assinante',
+            'apoiar o jornalismo',
+        ];
+        foreach ($markers as $m) {
+            if (strpos($t, $m) !== false) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public function fetchMarketingNewsBrazil(int $limit = 30): array
     {
         $apiKey = trim((string)Setting::get('perplexity_api_key', ''));
@@ -18,7 +118,7 @@ class PerplexityNewsService
             $model = 'sonar';
         }
 
-        $system = 'Você é um agregador de notícias. Sua tarefa é retornar APENAS um JSON válido (sem markdown) com uma lista de notícias recentes sobre marketing, branding, publicidade, social media, e-commerce e comportamento do consumidor no Brasil. Evite política geral e notícias fora do tema.';
+        $system = 'Você é um agregador de notícias. Sua tarefa é retornar APENAS um JSON válido (sem markdown) com uma lista de notícias recentes sobre marketing, branding, publicidade, social media, e-commerce e comportamento do consumidor no Brasil. Evite política geral e notícias fora do tema. Evite sites com paywall/assinatura e evite conteúdos que exigem login/cadastro para ler o texto completo.';
 
         $user = 'Busque as notícias mais recentes e relevantes (Brasil) para profissionais de marketing. Retorne exatamente neste formato JSON: {"items":[{"title":"...","summary":"...","url":"...","source_name":"...","published_at":"YYYY-MM-DD HH:MM:SS","image_url":"..."}]}. Regras: (1) no máximo ' . (int)$limit . ' itens; (2) title e url obrigatórios; (3) summary curto (1-2 frases); (4) published_at pode ser null se não souber; (5) image_url deve ser uma URL direta de imagem quando possível, caso contrário null.';
 
@@ -66,6 +166,9 @@ class PerplexityNewsService
             return [];
         }
 
+        $blockedDomains = $this->parseListSetting('news_blocked_domains', 'jornaldocomercio.com.br');
+        $blockedSources = $this->parseListSetting('news_blocked_sources', 'jornal do comércio');
+
         $items = [];
         $missingImageUrls = 0;
         foreach ($parsed['items'] as $it) {
@@ -78,6 +181,19 @@ class PerplexityNewsService
                 continue;
             }
 
+            $sourceName = isset($it['source_name']) ? (string)$it['source_name'] : null;
+            $summary = isset($it['summary']) ? (string)$it['summary'] : null;
+
+            if ($this->isBlockedByDomain($url, $blockedDomains)) {
+                continue;
+            }
+            if ($this->isBlockedBySource($sourceName, $blockedSources)) {
+                continue;
+            }
+            if ($summary !== null && $this->looksLikePaywallText($summary)) {
+                continue;
+            }
+
             $imageUrl = isset($it['image_url']) ? trim((string)$it['image_url']) : '';
             if ($imageUrl === '') {
                 $imageUrl = null;
@@ -86,9 +202,9 @@ class PerplexityNewsService
 
             $items[] = [
                 'title' => $title,
-                'summary' => isset($it['summary']) ? (string)$it['summary'] : null,
+                'summary' => $summary,
                 'url' => $url,
-                'source_name' => isset($it['source_name']) ? (string)$it['source_name'] : null,
+                'source_name' => $sourceName,
                 'published_at' => isset($it['published_at']) ? (string)$it['published_at'] : null,
                 'image_url' => $imageUrl,
             ];

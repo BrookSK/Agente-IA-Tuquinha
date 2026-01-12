@@ -15,6 +15,105 @@ use App\Services\PerplexityNewsService;
 
 class CronNewsController extends Controller
 {
+    private function parseListSetting(string $key, string $fallback = ''): array
+    {
+        $raw = (string)Setting::get($key, $fallback);
+        $raw = str_replace(["\r\n", "\r"], "\n", $raw);
+        $parts = preg_split('/[\n,;]+/', $raw) ?: [];
+        $out = [];
+        foreach ($parts as $p) {
+            $p = strtolower(trim((string)$p));
+            if ($p === '') {
+                continue;
+            }
+            $out[$p] = true;
+        }
+        return array_keys($out);
+    }
+
+    private function getHost(string $url): string
+    {
+        $host = (string)(parse_url($url, PHP_URL_HOST) ?? '');
+        $host = strtolower(trim($host));
+        if ($host === '') {
+            return '';
+        }
+        if (str_starts_with($host, 'www.')) {
+            $host = substr($host, 4);
+        }
+        return $host;
+    }
+
+    private function isBlockedByDomain(string $url, array $blockedDomains): bool
+    {
+        $host = $this->getHost($url);
+        if ($host === '' || !$blockedDomains) {
+            return false;
+        }
+        foreach ($blockedDomains as $d) {
+            $d = strtolower(trim((string)$d));
+            if ($d === '') {
+                continue;
+            }
+            if ($host === $d) {
+                return true;
+            }
+            if (str_ends_with($host, '.' . $d)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private function isBlockedBySource(?string $sourceName, array $blockedSources): bool
+    {
+        $s = strtolower(trim((string)($sourceName ?? '')));
+        if ($s === '' || !$blockedSources) {
+            return false;
+        }
+        foreach ($blockedSources as $b) {
+            $b = strtolower(trim((string)$b));
+            if ($b === '') {
+                continue;
+            }
+            if ($s === $b) {
+                return true;
+            }
+            if (strpos($s, $b) !== false) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private function looksLikePaywallText(string $text): bool
+    {
+        $t = strtolower(trim($text));
+        if ($t === '') {
+            return false;
+        }
+        $markers = [
+            'assine',
+            'assinatura',
+            'conteúdo exclusivo',
+            'conteudo exclusivo',
+            'para continuar lendo',
+            'continue lendo',
+            'faça login',
+            'faca login',
+            'cadastre-se',
+            'cadastro',
+            'acesso livre',
+            'seja assinante',
+        ];
+        foreach ($markers as $m) {
+            if (strpos($t, $m) !== false) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     private function ensureCronToken(): bool
     {
         $expected = trim((string)Setting::get('news_cron_token', ''));
@@ -107,6 +206,9 @@ class CronNewsController extends Controller
             return;
         }
 
+        $blockedDomains = $this->parseListSetting('news_blocked_domains', 'jornaldocomercio.com.br');
+        $blockedSources = $this->parseListSetting('news_blocked_sources', 'jornal do comércio');
+
         $refreshed = $this->maybeRefreshNews();
 
         $users = User::all();
@@ -161,6 +263,16 @@ class CronNewsController extends Controller
                 $source = trim((string)($ni['source_name'] ?? ''));
 
                 if ($nid <= 0 || $title === '' || $url === '') {
+                    continue;
+                }
+
+                if ($this->isBlockedByDomain($url, $blockedDomains)) {
+                    continue;
+                }
+                if ($this->isBlockedBySource($source, $blockedSources)) {
+                    continue;
+                }
+                if ($this->looksLikePaywallText($summary) || $this->looksLikePaywallText($source) || $this->looksLikePaywallText($url)) {
                     continue;
                 }
 
