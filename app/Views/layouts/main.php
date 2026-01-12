@@ -170,9 +170,21 @@ if (!empty($_SESSION['user_id'])) {
         body[data-theme="light"] [style*="background: #111118"] {
             background: var(--surface-card) !important;
         }
+        body[data-theme="light"] [style*="background: rgba(17,17,24"],
+        body[data-theme="light"] [style*="background:rgba(17,17,24"],
+        body[data-theme="light"] [style*="background: rgba(17, 17, 24"],
+        body[data-theme="light"] [style*="background:rgba(17, 17, 24"] {
+            background: var(--surface-card) !important;
+        }
         body[data-theme="light"] [style*="background:#050509"],
         body[data-theme="light"] [style*="background: #050509"] {
             background: var(--surface-subtle) !important;
+        }
+        body[data-theme="light"] [style*="background: rgba(0,0,0,0.35"],
+        body[data-theme="light"] [style*="background:rgba(0,0,0,0.35"],
+        body[data-theme="light"] [style*="background: rgba(0, 0, 0, 0.35"],
+        body[data-theme="light"] [style*="background:rgba(0, 0, 0, 0.35"] {
+            background: var(--input-bg) !important;
         }
         body[data-theme="light"] [style*="background:#0b0b10"],
         body[data-theme="light"] [style*="background: #0b0b10"] {
@@ -188,9 +200,27 @@ if (!empty($_SESSION['user_id'])) {
         body[data-theme="light"] [style*="border: 1px solid #272727"] {
             border-color: var(--border-subtle) !important;
         }
+        body[data-theme="light"] [style*="border: 1px solid rgba(255,255,255"],
+        body[data-theme="light"] [style*="border:1px solid rgba(255,255,255"],
+        body[data-theme="light"] [style*="border: 1px solid rgba(255, 255, 255"],
+        body[data-theme="light"] [style*="border:1px solid rgba(255, 255, 255"] {
+            border-color: var(--border-subtle) !important;
+        }
         body[data-theme="light"] [style*="color:#f5f5f5"],
         body[data-theme="light"] [style*="color: #f5f5f5"] {
             color: var(--text-primary) !important;
+        }
+        body[data-theme="light"] [style*="color: rgba(255,255,255,0.60"],
+        body[data-theme="light"] [style*="color:rgba(255,255,255,0.60"],
+        body[data-theme="light"] [style*="color: rgba(255, 255, 255, 0.60"],
+        body[data-theme="light"] [style*="color:rgba(255, 255, 255, 0.60"] {
+            color: var(--text-secondary) !important;
+        }
+        body[data-theme="light"] [style*="color: rgba(255,255,255,0.55"],
+        body[data-theme="light"] [style*="color:rgba(255,255,255,0.55"],
+        body[data-theme="light"] [style*="color: rgba(255, 255, 255, 0.55"],
+        body[data-theme="light"] [style*="color:rgba(255, 255, 255, 0.55"] {
+            color: var(--text-secondary) !important;
         }
         body[data-theme="light"] [style*="color:#b0b0b0"],
         body[data-theme="light"] [style*="color: #b0b0b0"] {
@@ -199,6 +229,10 @@ if (!empty($_SESSION['user_id'])) {
         body[data-theme="light"] [style*="background:#1c1c24"],
         body[data-theme="light"] [style*="background: #1c1c24"] {
             background: var(--surface-subtle) !important;
+        }
+        body[data-theme="light"] input::placeholder,
+        body[data-theme="light"] textarea::placeholder {
+            color: rgba(75, 85, 99, 0.8);
         }
         body[data-theme="light"] #social-chat-messages [style*="linear-gradient(135deg,#e53935,#ff6f60)"],
         body[data-theme="light"] #social-chat-messages [style*="linear-gradient(135deg, #e53935,#ff6f60)"] {

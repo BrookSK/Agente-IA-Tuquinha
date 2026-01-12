@@ -577,7 +577,114 @@ $publicUrl = ($isPublished && $publicToken !== '') ? ('/caderno/publico?token=' 
         border: 3px solid transparent;
         background-clip: padding-box;
     }
+
+    /* Mobile */
+    .notion-mobile-only { display: none; }
+    #notion-sidebar-overlay { display: none; }
+
+    @media (max-width: 920px) {
+        .notion-shell {
+            gap: 10px;
+        }
+        .notion-page-header {
+            padding: 14px 14px 10px 14px;
+        }
+        .notion-page-body {
+            padding: 12px 14px 18px 14px;
+        }
+        .notion-editor-wrap {
+            max-width: 100%;
+        }
+        .notion-editor-wrap .ce-block__content,
+        .notion-editor-wrap .ce-toolbar__content {
+            max-width: 100%;
+        }
+        .notion-title {
+            font-size: 24px;
+        }
+    }
+
+    @media (max-width: 720px) {
+        .notion-mobile-only { display: inline-flex; }
+
+        .notion-shell {
+            display: block;
+            min-height: calc(100vh - 64px);
+            position: relative;
+        }
+
+        .notion-sidebar {
+            position: fixed;
+            top: 64px;
+            left: 0;
+            height: calc(100vh - 64px);
+            width: min(320px, 86vw);
+            border-radius: 0 12px 12px 0;
+            box-shadow: 0 18px 46px rgba(0,0,0,0.45);
+            transform: translateX(-110%);
+            transition: transform 0.18s ease-out;
+            z-index: 100000;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        .notion-shell--sidebar-open .notion-sidebar {
+            transform: translateX(0);
+        }
+
+        #notion-sidebar-overlay {
+            position: fixed;
+            inset: 64px 0 0 0;
+            background: rgba(0,0,0,0.45);
+            z-index: 99999;
+        }
+        body[data-theme="light"] #notion-sidebar-overlay {
+            background: rgba(15,23,42,0.32);
+        }
+        .notion-shell--sidebar-open #notion-sidebar-overlay {
+            display: block;
+        }
+
+        .notion-page {
+            width: 100%;
+        }
+        .notion-page-header {
+            padding: 12px 12px 10px 12px;
+        }
+        .notion-page-body {
+            padding: 10px 12px 18px 12px;
+        }
+        .notion-emoji {
+            width: 38px;
+            height: 38px;
+            flex: 0 0 38px;
+            border-radius: 10px;
+        }
+        .notion-title {
+            font-size: 22px;
+            padding: 4px 2px;
+        }
+
+        .notion-page-header > div:last-child {
+            width: 100%;
+            justify-content: flex-start !important;
+            gap: 6px !important;
+        }
+
+        /* Menus/contexto no mobile: não estourar lateral */
+        .tuq-ctx {
+            width: calc(100vw - 16px);
+            left: 8px !important;
+            right: 8px !important;
+        }
+        .tuq-ctx .tuq-ctx-flyout {
+            left: 0;
+            top: 44px;
+            width: 100%;
+        }
+    }
 </style>
+
+<div id="notion-sidebar-overlay"></div>
 
 <div class="notion-shell">
     <div class="notion-sidebar">
@@ -632,6 +739,11 @@ $publicUrl = ($isPublished && $publicToken !== '') ? ('/caderno/publico?token=' 
                 </div>
             </div>
             <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap; justify-content:flex-end;">
+                <button type="button" id="btn-mobile-pages" class="notion-mobile-only" style="
+                    border:1px solid var(--border-subtle); border-radius:999px; padding:7px 12px;
+                    background:var(--surface-subtle); color:var(--text-primary); font-size:12px; cursor:pointer;">
+                    Páginas
+                </button>
                 <?php if ($current && $canEdit): ?>
                     <button type="button" id="btn-save" style="
                         border:1px solid var(--border-subtle); border-radius:999px; padding:7px 12px;
@@ -814,24 +926,60 @@ $publicUrl = ($isPublished && $publicToken !== '') ? ('/caderno/publico?token=' 
 
     var $ = function (id) { return document.getElementById(id); };
 
+    (function () {
+        var shell = document.querySelector('.notion-shell');
+        var btn = $('btn-mobile-pages');
+        var overlay = $('notion-sidebar-overlay');
+        if (!shell || !btn || !overlay) return;
+
+        function openSidebar() {
+            shell.classList.add('notion-shell--sidebar-open');
+        }
+        function closeSidebar() {
+            shell.classList.remove('notion-shell--sidebar-open');
+        }
+        function toggleSidebar() {
+            if (shell.classList.contains('notion-shell--sidebar-open')) closeSidebar();
+            else openSidebar();
+        }
+
+        btn.addEventListener('click', function (e) {
+            e.preventDefault();
+            toggleSidebar();
+        });
+        overlay.addEventListener('click', function () {
+            closeSidebar();
+        });
+
+        // Ao clicar em uma página no mobile, fecha o drawer
+        var sidebar = document.querySelector('.notion-sidebar');
+        if (sidebar) {
+            sidebar.addEventListener('click', function (e) {
+                var a = e.target && e.target.closest ? e.target.closest('a[href^="/caderno"]') : null;
+                if (!a) return;
+                closeSidebar();
+            });
+        }
+    })();
+
     function postForm(url, data) {
         var fd = new FormData();
         Object.keys(data || {}).forEach(function (k) { fd.append(k, data[k]); });
-        return fetch(url, {
-            method: 'POST',
-            headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' },
-            body: fd
-        }).then(function (r) {
-            var ct = (r.headers && r.headers.get) ? (r.headers.get('content-type') || '') : '';
-            if (ct.toLowerCase().indexOf('application/json') >= 0) {
-                return r.json().then(function (j) { return { ok: r.ok, status: r.status, json: j, text: null }; });
-            }
-            return r.text().then(function (t) {
-                return { ok: r.ok, status: r.status, json: null, text: t || '' };
+        return fetch(url, { method: 'POST', body: fd, headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+            .then(function (r) {
+                var ct = (r.headers && r.headers.get) ? (r.headers.get('content-type') || '') : '';
+                if (ct.toLowerCase().indexOf('application/json') >= 0) {
+                    return r.json().then(function (j) {
+                        return { ok: r.ok, status: r.status, json: j, text: null };
+                    });
+                }
+                return r.text().then(function (t) {
+                    return { ok: r.ok, status: r.status, json: null, text: t || '' };
+                });
+            })
+            .catch(function (err) {
+                return { ok: false, status: 0, json: null, text: String(err || 'Erro') };
             });
-        }).catch(function (err) {
-            return { ok: false, status: 0, json: null, text: String(err || 'Erro') };
-        });
     }
 
     function showActionError(res, fallback) {
