@@ -16,6 +16,28 @@ use App\Services\PerplexityNewsService;
 
 class NewsController extends Controller
 {
+    private function normalizeUrlForDedupe(string $url): string
+    {
+        $u = trim(strtolower($url));
+        if ($u === '') {
+            return '';
+        }
+
+        $parts = parse_url($u);
+        if (!is_array($parts)) {
+            return rtrim($u, '/');
+        }
+
+        $host = strtolower(trim((string)($parts['host'] ?? '')));
+        if (str_starts_with($host, 'www.')) {
+            $host = substr($host, 4);
+        }
+        $path = (string)($parts['path'] ?? '');
+        $path = $path !== '' ? rtrim($path, '/') : '';
+
+        return $host . $path;
+    }
+
     private function parseListSetting(string $key, string $fallback = ''): array
     {
         $raw = (string)Setting::get($key, $fallback);
@@ -180,21 +202,14 @@ class NewsController extends Controller
         $emailEnabled = !empty($pref) && !empty($pref['email_enabled']);
 
         // Busca mais itens para conseguir preencher o grid apenas com notícias que tenham imagem válida.
-        $desiredCount = 30;
-        if ($desiredCount < 10) {
-            $desiredCount = 10;
-        }
-        $candidates = NewsItem::latest(200);
-        $minCount = 10;
+        $candidates = NewsItem::latest(80);
         $final = [];
-        $fallbackNoImage = [];
+        $seen = [];
         $attemptedOg = 0;
         $validated = 0;
-        $seenUrls = [];
-        $seenTitles = [];
 
         foreach ($candidates as $row) {
-            if (count($final) >= $desiredCount) {
+            if (count($final) >= 30) {
                 break;
             }
             if (!is_array($row)) {
@@ -210,12 +225,12 @@ class NewsController extends Controller
                 continue;
             }
 
-            $urlKey = strtolower(trim($url));
-            if ($urlKey !== '' && isset($seenUrls[$urlKey])) {
+            $dedupeKey = $this->normalizeUrlForDedupe($url);
+            if ($dedupeKey !== '' && isset($seen['url:' . $dedupeKey])) {
                 continue;
             }
             $titleKey = strtolower(trim((string)($row['title'] ?? '')));
-            if ($titleKey !== '' && isset($seenTitles[$titleKey])) {
+            if ($titleKey !== '' && isset($seen['title:' . $titleKey])) {
                 continue;
             }
 
@@ -241,7 +256,7 @@ class NewsController extends Controller
             }
 
             // Se não tiver imagem (ou foi invalidada), tenta backfill via OpenGraph
-            if ($img === '' && $attemptedOg < 25) {
+            if ($img === '' && $attemptedOg < 8) {
                 $attemptedOg++;
                 try {
                     $og = OpenGraphImageService::fetchImageUrl($url, 4);
@@ -254,27 +269,19 @@ class NewsController extends Controller
                 }
             }
 
-            // Prioriza itens com imagem, mas guarda os sem imagem para completar o mínimo.
+            // Só exibe se tiver imagem válida
             if (trim($img) === '') {
-                $fallbackNoImage[] = $row;
-            } else {
-                $final[] = $row;
+                continue;
             }
-            if ($urlKey !== '') {
-                $seenUrls[$urlKey] = true;
+
+            if ($dedupeKey !== '') {
+                $seen['url:' . $dedupeKey] = true;
             }
             if ($titleKey !== '') {
-                $seenTitles[$titleKey] = true;
+                $seen['title:' . $titleKey] = true;
             }
-        }
 
-        if (count($final) < $desiredCount && !empty($fallbackNoImage)) {
-            foreach ($fallbackNoImage as $row) {
-                if (count($final) >= $desiredCount) {
-                    break;
-                }
-                $final[] = $row;
-            }
+            $final[] = $row;
         }
 
         $news = $final;
