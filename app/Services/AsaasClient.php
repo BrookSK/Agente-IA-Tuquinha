@@ -8,6 +8,7 @@ class AsaasClient
 {
     private string $baseUrl;
     private string $apiKey;
+    private string $environment;
 
     public function __construct()
     {
@@ -16,13 +17,18 @@ class AsaasClient
             throw new \RuntimeException('Configuração do Asaas não encontrada.');
         }
 
-        $environment = $config['environment'] ?? 'sandbox';
-        if ($environment === 'production') {
+        $this->environment = (string)($config['environment'] ?? 'sandbox');
+        if ($this->environment === 'production') {
             $this->baseUrl = 'https://api.asaas.com/v3';
-            $this->apiKey = $config['production_api_key'];
+            $this->apiKey = trim((string)($config['production_api_key'] ?? ''));
         } else {
             $this->baseUrl = 'https://sandbox.asaas.com/api/v3';
-            $this->apiKey = $config['sandbox_api_key'];
+            $this->apiKey = trim((string)($config['sandbox_api_key'] ?? ''));
+        }
+
+        if ($this->apiKey === '') {
+            error_log('AsaasClient: access_token vazio. env=' . $this->environment . ' baseUrl=' . $this->baseUrl);
+            throw new \RuntimeException('Chave API do Asaas não configurada para o ambiente selecionado (' . $this->environment . '). Verifique em /admin/config.');
         }
     }
 
