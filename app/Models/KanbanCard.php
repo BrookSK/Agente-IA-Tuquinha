@@ -23,6 +23,7 @@ class KanbanCard
                 LEFT JOIN (
                     SELECT card_id, COUNT(*) AS attachments_count
                     FROM kanban_card_attachments
+                    WHERE is_cover = 0
                     GROUP BY card_id
                 ) attc ON attc.card_id = c.id
                 LEFT JOIN (

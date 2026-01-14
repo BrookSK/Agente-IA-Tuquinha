@@ -529,6 +529,78 @@ class KanbanController extends Controller
         ]);
     }
 
+    public function uploadCardCover(): void
+    {
+        $user = $this->requireLogin();
+        $this->requireKanbanAccess($user);
+
+        $cardId = (int)($_POST['card_id'] ?? 0);
+        if ($cardId <= 0) {
+            $this->json(['ok' => false, 'error' => 'card_id inválido.'], 400);
+        }
+        $this->loadCardContextOrDeny($cardId, (int)$user['id']);
+
+        $existing = KanbanCardAttachment::findCoverForCard($cardId);
+        if ($existing) {
+            $this->json(['ok' => false, 'error' => 'Remova a capa atual antes de enviar outra.'], 409);
+        }
+
+        if (empty($_FILES['file']) || !is_array($_FILES['file'])) {
+            $this->json(['ok' => false, 'error' => 'Envie um arquivo.'], 422);
+        }
+
+        $err = (int)($_FILES['file']['error'] ?? UPLOAD_ERR_NO_FILE);
+        if ($err !== UPLOAD_ERR_OK) {
+            $this->json(['ok' => false, 'error' => 'Erro no upload.'], 422);
+        }
+
+        $tmp = (string)($_FILES['file']['tmp_name'] ?? '');
+        $originalName = (string)($_FILES['file']['name'] ?? 'capa');
+        $type = (string)($_FILES['file']['type'] ?? '');
+        $size = (int)($_FILES['file']['size'] ?? 0);
+        if (!is_file($tmp) || $size <= 0) {
+            $this->json(['ok' => false, 'error' => 'Arquivo inválido.'], 422);
+        }
+
+        $mime = strtolower(trim($type));
+        if ($mime === '' || strpos($mime, 'image/') !== 0) {
+            $this->json(['ok' => false, 'error' => 'A capa deve ser uma imagem.'], 422);
+        }
+
+        $remoteUrl = MediaStorageService::uploadFile($tmp, $originalName, $type);
+        if (!is_string($remoteUrl) || trim($remoteUrl) === '') {
+            $this->json(['ok' => false, 'error' => 'Não foi possível enviar a mídia para o servidor.'], 500);
+        }
+
+        $id = KanbanCardAttachment::create($cardId, $remoteUrl, $originalName, $type !== '' ? $type : null, $size, 1);
+        KanbanCard::setCoverAttachmentId($cardId, $id);
+        $row = KanbanCardAttachment::findById($id);
+
+        $this->json([
+            'ok' => true,
+            'cover_attachment_id' => $id,
+            'cover_url' => (string)($row['url'] ?? ''),
+            'cover_mime_type' => (string)($row['mime_type'] ?? ''),
+            'cover_original_name' => (string)($row['original_name'] ?? ''),
+        ]);
+    }
+
+    public function clearCardCover(): void
+    {
+        $user = $this->requireLogin();
+        $this->requireKanbanAccess($user);
+
+        $cardId = (int)($_POST['card_id'] ?? 0);
+        if ($cardId <= 0) {
+            $this->json(['ok' => false, 'error' => 'card_id inválido.'], 400);
+        }
+        $this->loadCardContextOrDeny($cardId, (int)$user['id']);
+
+        KanbanCardAttachment::deleteCoverForCard($cardId);
+        KanbanCard::setCoverAttachmentId($cardId, null);
+        $this->json(['ok' => true]);
+    }
+
     public function toggleCardDone(): void
     {
         $user = $this->requireLogin();
@@ -702,7 +774,7 @@ class KanbanController extends Controller
             $this->json(['ok' => false, 'error' => 'Não foi possível enviar a mídia para o servidor.'], 500);
         }
 
-        $id = KanbanCardAttachment::create($cardId, $remoteUrl, $originalName, $type !== '' ? $type : null, $size);
+        $id = KanbanCardAttachment::create($cardId, $remoteUrl, $originalName, $type !== '' ? $type : null, $size, 0);
         $row = KanbanCardAttachment::findById($id);
         $this->json(['ok' => true, 'attachment' => $row]);
     }
@@ -728,6 +800,10 @@ class KanbanController extends Controller
         }
 
         $this->loadCardContextOrDeny($cardId, (int)$user['id']);
+
+        if (!empty($att['is_cover'])) {
+            KanbanCard::setCoverAttachmentId($cardId, null);
+        }
         KanbanCardAttachment::deleteById($attachmentId);
         $this->json(['ok' => true]);
     }

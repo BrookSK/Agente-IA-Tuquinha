@@ -177,6 +177,8 @@ $router->post('/kanban/cartao/anexos/upload', 'KanbanController@uploadCardAttach
 $router->post('/kanban/cartao/anexos/excluir', 'KanbanController@deleteCardAttachment');
 
 $router->post('/kanban/cartao/capa/definir', 'KanbanController@setCardCover');
+$router->post('/kanban/cartao/capa/upload', 'KanbanController@uploadCardCover');
+$router->post('/kanban/cartao/capa/remover', 'KanbanController@clearCardCover');
 $router->post('/kanban/cartao/concluido/toggle', 'KanbanController@toggleCardDone');
 $router->post('/kanban/cartao/checklist/listar', 'KanbanController@listChecklist');
 $router->post('/kanban/cartao/checklist/adicionar', 'KanbanController@addChecklistItem');
