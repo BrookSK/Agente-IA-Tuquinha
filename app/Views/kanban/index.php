@@ -90,6 +90,31 @@ $currentBoardTitle = $currentBoard ? (string)($currentBoard['title'] ?? 'Sem tí
         gap: 6px;
         overflow-y: auto;
     }
+
+    .kb-share-card {
+        width: min(520px, calc(100vw - 28px));
+    }
+    .kb-share-row {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        margin-top: 10px;
+        flex-wrap: wrap;
+    }
+    .kb-share-list {
+        margin-top: 10px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        max-height: 260px;
+        overflow: auto;
+        padding-right: 2px;
+    }
+    .kb-share-empty {
+        color: var(--text-secondary);
+        font-size: 12px;
+        padding: 6px 2px;
+    }
     .kb-board-item {
         display: flex;
         align-items: center;
@@ -384,14 +409,64 @@ $currentBoardTitle = $currentBoard ? (string)($currentBoard['title'] ?? 'Sem tí
     }
     .kb-modal-card {
         position: relative;
-        width: min(520px, calc(100vw - 28px));
+        width: min(980px, calc(100vw - 28px));
         border-radius: 16px;
         border: 1px solid var(--border-subtle);
         background: var(--surface-card);
-        box-shadow: 0 18px 50px rgba(0,0,0,0.6);
-        padding: 14px;
-        max-height: calc(100vh - 28px);
+        padding: 16px;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+        max-height: calc(100vh - 24px);
         overflow-y: auto;
+    }
+
+    .kb-modal-two-col {
+        display: flex;
+        gap: 14px;
+        margin-top: 10px;
+        align-items: flex-start;
+    }
+    .kb-modal-left {
+        flex: 1;
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+    .kb-modal-right {
+        width: 240px;
+        flex: 0 0 240px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+    .kb-modal-side-title {
+        font-size: 12px;
+        font-weight: 800;
+        color: var(--text-secondary);
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        margin-top: 2px;
+    }
+    .kb-qa-btn {
+        width: 100%;
+        justify-content: flex-start;
+        gap: 8px;
+    }
+    .kb-modal-actions.kb-modal-actions--footer {
+        margin-top: 14px;
+    }
+
+    @media (max-width: 860px) {
+        .kb-modal-card {
+            width: min(620px, calc(100vw - 28px));
+        }
+        .kb-modal-two-col {
+            flex-direction: column;
+        }
+        .kb-modal-right {
+            width: 100%;
+            flex: 0 0 auto;
+        }
     }
 
     .kb-modal-card,
@@ -709,6 +784,10 @@ $currentBoardTitle = $currentBoard ? (string)($currentBoard['title'] ?? 'Sem tí
             </div>
             <div style="display:flex; gap:8px; flex-wrap:wrap;">
                 <?php if ($currentBoardId > 0): ?>
+                    <?php $isOwner = !empty($currentBoard) && (int)($currentBoard['owner_user_id'] ?? 0) === (int)($user['id'] ?? 0); ?>
+                    <?php if (!empty($canShareKanban) && ($isOwner || !empty($_SESSION['is_admin']))): ?>
+                        <button type="button" class="kb-btn" id="kb-share-board">Compartilhar</button>
+                    <?php endif; ?>
                     <button type="button" class="kb-btn" id="kb-rename-board">Renomear</button>
                     <button type="button" class="kb-btn kb-btn--danger" id="kb-delete-board">Excluir</button>
                 <?php endif; ?>
@@ -829,52 +908,66 @@ $currentBoardTitle = $currentBoard ? (string)($currentBoard['title'] ?? 'Sem tí
     <div class="kb-modal-backdrop" id="kb-modal-backdrop"></div>
     <div class="kb-modal-card">
         <div class="kb-modal-title" id="kb-modal-title">Editar</div>
-        <div id="kb-move-row" style="display:none;">
-            <div class="kb-modal-field-label">Lista</div>
-            <select class="kb-select" id="kb-move-list"></select>
-        </div>
-        <div style="margin-top:10px; display:flex; flex-direction:column; gap:8px;">
-            <input class="kb-input" id="kb-modal-input" placeholder="Título" />
-            <textarea class="kb-input" id="kb-modal-textarea" placeholder="Descrição" style="min-height:110px; resize:vertical;"></textarea>
+
+        <div class="kb-modal-two-col">
+            <div class="kb-modal-left">
+                <div id="kb-move-row" style="display:none;">
+                    <div class="kb-modal-field-label">Lista</div>
+                    <select class="kb-select" id="kb-move-list"></select>
+                </div>
+
+                <div style="display:flex; flex-direction:column; gap:8px;">
+                    <input class="kb-input" id="kb-modal-input" placeholder="Título" />
+                    <textarea class="kb-input" id="kb-modal-textarea" placeholder="Descrição" style="min-height:110px; resize:vertical;"></textarea>
+                </div>
+
+                <div style="display:flex; flex-direction:column; gap:6px;">
+                    <div class="kb-modal-field-label">Data de entrega</div>
+                    <input type="date" class="kb-input" id="kb-modal-due-date" />
+                </div>
+
+                <div class="kb-cover-box" id="kb-cover-section" style="display:none;">
+                    <div style="display:flex; align-items:center; justify-content:space-between; gap:8px;">
+                        <div class="kb-attachments-title">Capa do cartão</div>
+                        <button type="button" class="kb-btn" id="kb-cover-clear" style="display:none;">Remover capa</button>
+                    </div>
+                    <div class="kb-cover-preview" id="kb-cover-preview">
+                        <div class="kb-cover-empty">Sem capa.</div>
+                    </div>
+                    <div id="kb-cover-choices"></div>
+                </div>
+
+                <div class="kb-attachments" id="kb-checklist" style="display:none;">
+                    <div class="kb-attachments-title">Checklist</div>
+                    <div class="kb-attachments-row">
+                        <input class="kb-input" id="kb-checklist-new" placeholder="Adicionar item..." style="flex:1; min-width: 220px;" />
+                        <button type="button" class="kb-btn kb-btn--primary" id="kb-checklist-add">Adicionar</button>
+                    </div>
+                    <div class="kb-attachments-list" id="kb-checklist-list"></div>
+                </div>
+
+                <div class="kb-attachments" id="kb-attachments" style="display:none;">
+                    <div style="display:flex; align-items:center; justify-content:space-between; gap:8px;">
+                        <div class="kb-attachments-title">Anexos</div>
+                    </div>
+                    <div class="kb-attachments-row">
+                        <input type="file" class="kb-input" id="kb-attach-file" style="flex:1; min-width: 220px;" />
+                        <button type="button" class="kb-btn kb-btn--primary" id="kb-attach-upload">Enviar</button>
+                    </div>
+                    <div class="kb-attachments-list" id="kb-attach-list"></div>
+                </div>
+            </div>
+
+            <div class="kb-modal-right">
+                <div class="kb-modal-side-title">Ações</div>
+                <button type="button" class="kb-btn kb-qa-btn" id="kb-qa-checklist">☑ Checklist</button>
+                <button type="button" class="kb-btn kb-qa-btn" id="kb-qa-attachments">📎 Anexos</button>
+                <button type="button" class="kb-btn kb-qa-btn" id="kb-qa-cover">🖼 Capa</button>
+                <button type="button" class="kb-btn kb-qa-btn" id="kb-qa-move">⇄ Mover</button>
+            </div>
         </div>
 
-        <div style="margin-top:10px; display:flex; flex-direction:column; gap:6px;">
-            <div class="kb-modal-field-label">Data de entrega</div>
-            <input type="date" class="kb-input" id="kb-modal-due-date" />
-        </div>
-
-        <div class="kb-cover-box" id="kb-cover-section" style="display:none;">
-            <div style="display:flex; align-items:center; justify-content:space-between; gap:8px;">
-                <div class="kb-attachments-title">Capa do cartão</div>
-                <button type="button" class="kb-btn" id="kb-cover-clear" style="display:none;">Remover capa</button>
-            </div>
-            <div class="kb-cover-preview" id="kb-cover-preview">
-                <div class="kb-cover-empty">Sem capa.</div>
-            </div>
-            <div id="kb-cover-choices"></div>
-        </div>
-
-        <div class="kb-attachments" id="kb-checklist" style="display:none;">
-            <div class="kb-attachments-title">Checklist</div>
-            <div class="kb-attachments-row">
-                <input class="kb-input" id="kb-checklist-new" placeholder="Adicionar item..." style="flex:1; min-width: 220px;" />
-                <button type="button" class="kb-btn kb-btn--primary" id="kb-checklist-add">Adicionar</button>
-            </div>
-            <div class="kb-attachments-list" id="kb-checklist-list"></div>
-        </div>
-
-        <div class="kb-attachments" id="kb-attachments" style="display:none;">
-            <div style="display:flex; align-items:center; justify-content:space-between; gap:8px;">
-                <div class="kb-attachments-title">Anexos</div>
-            </div>
-            <div class="kb-attachments-row">
-                <input type="file" class="kb-input" id="kb-attach-file" style="flex:1; min-width: 220px;" />
-                <button type="button" class="kb-btn kb-btn--primary" id="kb-attach-upload">Enviar</button>
-            </div>
-            <div class="kb-attachments-list" id="kb-attach-list"></div>
-        </div>
-
-        <div class="kb-modal-actions">
+        <div class="kb-modal-actions kb-modal-actions--footer">
             <button type="button" class="kb-btn" id="kb-modal-cancel">Cancelar</button>
             <button type="button" class="kb-btn kb-btn--danger" id="kb-modal-delete" style="display:none;">Excluir</button>
             <button type="button" class="kb-btn kb-btn--primary" id="kb-modal-save">Salvar</button>
@@ -882,9 +975,31 @@ $currentBoardTitle = $currentBoard ? (string)($currentBoard['title'] ?? 'Sem tí
     </div>
 </div>
 
+<div class="kb-modal" id="kb-share-modal">
+    <div class="kb-modal-backdrop" id="kb-share-backdrop"></div>
+    <div class="kb-modal-card kb-share-card">
+        <div class="kb-modal-title">Compartilhar quadro</div>
+        <div style="color:var(--text-secondary); font-size:12px; margin-top:6px;">
+            Adicione pessoas pelo e-mail para elas poderem acessar e interagir com este quadro.
+        </div>
+
+        <div class="kb-share-row">
+            <input class="kb-input" id="kb-share-email" placeholder="email@exemplo.com" style="flex:1; min-width: 220px;" />
+            <button type="button" class="kb-btn kb-btn--primary" id="kb-share-add">Adicionar</button>
+        </div>
+
+        <div class="kb-share-list" id="kb-share-list"></div>
+
+        <div class="kb-modal-actions">
+            <button type="button" class="kb-btn" id="kb-share-close">Fechar</button>
+        </div>
+    </div>
+</div>
+
 <script>
 (function () {
     var boardId = <?= (int)$currentBoardId ?>;
+    var canShareKanban = <?= !empty($canShareKanban) ? 'true' : 'false' ?>;
 
     var SIDEBAR_KEY = 'kanban.sidebarCollapsed';
 
@@ -1497,6 +1612,182 @@ $currentBoardTitle = $currentBoard ? (string)($currentBoard['title'] ?? 'Sem tí
     if (backdrop) backdrop.addEventListener('click', closeModal);
     var cancel = $('kb-modal-cancel');
     if (cancel) cancel.addEventListener('click', closeModal);
+
+    function scrollIntoModalView(el) {
+        if (!el) return;
+        try {
+            el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        } catch (e) {
+            el.scrollIntoView(true);
+        }
+    }
+
+    var qaChecklist = $('kb-qa-checklist');
+    if (qaChecklist) {
+        qaChecklist.addEventListener('click', function () {
+            var modal = $('kb-modal');
+            if (!modal) return;
+            var cardId = modal.dataset.cardId;
+            if (!cardId) return;
+            var chk = $('kb-checklist');
+            if (chk) chk.style.display = 'block';
+            loadChecklist(cardId);
+            scrollIntoModalView(chk);
+            var input = $('kb-checklist-new');
+            if (input) input.focus();
+        });
+    }
+
+    var qaAttachments = $('kb-qa-attachments');
+    if (qaAttachments) {
+        qaAttachments.addEventListener('click', function () {
+            var modal = $('kb-modal');
+            if (!modal) return;
+            var cardId = modal.dataset.cardId;
+            if (!cardId) return;
+            var att = $('kb-attachments');
+            if (att) att.style.display = 'block';
+            loadAttachments(cardId);
+            scrollIntoModalView(att);
+            var input = $('kb-attach-file');
+            if (input) input.focus();
+        });
+    }
+
+    var qaCover = $('kb-qa-cover');
+    if (qaCover) {
+        qaCover.addEventListener('click', function () {
+            var modal = $('kb-modal');
+            if (!modal) return;
+            var cardId = modal.dataset.cardId;
+            if (!cardId) return;
+            var cover = $('kb-cover-section');
+            if (cover) {
+                cover.style.display = 'block';
+                scrollIntoModalView(cover);
+            }
+            loadAttachments(cardId);
+        });
+    }
+
+    var qaMove = $('kb-qa-move');
+    if (qaMove) {
+        qaMove.addEventListener('click', function () {
+            var mr = $('kb-move-row');
+            if (!mr) return;
+            mr.style.display = 'block';
+            scrollIntoModalView(mr);
+            var sel = $('kb-move-list');
+            if (sel) sel.focus();
+        });
+    }
+
+    function openShareModal() {
+        var modal = $('kb-share-modal');
+        if (!modal) return;
+        modal.classList.add('is-open');
+        var email = $('kb-share-email');
+        if (email) email.value = '';
+        loadBoardMembers();
+    }
+
+    function closeShareModal() {
+        var modal = $('kb-share-modal');
+        if (!modal) return;
+        modal.classList.remove('is-open');
+        var list = $('kb-share-list');
+        if (list) list.innerHTML = '';
+        var email = $('kb-share-email');
+        if (email) email.value = '';
+    }
+
+    function renderBoardMembers(members) {
+        var list = $('kb-share-list');
+        if (!list) return;
+        list.innerHTML = '';
+
+        if (!members || !members.length) {
+            list.innerHTML = '<div class="kb-share-empty">Nenhum membro adicionado.</div>';
+            return;
+        }
+
+        members.forEach(function (m) {
+            var uid = m && m.user_id ? String(m.user_id) : '';
+            var name = (m && (m.preferred_name || m.name)) ? String(m.preferred_name || m.name) : 'Usuário';
+            var email = m && m.email ? String(m.email) : '';
+            var row = document.createElement('div');
+            row.className = 'kb-attachment-item';
+            row.innerHTML = ''
+                + '<div class="kb-attachment-left">'
+                + '  <div class="kb-attachment-name">' + esc(name) + '</div>'
+                + '  <div style="color:var(--text-secondary); font-size:12px;">' + esc(email) + '</div>'
+                + '</div>'
+                + '<div class="kb-attachment-actions">'
+                + '  <button type="button" class="kb-btn kb-btn--danger" data-action="remove-board-member" data-user-id="' + esc(uid) + '">Remover</button>'
+                + '</div>';
+            list.appendChild(row);
+        });
+    }
+
+    function loadBoardMembers() {
+        if (!boardId) return;
+        return postForm('/kanban/quadro/membros/listar', { board_id: String(boardId) }).then(function (res) {
+            if (res.json && res.json.ok) {
+                renderBoardMembers(res.json.members || []);
+                return;
+            }
+            renderBoardMembers([]);
+        });
+    }
+
+    var shareBtn = $('kb-share-board');
+    if (shareBtn && boardId && canShareKanban) {
+        shareBtn.addEventListener('click', openShareModal);
+    }
+    var shareBackdrop = $('kb-share-backdrop');
+    if (shareBackdrop) shareBackdrop.addEventListener('click', closeShareModal);
+    var shareClose = $('kb-share-close');
+    if (shareClose) shareClose.addEventListener('click', closeShareModal);
+    var shareAdd = $('kb-share-add');
+    if (shareAdd) {
+        shareAdd.addEventListener('click', function () {
+            if (!boardId) return;
+            var email = $('kb-share-email');
+            var value = email ? String(email.value || '').trim() : '';
+            if (!value) {
+                alert('Informe o e-mail.');
+                return;
+            }
+            shareAdd.disabled = true;
+            postForm('/kanban/quadro/membros/adicionar', { board_id: String(boardId), email: value }).then(function (res) {
+                shareAdd.disabled = false;
+                if (res.json && res.json.ok) {
+                    if (email) email.value = '';
+                    loadBoardMembers();
+                } else {
+                    alert((res.json && res.json.error) ? res.json.error : 'Falha ao adicionar membro.');
+                }
+            });
+        });
+    }
+
+    document.addEventListener('click', function (e) {
+        var t = e.target;
+        if (!t) return;
+        var act = t.getAttribute && t.getAttribute('data-action');
+        if (act === 'remove-board-member') {
+            var uid = t.getAttribute('data-user-id');
+            if (!uid) return;
+            if (!confirm('Remover este membro do quadro?')) return;
+            postForm('/kanban/quadro/membros/remover', { board_id: String(boardId), user_id: String(uid) }).then(function (res) {
+                if (res.json && res.json.ok) {
+                    loadBoardMembers();
+                } else {
+                    alert((res.json && res.json.error) ? res.json.error : 'Falha ao remover membro.');
+                }
+            });
+        }
+    });
 
     var btnNewBoard = $('kb-new-board');
     if (btnNewBoard) {

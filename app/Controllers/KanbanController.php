@@ -5,6 +5,7 @@ namespace App\Controllers;
 use App\Core\Controller;
 use App\Core\Database;
 use App\Models\KanbanBoard;
+use App\Models\KanbanBoardMember;
 use App\Models\KanbanCard;
 use App\Models\KanbanCardAttachment;
 use App\Models\KanbanCardChecklistItem;
@@ -107,6 +108,11 @@ class KanbanController extends Controller
     private function loadBoardOrDeny(int $boardId, int $userId): array
     {
         $board = KanbanBoard::findOwnedById($boardId, $userId);
+        if ($board) {
+            return $board;
+        }
+
+        $board = KanbanBoard::findAccessibleById($boardId, $userId);
         if (!$board) {
             if ($this->wantsJson()) {
                 $this->json(['ok' => false, 'error' => 'Quadro não encontrado.'], 404);
@@ -114,6 +120,21 @@ class KanbanController extends Controller
             header('Location: /kanban');
             exit;
         }
+
+        // Se o usuário não é o dono, valida se o plano do dono permite compartilhamento.
+        $ownerId = (int)($board['owner_user_id'] ?? 0);
+        if ($ownerId > 0 && $ownerId !== $userId && empty($_SESSION['is_admin'])) {
+            $owner = User::findById($ownerId);
+            if (!$owner) {
+                $this->json(['ok' => false, 'error' => 'Quadro não encontrado.'], 404);
+            }
+
+            $ownerPlan = $this->getActivePlanForEmail((string)($owner['email'] ?? ''));
+            if (!$ownerPlan || empty($ownerPlan['allow_kanban_sharing'])) {
+                $this->json(['ok' => false, 'error' => 'O compartilhamento do Kanban não está disponível neste quadro.'], 403);
+            }
+        }
+
         return $board;
     }
 
@@ -129,10 +150,7 @@ class KanbanController extends Controller
             $this->json(['ok' => false, 'error' => 'Lista não encontrada.'], 404);
         }
 
-        $board = KanbanBoard::findOwnedById((int)($list['board_id'] ?? 0), $userId);
-        if (!$board) {
-            $this->json(['ok' => false, 'error' => 'Sem acesso ao cartão.'], 403);
-        }
+        $board = $this->loadBoardOrDeny((int)($list['board_id'] ?? 0), $userId);
 
         return ['card' => $card, 'list' => $list, 'board' => $board];
     }
@@ -140,10 +158,13 @@ class KanbanController extends Controller
     public function index(): void
     {
         $user = $this->requireLogin();
-        $this->requireKanbanAccess($user);
+        $access = $this->requireKanbanAccess($user);
 
         $uid = (int)$user['id'];
-        $boards = KanbanBoard::listForUser($uid);
+        $boards = KanbanBoard::listForUserIncludingShared($uid);
+
+        $plan = is_array($access) ? ($access['plan'] ?? null) : null;
+        $canShareKanban = !empty($_SESSION['is_admin']) || (is_array($plan) && !empty($plan['allow_kanban_sharing']));
 
         $boardId = isset($_GET['board_id']) ? (int)$_GET['board_id'] : 0;
         $currentBoard = null;
@@ -179,7 +200,85 @@ class KanbanController extends Controller
             'currentBoard' => $currentBoard,
             'lists' => $lists,
             'cardsByList' => $cardsByList,
+            'canShareKanban' => $canShareKanban,
         ]);
+    }
+
+    public function listBoardMembers(): void
+    {
+        $user = $this->requireLogin();
+        $access = $this->requireKanbanAccess($user);
+
+        $boardId = (int)($_POST['board_id'] ?? 0);
+        if ($boardId <= 0) {
+            $this->json(['ok' => false, 'error' => 'board_id inválido.'], 400);
+        }
+
+        $board = KanbanBoard::findOwnedById($boardId, (int)$user['id']);
+        if (!$board && empty($_SESSION['is_admin'])) {
+            $this->json(['ok' => false, 'error' => 'Sem permissão para ver membros.'], 403);
+        }
+
+        $members = KanbanBoardMember::listForBoard($boardId);
+        $this->json(['ok' => true, 'members' => $members]);
+    }
+
+    public function addBoardMember(): void
+    {
+        $user = $this->requireLogin();
+        $access = $this->requireKanbanAccess($user);
+
+        if (empty($_SESSION['is_admin'])) {
+            $plan = is_array($access) ? ($access['plan'] ?? null) : null;
+            if (!is_array($plan) || empty($plan['allow_kanban_sharing'])) {
+                $this->json(['ok' => false, 'error' => 'Seu plano não permite compartilhar quadros do Kanban.'], 403);
+            }
+        }
+
+        $boardId = (int)($_POST['board_id'] ?? 0);
+        $email = trim((string)($_POST['email'] ?? ''));
+        if ($boardId <= 0) {
+            $this->json(['ok' => false, 'error' => 'board_id inválido.'], 400);
+        }
+        if ($email === '') {
+            $this->json(['ok' => false, 'error' => 'Informe o e-mail do usuário.'], 422);
+        }
+
+        $board = KanbanBoard::findOwnedById($boardId, (int)$user['id']);
+        if (!$board && empty($_SESSION['is_admin'])) {
+            $this->json(['ok' => false, 'error' => 'Sem permissão para compartilhar este quadro.'], 403);
+        }
+
+        $target = User::findByEmail($email);
+        if (!$target) {
+            $this->json(['ok' => false, 'error' => 'Usuário não encontrado.'], 404);
+        }
+        if ((int)($target['id'] ?? 0) === (int)$user['id']) {
+            $this->json(['ok' => false, 'error' => 'Você já é o dono deste quadro.'], 422);
+        }
+
+        KanbanBoardMember::add($boardId, (int)$target['id'], 'member');
+        $this->json(['ok' => true]);
+    }
+
+    public function removeBoardMember(): void
+    {
+        $user = $this->requireLogin();
+        $access = $this->requireKanbanAccess($user);
+
+        $boardId = (int)($_POST['board_id'] ?? 0);
+        $userId = (int)($_POST['user_id'] ?? 0);
+        if ($boardId <= 0 || $userId <= 0) {
+            $this->json(['ok' => false, 'error' => 'Parâmetros inválidos.'], 400);
+        }
+
+        $board = KanbanBoard::findOwnedById($boardId, (int)$user['id']);
+        if (!$board && empty($_SESSION['is_admin'])) {
+            $this->json(['ok' => false, 'error' => 'Sem permissão para remover membro.'], 403);
+        }
+
+        KanbanBoardMember::remove($boardId, $userId);
+        $this->json(['ok' => true]);
     }
 
     public function createBoard(): void

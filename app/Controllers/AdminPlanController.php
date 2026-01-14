@@ -82,6 +82,7 @@ class AdminPlanController extends Controller
         $allowVideoChat = !empty($_POST['allow_video_chat']) ? 1 : 0;
         $allowPages = !empty($_POST['allow_pages']) ? 1 : 0;
         $allowKanban = !empty($_POST['allow_kanban']) ? 1 : 0;
+        $allowKanbanSharing = !empty($_POST['allow_kanban_sharing']) ? 1 : 0;
         $allowProjectsAccess = !empty($_POST['allow_projects_access']) ? 1 : 0;
         $allowProjectsCreate = $allowProjectsAccess;
         $allowProjectsEdit = $allowProjectsAccess;
@@ -215,6 +216,7 @@ class AdminPlanController extends Controller
             'course_discount_percent' => $courseDiscountPercent,
             'allow_pages' => $allowPages,
             'allow_kanban' => $allowKanban,
+            'allow_kanban_sharing' => $allowKanbanSharing,
             'allow_projects_access' => $allowProjectsAccess,
             'allow_projects_create' => $allowProjectsCreate,
             'allow_projects_edit' => $allowProjectsEdit,

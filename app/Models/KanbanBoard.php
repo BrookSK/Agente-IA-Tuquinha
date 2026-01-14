@@ -7,6 +7,15 @@ use PDO;
 
 class KanbanBoard
 {
+    public static function findById(int $id): ?array
+    {
+        $pdo = Database::getConnection();
+        $stmt = $pdo->prepare('SELECT * FROM kanban_boards WHERE id = :id LIMIT 1');
+        $stmt->execute(['id' => $id]);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $row ?: null;
+    }
+
     public static function countForUser(int $userId): int
     {
         $pdo = Database::getConnection();
@@ -24,10 +33,35 @@ class KanbanBoard
         return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
     }
 
+    public static function listForUserIncludingShared(int $userId): array
+    {
+        $pdo = Database::getConnection();
+        $stmt = $pdo->prepare('SELECT b.*
+            FROM kanban_boards b
+            LEFT JOIN kanban_board_members m ON m.board_id = b.id AND m.user_id = :uid
+            WHERE b.owner_user_id = :uid OR m.user_id IS NOT NULL
+            ORDER BY b.updated_at DESC');
+        $stmt->execute(['uid' => $userId]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+    }
+
     public static function findOwnedById(int $id, int $userId): ?array
     {
         $pdo = Database::getConnection();
         $stmt = $pdo->prepare('SELECT * FROM kanban_boards WHERE id = :id AND owner_user_id = :uid LIMIT 1');
+        $stmt->execute(['id' => $id, 'uid' => $userId]);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $row ?: null;
+    }
+
+    public static function findAccessibleById(int $id, int $userId): ?array
+    {
+        $pdo = Database::getConnection();
+        $stmt = $pdo->prepare('SELECT b.*
+            FROM kanban_boards b
+            LEFT JOIN kanban_board_members m ON m.board_id = b.id AND m.user_id = :uid
+            WHERE b.id = :id AND (b.owner_user_id = :uid OR m.user_id IS NOT NULL)
+            LIMIT 1');
         $stmt->execute(['id' => $id, 'uid' => $userId]);
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
         return $row ?: null;

@@ -271,6 +271,10 @@ if ($slugForCycle !== '') {
                 <span>Permitir acesso ao Kanban</span>
             </label>
             <label style="display:flex; align-items:center; gap:5px;">
+                <input type="checkbox" name="allow_kanban_sharing" value="1" <?= !empty($plan['allow_kanban_sharing']) ? 'checked' : '' ?>>
+                <span>Permitir compartilhar quadros do Kanban</span>
+            </label>
+            <label style="display:flex; align-items:center; gap:5px;">
                 <input type="checkbox" name="allow_projects_access" value="1" <?= !empty($plan['allow_projects_access']) ? 'checked' : '' ?>>
                 <span>Permitir acesso a projetos</span>
             </label>
