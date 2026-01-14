@@ -409,85 +409,372 @@ if (!empty($currentPlan) && is_array($currentPlan)) {
     <?php endif; ?>
 
     <?php if (!empty($conversationId) && !empty($personaOptions) && is_array($personaOptions) && $isFreePlan): ?>
-        <?php
-            $currentPersonaId = isset($currentPersonaData['id']) ? (int)$currentPersonaData['id'] : 0;
-        ?>
+        <style>
+            .chat-persona-card {
+                width: 300px;
+                background: var(--surface-card);
+                border-radius: 20px;
+                border: 1px solid var(--border-subtle);
+                overflow: hidden;
+                color: var(--text-primary);
+                text-decoration: none;
+                box-shadow: 0 18px 35px rgba(0,0,0,0.25);
+                transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease, opacity 0.18s ease, filter 0.18s ease;
+                opacity: 0.55;
+                transform: scale(0.96);
+            }
+            .chat-persona-card:hover {
+                transform: translateY(-4px);
+                box-shadow: 0 22px 40px rgba(15,23,42,0.3);
+                border-color: var(--accent-soft);
+                opacity: 0.95;
+            }
+            .chat-persona-card.is-selected {
+                opacity: 1;
+                transform: scale(1);
+                border-color: #2e7d32;
+                box-shadow: 0 22px 46px rgba(0,0,0,0.35);
+            }
+            .chat-persona-card-image {
+                width: 100%;
+                height: 220px;
+                overflow: hidden;
+                background: var(--surface-subtle);
+            }
+            .chat-persona-card-desc {
+                font-size: 12px;
+                color: var(--text-secondary);
+                line-height: 1.4;
+                max-height: 5.4em;
+                overflow: hidden;
+            }
+            .chat-persona-card-muted {
+                font-size: 12px;
+                color: var(--text-secondary);
+            }
+
+            .chat-persona-nav-btn {
+                position:absolute;
+                top:50%;
+                transform:translateY(-50%);
+                width:56px;
+                height:56px;
+                border-radius:999px;
+                border:1px solid #272727;
+                background:rgba(5,5,9,0.9);
+                color:#f5f5f5;
+                display:flex;
+                align-items:center;
+                justify-content:center;
+                cursor:pointer;
+                z-index:2;
+                font-size:26px;
+                line-height:1;
+            }
+
+            .chat-persona-stage {
+                position: relative;
+                margin-top: 8px;
+                padding: 16px 40px 18px 40px;
+                min-height: 420px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                overflow-x: hidden;
+                overflow-y: visible;
+                touch-action: pan-y;
+            }
+            #chat-persona-carousel {
+                position: relative;
+                width: 100%;
+                height: 400px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                pointer-events: none;
+            }
+            #chat-persona-carousel .chat-persona-card {
+                position: absolute;
+                left: 50%;
+                top: 50%;
+                transform: translate(-50%, -50%) scale(0.96);
+                pointer-events: auto;
+            }
+            #chat-persona-carousel .chat-persona-card.is-center {
+                opacity: 1;
+                transform: translate(-50%, -50%) scale(1.08);
+                filter: none;
+                z-index: 3;
+            }
+            #chat-persona-carousel .chat-persona-card.is-left {
+                opacity: 0.38;
+                transform: translate(calc(-50% - 260px), -50%) scale(0.9);
+                filter: grayscale(1);
+                z-index: 2;
+            }
+            #chat-persona-carousel .chat-persona-card.is-right {
+                opacity: 0.38;
+                transform: translate(calc(-50% + 260px), -50%) scale(0.9);
+                filter: grayscale(1);
+                z-index: 2;
+            }
+            #chat-persona-carousel .chat-persona-card.is-hidden {
+                opacity: 0;
+                transform: translate(-50%, -50%) scale(0.85);
+                pointer-events: none;
+                z-index: 1;
+            }
+
+            @media (max-width: 640px) {
+                .chat-persona-stage {
+                    padding: 8px 10px 10px 10px;
+                    min-height: 410px;
+                }
+                .chat-persona-nav-btn {
+                    width: 60px;
+                    height: 60px;
+                    background: rgba(5,5,9,0.82);
+                    font-size:28px;
+                }
+                #chat-persona-carousel .chat-persona-card.is-left {
+                    opacity: 0.22;
+                    transform: translate(calc(-50% - 170px), -50%) scale(0.86);
+                }
+                #chat-persona-carousel .chat-persona-card.is-right {
+                    opacity: 0.22;
+                    transform: translate(calc(-50% + 170px), -50%) scale(0.86);
+                }
+                #chat-persona-carousel .chat-persona-card.is-center {
+                    transform: translate(-50%, -50%) scale(1.03);
+                }
+            }
+        </style>
+
         <div style="margin-top:10px; margin-bottom:10px;">
-            <div style="margin-bottom:8px; font-size:12px; color:#b0b0b0;">Personalidades (preview):</div>
-            <div style="position:relative;">
-                <div style="display:flex; gap:12px; width:100%; box-sizing:border-box; overflow-x:auto; overflow-y:hidden; max-width:100%; min-width:0; padding:6px 2px 10px 2px; scroll-snap-type:x mandatory;">
-                    <?php foreach ($personaOptions as $po): ?>
+            <div style="margin-bottom:8px; font-size:12px; color:#b0b0b0;">Escolha a personalidade do Tuquinha (preview):</div>
+            <div class="chat-persona-stage">
+                <button type="button" id="chat-persona-prev" class="chat-persona-nav-btn" style="left:0;" aria-label="Anterior">‹</button>
+                <button type="button" id="chat-persona-next" class="chat-persona-nav-btn" style="right:0;" aria-label="Próximo">›</button>
+
+                <div id="chat-persona-carousel" style="display:flex;">
+                    <a href="/chat?new=1" class="chat-persona-card" style="cursor:pointer;">
+                        <div class="chat-persona-card-image">
+                            <img src="/public/perso_padrao.png" alt="Padrão do Tuquinha" onerror="this.onerror=null;this.src='/public/favicon.png';" style="width:100%; height:100%; object-fit:cover; display:block;">
+                        </div>
+                        <div style="padding:10px 12px 12px 12px;">
+                            <div style="display:flex; align-items:center; justify-content:space-between; gap:6px; margin-bottom:4px;">
+                                <div style="font-size:18px; font-weight:650; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">Padrão do Tuquinha</div>
+                            </div>
+                            <div class="chat-persona-card-desc">
+                                <?= nl2br(htmlspecialchars((string)\App\Models\Setting::get('default_tuquinha_description', 'Deixa o sistema escolher a melhor personalidade global para você.'))) ?>
+                            </div>
+                        </div>
+                    </a>
+
+                    <?php
+                        $hasMb = function_exists('mb_substr') && function_exists('mb_strlen');
+                    ?>
+                    <?php foreach ($personaOptions as $persona): ?>
                         <?php
-                            $pid = (int)($po['id'] ?? 0);
-                            $pname = trim((string)($po['name'] ?? ''));
-                            $parea = trim((string)($po['area'] ?? ''));
-                            $pimg = trim((string)($po['image_path'] ?? ''));
-                            if ($pid <= 0 || $pname === '') { continue; }
-
-                            $isDefault = !empty($po['is_default']);
-                            $isComingSoon = !empty($po['coming_soon']);
-                            $isActive = ($currentPersonaId > 0 && $currentPersonaId === $pid);
-
-                            $isAllowedToClick = ($isDefault && !$isComingSoon);
-                            $disabledReason = '';
-                            if ($isComingSoon) {
-                                $disabledReason = 'Em breve';
-                            } elseif (!$isDefault) {
-                                $disabledReason = 'Disponível nos planos pagos';
+                            $id = (int)($persona['id'] ?? 0);
+                            $name = trim((string)($persona['name'] ?? ''));
+                            $area = trim((string)($persona['area'] ?? ''));
+                            $imagePath = trim((string)($persona['image_path'] ?? ''));
+                            $isDefault = !empty($persona['is_default']);
+                            $isComingSoon = !empty($persona['coming_soon']);
+                            $defaultPersonaImage = '/public/perso_padrao.png';
+                            $prompt = trim((string)($persona['prompt'] ?? ''));
+                            $desc = '';
+                            if ($prompt !== '') {
+                                $basePrompt = $prompt;
+                                $marker = 'Regras principais:';
+                                if (function_exists('mb_stripos')) {
+                                    $posMarker = mb_stripos($basePrompt, $marker, 0, 'UTF-8');
+                                    if ($posMarker !== false) {
+                                        $basePrompt = mb_substr($basePrompt, 0, $posMarker, 'UTF-8');
+                                    }
+                                } else {
+                                    $posMarker = stripos($basePrompt, $marker);
+                                    if ($posMarker !== false) {
+                                        $basePrompt = substr($basePrompt, 0, $posMarker);
+                                    }
+                                }
+                                if ($hasMb) {
+                                    $maxLen = 220;
+                                    $desc = mb_substr($basePrompt, 0, $maxLen, 'UTF-8');
+                                    if (mb_strlen($basePrompt, 'UTF-8') > $maxLen) {
+                                        $desc .= '...';
+                                    }
+                                } else {
+                                    $desc = substr($basePrompt, 0, 220);
+                                    if (strlen($basePrompt) > 220) {
+                                        $desc .= '...';
+                                    }
+                                }
                             }
-
-                            $href = $isAllowedToClick ? '/chat?new=1' : 'javascript:void(0)';
+                            if ($imagePath === '') {
+                                $imagePath = $isDefault ? $defaultPersonaImage : '/public/favicon.png';
+                            }
+                            if ($id <= 0 || $name === '') { continue; }
                         ?>
-                        <a href="<?= $href ?>" title="<?= $disabledReason !== '' ? htmlspecialchars($disabledReason) : '' ?>" style="
-                            flex:0 0 240px;
-                            max-width: 260px;
-                            scroll-snap-align:center;
-                            border:1px solid var(--border-subtle);
-                            background:<?= $isActive ? 'rgba(255,111,96,0.14)' : 'var(--surface-card)' ?>;
-                            border-radius:14px;
-                            padding:10px;
-                            color:var(--text-primary);
-                            text-decoration:none;
-                            cursor:<?= !$isAllowedToClick ? 'not-allowed' : 'pointer' ?>;
-                            opacity:<?= !$isAllowedToClick ? '0.60' : '1' ?>;
-                            pointer-events:<?= !$isAllowedToClick ? 'none' : 'auto' ?>;
-                            display:flex;
-                            gap:10px;
-                            align-items:center;
-                        ">
-                            <?php if ($pimg !== ''): ?>
-                                <img src="<?= htmlspecialchars($pimg) ?>" alt="<?= htmlspecialchars($pname) ?>" style="width:46px; height:46px; border-radius:12px; object-fit:cover; border:1px solid var(--border-subtle); background:var(--surface-subtle); flex:0 0 auto;" />
-                            <?php else: ?>
-                                <div style="width:46px; height:46px; border-radius:12px; border:1px solid var(--border-subtle); background:var(--surface-subtle); display:flex; align-items:center; justify-content:center; flex:0 0 auto;">
-                                    <span style="font-size:12px; color:var(--text-secondary); font-weight:700; line-height:1;">T</span>
+                        <a href="javascript:void(0)" class="chat-persona-card" style="cursor:not-allowed;">
+                            <div class="chat-persona-card-image">
+                                <img src="<?= htmlspecialchars($imagePath) ?>" alt="<?= htmlspecialchars($name) ?>" onerror="this.onerror=null;this.src='/public/favicon.png';" style="width:100%; height:100%; object-fit:cover; display:block;">
+                            </div>
+                            <div style="padding:10px 12px 12px 12px;">
+                                <div style="display:flex; align-items:center; justify-content:space-between; gap:6px; margin-bottom:4px;">
+                                    <div style="font-size:18px; font-weight:650; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                                        <?= htmlspecialchars($name) ?>
+                                    </div>
+                                    <div style="display:flex; gap:6px; align-items:center; flex-shrink:0;">
+                                        <?php if ($isComingSoon): ?>
+                                            <span style="font-size:9px; text-transform:uppercase; letter-spacing:0.14em; border-radius:999px; padding:2px 7px; background:#201216; color:#ffcc80; border:1px solid #ff6f60;">Em breve</span>
+                                        <?php endif; ?>
+                                        <?php if ($isDefault): ?>
+                                            <span style="font-size:9px; text-transform:uppercase; letter-spacing:0.14em; border-radius:999px; padding:2px 7px; background:#201216; color:#ffcc80; border:1px solid #ff6f60;">Principal</span>
+                                        <?php endif; ?>
+                                    </div>
                                 </div>
-                            <?php endif; ?>
-                            <div style="min-width:0; flex:1 1 auto;">
-                                <div title="<?= htmlspecialchars($pname) ?>" style="font-weight:700; font-size:13px; line-height:1.2; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
-                                    <?= htmlspecialchars($pname) ?>
-                                </div>
-                                <?php if ($parea !== ''): ?>
-                                    <div title="<?= htmlspecialchars($parea) ?>" style="font-size:11px; color:var(--text-secondary); line-height:1.2; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
-                                        <?= htmlspecialchars($parea) ?>
+                                <?php if ($area !== ''): ?>
+                                    <div style="font-size:12px; color:#ffcc80; margin-bottom:6px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                                        <?= htmlspecialchars($area) ?>
                                     </div>
                                 <?php endif; ?>
-                                <div style="margin-top:6px; display:flex; gap:6px; flex-wrap:wrap;">
-                                    <?php if ($isDefault): ?>
-                                        <span style="font-size:9px; text-transform:uppercase; letter-spacing:0.14em; border-radius:999px; padding:2px 7px; background:#102312; color:#c8ffd4; border:1px solid #2e7d32;">Principal</span>
-                                    <?php endif; ?>
-                                    <?php if ($isComingSoon): ?>
-                                        <span style="font-size:9px; text-transform:uppercase; letter-spacing:0.14em; border-radius:999px; padding:2px 7px; background:#201216; color:#ffcc80; border:1px solid #ff6f60;">Em breve</span>
-                                    <?php elseif (!$isDefault): ?>
-                                        <span style="font-size:9px; text-transform:uppercase; letter-spacing:0.14em; border-radius:999px; padding:2px 7px; background:#111118; color:#ffcc80; border:1px solid #272727;">Plano pago</span>
-                                    <?php endif; ?>
-                                </div>
+                                <?php if ($desc !== ''): ?>
+                                    <div class="chat-persona-card-desc">
+                                        <?= nl2br(htmlspecialchars($desc)) ?>
+                                    </div>
+                                <?php else: ?>
+                                    <div class="chat-persona-card-muted">
+                                        <?= $isComingSoon ? 'Preview disponível. Em breve você poderá usar essa personalidade.' : 'Disponível nos planos pagos.' ?>
+                                    </div>
+                                <?php endif; ?>
                             </div>
                         </a>
                     <?php endforeach; ?>
                 </div>
             </div>
-            <div style="margin-top:6px; font-size:11px; color:#8d8d8d;">No plano Free você pode ver as personalidades, mas só pode usar a personalidade padrão.</div>
+            <div style="margin-top:-6px; font-size:11px; color:#8d8d8d;">No plano Free você pode ver as personalidades, mas só pode usar a personalidade padrão.</div>
         </div>
+
+        <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            var track = document.getElementById('chat-persona-carousel');
+            if (!track) return;
+
+            var stage = track.parentElement;
+
+            var btnPrev = document.getElementById('chat-persona-prev');
+            var btnNext = document.getElementById('chat-persona-next');
+
+            var cards = track.querySelectorAll('.chat-persona-card');
+            if (!cards || cards.length === 0) return;
+
+            var currentIndex = 0;
+
+            function normalizeIndex(i) {
+                var len = cards.length;
+                if (len <= 0) return 0;
+                var x = i % len;
+                if (x < 0) x += len;
+                return x;
+            }
+
+            function applyVisualState() {
+                cards.forEach(function (c) {
+                    c.classList.remove('is-left');
+                    c.classList.remove('is-center');
+                    c.classList.remove('is-right');
+                    c.classList.remove('is-hidden');
+                });
+
+                var len = cards.length;
+                if (len <= 0) return;
+
+                var center = cards[currentIndex];
+                var left = cards[normalizeIndex(currentIndex - 1)];
+                var right = cards[normalizeIndex(currentIndex + 1)];
+
+                cards.forEach(function (c) {
+                    c.classList.add('is-hidden');
+                });
+                if (left) left.classList.remove('is-hidden');
+                if (right) right.classList.remove('is-hidden');
+                if (center) center.classList.remove('is-hidden');
+
+                if (left) left.classList.add('is-left');
+                if (right) right.classList.add('is-right');
+                if (center) center.classList.add('is-center');
+
+                cards.forEach(function (c) {
+                    c.classList.remove('is-selected');
+                });
+                if (center) center.classList.add('is-selected');
+            }
+
+            function selectIndex(i) {
+                currentIndex = normalizeIndex(i);
+                applyVisualState();
+            }
+
+            if (btnPrev) {
+                btnPrev.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    selectIndex(currentIndex - 1);
+                });
+            }
+            if (btnNext) {
+                btnNext.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    selectIndex(currentIndex + 1);
+                });
+            }
+
+            cards.forEach(function (card) {
+                card.addEventListener('click', function () {
+                    var idx = 0;
+                    cards.forEach(function (c, i) {
+                        if (c === card) idx = i;
+                    });
+                    selectIndex(idx);
+                });
+            });
+
+            if (stage) {
+                var startX = 0;
+                var startY = 0;
+                var tracking = false;
+
+                stage.addEventListener('touchstart', function (e) {
+                    if (!e.touches || e.touches.length !== 1) return;
+                    tracking = true;
+                    startX = e.touches[0].clientX;
+                    startY = e.touches[0].clientY;
+                }, { passive: true });
+
+                stage.addEventListener('touchend', function (e) {
+                    if (!tracking) return;
+                    tracking = false;
+                    if (!e.changedTouches || e.changedTouches.length !== 1) return;
+                    var endX = e.changedTouches[0].clientX;
+                    var endY = e.changedTouches[0].clientY;
+                    var dx = endX - startX;
+                    var dy = endY - startY;
+
+                    if (Math.abs(dx) < 35) return;
+                    if (Math.abs(dx) < Math.abs(dy)) return;
+
+                    if (dx < 0) {
+                        selectIndex(currentIndex + 1);
+                    } else {
+                        selectIndex(currentIndex - 1);
+                    }
+                }, { passive: true });
+            }
+
+            selectIndex(currentIndex);
+        });
+        </script>
     <?php endif; ?>
 
     <?php if (!empty($conversationId) && $canUseConversationSettings): ?>
