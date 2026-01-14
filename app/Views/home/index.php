@@ -260,7 +260,8 @@
                 max-width: 980px !important;
                 display: grid !important;
                 grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
-                gap: 18px !important;
+                gap: 26px !important;
+                padding: 0 10px !important;
             }
         }
     </style>
