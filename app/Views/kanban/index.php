@@ -390,6 +390,8 @@ $currentBoardTitle = $currentBoard ? (string)($currentBoard['title'] ?? 'Sem tí
         background: var(--surface-card);
         box-shadow: 0 18px 50px rgba(0,0,0,0.6);
         padding: 14px;
+        max-height: calc(100vh - 28px);
+        overflow-y: auto;
     }
 
     .kb-attachments {
@@ -995,7 +997,7 @@ $currentBoardTitle = $currentBoard ? (string)($currentBoard['title'] ?? 'Sem tí
         if (!modal) return;
         modal.classList.add('is-open');
         $('kb-modal-title').textContent = opts.title || 'Editar';
-        $('kb-modal-input').value = opts.value || '';
+        $('kb-modal-input').value = String(opts.value || '').trim();
         $('kb-modal-textarea').value = opts.desc || '';
         var dd = $('kb-modal-due-date');
         if (dd) dd.value = opts.dueDate || '';
@@ -1500,8 +1502,8 @@ $currentBoardTitle = $currentBoard ? (string)($currentBoard['title'] ?? 'Sem tí
             var listId3 = cardRoot.getAttribute('data-list-id');
             var titleEl = cardRoot.querySelector('.kb-card-title');
             var descEl = cardRoot.querySelector('.kb-card-desc');
-            var title = titleEl ? titleEl.textContent : '';
-            var desc = descEl ? descEl.textContent : '';
+            var title = titleEl ? (titleEl.textContent || '').trim() : '';
+            var desc = descEl ? (descEl.textContent || '') : '';
             var dueAttr = cardRoot.getAttribute('data-due-date') || '';
             var coverUrlAttr = cardRoot.getAttribute('data-cover-url') || '';
             openModal({
