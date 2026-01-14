@@ -94,6 +94,10 @@
         flex-wrap: wrap;
         justify-content: flex-end;
     }
+    .tuqPersonaBadgeRight {
+        max-width: 220px;
+        padding: 5px 9px;
+    }
     .tuqDotsBtn {
         border: 1px solid var(--border-subtle);
         background: var(--surface-subtle);
@@ -261,21 +265,6 @@
                                     $personaLabelArea = $personaArea !== '' ? $personaArea : 'Chat';
                                     $personaHasImg = $personaImg !== '';
                                 ?>
-                                <?php if ($showPersona): ?>
-                                    <div class="tuqPersonaBadge tuqPersonaBadgeInline" title="<?= htmlspecialchars($personaLabelName . ($personaArea !== '' ? (' • ' . $personaArea) : ''), ENT_QUOTES, 'UTF-8') ?>">
-                                        <span class="tuqPersonaBadgeAvatar" aria-hidden="true">
-                                            <?php if ($personaHasImg): ?>
-                                                <img src="<?= htmlspecialchars($personaImg, ENT_QUOTES, 'UTF-8') ?>" alt="">
-                                            <?php else: ?>
-                                                <span style="font-size:14px;">🐦</span>
-                                            <?php endif; ?>
-                                        </span>
-                                        <span class="tuqPersonaBadgeText">
-                                            <span class="tuqPersonaBadgeName"><?= htmlspecialchars($personaLabelName) ?></span>
-                                            <span class="tuqPersonaBadgeArea"><?= htmlspecialchars($personaLabelArea) ?></span>
-                                        </span>
-                                    </div>
-                                <?php endif; ?>
                                 <div class="tuqChatTitleRowTitle" style="font-size:14px; font-weight:500;">
                                     <?= htmlspecialchars($title) ?>
                                 </div>
@@ -288,6 +277,21 @@
                         </a>
                     </div>
                     <div class="tuqChatListItemActions">
+                        <?php if ($showPersona): ?>
+                            <div class="tuqPersonaBadge tuqPersonaBadgeInline tuqPersonaBadgeRight" title="<?= htmlspecialchars($personaLabelName . ($personaArea !== '' ? (' • ' . $personaArea) : ''), ENT_QUOTES, 'UTF-8') ?>">
+                                <span class="tuqPersonaBadgeAvatar" aria-hidden="true">
+                                    <?php if ($personaHasImg): ?>
+                                        <img src="<?= htmlspecialchars($personaImg, ENT_QUOTES, 'UTF-8') ?>" alt="">
+                                    <?php else: ?>
+                                        <span style="font-size:14px;">🐦</span>
+                                    <?php endif; ?>
+                                </span>
+                                <span class="tuqPersonaBadgeText">
+                                    <span class="tuqPersonaBadgeName"><?= htmlspecialchars($personaLabelName) ?></span>
+                                    <span class="tuqPersonaBadgeArea"><?= htmlspecialchars($personaLabelArea) ?></span>
+                                </span>
+                            </div>
+                        <?php endif; ?>
                         <div class="tuqDotsMenuWrap">
                             <button type="button" class="tuqDotsBtn" aria-label="Abrir menu" data-dots="<?= (int)$convId ?>">⋯</button>
                             <div class="tuqDotsMenu" id="tuqDotsMenu<?= (int)$convId ?>">

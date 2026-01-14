@@ -327,6 +327,70 @@ class ProjectController extends Controller
             $personalities = Personality::allActive();
         }
 
+        $currentPlan = null;
+        if (!empty($_SESSION['is_admin'])) {
+            $currentPlan = Plan::findTopActive();
+            if ($currentPlan && !empty($currentPlan['slug'])) {
+                $_SESSION['plan_slug'] = $currentPlan['slug'];
+            }
+        } else {
+            $email = (string)($user['email'] ?? '');
+            $currentPlan = $this->getActivePlanForEmail($email);
+            if (!$currentPlan) {
+                $currentPlan = Plan::findBySessionSlug($_SESSION['plan_slug'] ?? null) ?: Plan::findBySlug('free');
+                if ($currentPlan && !empty($currentPlan['slug'])) {
+                    $_SESSION['plan_slug'] = $currentPlan['slug'];
+                }
+            }
+        }
+
+        $allowedModels = [];
+        $defaultModel = null;
+        if ($currentPlan) {
+            $allowedModels = Plan::parseAllowedModels($currentPlan['allowed_models'] ?? null);
+            $defaultModel = $currentPlan['default_model'] ?? null;
+        }
+        if (!$allowedModels) {
+            $fallbackModel = Setting::get('openai_default_model', AI_MODEL);
+            if ($fallbackModel) {
+                $allowedModels = [$fallbackModel];
+                if (!$defaultModel) {
+                    $defaultModel = $fallbackModel;
+                }
+            }
+        }
+
+        $comingSoonModels = [];
+        $anthropicKeyConfigured = trim((string)Setting::get('anthropic_api_key', ANTHROPIC_API_KEY)) !== '';
+        $nanoKeyConfigured = trim((string)Setting::get('nano_banana_pro_api_key', '')) !== '';
+
+        foreach ($allowedModels as $m) {
+            $mm = trim((string)$m);
+            if ($mm === '') {
+                continue;
+            }
+            if (str_starts_with($mm, 'claude-') && !$anthropicKeyConfigured) {
+                $comingSoonModels[$mm] = 'Claude requer chave da Anthropic';
+            }
+            if (in_array($mm, ['gemini-2.5-flash-image', 'gemini-3-pro-image-preview', 'nano-banana-pro'], true) && !$nanoKeyConfigured) {
+                $comingSoonModels[$mm] = 'Nano Banana requer chave';
+            }
+        }
+
+        $projectChatModel = isset($project['chat_model']) ? trim((string)$project['chat_model']) : '';
+        $currentModel = $projectChatModel !== '' ? $projectChatModel : (string)($_SESSION['chat_model'] ?? '');
+        if ($currentModel === '' && $defaultModel) {
+            $currentModel = (string)$defaultModel;
+        }
+        if ($currentModel === '' && !empty($allowedModels[0])) {
+            $currentModel = (string)$allowedModels[0];
+        }
+
+        // Se o modelo atual não estiver na lista permitida, ajusta para o default/primeiro.
+        if ($currentModel !== '' && !in_array($currentModel, $allowedModels, true)) {
+            $currentModel = $defaultModel && in_array($defaultModel, $allowedModels, true) ? (string)$defaultModel : (string)($allowedModels[0] ?? $currentModel);
+        }
+
         $this->view('projects/show', [
             'pageTitle' => ($project['name'] ?? 'Projeto') . ' - Tuquinha',
             'user' => $user,
@@ -342,6 +406,10 @@ class ProjectController extends Controller
             'planAllowsPersonalities' => $planAllowsPersonalities,
             'personalities' => $personalities,
             'projectInstructions' => (string)($project['instructions'] ?? ''),
+            'currentPlan' => $currentPlan,
+            'allowedModels' => $allowedModels,
+            'currentModel' => $currentModel,
+            'comingSoonModels' => $comingSoonModels,
             'uploadError' => $_SESSION['project_upload_error'] ?? null,
             'uploadOk' => $_SESSION['project_upload_ok'] ?? null,
         ]);
@@ -827,6 +895,55 @@ class ProjectController extends Controller
             $_SESSION['project_upload_error'] = 'Digite uma mensagem para iniciar o chat.';
             header('Location: /projetos/ver?id=' . $projectId);
             exit;
+        }
+
+        // Modelo selecionado no compositor do projeto
+        $pickedModel = isset($_POST['model']) && is_string($_POST['model']) ? trim((string)$_POST['model']) : '';
+        if ($pickedModel !== '') {
+            $plan = null;
+            if (!empty($_SESSION['is_admin'])) {
+                $plan = Plan::findTopActive();
+            } else {
+                $email = (string)($user['email'] ?? '');
+                $plan = $this->getActivePlanForEmail($email);
+                if (!$plan) {
+                    $plan = Plan::findBySessionSlug($_SESSION['plan_slug'] ?? null) ?: Plan::findBySlug('free');
+                }
+            }
+
+            $allowedModels = $plan ? Plan::parseAllowedModels($plan['allowed_models'] ?? null) : [];
+            if (!$allowedModels) {
+                $fallbackModel = Setting::get('openai_default_model', AI_MODEL);
+                if ($fallbackModel) {
+                    $allowedModels = [$fallbackModel];
+                }
+            }
+
+            $anthropicKeyConfigured = trim((string)Setting::get('anthropic_api_key', ANTHROPIC_API_KEY)) !== '';
+            $nanoKeyConfigured = trim((string)Setting::get('nano_banana_pro_api_key', '')) !== '';
+            $isComingSoon = false;
+            if (str_starts_with($pickedModel, 'claude-') && !$anthropicKeyConfigured) {
+                $isComingSoon = true;
+            }
+            if (in_array($pickedModel, ['gemini-2.5-flash-image', 'gemini-3-pro-image-preview', 'nano-banana-pro'], true) && !$nanoKeyConfigured) {
+                $isComingSoon = true;
+            }
+
+            if ($isComingSoon) {
+                $_SESSION['project_upload_error'] = 'Este modelo está marcado como Em breve e ainda não pode ser usado para enviar mensagens.';
+                header('Location: /projetos/ver?id=' . $projectId);
+                exit;
+            }
+
+            if (in_array($pickedModel, $allowedModels, true)) {
+                $_SESSION['chat_model'] = $pickedModel;
+                if (ProjectMember::canWrite($projectId, $userId) || ProjectMember::canAdmin($projectId, $userId)) {
+                    try {
+                        Project::updateChatModel($projectId, $pickedModel);
+                    } catch (\Throwable $e) {
+                    }
+                }
+            }
         }
 
         $personaId = null;

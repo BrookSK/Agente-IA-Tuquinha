@@ -77,4 +77,26 @@ class CoursePurchase
 
         return (bool)$stmt->fetch(PDO::FETCH_ASSOC);
     }
+
+    public static function paidCourseIdsByUser(int $userId): array
+    {
+        if ($userId <= 0) {
+            return [];
+        }
+
+        $pdo = Database::getConnection();
+        $stmt = $pdo->prepare('SELECT course_id FROM course_purchases WHERE user_id = :user_id AND status = "paid"');
+        $stmt->execute(['user_id' => $userId]);
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        $ids = [];
+        foreach ($rows as $r) {
+            $cid = (int)($r['course_id'] ?? 0);
+            if ($cid > 0) {
+                $ids[$cid] = true;
+            }
+        }
+
+        return array_keys($ids);
+    }
 }

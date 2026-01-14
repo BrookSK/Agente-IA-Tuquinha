@@ -12,6 +12,9 @@
 <?php /** @var array $projectMemoryItems */ ?>
 <?php /** @var string|null $uploadError */ ?>
 <?php /** @var string|null $uploadOk */ ?>
+<?php /** @var array $allowedModels */ ?>
+<?php /** @var string|null $currentModel */ ?>
+<?php /** @var array $comingSoonModels */ ?>
 <?php
     $timeAgo = static function (?string $dt): string {
         if (!$dt) {
@@ -456,6 +459,51 @@
                 <form id="projectComposerForm" action="/projetos/chat/criar" method="post" style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
                     <input type="hidden" name="project_id" value="<?= (int)($project['id'] ?? 0) ?>">
                     <div style="flex:1; min-width:0; overflow:hidden; background:var(--surface-subtle); border:1px solid var(--border-subtle); border-radius:14px; padding:14px; color:var(--text-secondary); font-size:13px;">
+                        <?php
+                            $allowedModels = isset($allowedModels) && is_array($allowedModels) ? $allowedModels : [];
+                            $currentModel = isset($currentModel) && is_string($currentModel) ? $currentModel : '';
+                            $comingSoonModels = isset($comingSoonModels) && is_array($comingSoonModels) ? $comingSoonModels : [];
+                        ?>
+                        <?php if (!empty($allowedModels)): ?>
+                            <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:10px;">
+                                <div style="font-size:12px; color:var(--text-secondary); white-space:nowrap;">Modelo</div>
+                                <div style="display:flex; align-items:center; gap:8px;">
+                                    <select name="model" id="projectComposerModel" style="
+                                        min-width: 160px;
+                                        background: var(--surface-card);
+                                        color: var(--text-primary);
+                                        border-radius: 999px;
+                                        border: 1px solid var(--border-subtle);
+                                        padding: 6px 10px;
+                                        font-size: 12px;
+                                        outline: none;
+                                    ">
+                                        <?php foreach ($allowedModels as $m): ?>
+                                            <?php
+                                                $m = (string)$m;
+                                                $label = $m;
+                                                if ($m === 'gpt-5.2-chat-latest') {
+                                                    $label = 'GPT-5.2 Chat';
+                                                }
+                                                if ($m === 'gemini-2.5-flash-image' || $m === 'gemini-3-pro-image-preview') {
+                                                    $label = $m . ' (Nano Banana)';
+                                                }
+                                                if (!empty($comingSoonModels[$m])) {
+                                                    $label .= ' • Em breve';
+                                                }
+                                            ?>
+                                            <option value="<?= htmlspecialchars($m) ?>" <?= $currentModel === $m ? 'selected' : '' ?> data-coming-soon="<?= !empty($comingSoonModels[$m]) ? '1' : '0' ?>">
+                                                <?= htmlspecialchars($label) ?>
+                                            </option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                    <span id="projectModelComingSoonBadge" style="display:none; font-size:9px; text-transform:uppercase; letter-spacing:0.14em; border-radius:999px; padding:2px 7px; background:#201216; color:#ffcc80; border:1px solid #ff6f60;">Em breve</span>
+                                </div>
+                            </div>
+                            <div id="projectModelComingSoonHint" style="display:none; margin:-4px 0 8px 0; font-size:11px; color:#ffcc80;">
+                                Este modelo ainda está em breve. Você pode selecionar, mas não dá para enviar mensagens com ele.
+                            </div>
+                        <?php endif; ?>
                         <?php if (!empty($planAllowsPersonalities) && !empty($personalities) && is_array($personalities)): ?>
                             <?php
                                 $defaultPersonaId = !empty($_SESSION['default_persona_id']) ? (int)$_SESSION['default_persona_id'] : 0;
@@ -519,7 +567,6 @@
                         <div style="display:flex; justify-content:flex-end; align-items:center; margin-top:10px;">
                             <button type="submit" style="display:inline-flex; align-items:center; justify-content:center; width:34px; height:34px; border-radius:10px; border:1px solid #2e7d32; background:#102312; color:#c8ffd4; text-decoration:none; font-weight:700; cursor:pointer;">↑</button>
                         </div>
-                        <div style="color:var(--text-secondary); font-size:12px; white-space:nowrap; margin-top:8px;"><?= htmlspecialchars($composerModel) ?> ✓</div>
                     </div>
                 </form>
             </div>
@@ -841,17 +888,13 @@
                     }
                 }
             </style>
-
             <script>
                 (function () {
-                    var btn = document.getElementById('filesPlusBtn');
-                    var menu = document.getElementById('filesPlusMenu');
-                    var uploadForm = document.getElementById('filesUploadForm');
-                    var textForm = document.getElementById('filesTextForm');
+                    var composerForm = document.getElementById('projectComposerForm');
+                    if (!composerForm) return;
 
-                    function closeMenu() {
-                        if (menu) menu.style.display = 'none';
-                    }
+                    var personaPicker = document.getElementById('projectPersonaPicker');
+                    if (!personaPicker) return;
 
                     function showUpload() {
                         if (uploadForm) uploadForm.style.display = 'flex';
@@ -1528,6 +1571,43 @@
                             } catch (e) {}
                         });
                     })();
+                })();
+            </script>
+
+            <script>
+                (function () {
+                    var form = document.getElementById('projectComposerForm');
+                    var sel = document.getElementById('projectComposerModel');
+                    var badge = document.getElementById('projectModelComingSoonBadge');
+                    var hint = document.getElementById('projectModelComingSoonHint');
+                    if (!form || !sel) return;
+
+                    function isComingSoonSelected() {
+                        try {
+                            var opt = sel.options && sel.selectedIndex >= 0 ? sel.options[sel.selectedIndex] : null;
+                            if (!opt) return false;
+                            return String(opt.getAttribute('data-coming-soon') || '') === '1';
+                        } catch (e) {
+                            return false;
+                        }
+                    }
+
+                    function syncComingSoonUi() {
+                        var cs = isComingSoonSelected();
+                        if (badge) badge.style.display = cs ? 'inline-flex' : 'none';
+                        if (hint) hint.style.display = cs ? 'block' : 'none';
+                    }
+
+                    sel.addEventListener('change', syncComingSoonUi);
+                    form.addEventListener('submit', function (e) {
+                        if (isComingSoonSelected()) {
+                            try { if (e) e.preventDefault(); } catch (err) {}
+                            syncComingSoonUi();
+                            return false;
+                        }
+                    });
+
+                    syncComingSoonUi();
                 })();
             </script>
 

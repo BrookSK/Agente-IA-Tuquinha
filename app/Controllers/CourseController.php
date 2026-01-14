@@ -466,12 +466,23 @@ class CourseController extends Controller
         $isAdmin = !empty($_SESSION['is_admin']);
         $planAllowsCourses = !empty($plan['allow_courses']);
 
+        $filter = isset($_GET['f']) ? trim((string)$_GET['f']) : '';
+        $filter = strtolower($filter);
+        if (!in_array($filter, ['my'], true)) {
+            $filter = 'all';
+        }
+
         $courses = Course::allActive();
 
         $enrolledIds = [];
+        $paidPurchaseIds = [];
         if ($user) {
             foreach (CourseEnrollment::allByUser((int)$user['id']) as $en) {
                 $enrolledIds[(int)$en['course_id']] = true;
+            }
+
+            foreach (CoursePurchase::paidCourseIdsByUser((int)$user['id']) as $cid) {
+                $paidPurchaseIds[(int)$cid] = true;
             }
         }
 
@@ -487,9 +498,17 @@ class CourseController extends Controller
             }
 
             $course['is_enrolled'] = isset($enrolledIds[$cid]);
+            $course['has_paid_purchase'] = isset($paidPurchaseIds[$cid]);
             $course['can_access_by_plan'] = $planAllowsCourses || $isAdmin;
             $course['allow_public_purchase'] = $allowPublicPurchase;
             $course['allow_plan_access_only'] = $allowPlanOnly;
+
+            if ($filter === 'my') {
+                $hasAccess = !empty($course['can_access_by_plan']) || !empty($course['is_enrolled']) || !empty($course['has_paid_purchase']);
+                if (!$hasAccess) {
+                    continue;
+                }
+            }
             $visibleCourses[] = $course;
         }
 
@@ -502,6 +521,7 @@ class CourseController extends Controller
             'user' => $user,
             'plan' => $plan,
             'courses' => $visibleCourses,
+            'filter' => $filter,
             'success' => $success,
             'error' => $error,
         ]);

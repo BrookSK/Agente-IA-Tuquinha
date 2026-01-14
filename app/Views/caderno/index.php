@@ -287,6 +287,11 @@ $publicUrl = ($isPublished && $publicToken !== '') ? ('/caderno/publico?token=' 
         height: auto;
         min-height: 44px;
     }
+    .notion-editor-wrap .cdx-quote__text {
+        height: auto;
+        min-height: 44px;
+        overflow: hidden;
+    }
     body[data-theme="light"] .notion-editor-wrap .ce-code__textarea {
         background: rgba(15, 23, 42, 0.04);
     }
@@ -2406,8 +2411,11 @@ $publicUrl = ($isPublished && $publicToken !== '') ? ('/caderno/publico?token=' 
 
         function autoSize(el) {
             if (!el || el.nodeType !== 1) return;
-            if ((el.tagName || '').toLowerCase() !== 'textarea') return;
-            // só aplica em inputs do editor (ex.: code tool / quote tool)
+            var tag = (el.tagName || '').toLowerCase();
+            var isTextarea = tag === 'textarea';
+            var isEditableQuote = !isTextarea && (el.classList && el.classList.contains('cdx-quote__text'));
+            if (!isTextarea && !isEditableQuote) return;
+
             try {
                 el.style.height = 'auto';
                 el.style.overflow = 'hidden';
@@ -2419,7 +2427,7 @@ $publicUrl = ($isPublished && $publicToken !== '') ? ('/caderno/publico?token=' 
         }
 
         function scan() {
-            var areas = host.querySelectorAll('textarea');
+            var areas = host.querySelectorAll('textarea, .cdx-quote__text');
             for (var i = 0; i < areas.length; i++) {
                 autoSize(areas[i]);
             }

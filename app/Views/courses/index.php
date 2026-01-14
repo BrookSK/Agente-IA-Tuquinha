@@ -2,6 +2,7 @@
 /** @var array|null $user */
 /** @var array|null $plan */
 /** @var array $courses */
+/** @var string|null $filter */
 /** @var string|null $success */
 /** @var string|null $error */
 ?>
@@ -44,9 +45,49 @@
         color: var(--text-secondary);
         text-align: right;
     }
+
+    .course-filter-tabs {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px;
+        border-radius: 999px;
+        border: 1px solid var(--border-subtle);
+        background: rgba(255,255,255,0.04);
+        box-shadow: var(--shadow-tile);
+    }
+    .course-filter-tab {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 8px 12px;
+        border-radius: 999px;
+        border: 1px solid transparent;
+        background: transparent;
+        color: var(--text-secondary);
+        font-size: 12px;
+        font-weight: 650;
+        text-decoration: none;
+        line-height: 1;
+    }
+    .course-filter-tab.is-active {
+        background: linear-gradient(135deg, #e53935, #ff6f60);
+        color: #050509;
+    }
 </style>
-<div style="max-width: 960px; margin: 0 auto;">
-    <h1 style="font-size: 22px; margin-bottom: 10px; font-weight: 650;">Cursos do Tuquinha</h1>
+<?php $filter = isset($filter) ? (string)$filter : 'all'; ?>
+<div style="max-width: none; width: 100%; margin: 0;">
+    <div style="display:flex; align-items:flex-start; justify-content:space-between; gap: 12px;">
+        <div style="min-width: 0;">
+            <h1 style="font-size: 22px; margin-bottom: 10px; font-weight: 650;">Cursos do Tuquinha</h1>
+        </div>
+        <div style="flex: 0 0 auto; margin-top: 2px;">
+            <div class="course-filter-tabs">
+                <a class="course-filter-tab<?= $filter !== 'my' ? ' is-active' : '' ?>" href="/cursos">Todos</a>
+                <a class="course-filter-tab<?= $filter === 'my' ? ' is-active' : '' ?>" href="/cursos?f=my">Meus cursos</a>
+            </div>
+        </div>
+    </div>
     <p style="color:var(--text-secondary); font-size:13px; margin-bottom:14px;">
         Aprofunde sua prática de branding com cursos focados em designers de marca. Alguns cursos são liberados pelo seu plano,
         outros podem ser adquiridos de forma avulsa.
@@ -66,7 +107,11 @@
 
     <?php if (empty($courses)): ?>
         <div style="margin-top:10px; color:var(--text-secondary); font-size:13px;">
-            Ainda não há cursos disponíveis para o seu perfil no momento.
+            <?php if ($filter === 'my'): ?>
+                Você ainda não tem cursos liberados no seu perfil.
+            <?php else: ?>
+                Ainda não há cursos disponíveis para o seu perfil no momento.
+            <?php endif; ?>
         </div>
     <?php else: ?>
         <div style="display:flex; flex-wrap:wrap; gap:14px; margin-top:6px;">

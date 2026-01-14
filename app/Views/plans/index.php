@@ -22,12 +22,16 @@
 
     @media (min-width: 900px) {
         #plans-wrap {
-            max-width: 1200px !important;
+            max-width: none !important;
+            width: 100% !important;
+            margin: 0 !important;
+            padding-left: 0 !important;
+            padding-right: 0 !important;
         }
         #plans-grid {
             display: grid !important;
-            grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
-            gap: 14px !important;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)) !important;
+            gap: 18px !important;
             align-items: stretch;
         }
     }
@@ -38,7 +42,7 @@
         }
     }
 </style>
-<div id="plans-wrap" style="max-width: 520px; margin: 0 auto; padding: 18px 14px 26px 14px;">
+<div id="plans-wrap" style="max-width: none; width: 100%; margin: 0; padding: 18px 0 26px 0;">
     <?php
         $hasCurrentPlan = !empty($currentPlan) && is_array($currentPlan);
         $currentSlug = $hasCurrentPlan ? (string)($currentPlan['slug'] ?? '') : '';
