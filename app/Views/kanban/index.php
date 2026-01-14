@@ -394,6 +394,31 @@ $currentBoardTitle = $currentBoard ? (string)($currentBoard['title'] ?? 'Sem tí
         overflow-y: auto;
     }
 
+    .kb-modal-card,
+    .kb-attachments-list {
+        scrollbar-color: rgba(255,255,255,0.24) rgba(0,0,0,0.25);
+        scrollbar-width: thin;
+    }
+    .kb-modal-card::-webkit-scrollbar,
+    .kb-attachments-list::-webkit-scrollbar {
+        width: 10px;
+    }
+    .kb-modal-card::-webkit-scrollbar-track,
+    .kb-attachments-list::-webkit-scrollbar-track {
+        background: rgba(0,0,0,0.25);
+        border-radius: 999px;
+    }
+    .kb-modal-card::-webkit-scrollbar-thumb,
+    .kb-attachments-list::-webkit-scrollbar-thumb {
+        background: rgba(255,255,255,0.24);
+        border-radius: 999px;
+        border: 2px solid rgba(0,0,0,0.25);
+    }
+    .kb-modal-card::-webkit-scrollbar-thumb:hover,
+    .kb-attachments-list::-webkit-scrollbar-thumb:hover {
+        background: rgba(255,255,255,0.34);
+    }
+
     .kb-attachments {
         margin-top: 10px;
         border-top: 1px solid var(--border-subtle);
