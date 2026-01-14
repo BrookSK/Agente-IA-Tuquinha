@@ -48,7 +48,7 @@ $editStatus = $isEditing ? (string)($editItem['status'] ?? 'draft') : 'draft';
             </div>
             <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
                 <a href="/perfil/portfolio" style="font-size:12px; color:#ff6f60; text-decoration:none;">Ver público</a>
-                <a href="/perfil" style="font-size:12px; color:#ff6f60; text-decoration:none;">Voltar ao perfil</a>
+                <a href="/perfil/portfolio" style="font-size:12px; color:#ff6f60; text-decoration:none;">Voltar ao portfólio</a>
             </div>
         </div>
     </section>

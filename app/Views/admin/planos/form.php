@@ -97,6 +97,22 @@ if ($slugForCycle !== '') {
                     background:var(--surface-subtle); color:var(--text-primary); font-size:13px;">
                 <div style="font-size:11px; color:#777; margin-top:3px;">Se vazio ou 0, o plano não terá limite mensal rígido de tokens.</div>
             </div>
+
+            <div style="flex:1 1 160px;">
+                <label style="font-size:13px; color:var(--text-primary); display:block; margin-bottom:4px;">Limite de personalidades</label>
+                <input type="number" name="personalities_limit" min="0" value="<?= isset($plan['personalities_limit']) ? (int)$plan['personalities_limit'] : '' ?>" style="
+                    width:160px; padding:8px 10px; border-radius:8px; border:1px solid var(--border-subtle);
+                    background:var(--surface-subtle); color:var(--text-primary); font-size:13px;">
+                <div style="font-size:11px; color:#777; margin-top:3px;">Se vazio, o plano não impõe limite de personalidades. Se 0, não permite nenhuma.</div>
+            </div>
+
+            <div style="flex:1 1 160px;">
+                <label style="font-size:13px; color:var(--text-primary); display:block; margin-bottom:4px;">Limite de quadros do Kanban</label>
+                <input type="number" name="kanban_boards_limit" min="0" value="<?= isset($plan['kanban_boards_limit']) ? (int)$plan['kanban_boards_limit'] : '' ?>" style="
+                    width:160px; padding:8px 10px; border-radius:8px; border:1px solid var(--border-subtle);
+                    background:var(--surface-subtle); color:var(--text-primary); font-size:13px;">
+                <div style="font-size:11px; color:#777; margin-top:3px;">Se vazio, não impõe limite de quadros. Se 0, não permite criar nenhum quadro.</div>
+            </div>
         </div>
 
         <div>

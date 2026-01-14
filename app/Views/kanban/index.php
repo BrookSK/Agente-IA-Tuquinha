@@ -526,6 +526,68 @@ $currentBoardTitle = $currentBoard ? (string)($currentBoard['title'] ?? 'Sem tí
         .kb-list-placeholder { width: 94vw; flex: 0 0 94vw; }
         .kb-board { padding: 10px; }
     }
+
+    .kb-card.is-done {
+        opacity: 0.78;
+    }
+
+    .kb-card-done-btn {
+        width: 28px;
+        height: 28px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 8px;
+        border: 1px solid var(--border-subtle);
+        background: rgba(255,255,255,0.04);
+        color: var(--text-secondary);
+        cursor: pointer;
+    }
+
+    .kb-card.is-done .kb-card-done-btn {
+        background: rgba(100, 210, 120, 0.18);
+        border-color: rgba(100, 210, 120, 0.35);
+        color: rgba(140, 240, 160, 1);
+    }
+
+    .kb-card-badges {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        align-items: center;
+        margin-top: 8px;
+    }
+
+    .kb-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 12px;
+        padding: 4px 8px;
+        border-radius: 10px;
+        border: 1px solid rgba(255,255,255,0.08);
+        background: rgba(255,255,255,0.04);
+        color: var(--text-secondary);
+        line-height: 1.2;
+    }
+
+    .kb-badge--due-soon {
+        background: rgba(255, 200, 90, 0.16);
+        border-color: rgba(255, 200, 90, 0.28);
+        color: rgba(255, 220, 160, 1);
+    }
+
+    .kb-badge--due-ok {
+        background: rgba(100, 210, 120, 0.14);
+        border-color: rgba(100, 210, 120, 0.26);
+        color: rgba(160, 240, 180, 1);
+    }
+
+    .kb-badge--due-late {
+        background: rgba(255, 70, 70, 0.16);
+        border-color: rgba(255, 70, 70, 0.28);
+        color: rgba(255, 150, 150, 1);
+    }
 </style>
 
 <div class="kb-shell">
@@ -594,9 +656,73 @@ $currentBoardTitle = $currentBoard ? (string)($currentBoard['title'] ?? 'Sem tí
                                     $cid = (int)($c['id'] ?? 0);
                                     $ct = (string)($c['title'] ?? 'Sem título');
                                     $cd = (string)($c['description'] ?? '');
+                                    $due = (string)($c['due_date'] ?? '');
+                                    $coverUrl = (string)($c['cover_url'] ?? '');
+                                    $isDone = !empty($c['is_done']) && (string)$c['is_done'] !== '0';
+                                    $attachmentsCount = (int)($c['attachments_count'] ?? 0);
+                                    $chkTotal = (int)($c['checklist_total'] ?? 0);
+                                    $chkDone = (int)($c['checklist_done'] ?? 0);
+
+                                    $dueClass = '';
+                                    $dueLabel = '';
+                                    if ($due !== '') {
+                                        $ts = strtotime($due);
+                                        if ($ts !== false) {
+                                            $today = strtotime(date('Y-m-d'));
+                                            if ($ts < $today) {
+                                                $dueClass = 'kb-badge--due-late';
+                                            } elseif ($ts === $today) {
+                                                $dueClass = 'kb-badge--due-soon';
+                                            } else {
+                                                $dueClass = 'kb-badge--due-ok';
+                                            }
+                                            $m = (int)date('n', $ts);
+                                            $months = [1=>'jan.',2=>'fev.',3=>'mar.',4=>'abr.',5=>'mai.',6=>'jun.',7=>'jul.',8=>'ago.',9=>'set.',10=>'out.',11=>'nov.',12=>'dez.'];
+                                            $dueLabel = (int)date('j', $ts) . ' de ' . ($months[$m] ?? date('M', $ts)) . ' de ' . date('Y', $ts);
+                                        } else {
+                                            $dueLabel = $due;
+                                        }
+                                    }
                                 ?>
-                                <div class="kb-card" draggable="true" data-card-id="<?= $cid ?>" data-list-id="<?= $lid ?>">
-                                    <div class="kb-card-title"><?= htmlspecialchars($ct) ?></div>
+                                <div class="kb-card<?= $isDone ? ' is-done' : '' ?>" draggable="true" data-card-id="<?= $cid ?>" data-list-id="<?= $lid ?>" data-due-date="<?= htmlspecialchars($due) ?>" data-cover-url="<?= htmlspecialchars($coverUrl) ?>" data-attachments-count="<?= $attachmentsCount ?>" data-checklist-done="<?= $chkDone ?>" data-checklist-total="<?= $chkTotal ?>" data-is-done="<?= $isDone ? '1' : '0' ?>">
+                                    <?php if ($coverUrl !== ''): ?>
+                                        <div class="kb-card-cover" style="margin:-10px -10px 10px -10px; border-radius:12px; overflow:hidden;">
+                                            <img src="<?= htmlspecialchars($coverUrl) ?>" alt="Capa" style="width:100%; height:140px; object-fit:cover; display:block;">
+                                        </div>
+                                    <?php endif; ?>
+                                    <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:10px;">
+                                        <div class="kb-card-title" style="flex:1; min-width:0;">
+                                            <?= htmlspecialchars($ct) ?>
+                                        </div>
+                                        <button type="button" class="kb-card-done-btn" data-action="toggle-done" title="Marcar como concluído">
+                                            <?= $isDone ? '✓' : '○' ?>
+                                        </button>
+                                    </div>
+
+                                    <?php if ($dueLabel !== '' || $attachmentsCount > 0 || $chkTotal > 0): ?>
+                                        <div class="kb-card-badges">
+                                            <?php if ($dueLabel !== ''): ?>
+                                                <span class="kb-badge <?= $dueClass ?>" data-badge="due" data-due-raw="<?= htmlspecialchars($due) ?>">
+                                                    <span style="opacity:0.9;">⏰</span>
+                                                    <span><?= htmlspecialchars($dueLabel) ?></span>
+                                                </span>
+                                            <?php endif; ?>
+
+                                            <?php if ($attachmentsCount > 0): ?>
+                                                <span class="kb-badge" data-badge="attachments">
+                                                    <span style="opacity:0.9;">📎</span>
+                                                    <span><?= (int)$attachmentsCount ?></span>
+                                                </span>
+                                            <?php endif; ?>
+
+                                            <?php if ($chkTotal > 0): ?>
+                                                <span class="kb-badge" data-badge="checklist">
+                                                    <span style="opacity:0.9;">☑</span>
+                                                    <span><?= (int)$chkDone ?>/<?= (int)$chkTotal ?></span>
+                                                </span>
+                                            <?php endif; ?>
+                                        </div>
+                                    <?php endif; ?>
                                     <?php if ($cd !== ''): ?>
                                         <div class="kb-card-desc"><?= htmlspecialchars($cd) ?></div>
                                     <?php endif; ?>
@@ -629,8 +755,25 @@ $currentBoardTitle = $currentBoard ? (string)($currentBoard['title'] ?? 'Sem tí
             <textarea class="kb-input" id="kb-modal-textarea" placeholder="Descrição" style="min-height:110px; resize:vertical;"></textarea>
         </div>
 
+        <div style="margin-top:10px; display:flex; flex-direction:column; gap:6px;">
+            <div class="kb-modal-field-label">Data de entrega</div>
+            <input type="date" class="kb-input" id="kb-modal-due-date" />
+        </div>
+
+        <div class="kb-attachments" id="kb-checklist" style="display:none;">
+            <div class="kb-attachments-title">Checklist</div>
+            <div class="kb-attachments-row">
+                <input class="kb-input" id="kb-checklist-new" placeholder="Adicionar item..." style="flex:1; min-width: 220px;" />
+                <button type="button" class="kb-btn kb-btn--primary" id="kb-checklist-add">Adicionar</button>
+            </div>
+            <div class="kb-attachments-list" id="kb-checklist-list"></div>
+        </div>
+
         <div class="kb-attachments" id="kb-attachments" style="display:none;">
-            <div class="kb-attachments-title">Anexos</div>
+            <div style="display:flex; align-items:center; justify-content:space-between; gap:8px;">
+                <div class="kb-attachments-title">Anexos</div>
+                <button type="button" class="kb-btn" id="kb-cover-clear" style="display:none;">Remover capa</button>
+            </div>
             <div class="kb-attachments-row">
                 <input type="file" class="kb-input" id="kb-attach-file" style="flex:1; min-width: 220px;" />
                 <button type="button" class="kb-btn kb-btn--primary" id="kb-attach-upload">Enviar</button>
@@ -711,11 +854,73 @@ $currentBoardTitle = $currentBoard ? (string)($currentBoard['title'] ?? 'Sem tí
         el.setAttribute('draggable', 'true');
         el.setAttribute('data-card-id', String(card.id));
         el.setAttribute('data-list-id', String(listId));
-        el.innerHTML = '<div class="kb-card-title">' + esc(card.title || 'Sem título') + '</div>';
+        el.setAttribute('data-due-date', String(card.due_date || ''));
+        el.setAttribute('data-cover-url', String(card.cover_url || ''));
+        el.setAttribute('data-attachments-count', String(card.attachments_count || '0'));
+        el.setAttribute('data-checklist-done', String(card.checklist_done || '0'));
+        el.setAttribute('data-checklist-total', String(card.checklist_total || '0'));
+        el.setAttribute('data-is-done', String(card.is_done || '0'));
+        if (String(card.is_done || '0') !== '0') {
+            el.classList.add('is-done');
+        }
+
+        el.innerHTML = '';
+        if (card.cover_url) {
+            el.innerHTML += '<div class="kb-card-cover" style="margin:-10px -10px 10px -10px; border-radius:12px; overflow:hidden;">'
+                + '<img src="' + esc(card.cover_url) + '" alt="Capa" style="width:100%; height:140px; object-fit:cover; display:block;">'
+                + '</div>';
+        }
+        el.innerHTML += '<div style="display:flex; align-items:flex-start; justify-content:space-between; gap:10px;">'
+            + '<div class="kb-card-title" style="flex:1; min-width:0;">' + esc(card.title || 'Sem título') + '</div>'
+            + '<button type="button" class="kb-card-done-btn" data-action="toggle-done" title="Marcar como concluído">' + (String(card.is_done || '0') !== '0' ? '✓' : '○') + '</button>'
+            + '</div>';
+
+        var badges = [];
+        var dueRaw = String(card.due_date || '');
+        var dueInfo = dueRaw ? getDueBadgeInfo(dueRaw) : null;
+        if (dueInfo) {
+            badges.push('<span class="kb-badge ' + esc(dueInfo.cls) + '" data-badge="due" data-due-raw="' + esc(dueRaw) + '">' + '<span style="opacity:0.9;">⏰</span>' + '<span>' + esc(dueInfo.label) + '</span></span>');
+        }
+        var attCount = parseInt(String(card.attachments_count || '0'), 10) || 0;
+        if (attCount > 0) {
+            badges.push('<span class="kb-badge" data-badge="attachments"><span style="opacity:0.9;">📎</span><span>' + esc(String(attCount)) + '</span></span>');
+        }
+        var chkTotal = parseInt(String(card.checklist_total || '0'), 10) || 0;
+        var chkDone = parseInt(String(card.checklist_done || '0'), 10) || 0;
+        if (chkTotal > 0) {
+            badges.push('<span class="kb-badge" data-badge="checklist"><span style="opacity:0.9;">☑</span><span>' + esc(String(chkDone)) + '/' + esc(String(chkTotal)) + '</span></span>');
+        }
+        if (badges.length) {
+            el.innerHTML += '<div class="kb-card-badges">' + badges.join('') + '</div>';
+        }
+
         if (card.description) {
             el.innerHTML += '<div class="kb-card-desc">' + esc(card.description) + '</div>';
         }
         return el;
+    }
+
+    function getDueBadgeInfo(dateStr) {
+        if (!dateStr) return null;
+        var m = String(dateStr).match(/^(\d{4})-(\d{2})-(\d{2})$/);
+        if (!m) {
+            return { cls: 'kb-badge--due-ok', label: String(dateStr) };
+        }
+        var y = parseInt(m[1], 10);
+        var mo = parseInt(m[2], 10);
+        var d = parseInt(m[3], 10);
+
+        var dt = new Date(Date.UTC(y, mo - 1, d));
+        var now = new Date();
+        var today = new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()));
+
+        var cls = 'kb-badge--due-ok';
+        if (dt.getTime() < today.getTime()) cls = 'kb-badge--due-late';
+        else if (dt.getTime() === today.getTime()) cls = 'kb-badge--due-soon';
+
+        var months = ['jan.', 'fev.', 'mar.', 'abr.', 'mai.', 'jun.', 'jul.', 'ago.', 'set.', 'out.', 'nov.', 'dez.'];
+        var label = d + ' de ' + (months[mo - 1] || '') + ' de ' + y;
+        return { cls: cls, label: label };
     }
 
     function ensureListTitleClickIsNotDnd(el) {
@@ -792,6 +997,8 @@ $currentBoardTitle = $currentBoard ? (string)($currentBoard['title'] ?? 'Sem tí
         $('kb-modal-title').textContent = opts.title || 'Editar';
         $('kb-modal-input').value = opts.value || '';
         $('kb-modal-textarea').value = opts.desc || '';
+        var dd = $('kb-modal-due-date');
+        if (dd) dd.value = opts.dueDate || '';
         $('kb-modal-textarea').style.display = opts.showDesc ? 'block' : 'none';
         var del = $('kb-modal-delete');
         del.style.display = opts.showDelete ? 'inline-flex' : 'none';
@@ -830,10 +1037,22 @@ $currentBoardTitle = $currentBoard ? (string)($currentBoard['title'] ?? 'Sem tí
 
         var att = $('kb-attachments');
         if (att) att.style.display = 'none';
+        var chk = $('kb-checklist');
+        if (chk) chk.style.display = 'none';
         var file = $('kb-attach-file');
         if (file) file.value = '';
         var list = $('kb-attach-list');
         if (list) list.innerHTML = '';
+        var cl = $('kb-checklist-list');
+        if (cl) cl.innerHTML = '';
+        var ci = $('kb-checklist-new');
+        if (ci) ci.value = '';
+
+        var coverClear = $('kb-cover-clear');
+        if (coverClear) {
+            coverClear.style.display = 'none';
+            coverClear.onclick = null;
+        }
     }
 
     function buildListOptions(selectEl, selectedListId) {
@@ -892,6 +1111,8 @@ $currentBoardTitle = $currentBoard ? (string)($currentBoard['title'] ?? 'Sem tí
             var id = a && a.id ? String(a.id) : '';
             var url = a && a.url ? String(a.url) : '';
             var name = (a && a.original_name ? String(a.original_name) : (url ? url.split('/').pop() : 'Arquivo'));
+            var mime = a && a.mime_type ? String(a.mime_type) : '';
+            var isImage = mime && mime.toLowerCase().indexOf('image/') === 0;
 
             var row = document.createElement('div');
             row.className = 'kb-attachment-item';
@@ -905,6 +1126,8 @@ $currentBoardTitle = $currentBoard ? (string)($currentBoard['title'] ?? 'Sem tí
             actions.className = 'kb-attachment-actions';
             actions.innerHTML = ''
                 + '<a class="kb-btn" href="' + esc(url) + '" target="_blank" rel="noopener">Abrir</a>'
+                + (isImage ? '<a class="kb-btn" href="' + esc(url) + '" download>Baixar</a>' : '')
+                + (isImage ? '<button type="button" class="kb-btn" data-action="set-cover" data-attachment-id="' + esc(id) + '">Capa</button>' : '')
                 + '<button type="button" class="kb-btn kb-btn--danger" data-action="delete-attachment" data-attachment-id="' + esc(id) + '">Remover</button>';
 
             row.appendChild(left);
@@ -956,7 +1179,134 @@ $currentBoardTitle = $currentBoard ? (string)($currentBoard['title'] ?? 'Sem tí
                 }
             });
         }
+
+        if (act === 'set-cover') {
+            var modal = $('kb-modal');
+            if (!modal) return;
+            var cardId = modal.dataset.cardId;
+            if (!cardId) return;
+            var attId = t.getAttribute('data-attachment-id');
+            if (!attId) return;
+            postForm('/kanban/cartao/capa/definir', { card_id: String(cardId), attachment_id: String(attId) }).then(function (res) {
+                if (res.json && res.json.ok) {
+                    loadAttachments(cardId);
+                    var coverUrl = (res.json && res.json.cover_url) ? String(res.json.cover_url) : '';
+                    var cardEl = getCardEl(cardId);
+                    if (cardEl) {
+                        cardEl.setAttribute('data-cover-url', coverUrl);
+                        var coverBox = cardEl.querySelector('.kb-card-cover');
+                        if (!coverUrl) {
+                            if (coverBox && coverBox.parentNode) coverBox.parentNode.removeChild(coverBox);
+                        } else {
+                            if (!coverBox) {
+                                coverBox = document.createElement('div');
+                                coverBox.className = 'kb-card-cover';
+                                coverBox.style.margin = '-10px -10px 10px -10px';
+                                coverBox.style.borderRadius = '12px';
+                                coverBox.style.overflow = 'hidden';
+                                cardEl.insertBefore(coverBox, cardEl.firstChild);
+                            }
+                            coverBox.innerHTML = '<img src="' + esc(coverUrl) + '" alt="Capa" style="width:100%; height:140px; object-fit:cover; display:block;">';
+                        }
+                    }
+                    var coverClear = $('kb-cover-clear');
+                    if (coverClear) coverClear.style.display = 'inline-flex';
+                } else {
+                    alert((res.json && res.json.error) ? res.json.error : 'Falha ao definir capa.');
+                }
+            });
+        }
     });
+
+    function renderChecklist(items) {
+        var list = $('kb-checklist-list');
+        if (!list) return;
+        list.innerHTML = '';
+        if (!items || !items.length) {
+            list.innerHTML = '<div style="color:var(--text-secondary); font-size:12px; padding:6px 2px;">Nenhum item.</div>';
+            return;
+        }
+        items.forEach(function (it) {
+            var row = document.createElement('div');
+            row.className = 'kb-attachment-item';
+            row.setAttribute('data-checklist-id', String(it.id || ''));
+            var left = document.createElement('div');
+            left.className = 'kb-attachment-left';
+            var done = !!(it.is_done && String(it.is_done) !== '0');
+            left.innerHTML = '<label style="display:flex; align-items:center; gap:8px;">'
+                + '<input type="checkbox" data-action="toggle-check" data-item-id="' + esc(String(it.id || '')) + '" ' + (done ? 'checked' : '') + '>'
+                + '<span style="' + (done ? 'text-decoration:line-through; opacity:0.7;' : '') + '">' + esc(String(it.content || '')) + '</span>'
+                + '</label>';
+            var actions = document.createElement('div');
+            actions.className = 'kb-attachment-actions';
+            actions.innerHTML = '<button type="button" class="kb-btn kb-btn--danger" data-action="delete-check" data-item-id="' + esc(String(it.id || '')) + '">Remover</button>';
+            row.appendChild(left);
+            row.appendChild(actions);
+            list.appendChild(row);
+        });
+    }
+
+    function loadChecklist(cardId) {
+        return postForm('/kanban/cartao/checklist/listar', { card_id: String(cardId) }).then(function (res) {
+            if (res.json && res.json.ok) {
+                renderChecklist(res.json.items || []);
+                return;
+            }
+            renderChecklist([]);
+        });
+    }
+
+    document.addEventListener('click', function (e) {
+        var t = e.target;
+        if (!t) return;
+        var act = t.getAttribute && t.getAttribute('data-action');
+        if (act === 'delete-check') {
+            var itemId = t.getAttribute('data-item-id');
+            if (!itemId) return;
+            postForm('/kanban/cartao/checklist/excluir', { item_id: String(itemId) }).then(function (res) {
+                if (res.json && res.json.ok) {
+                    var modal = $('kb-modal');
+                    if (!modal) return;
+                    var cardId = modal.dataset.cardId;
+                    if (!cardId) return;
+                    loadChecklist(cardId);
+                } else {
+                    alert((res.json && res.json.error) ? res.json.error : 'Falha ao remover item.');
+                }
+            });
+        }
+    });
+
+    document.addEventListener('change', function (e) {
+        var t = e.target;
+        if (!t) return;
+        var act = t.getAttribute && t.getAttribute('data-action');
+        if (act === 'toggle-check') {
+            var itemId = t.getAttribute('data-item-id');
+            if (!itemId) return;
+            postForm('/kanban/cartao/checklist/toggle', { item_id: String(itemId), done: t.checked ? '1' : '0' });
+        }
+    });
+
+    var addCheckBtn = $('kb-checklist-add');
+    if (addCheckBtn) {
+        addCheckBtn.addEventListener('click', function () {
+            var modal = $('kb-modal');
+            if (!modal) return;
+            var cardId = modal.dataset.cardId;
+            if (!cardId) return;
+            var input = $('kb-checklist-new');
+            var content = input ? input.value : '';
+            postForm('/kanban/cartao/checklist/adicionar', { card_id: String(cardId), content: content || '' }).then(function (res) {
+                if (res.json && res.json.ok) {
+                    if (input) input.value = '';
+                    loadChecklist(cardId);
+                } else {
+                    alert((res.json && res.json.error) ? res.json.error : 'Falha ao adicionar item.');
+                }
+            });
+        });
+    }
 
     var uploadBtn = $('kb-attach-upload');
     if (uploadBtn) {
@@ -1081,6 +1431,28 @@ $currentBoardTitle = $currentBoard ? (string)($currentBoard['title'] ?? 'Sem tí
 
         var act = t.getAttribute && t.getAttribute('data-action');
 
+        if (act === 'toggle-done') {
+            e.preventDefault();
+            e.stopPropagation();
+            var cardRoot2 = t && t.closest ? t.closest('.kb-card[data-card-id]') : null;
+            if (!cardRoot2) return;
+            var cardId2 = cardRoot2.getAttribute('data-card-id');
+            if (!cardId2) return;
+            postForm('/kanban/cartao/concluido/toggle', { card_id: String(cardId2) }).then(function (res) {
+                if (res.json && res.json.ok) {
+                    var done = (res.json && String(res.json.is_done) !== '0');
+                    cardRoot2.setAttribute('data-is-done', done ? '1' : '0');
+                    if (done) cardRoot2.classList.add('is-done');
+                    else cardRoot2.classList.remove('is-done');
+                    var btn = cardRoot2.querySelector('.kb-card-done-btn');
+                    if (btn) btn.textContent = done ? '✓' : '○';
+                } else {
+                    alert((res.json && res.json.error) ? res.json.error : 'Falha ao atualizar cartão.');
+                }
+            });
+            return;
+        }
+
         if (act === 'delete-list') {
             var listId = t.getAttribute('data-list-id');
             if (!listId) return;
@@ -1101,10 +1473,13 @@ $currentBoardTitle = $currentBoard ? (string)($currentBoard['title'] ?? 'Sem tí
             openModal({
                 title: 'Novo cartão',
                 value: '',
+                dueDate: '',
                 showDesc: true,
                 showDelete: false,
                 onSave: function (title, desc) {
-                    postForm('/kanban/cartao/criar', { list_id: String(listId2), title: title || '', description: desc || '' }).then(function (res) {
+                    var dd = $('kb-modal-due-date');
+                    var due = dd ? (dd.value || '') : '';
+                    postForm('/kanban/cartao/criar', { list_id: String(listId2), title: title || '', description: desc || '', due_date: due || '' }).then(function (res) {
                         if (res.json && res.json.ok && res.json.card) {
                             var container = getCardsContainer(listId2);
                             if (container) {
@@ -1127,10 +1502,13 @@ $currentBoardTitle = $currentBoard ? (string)($currentBoard['title'] ?? 'Sem tí
             var descEl = cardRoot.querySelector('.kb-card-desc');
             var title = titleEl ? titleEl.textContent : '';
             var desc = descEl ? descEl.textContent : '';
+            var dueAttr = cardRoot.getAttribute('data-due-date') || '';
+            var coverUrlAttr = cardRoot.getAttribute('data-cover-url') || '';
             openModal({
                 title: 'Editar cartão',
                 value: title,
                 desc: desc,
+                dueDate: dueAttr,
                 showDesc: true,
                 showDelete: true,
                 cardId: cardId,
@@ -1148,12 +1526,46 @@ $currentBoardTitle = $currentBoard ? (string)($currentBoard['title'] ?? 'Sem tí
                     });
                 },
                 onSave: function (tNew, dNew) {
-                    postForm('/kanban/cartao/atualizar', { card_id: String(cardId), title: tNew || '', description: dNew || '' }).then(function (res) {
+                    var ddIn = $('kb-modal-due-date');
+                    var dueNew = ddIn ? (ddIn.value || '') : '';
+                    postForm('/kanban/cartao/atualizar', { card_id: String(cardId), title: tNew || '', description: dNew || '', due_date: dueNew || '' }).then(function (res) {
                         if (res.json && res.json.ok) {
                             var el = document.querySelector('.kb-card[data-card-id="' + String(cardId) + '"]');
                             if (el) {
                                 var tt = el.querySelector('.kb-card-title');
                                 if (tt) tt.textContent = tNew || 'Sem título';
+
+                                var dueTrim = (dueNew || '').trim();
+                                el.setAttribute('data-due-date', dueTrim);
+
+                                var badgesWrap = el.querySelector('.kb-card-badges');
+                                if (!badgesWrap) {
+                                    badgesWrap = document.createElement('div');
+                                    badgesWrap.className = 'kb-card-badges';
+                                    var descExisting = el.querySelector('.kb-card-desc');
+                                    if (descExisting) {
+                                        el.insertBefore(badgesWrap, descExisting);
+                                    } else {
+                                        el.appendChild(badgesWrap);
+                                    }
+                                }
+
+                                var dueBadge = badgesWrap.querySelector('[data-badge="due"]');
+                                if (dueTrim) {
+                                    var info = getDueBadgeInfo(dueTrim);
+                                    if (!dueBadge) {
+                                        dueBadge = document.createElement('span');
+                                        dueBadge.setAttribute('data-badge', 'due');
+                                        badgesWrap.insertBefore(dueBadge, badgesWrap.firstChild);
+                                    }
+                                    dueBadge.className = 'kb-badge ' + (info ? info.cls : 'kb-badge--due-ok');
+                                    dueBadge.setAttribute('data-due-raw', dueTrim);
+                                    dueBadge.innerHTML = '<span style="opacity:0.9;">⏰</span><span>' + esc(info ? info.label : dueTrim) + '</span>';
+                                } else {
+                                    if (dueBadge && dueBadge.parentNode) {
+                                        dueBadge.parentNode.removeChild(dueBadge);
+                                    }
+                                }
 
                                 var dd = el.querySelector('.kb-card-desc');
                                 var dTrim = (dNew || '').trim();
@@ -1166,6 +1578,14 @@ $currentBoardTitle = $currentBoard ? (string)($currentBoard['title'] ?? 'Sem tí
                                     dd.textContent = dTrim;
                                 } else if (dd && dd.parentNode) {
                                     dd.parentNode.removeChild(dd);
+                                }
+
+                                // Se não houver nenhum badge (due, anexos, checklist), esconde container
+                                if (badgesWrap) {
+                                    var hasAny = badgesWrap.querySelector('[data-badge]');
+                                    if (!hasAny) {
+                                        if (badgesWrap.parentNode) badgesWrap.parentNode.removeChild(badgesWrap);
+                                    }
                                 }
                             }
                             closeModal();
@@ -1181,6 +1601,32 @@ $currentBoardTitle = $currentBoard ? (string)($currentBoard['title'] ?? 'Sem tí
                 att.style.display = 'block';
             }
             loadAttachments(cardId);
+
+            var chk = $('kb-checklist');
+            if (chk) {
+                chk.style.display = 'block';
+            }
+            loadChecklist(cardId);
+
+            var coverClear = $('kb-cover-clear');
+            if (coverClear) {
+                coverClear.style.display = coverUrlAttr ? 'inline-flex' : 'none';
+                coverClear.onclick = function () {
+                    postForm('/kanban/cartao/capa/definir', { card_id: String(cardId), attachment_id: '' }).then(function (res) {
+                        if (res.json && res.json.ok) {
+                            var cardEl2 = getCardEl(cardId);
+                            if (cardEl2) {
+                                cardEl2.setAttribute('data-cover-url', '');
+                                var coverBox = cardEl2.querySelector('.kb-card-cover');
+                                if (coverBox && coverBox.parentNode) coverBox.parentNode.removeChild(coverBox);
+                            }
+                            coverClear.style.display = 'none';
+                        } else {
+                            alert((res.json && res.json.error) ? res.json.error : 'Falha ao remover capa.');
+                        }
+                    });
+                };
+            }
 
             var moveRow = $('kb-move-row');
             var moveSel = $('kb-move-list');

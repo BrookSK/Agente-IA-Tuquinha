@@ -1,5 +1,7 @@
 <?php
 /** @var array|null $persona */
+/** @var array $plans */
+/** @var array $selectedPlanIds */
 $isEdit = !empty($persona);
 ?>
 <div style="max-width: 720px; margin: 0 auto;">
@@ -72,6 +74,47 @@ $isEdit = !empty($persona);
             <div style="font-size:11px; color:#777; margin-top:3px;">
                 Explique detalhadamente como essa personalidade deve se comportar: tom de voz, foco, o que priorizar, o que evitar, exemplos de tarefas.
             </div>
+        </div>
+
+        <div>
+            <label style="font-size:13px; color:var(--text-primary); display:block; margin-bottom:4px;">Descrição do card "Padrão do Tuquinha"</label>
+            <textarea name="default_tuquinha_description" rows="3" style="
+                width:100%; padding:8px 10px; border-radius:8px; border:1px solid var(--border-subtle);
+                background:var(--surface-subtle); color:var(--text-primary); font-size:13px; resize:vertical;" placeholder="Texto exibido para a opção 'Padrão do Tuquinha' nas telas de seleção."><?= htmlspecialchars((string)($defaultTuquinhaDesc ?? '')) ?></textarea>
+            <div style="font-size:11px; color:#777; margin-top:3px;">Esse texto é aplicado quando você marcar "Definir como personalidade padrão global".</div>
+        </div>
+
+        <div style="margin-top:8px; padding:10px 12px; border-radius:10px; border:1px solid var(--border-subtle); background:rgba(255,255,255,0.02);">
+            <div style="font-size:13px; font-weight:600; margin-bottom:6px;">Aparecer em quais planos?</div>
+            <div style="font-size:11px; color:#777; margin-bottom:8px;">
+                Se você selecionar planos aqui, esta personalidade só aparecerá para usuários desses planos.
+                O sistema também respeita o "Limite de personalidades" configurado em cada plano.
+            </div>
+
+            <?php
+                $selected = [];
+                if (isset($selectedPlanIds) && is_array($selectedPlanIds)) {
+                    foreach ($selectedPlanIds as $sp) {
+                        $selected[(int)$sp] = true;
+                    }
+                }
+            ?>
+
+            <?php if (empty($plans)): ?>
+                <div style="font-size:12px; color:#777;">Nenhum plano cadastrado.</div>
+            <?php else: ?>
+                <div style="display:flex; flex-wrap:wrap; gap:10px; font-size:13px; color:var(--text-secondary);">
+                    <?php foreach ($plans as $pl): ?>
+                        <?php if (!is_array($pl)) continue; ?>
+                        <?php $pid = (int)($pl['id'] ?? 0); ?>
+                        <?php if ($pid <= 0) continue; ?>
+                        <label style="display:flex; align-items:center; gap:6px;">
+                            <input type="checkbox" name="plan_ids[]" value="<?= (int)$pid ?>" <?= !empty($selected[$pid]) ? 'checked' : '' ?>>
+                            <span><?= htmlspecialchars((string)($pl['name'] ?? 'Plano')) ?></span>
+                        </label>
+                    <?php endforeach; ?>
+                </div>
+            <?php endif; ?>
         </div>
 
         <div style="display:flex; flex-wrap:wrap; gap:10px; font-size:13px; color:var(--text-secondary); margin-top:4px;">

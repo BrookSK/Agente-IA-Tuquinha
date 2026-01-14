@@ -50,7 +50,12 @@ class PersonalityPreferenceController extends Controller
             exit;
         }
 
-        $personalities = Personality::allVisibleForUsers();
+        $planId = isset($plan['id']) ? (int)$plan['id'] : 0;
+        if ($planId > 0) {
+            $personalities = Personality::allVisibleForUsersByPlan($planId);
+        } else {
+            $personalities = Personality::allVisibleForUsers();
+        }
 
         $success = $_SESSION['personality_pref_success'] ?? null;
         if ($success !== null) {
@@ -80,7 +85,25 @@ class PersonalityPreferenceController extends Controller
         if ($defaultPersonaIdRaw > 0) {
             $persona = Personality::findById($defaultPersonaIdRaw);
             if ($persona && !empty($persona['active']) && empty($persona['coming_soon'])) {
-                $defaultPersonaId = (int)$persona['id'];
+                $allowed = true;
+                $planId = isset($plan['id']) ? (int)$plan['id'] : 0;
+                if ($planId > 0) {
+                    try {
+                        $allowedList = Personality::allVisibleForUsersByPlan($planId);
+                        $allowed = false;
+                        foreach ($allowedList as $ap) {
+                            if ((int)($ap['id'] ?? 0) === (int)$persona['id']) {
+                                $allowed = true;
+                                break;
+                            }
+                        }
+                    } catch (\Throwable $e) {
+                        $allowed = true;
+                    }
+                }
+                if ($allowed) {
+                    $defaultPersonaId = (int)$persona['id'];
+                }
             }
         }
 

@@ -932,6 +932,29 @@ if (!empty($_SESSION['user_id'])) {
                         <span>Kanban</span>
                     </a>
                 <?php endif; ?>
+
+                <?php
+                    $canUseGuides = false;
+                    if (!empty($_SESSION['is_admin'])) {
+                        $canUseGuides = true;
+                    } elseif (!empty($currentPlanForMenu) && !empty($hasActiveSubscriptionForMenu)) {
+                        $slugForGuides = (string)($currentPlanForMenu['slug'] ?? '');
+                        if ($slugForGuides !== '' && $slugForGuides !== 'free') {
+                            $canUseGuides = true;
+                        }
+                    }
+                ?>
+
+                <?php if ($canUseGuides): ?>
+                    <a href="/guia/projeto-de-marca" target="_blank" rel="noopener" class="sidebar-button<?= $isActiveNav('/guia/projeto-de-marca') ? ' sidebar-button--active' : '' ?>">
+                        <span class="icon" aria-hidden="true"><?php echo $renderMenuIcon('quick_guides', '📘'); ?></span>
+                        <span>Guia de Projetos</span>
+                    </a>
+                    <a href="/guia/metodologia" target="_blank" rel="noopener" class="sidebar-button<?= $isActiveNav('/guia/metodologia') ? ' sidebar-button--active' : '' ?>">
+                        <span class="icon" aria-hidden="true"><?php echo $renderMenuIcon('quick_guides', '📗'); ?></span>
+                        <span>Metodologia</span>
+                    </a>
+                <?php endif; ?>
                 <a href="/planos" class="sidebar-button<?= $isActiveNav('/planos') ? ' sidebar-button--active' : '' ?>" data-tour="nav-plans">
                     <span class="icon" aria-hidden="true"><?php echo $renderMenuIcon('quick_plans', '💳'); ?></span>
                     <span>Planos e limites</span>

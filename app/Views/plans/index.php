@@ -19,8 +19,26 @@
     body[data-theme="light"] #plan-cycle-tabs .plan-cycle-tab.is-active {
         color: #ffffff !important;
     }
+
+    @media (min-width: 900px) {
+        #plans-wrap {
+            max-width: 1200px !important;
+        }
+        #plans-grid {
+            display: grid !important;
+            grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+            gap: 14px !important;
+            align-items: stretch;
+        }
+    }
+
+    @media (min-width: 900px) and (max-width: 1180px) {
+        #plans-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        }
+    }
 </style>
-<div style="max-width: 520px; margin: 0 auto; padding: 18px 14px 26px 14px;">
+<div id="plans-wrap" style="max-width: 520px; margin: 0 auto; padding: 18px 14px 26px 14px;">
     <?php
         $hasCurrentPlan = !empty($currentPlan) && is_array($currentPlan);
         $currentSlug = $hasCurrentPlan ? (string)($currentPlan['slug'] ?? '') : '';
@@ -32,8 +50,26 @@
         $days = (int)($retentionDays ?? 90);
         if ($days <= 0) { $days = 90; }
 
-        // Constrói lista na ordem vinda do banco (sort_order) e identifica destaque (Expert)
+        // Ordena para exibição: Free primeiro, depois do mais barato pro mais caro.
         $displayPlans = is_array($plans) ? $plans : [];
+        usort($displayPlans, function ($a, $b) {
+            $a = is_array($a) ? $a : [];
+            $b = is_array($b) ? $b : [];
+            $aSlug = (string)($a['slug'] ?? '');
+            $bSlug = (string)($b['slug'] ?? '');
+            $aPrice = (int)($a['price_cents'] ?? 0);
+            $bPrice = (int)($b['price_cents'] ?? 0);
+            $aIsFree = ($aSlug === 'free') || ($aPrice <= 0);
+            $bIsFree = ($bSlug === 'free') || ($bPrice <= 0);
+
+            if ($aIsFree && !$bIsFree) return -1;
+            if (!$aIsFree && $bIsFree) return 1;
+
+            if ($aPrice === $bPrice) {
+                return strcmp((string)($a['name'] ?? ''), (string)($b['name'] ?? ''));
+            }
+            return $aPrice < $bPrice ? -1 : 1;
+        });
 
         $cycleKeyForSlug = function (string $slug): string {
             $s = strtolower(trim($slug));
@@ -192,7 +228,7 @@
         })();
     </script>
 
-    <div style="display:flex; flex-direction:column; gap: 12px;">
+    <div id="plans-grid" style="display:flex; flex-direction:column; gap: 12px;">
         <?php foreach ($displayPlans as $plan): ?>
             <?php
                 $slug = (string)($plan['slug'] ?? '');

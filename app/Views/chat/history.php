@@ -255,6 +255,27 @@
                     <div class="tuqChatListItemMain">
                         <a class="tuqChatCardLink" href="/chat?c=<?= (int)$conv['id'] ?>">
                             <div class="tuqChatTitleRow">
+                                <?php
+                                    $showPersona = !empty($planAllowsPersonalities);
+                                    $personaLabelName = $personaName !== '' ? $personaName : 'Tuquinha';
+                                    $personaLabelArea = $personaArea !== '' ? $personaArea : 'Chat';
+                                    $personaHasImg = $personaImg !== '';
+                                ?>
+                                <?php if ($showPersona): ?>
+                                    <div class="tuqPersonaBadge tuqPersonaBadgeInline" title="<?= htmlspecialchars($personaLabelName . ($personaArea !== '' ? (' • ' . $personaArea) : ''), ENT_QUOTES, 'UTF-8') ?>">
+                                        <span class="tuqPersonaBadgeAvatar" aria-hidden="true">
+                                            <?php if ($personaHasImg): ?>
+                                                <img src="<?= htmlspecialchars($personaImg, ENT_QUOTES, 'UTF-8') ?>" alt="">
+                                            <?php else: ?>
+                                                <span style="font-size:14px;">🐦</span>
+                                            <?php endif; ?>
+                                        </span>
+                                        <span class="tuqPersonaBadgeText">
+                                            <span class="tuqPersonaBadgeName"><?= htmlspecialchars($personaLabelName) ?></span>
+                                            <span class="tuqPersonaBadgeArea"><?= htmlspecialchars($personaLabelArea) ?></span>
+                                        </span>
+                                    </div>
+                                <?php endif; ?>
                                 <div class="tuqChatTitleRowTitle" style="font-size:14px; font-weight:500;">
                                     <?= htmlspecialchars($title) ?>
                                 </div>

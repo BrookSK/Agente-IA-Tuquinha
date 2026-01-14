@@ -7,6 +7,7 @@ use App\Core\Database;
 use App\Models\KanbanBoard;
 use App\Models\KanbanCard;
 use App\Models\KanbanCardAttachment;
+use App\Models\KanbanCardChecklistItem;
 use App\Models\KanbanList;
 use App\Models\Plan;
 use App\Models\Subscription;
@@ -184,7 +185,21 @@ class KanbanController extends Controller
     public function createBoard(): void
     {
         $user = $this->requireLogin();
-        $this->requireKanbanAccess($user);
+        $access = $this->requireKanbanAccess($user);
+
+        if (empty($_SESSION['is_admin'])) {
+            $plan = is_array($access) ? ($access['plan'] ?? null) : null;
+            if (is_array($plan) && array_key_exists('kanban_boards_limit', $plan) && $plan['kanban_boards_limit'] !== null && $plan['kanban_boards_limit'] !== '') {
+                $limit = (int)$plan['kanban_boards_limit'];
+                $current = KanbanBoard::countForUser((int)$user['id']);
+                if ($current >= $limit) {
+                    $this->json([
+                        'ok' => false,
+                        'error' => 'Seu plano permite no máximo ' . $limit . ' quadros no Kanban.',
+                    ], 403);
+                }
+            }
+        }
 
         $title = trim($_POST['title'] ?? '');
         $id = KanbanBoard::create((int)$user['id'], $title);
@@ -338,6 +353,10 @@ class KanbanController extends Controller
         $this->loadBoardOrDeny((int)$list['board_id'], (int)$user['id']);
 
         $id = KanbanCard::create($listId, $title, $description);
+
+        $dueDate = isset($_POST['due_date']) ? trim((string)$_POST['due_date']) : '';
+        KanbanCard::setDueDate($id, $dueDate !== '' ? $dueDate : null);
+
         $card = KanbanCard::findById($id);
         $this->json(['ok' => true, 'card' => $card]);
     }
@@ -366,6 +385,148 @@ class KanbanController extends Controller
         $this->loadBoardOrDeny((int)$list['board_id'], (int)$user['id']);
 
         KanbanCard::update($cardId, $title, $description);
+
+        $dueDate = isset($_POST['due_date']) ? trim((string)$_POST['due_date']) : '';
+        KanbanCard::setDueDate($cardId, $dueDate !== '' ? $dueDate : null);
+
+        $this->json(['ok' => true]);
+    }
+
+    public function setCardCover(): void
+    {
+        $user = $this->requireLogin();
+        $this->requireKanbanAccess($user);
+
+        $cardId = (int)($_POST['card_id'] ?? 0);
+        $attachmentIdRaw = (int)($_POST['attachment_id'] ?? 0);
+        if ($cardId <= 0) {
+            $this->json(['ok' => false, 'error' => 'card_id inválido.'], 400);
+        }
+
+        $ctx = $this->loadCardContextOrDeny($cardId, (int)$user['id']);
+        $attachmentId = null;
+        $coverUrl = null;
+        $coverMime = null;
+        if ($attachmentIdRaw > 0) {
+            $att = KanbanCardAttachment::findById($attachmentIdRaw);
+            if (!$att || (int)($att['card_id'] ?? 0) !== $cardId) {
+                $this->json(['ok' => false, 'error' => 'Anexo inválido.'], 404);
+            }
+            $mime = strtolower(trim((string)($att['mime_type'] ?? '')));
+            if ($mime === '' || strpos($mime, 'image/') !== 0) {
+                $this->json(['ok' => false, 'error' => 'A capa deve ser uma imagem.'], 422);
+            }
+            $attachmentId = (int)$att['id'];
+            $coverUrl = (string)($att['url'] ?? '');
+            $coverMime = (string)($att['mime_type'] ?? '');
+        }
+
+        KanbanCard::setCoverAttachmentId($cardId, $attachmentId);
+        $this->json([
+            'ok' => true,
+            'cover_attachment_id' => $attachmentId,
+            'cover_url' => $coverUrl,
+            'cover_mime_type' => $coverMime,
+        ]);
+    }
+
+    public function toggleCardDone(): void
+    {
+        $user = $this->requireLogin();
+        $this->requireKanbanAccess($user);
+
+        $cardId = (int)($_POST['card_id'] ?? 0);
+        if ($cardId <= 0) {
+            $this->json(['ok' => false, 'error' => 'card_id inválido.'], 400);
+        }
+
+        $ctx = $this->loadCardContextOrDeny($cardId, (int)$user['id']);
+        $card = is_array($ctx) ? ($ctx['card'] ?? null) : null;
+        if (!$card) {
+            $this->json(['ok' => false, 'error' => 'Cartão não encontrado.'], 404);
+        }
+
+        $current = !empty($card['is_done']) && (string)$card['is_done'] !== '0';
+        $new = !$current;
+        KanbanCard::setDone($cardId, $new);
+        $this->json(['ok' => true, 'is_done' => $new ? 1 : 0]);
+    }
+
+    public function listChecklist(): void
+    {
+        $user = $this->requireLogin();
+        $this->requireKanbanAccess($user);
+
+        $cardId = (int)($_POST['card_id'] ?? 0);
+        if ($cardId <= 0) {
+            $this->json(['ok' => false, 'error' => 'card_id inválido.'], 400);
+        }
+        $this->loadCardContextOrDeny($cardId, (int)$user['id']);
+        $items = KanbanCardChecklistItem::listForCard($cardId);
+        $this->json(['ok' => true, 'items' => $items]);
+    }
+
+    public function addChecklistItem(): void
+    {
+        $user = $this->requireLogin();
+        $this->requireKanbanAccess($user);
+
+        $cardId = (int)($_POST['card_id'] ?? 0);
+        $content = trim((string)($_POST['content'] ?? ''));
+        if ($cardId <= 0) {
+            $this->json(['ok' => false, 'error' => 'card_id inválido.'], 400);
+        }
+        $this->loadCardContextOrDeny($cardId, (int)$user['id']);
+        if ($content === '') {
+            $this->json(['ok' => false, 'error' => 'Informe o texto do item.'], 422);
+        }
+
+        $id = KanbanCardChecklistItem::create($cardId, $content);
+        $item = KanbanCardChecklistItem::findById($id);
+        $this->json(['ok' => true, 'item' => $item]);
+    }
+
+    public function toggleChecklistItem(): void
+    {
+        $user = $this->requireLogin();
+        $this->requireKanbanAccess($user);
+
+        $itemId = (int)($_POST['item_id'] ?? 0);
+        $done = !empty($_POST['done']) ? 1 : 0;
+        if ($itemId <= 0) {
+            $this->json(['ok' => false, 'error' => 'item_id inválido.'], 400);
+        }
+        $item = KanbanCardChecklistItem::findById($itemId);
+        if (!$item) {
+            $this->json(['ok' => false, 'error' => 'Item não encontrado.'], 404);
+        }
+        $cardId = (int)($item['card_id'] ?? 0);
+        if ($cardId <= 0) {
+            $this->json(['ok' => false, 'error' => 'Item inválido.'], 400);
+        }
+        $this->loadCardContextOrDeny($cardId, (int)$user['id']);
+
+        KanbanCardChecklistItem::toggleDone($itemId, $done === 1);
+        $this->json(['ok' => true]);
+    }
+
+    public function deleteChecklistItem(): void
+    {
+        $user = $this->requireLogin();
+        $this->requireKanbanAccess($user);
+
+        $itemId = (int)($_POST['item_id'] ?? 0);
+        if ($itemId <= 0) {
+            $this->json(['ok' => false, 'error' => 'item_id inválido.'], 400);
+        }
+        $item = KanbanCardChecklistItem::findById($itemId);
+        if (!$item) {
+            $this->json(['ok' => false, 'error' => 'Item não encontrado.'], 404);
+        }
+        $cardId = (int)($item['card_id'] ?? 0);
+        $this->loadCardContextOrDeny($cardId, (int)$user['id']);
+
+        KanbanCardChecklistItem::deleteById($itemId);
         $this->json(['ok' => true]);
     }
 

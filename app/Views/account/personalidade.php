@@ -2,9 +2,13 @@
 /** @var array $user */
 /** @var array $plan */
 /** @var array $personalities */
+/** @var string|null $success */
 
 $currentDefaultPersonaId = isset($user['default_persona_id']) ? (int)$user['default_persona_id'] : 0;
 $successMessage = $success ?? null;
+
+$defaultPersonaImage = '/public/perso_padrao.png';
+$defaultTuquinhaDesc = \App\Models\Setting::get('default_tuquinha_description', 'Deixa o sistema escolher a melhor personalidade global para você.');
 ?>
 <style>
     .persona-default-card {
@@ -179,7 +183,7 @@ $successMessage = $success ?? null;
                     <div style="padding:10px 12px 12px 12px;">
                         <div style="font-size:16px; font-weight:650; margin-bottom:4px;">Padrão do Tuquinha</div>
                         <div class="persona-default-card-desc">
-                            Deixa o sistema escolher a melhor personalidade global para você.
+                            <?= htmlspecialchars((string)$defaultTuquinhaDesc) ?>
                         </div>
                     </div>
                 </button>

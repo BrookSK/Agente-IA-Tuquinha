@@ -4,6 +4,8 @@ namespace App\Controllers;
 
 use App\Core\Controller;
 use App\Models\Personality;
+use App\Models\Plan;
+use App\Models\Setting;
 
 class AdminPersonalityController extends Controller
 {
@@ -35,9 +37,24 @@ class AdminPersonalityController extends Controller
             $persona = Personality::findById($id);
         }
 
+        $plans = Plan::all();
+        $selectedPlanIds = [];
+        if ($id > 0) {
+            try {
+                $selectedPlanIds = Personality::getPlanIds($id);
+            } catch (\Throwable $e) {
+                $selectedPlanIds = [];
+            }
+        }
+
+        $defaultTuquinhaDesc = Setting::get('default_tuquinha_description', 'Deixa o sistema escolher a melhor personalidade global para você.');
+
         $this->view('admin/personalidades/form', [
             'pageTitle' => $persona ? 'Editar personalidade' : 'Nova personalidade',
             'persona' => $persona,
+            'plans' => $plans,
+            'selectedPlanIds' => $selectedPlanIds,
+            'defaultTuquinhaDesc' => $defaultTuquinhaDesc,
         ]);
     }
 
@@ -54,6 +71,8 @@ class AdminPersonalityController extends Controller
         $isDefault = !empty($_POST['is_default']) ? 1 : 0;
         $active = !empty($_POST['active']) ? 1 : 0;
         $comingSoon = !empty($_POST['coming_soon']) ? 1 : 0;
+        $defaultTuquinhaDesc = trim((string)($_POST['default_tuquinha_description'] ?? ''));
+        $planIds = isset($_POST['plan_ids']) && is_array($_POST['plan_ids']) ? $_POST['plan_ids'] : [];
 
         $target = '/admin/personalidades/novo';
         if ($id > 0) {
@@ -65,6 +84,37 @@ class AdminPersonalityController extends Controller
             $_SESSION['admin_persona_error'] = 'Preencha nome, área, slug e prompt.';
             header('Location: ' . $target);
             exit;
+        }
+
+        // Valida limite de personalidades por plano (se configurado)
+        $normalizedPlanIds = [];
+        foreach ($planIds as $pidRaw) {
+            $pid = (int)$pidRaw;
+            if ($pid <= 0) {
+                continue;
+            }
+            $normalizedPlanIds[$pid] = true;
+        }
+        $planIds = array_keys($normalizedPlanIds);
+
+        foreach ($planIds as $pid) {
+            $plan = Plan::findById((int)$pid);
+            if (!$plan) {
+                continue;
+            }
+            $limit = null;
+            if (array_key_exists('personalities_limit', $plan) && $plan['personalities_limit'] !== null && $plan['personalities_limit'] !== '') {
+                $limit = (int)$plan['personalities_limit'];
+            }
+            if ($limit === null) {
+                continue;
+            }
+            $current = Personality::countForPlan((int)$pid, $id > 0 ? $id : null);
+            if (($current + 1) > $limit) {
+                $_SESSION['admin_persona_error'] = 'O plano "' . ((string)($plan['name'] ?? '')) . '" permite no máximo ' . $limit . ' personalidades. Remova alguma personalidade deste plano ou aumente o limite no plano.';
+                header('Location: ' . $target);
+                exit;
+            }
         }
 
         // Upload opcional de nova imagem da personalidade
@@ -122,6 +172,10 @@ class AdminPersonalityController extends Controller
         if ($isDefault) {
             $pdo = \App\Core\Database::getConnection();
             $pdo->exec('UPDATE personalities SET is_default = 0');
+
+            if ($defaultTuquinhaDesc !== '') {
+                Setting::set('default_tuquinha_description', $defaultTuquinhaDesc);
+            }
         }
 
         $data = [
@@ -137,8 +191,16 @@ class AdminPersonalityController extends Controller
 
         if ($id > 0) {
             Personality::update($id, $data);
+            try {
+                Personality::setPlanIds($id, $planIds);
+            } catch (\Throwable $e) {
+            }
         } else {
-            Personality::create($data);
+            $newId = Personality::create($data);
+            try {
+                Personality::setPlanIds($newId, $planIds);
+            } catch (\Throwable $e) {
+            }
         }
 
         header('Location: /admin/personalidades');

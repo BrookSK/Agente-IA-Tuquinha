@@ -60,11 +60,8 @@ $initial = mb_strtoupper(mb_substr((string)$displayName, 0, 1, 'UTF-8'), 'UTF-8'
 
             <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
                 <a href="/perfil?user_id=<?= (int)$targetId ?>" style="font-size:12px; color:#ff6f60; text-decoration:none;">Voltar ao perfil</a>
-                <?php if ($isOwn): ?>
-                    <a href="/perfil/portfolio/gerenciar?owner_user_id=<?= (int)$targetId ?>" style="border-radius:999px; padding:6px 12px; border:1px solid var(--border-subtle); background:var(--surface-subtle); color:var(--text-primary); font-size:12px; font-weight:650; text-decoration:none; white-space:nowrap;">Criar novo projeto</a>
-                <?php endif; ?>
                 <?php if (!empty($canManage) || $isOwn): ?>
-                    <a href="/perfil/portfolio/gerenciar?owner_user_id=<?= (int)$targetId ?>" style="border-radius:999px; padding:6px 12px; background:linear-gradient(135deg,#e53935,#ff6f60); color:#050509; font-size:12px; font-weight:650; text-decoration:none; white-space:nowrap;">Gerenciar</a>
+                    <a href="/perfil/portfolio/gerenciar?owner_user_id=<?= (int)$targetId ?>" style="border-radius:999px; padding:6px 12px; background:linear-gradient(135deg,#e53935,#ff6f60); color:#050509; font-size:12px; font-weight:650; text-decoration:none; white-space:nowrap;">Criar / Gerenciar</a>
                 <?php endif; ?>
             </div>
         </div>

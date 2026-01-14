@@ -12,6 +12,7 @@ use App\Models\Subscription;
 use App\Models\User;
 use App\Services\MailService;
 use App\Services\PerplexityNewsService;
+use App\Services\RssNewsService;
 
 class CronNewsController extends Controller
 {
@@ -190,10 +191,52 @@ class CronNewsController extends Controller
             return false;
         }
 
+        $rssRaw = (string)Setting::get('news_rss_feeds', "https://www.meioemensagem.com.br/feed\nhttps://www.meioemensagem.com.br/categoria/marketing/feed\nhttps://www.publicitarioscriativos.com/feed\nhttps://mundodomarketing.com.br/feed\nhttps://www.promoview.com.br/feed\nhttps://gkpb.com.br/feed");
+        $rssRaw = str_replace(["\r\n", "\r"], "\n", $rssRaw);
+        $rssParts = preg_split('/[\n,;]+/', $rssRaw) ?: [];
+        $rssFeeds = [];
+        foreach ($rssParts as $p) {
+            $p = trim((string)$p);
+            if ($p === '') {
+                continue;
+            }
+            $rssFeeds[] = $p;
+        }
+
+        $rssItems = [];
+        try {
+            $rssItems = RssNewsService::fetch($rssFeeds, 40, 10);
+        } catch (\Throwable $e) {
+            $rssItems = [];
+        }
+
         $svc = new PerplexityNewsService();
-        $items = $svc->fetchMarketingNewsBrazil(30);
-        if ($items) {
-            NewsItem::upsertMany($items);
+        $aiItems = $svc->fetchMarketingNewsBrazil(30);
+
+        $merged = [];
+        $seen = [];
+        foreach (array_merge($rssItems, $aiItems) as $it) {
+            if (!is_array($it)) {
+                continue;
+            }
+            $u = trim((string)($it['url'] ?? ''));
+            $t = trim((string)($it['title'] ?? ''));
+            if ($u === '' || $t === '') {
+                continue;
+            }
+            $k = $this->getHost($u) . (string)(parse_url($u, PHP_URL_PATH) ?? '');
+            $k = strtolower(trim($k));
+            if ($k !== '' && isset($seen[$k])) {
+                continue;
+            }
+            if ($k !== '') {
+                $seen[$k] = true;
+            }
+            $merged[] = $it;
+        }
+
+        if ($merged) {
+            NewsItem::upsertMany($merged);
             return true;
         }
 

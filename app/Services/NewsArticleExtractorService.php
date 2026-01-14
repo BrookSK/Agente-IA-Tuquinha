@@ -74,8 +74,8 @@ class NewsArticleExtractorService
         }
 
         $html = (string)$body;
-        if (strlen($html) > 800_000) {
-            $html = substr($html, 0, 800_000);
+        if (strlen($html) > 1_800_000) {
+            $html = substr($html, 0, 1_800_000);
         }
 
         return $html;
@@ -116,17 +116,15 @@ class NewsArticleExtractorService
 
         $blocks = [];
 
+        $articleHtml = null;
         if (preg_match('/<article\b[^>]*>(.*?)<\/article>/is', (string)$clean, $m)) {
             $articleHtml = (string)$m[1];
-            if (preg_match_all('/<p\b[^>]*>(.*?)<\/p>/is', $articleHtml, $pm)) {
-                $blocks = $pm[1];
-            }
         }
+        $scope = $articleHtml !== null ? $articleHtml : (string)$clean;
 
-        if (!$blocks) {
-            if (preg_match_all('/<p\b[^>]*>(.*?)<\/p>/is', (string)$clean, $pm)) {
-                $blocks = $pm[1];
-            }
+        // Coleta parágrafos e itens de lista (muitas matérias listam pontos em <li>)
+        if (preg_match_all('/<(p|li)\b[^>]*>(.*?)<\/(p|li)>/is', $scope, $pm)) {
+            $blocks = $pm[2];
         }
 
         $out = [];
@@ -138,11 +136,11 @@ class NewsArticleExtractorService
             if ($txt === '') {
                 continue;
             }
-            if (mb_strlen($txt, 'UTF-8') < 40) {
+            if (mb_strlen($txt, 'UTF-8') < 20) {
                 continue;
             }
             $out[] = $txt;
-            if (count($out) >= 20) {
+            if (count($out) >= 60) {
                 break;
             }
         }
@@ -152,8 +150,8 @@ class NewsArticleExtractorService
         }
 
         $text = implode("\n\n", $out);
-        if (mb_strlen($text, 'UTF-8') > 8000) {
-            $text = mb_substr($text, 0, 8000, 'UTF-8');
+        if (mb_strlen($text, 'UTF-8') > 24000) {
+            $text = mb_substr($text, 0, 24000, 'UTF-8');
         }
 
         return $text;

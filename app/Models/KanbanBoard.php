@@ -7,6 +7,15 @@ use PDO;
 
 class KanbanBoard
 {
+    public static function countForUser(int $userId): int
+    {
+        $pdo = Database::getConnection();
+        $stmt = $pdo->prepare('SELECT COUNT(*) AS c FROM kanban_boards WHERE owner_user_id = :uid');
+        $stmt->execute(['uid' => $userId]);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        return (int)($row['c'] ?? 0);
+    }
+
     public static function listForUser(int $userId): array
     {
         $pdo = Database::getConnection();

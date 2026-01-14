@@ -126,6 +126,8 @@ $router->post('/conta/refazer-tour', 'AccountController@restartTour');
 $router->post('/conta/assinatura/cancelar', 'AccountController@cancelSubscription');
 $router->get('/conta/personalidade', 'PersonalityPreferenceController@index');
 $router->post('/conta/personalidade', 'PersonalityPreferenceController@save');
+$router->get('/guia/metodologia', 'GuideController@metodologia');
+$router->get('/guia/projeto-de-marca', 'GuideController@projetoDeMarca');
 $router->get('/tokens/comprar', 'TokenTopupController@show');
 $router->post('/tokens/comprar', 'TokenTopupController@create');
 $router->get('/tokens/historico', 'TokenTopupController@history');
@@ -170,6 +172,13 @@ $router->post('/kanban/sync', 'KanbanController@sync');
 $router->post('/kanban/cartao/anexos/listar', 'KanbanController@listCardAttachments');
 $router->post('/kanban/cartao/anexos/upload', 'KanbanController@uploadCardAttachment');
 $router->post('/kanban/cartao/anexos/excluir', 'KanbanController@deleteCardAttachment');
+
+$router->post('/kanban/cartao/capa/definir', 'KanbanController@setCardCover');
+$router->post('/kanban/cartao/concluido/toggle', 'KanbanController@toggleCardDone');
+$router->post('/kanban/cartao/checklist/listar', 'KanbanController@listChecklist');
+$router->post('/kanban/cartao/checklist/adicionar', 'KanbanController@addChecklistItem');
+$router->post('/kanban/cartao/checklist/toggle', 'KanbanController@toggleChecklistItem');
+$router->post('/kanban/cartao/checklist/excluir', 'KanbanController@deleteChecklistItem');
 
 $router->get('/caderno', 'CadernoController@index');
 $router->post('/caderno/criar', 'CadernoController@create');

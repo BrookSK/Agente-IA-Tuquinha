@@ -170,6 +170,25 @@ $conversationId = isset($conversationId) ? (int)$conversationId : 0;
             <div id="persona-carousel" style="
                 display:flex;
             ">
+                <?php if ($conversationId <= 0): ?>
+                    <a href="/chat?new=1" class="persona-card" style="
+                        cursor:pointer;
+                    ">
+                        <div class="persona-card-image">
+                            <img src="/public/perso_padrao.png" alt="Padrão do Tuquinha" onerror="this.onerror=null;this.src='/public/favicon.png';" style="width:100%; height:100%; object-fit:cover; display:block;">
+                        </div>
+                        <div style="padding:10px 12px 12px 12px;">
+                            <div style="display:flex; align-items:center; justify-content:space-between; gap:6px; margin-bottom:4px;">
+                                <div style="font-size:18px; font-weight:650; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                                    Padrão do Tuquinha
+                                </div>
+                            </div>
+                            <div class="persona-card-desc">
+                                <?= nl2br(htmlspecialchars((string)\App\Models\Setting::get('default_tuquinha_description', 'Deixa o sistema escolher a melhor personalidade global para você.'))) ?>
+                            </div>
+                        </div>
+                    </a>
+                <?php endif; ?>
                 <?php foreach ($personalities as $persona): ?>
                     <?php
                         $id = (int)($persona['id'] ?? 0);

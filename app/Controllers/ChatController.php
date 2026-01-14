@@ -208,6 +208,21 @@ class ChatController extends Controller
             }
         }
 
+        $projectChatModel = null;
+        if (!empty($conversation->project_id)) {
+            try {
+                $p = Project::findById((int)$conversation->project_id);
+                if ($p) {
+                    $projectChatModel = isset($p['chat_model']) ? trim((string)$p['chat_model']) : null;
+                    if ($projectChatModel === '') {
+                        $projectChatModel = null;
+                    }
+                }
+            } catch (\Throwable $e) {
+                $projectChatModel = null;
+            }
+        }
+
         if (empty($_SESSION['chat_model']) && $defaultModel) {
             $_SESSION['chat_model'] = $defaultModel;
         }
@@ -274,7 +289,7 @@ class ChatController extends Controller
             'chatHistory' => $history,
             'attachments' => $attachments,
             'allowedModels' => $allowedModels,
-            'currentModel' => $_SESSION['chat_model'] ?? $defaultModel,
+            'currentModel' => $projectChatModel ?? ($_SESSION['chat_model'] ?? $defaultModel),
             'currentPlan' => $currentPlan,
             'draftMessage' => $draftMessage,
             'audioError' => $audioError,
@@ -454,10 +469,6 @@ class ChatController extends Controller
         $isAjax = !empty($_SERVER['HTTP_X_REQUESTED_WITH'])
             && strtolower((string)$_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest';
 
-        if (isset($_POST['model']) && $_POST['model'] !== '') {
-            $_SESSION['chat_model'] = $_POST['model'];
-        }
-
         if ($message !== '') {
             $sessionId = session_id();
             $userId = !empty($_SESSION['user_id']) ? (int)$_SESSION['user_id'] : 0;
@@ -494,6 +505,21 @@ class ChatController extends Controller
                     }
                     header('Location: /projetos');
                     exit;
+                }
+            }
+
+            if (isset($_POST['model']) && is_string($_POST['model']) && trim($_POST['model']) !== '') {
+                $pickedModel = trim((string)$_POST['model']);
+                $_SESSION['chat_model'] = $pickedModel;
+
+                if (!empty($conversation->project_id) && $userId > 0) {
+                    $pid = (int)$conversation->project_id;
+                    if (ProjectMember::canWrite($pid, $userId) || ProjectMember::canAdmin($pid, $userId)) {
+                        try {
+                            Project::updateChatModel($pid, $pickedModel);
+                        } catch (\Throwable $e) {
+                        }
+                    }
                 }
             }
 
@@ -542,9 +568,24 @@ class ChatController extends Controller
                 }
             }
 
-            $modelToUse = isset($_SESSION['chat_model']) && is_string($_SESSION['chat_model']) && $_SESSION['chat_model'] !== ''
-                ? (string)$_SESSION['chat_model']
-                : '';
+            $modelToUse = '';
+            if (!empty($conversation->project_id)) {
+                try {
+                    $p = Project::findById((int)$conversation->project_id);
+                    if ($p && isset($p['chat_model'])) {
+                        $m = trim((string)$p['chat_model']);
+                        if ($m !== '') {
+                            $modelToUse = $m;
+                        }
+                    }
+                } catch (\Throwable $e) {
+                }
+            }
+            if ($modelToUse === '') {
+                $modelToUse = isset($_SESSION['chat_model']) && is_string($_SESSION['chat_model']) && $_SESSION['chat_model'] !== ''
+                    ? (string)$_SESSION['chat_model']
+                    : '';
+            }
 
             $nanoModels = [
                 'nano-banana-pro',
@@ -792,9 +833,24 @@ class ChatController extends Controller
             if (!empty($_FILES['attachments']) && is_array($_FILES['attachments']['name'])) {
                 $count = count($_FILES['attachments']['name']);
 
-                $modelToUse = isset($_SESSION['chat_model']) && is_string($_SESSION['chat_model']) && $_SESSION['chat_model'] !== ''
-                    ? (string)$_SESSION['chat_model']
-                    : '';
+                $modelToUse = '';
+                if (!empty($conversation->project_id)) {
+                    try {
+                        $p = Project::findById((int)$conversation->project_id);
+                        if ($p && isset($p['chat_model'])) {
+                            $m = trim((string)$p['chat_model']);
+                            if ($m !== '') {
+                                $modelToUse = $m;
+                            }
+                        }
+                    } catch (\Throwable $e) {
+                    }
+                }
+                if ($modelToUse === '') {
+                    $modelToUse = isset($_SESSION['chat_model']) && is_string($_SESSION['chat_model']) && $_SESSION['chat_model'] !== ''
+                        ? (string)$_SESSION['chat_model']
+                        : '';
+                }
                 $isOpenAIModel = !str_starts_with($modelToUse, 'claude-');
 
                 for ($i = 0; $i < $count; $i++) {

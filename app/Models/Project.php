@@ -122,6 +122,25 @@ class Project
         ]);
     }
 
+    public static function updateChatModel(int $projectId, ?string $chatModel): void
+    {
+        if ($projectId <= 0) {
+            return;
+        }
+
+        $chatModel = $chatModel !== null ? trim($chatModel) : null;
+        if ($chatModel === '') {
+            $chatModel = null;
+        }
+
+        $pdo = Database::getConnection();
+        $stmt = $pdo->prepare('UPDATE projects SET chat_model = :chat_model, updated_at = NOW() WHERE id = :id LIMIT 1');
+        $stmt->execute([
+            'chat_model' => $chatModel,
+            'id' => $projectId,
+        ]);
+    }
+
     public static function deleteProject(int $projectId): void
     {
         if ($projectId <= 0) {

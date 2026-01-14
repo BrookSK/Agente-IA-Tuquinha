@@ -80,6 +80,77 @@ $publicUrl = ($isPublished && $publicToken !== '') ? ('/caderno/publico?token=' 
         font-size: 18px;
         flex: 0 0 44px;
     }
+
+    .tuq-emoji-backdrop {
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.65);
+        z-index: 9999;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 16px;
+    }
+    .tuq-emoji-modal {
+        width: 100%;
+        max-width: 520px;
+        border-radius: 16px;
+        border: 1px solid var(--border-subtle);
+        background: var(--surface-card);
+        box-shadow: var(--shadow-card-strong);
+        overflow: hidden;
+    }
+    .tuq-emoji-modal-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        padding: 10px 12px;
+        border-bottom: 1px solid var(--border-subtle);
+        background: rgba(255,255,255,0.03);
+    }
+    body[data-theme="light"] .tuq-emoji-modal-header {
+        background: rgba(15,23,42,0.03);
+    }
+    .tuq-emoji-grid {
+        display: grid;
+        grid-template-columns: repeat(10, minmax(0, 1fr));
+        gap: 6px;
+        padding: 10px 12px 12px 12px;
+        max-height: 320px;
+        overflow: auto;
+    }
+    .tuq-emoji-btn {
+        border: 1px solid var(--border-subtle);
+        background: var(--surface-subtle);
+        color: var(--text-primary);
+        border-radius: 10px;
+        height: 34px;
+        cursor: pointer;
+        font-size: 18px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .tuq-emoji-btn:hover {
+        border-color: rgba(229,57,53,0.55);
+        box-shadow: 0 0 0 2px rgba(229,57,53,0.12);
+    }
+    .tuq-emoji-search {
+        width: 100%;
+        padding: 8px 10px;
+        border-radius: 10px;
+        border: 1px solid var(--border-subtle);
+        background: var(--surface-subtle);
+        color: var(--text-primary);
+        font-size: 13px;
+        outline: none;
+    }
+    .tuq-emoji-hint {
+        padding: 0 12px 12px 12px;
+        font-size: 11px;
+        color: var(--text-secondary);
+    }
     .notion-title {
         width: 100%;
         border: none;
@@ -209,6 +280,13 @@ $publicUrl = ($isPublished && $publicToken !== '') ? ('/caderno/publico?token=' 
         font-size: 13px;
         line-height: 1.6;
     }
+    .notion-editor-wrap .ce-code__textarea,
+    .notion-editor-wrap .cdx-quote textarea {
+        resize: none;
+        overflow: hidden;
+        height: auto;
+        min-height: 44px;
+    }
     body[data-theme="light"] .notion-editor-wrap .ce-code__textarea {
         background: rgba(15, 23, 42, 0.04);
     }
@@ -332,6 +410,16 @@ $publicUrl = ($isPublished && $publicToken !== '') ? ('/caderno/publico?token=' 
         background: rgba(255,255,255,0.08) !important;
         border: 1px solid rgba(255,255,255,0.10) !important;
         border-radius: 10px !important;
+    }
+    body:not([data-theme="light"]) .ce-popover__item-icon {
+        background: rgba(0,0,0,0.35) !important;
+        border: 1px solid rgba(255,255,255,0.12) !important;
+    }
+    body:not([data-theme="light"]) .ce-popover__item-icon svg,
+    body:not([data-theme="light"]) .ce-popover__item-icon svg * {
+        fill: currentColor !important;
+        stroke: currentColor !important;
+        color: #ffffff !important;
     }
     body[data-theme="light"] .ce-popover__item-icon {
         background: rgba(15,23,42,0.06) !important;
@@ -905,6 +993,27 @@ $publicUrl = ($isPublished && $publicToken !== '') ? ('/caderno/publico?token=' 
                         border:1px solid rgba(229,57,53,0.35); border-radius:999px; padding:7px 12px;
                         background:rgba(229,57,53,0.10); color:var(--accent); font-size:12px; cursor:pointer;">Excluir</button>
                 <?php endif; ?>
+            </div>
+        </div>
+
+        <div id="emoji-picker-backdrop" class="tuq-emoji-backdrop" aria-hidden="true">
+            <div class="tuq-emoji-modal" role="dialog" aria-modal="true" aria-label="Selecionar emoji">
+                <div class="tuq-emoji-modal-header">
+                    <div style="font-size:12px; font-weight:800; color:var(--text-primary);">Escolha um emoji</div>
+                    <button type="button" id="emoji-picker-close" style="
+                        border:1px solid var(--border-subtle);
+                        background:transparent;
+                        color:var(--text-primary);
+                        border-radius:999px;
+                        padding:6px 10px;
+                        cursor:pointer;
+                        font-size:12px;">Fechar</button>
+                </div>
+                <div style="padding:10px 12px 0 12px;">
+                    <input type="text" id="emoji-picker-search" class="tuq-emoji-search" placeholder="Pesquisar (ex: fogo, check, pasta, ideia)" autocomplete="off">
+                </div>
+                <div id="emoji-picker-grid" class="tuq-emoji-grid"></div>
+                <div class="tuq-emoji-hint">Dica: no Windows você também pode usar <b>Win + .</b> para abrir o painel de emojis.</div>
             </div>
         </div>
 
@@ -2170,6 +2279,219 @@ $publicUrl = ($isPublished && $publicToken !== '') ? ('/caderno/publico?token=' 
         icon.addEventListener('input', schedule);
     }
     attachRename();
+
+    function setupEmojiPicker() {
+        var iconWrap = document.querySelector('.notion-emoji');
+        var iconInput = $('page-icon');
+        var backdrop = $('emoji-picker-backdrop');
+        var grid = $('emoji-picker-grid');
+        var search = $('emoji-picker-search');
+        var close = $('emoji-picker-close');
+        if (!iconWrap || !iconInput || !backdrop || !grid || !search || !close) return;
+
+        function open() {
+            if (!canEdit) return;
+            if (!pageId) return;
+            backdrop.style.display = 'flex';
+            backdrop.setAttribute('aria-hidden', 'false');
+            search.value = '';
+            render('');
+            setTimeout(function () {
+                try { search.focus(); } catch (e) {}
+            }, 0);
+        }
+
+        function hide() {
+            backdrop.style.display = 'none';
+            backdrop.setAttribute('aria-hidden', 'true');
+        }
+
+        var EMOJIS = [
+            { e: '📄', k: 'pagina documento arquivo folha' },
+            { e: '📁', k: 'pasta arquivos' },
+            { e: '📌', k: 'pin fixar' },
+            { e: '✅', k: 'check ok concluido' },
+            { e: '🧠', k: 'ideia mente' },
+            { e: '💡', k: 'ideia lampada' },
+            { e: '🔥', k: 'fogo hot' },
+            { e: '⭐', k: 'estrela favorito' },
+            { e: '⚡', k: 'raio rapido' },
+            { e: '📝', k: 'anotacao escrever' },
+            { e: '📚', k: 'livros estudo' },
+            { e: '🎯', k: 'alvo objetivo meta' },
+            { e: '🚀', k: 'foguete lancar' },
+            { e: '🧩', k: 'puzzle' },
+            { e: '🗂️', k: 'organizar kanban arquivos' },
+            { e: '🧾', k: 'recibo lista' },
+            { e: '📅', k: 'calendario agenda' },
+            { e: '⏰', k: 'tempo relogio' },
+            { e: '🎨', k: 'design arte' },
+            { e: '🧑‍💻', k: 'codigo dev' },
+            { e: '📈', k: 'crescimento grafico' },
+            { e: '🛒', k: 'vendas loja' },
+            { e: '💰', k: 'dinheiro' },
+            { e: '📣', k: 'marketing megafone' },
+            { e: '📷', k: 'foto imagem' },
+            { e: '🎬', k: 'video' },
+            { e: '🔒', k: 'seguranca' },
+            { e: '🔓', k: 'aberto' },
+            { e: '🧪', k: 'teste' },
+            { e: '⚠️', k: 'alerta' },
+            { e: '💎', k: 'premium' },
+            { e: '🏁', k: 'final' },
+            { e: '🌱', k: 'inicio free' },
+        ];
+
+        function setEmoji(emoji) {
+            iconInput.value = emoji;
+            try {
+                iconInput.dispatchEvent(new Event('input', { bubbles: true }));
+            } catch (e) {
+            }
+            hide();
+        }
+
+        function render(query) {
+            var q = String(query || '').toLowerCase().trim();
+            grid.innerHTML = '';
+            var list = EMOJIS.filter(function (it) {
+                if (!q) return true;
+                var key = (it.k || '') + ' ' + (it.e || '');
+                return key.toLowerCase().indexOf(q) >= 0;
+            });
+            if (!list.length) {
+                var empty = document.createElement('div');
+                empty.style.gridColumn = '1 / -1';
+                empty.style.fontSize = '12px';
+                empty.style.color = 'var(--text-secondary)';
+                empty.textContent = 'Nenhum emoji encontrado.';
+                grid.appendChild(empty);
+                return;
+            }
+            list.forEach(function (it) {
+                var b = document.createElement('button');
+                b.type = 'button';
+                b.className = 'tuq-emoji-btn';
+                b.textContent = it.e;
+                b.addEventListener('click', function () { setEmoji(it.e); });
+                grid.appendChild(b);
+            });
+        }
+
+        iconWrap.addEventListener('click', function (e) {
+            if (e) e.preventDefault();
+            open();
+        });
+        iconInput.addEventListener('focus', function () {
+            open();
+        });
+        close.addEventListener('click', hide);
+        backdrop.addEventListener('click', function (e) {
+            if (e && e.target === backdrop) hide();
+        });
+        window.addEventListener('keydown', function (e) {
+            if (!e) return;
+            if (backdrop.style.display !== 'flex') return;
+            if (e.key === 'Escape') hide();
+        });
+        search.addEventListener('input', function () {
+            render(search.value || '');
+        });
+    }
+    setupEmojiPicker();
+
+    function setupAutoResizeTextareas() {
+        var host = document.getElementById('editorjs');
+        if (!host) return;
+
+        function autoSize(el) {
+            if (!el || el.nodeType !== 1) return;
+            if ((el.tagName || '').toLowerCase() !== 'textarea') return;
+            // só aplica em inputs do editor (ex.: code tool / quote tool)
+            try {
+                el.style.height = 'auto';
+                el.style.overflow = 'hidden';
+                var h = el.scrollHeight;
+                if (typeof h === 'number' && h > 0) {
+                    el.style.height = h + 'px';
+                }
+            } catch (e) {}
+        }
+
+        function scan() {
+            var areas = host.querySelectorAll('textarea');
+            for (var i = 0; i < areas.length; i++) {
+                autoSize(areas[i]);
+            }
+        }
+
+        host.addEventListener('input', function (e) {
+            var t = e && e.target ? e.target : null;
+            autoSize(t);
+        });
+
+        // captura blocos inseridos dinamicamente
+        try {
+            var obs = new MutationObserver(function () {
+                scan();
+            });
+            obs.observe(host, { childList: true, subtree: true });
+        } catch (e) {}
+
+        // inicial
+        setTimeout(scan, 0);
+        setTimeout(scan, 250);
+    }
+    setupAutoResizeTextareas();
+
+    function setupPlusOpensTransformMenu() {
+        if (!canEdit) return;
+
+        function handlePlusClick(btn, e) {
+            try { if (e) e.preventDefault(); } catch (err) {}
+            try { if (e) e.stopPropagation(); } catch (err2) {}
+
+            try {
+                currentBlockIndex = resolveBlockIndex();
+            } catch (err3) {
+                currentBlockIndex = null;
+            }
+
+            try {
+                var r = btn.getBoundingClientRect();
+                showCtxAtRect(r);
+                showFlyout('transform');
+            } catch (err4) {}
+
+            if (ctxSearch) {
+                ctxSearch.value = '';
+                try {
+                    ctxSearch.dispatchEvent(new Event('input'));
+                } catch (err5) {}
+            }
+        }
+
+        // Captura antes do Editor.js (para evitar abrir o popover padrão do '+')
+        document.addEventListener('click', function (e) {
+            var t = e && e.target ? e.target : null;
+            if (!t) return;
+            var btn = null;
+            try {
+                btn = t.closest ? t.closest('.ce-toolbar__plus') : null;
+            } catch (err) {
+                btn = null;
+            }
+            if (!btn) return;
+
+            // Apenas quando o '+' estiver dentro do editor
+            var inside = false;
+            try { inside = !!(btn.closest && btn.closest('#editorjs')); } catch (err2) { inside = false; }
+            if (!inside) return;
+
+            handlePlusClick(btn, e);
+        }, true);
+    }
+    setupPlusOpensTransformMenu();
 
     var btnDelete = $('btn-delete');
     if (btnDelete && pageId) {

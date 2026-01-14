@@ -1,0 +1,2 @@
+ALTER TABLE plans
+    ADD COLUMN personalities_limit INT UNSIGNED NULL DEFAULT NULL;

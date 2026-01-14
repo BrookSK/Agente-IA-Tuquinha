@@ -20,6 +20,16 @@
         $planAllowsCourses = !empty($planAllowsCourses);
         $hasCourseEnrollment = !empty($hasCourseEnrollment);
 
+        $guideHref = function (string $path) use ($isLogged, $hasPaidActiveSubscription): string {
+            if (!$isLogged) {
+                return '/login';
+            }
+            if (!$hasPaidActiveSubscription) {
+                return '/planos';
+            }
+            return $path;
+        };
+
         $menuHref = function (string $path) use ($isLogged): string {
             return $isLogged ? $path : '/login';
         };
@@ -159,30 +169,6 @@
         <?php endforeach; ?>
     </div>
 
-    <div style="max-width: 520px; margin: 0 auto 26px auto; display:flex; flex-direction:column; gap: 12px;">
-        <div style="background: var(--surface-card); border-radius: 14px; padding: 14px; border: 1px solid var(--border-subtle); box-shadow: var(--shadow-card);">
-            <div style="font-size: 14px; font-weight: 800; margin-bottom: 8px;">Essência</div>
-            <div style="color: var(--text-secondary); font-size: 13px; line-height: 1.6;">
-                Criado por quem viveu a solidão de freelancer e decidiu:<br>
-                ninguém mais precisa passar por isso sozinho.
-            </div>
-        </div>
-        <div style="background: var(--surface-card); border-radius: 14px; padding: 14px; border: 1px solid var(--border-subtle); box-shadow: var(--shadow-card);">
-            <div style="font-size: 14px; font-weight: 800; margin-bottom: 8px;">Foco</div>
-            <div style="color: var(--text-secondary); font-size: 13px; line-height: 1.6;">
-                Eliminar os erros que custam anos. Dar as ferramentas certas.<br>
-                Conectar você com quem já passou por isso.
-            </div>
-        </div>
-        <div style="background: var(--surface-card); border-radius: 14px; padding: 14px; border: 1px solid var(--border-subtle); box-shadow: var(--shadow-card);">
-            <div style="font-size: 14px; font-weight: 800; margin-bottom: 8px;">Para quem</div>
-            <div style="color: var(--text-secondary); font-size: 13px; line-height: 1.6;">
-                Para o designer que está cansado de trocar horas por dinheiro e
-                quer construir algo maior, mais sólido, mais seu.
-            </div>
-        </div>
-    </div>
-
     <div data-tour="home-about" style="
         margin: 0 -14px 0 -14px;
         padding: 34px 14px;
@@ -268,6 +254,40 @@
         </div>
     </div>
 
+    <style>
+        @media (min-width: 900px) {
+            #home-pillars {
+                max-width: 980px !important;
+                display: grid !important;
+                grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+                gap: 12px !important;
+            }
+        }
+    </style>
+    <div id="home-pillars" style="max-width: 520px; margin: 0 auto 26px auto; display:flex; flex-direction:column; gap: 12px;">
+        <div style="background: var(--surface-card); border-radius: 14px; padding: 14px; border: 1px solid var(--border-subtle); box-shadow: var(--shadow-card);">
+            <div style="font-size: 14px; font-weight: 800; margin-bottom: 8px;">Essência</div>
+            <div style="color: var(--text-secondary); font-size: 13px; line-height: 1.6;">
+                Criado por quem viveu a solidão de freelancer e decidiu:<br>
+                ninguém mais precisa passar por isso sozinho.
+            </div>
+        </div>
+        <div style="background: var(--surface-card); border-radius: 14px; padding: 14px; border: 1px solid var(--border-subtle); box-shadow: var(--shadow-card);">
+            <div style="font-size: 14px; font-weight: 800; margin-bottom: 8px;">Foco</div>
+            <div style="color: var(--text-secondary); font-size: 13px; line-height: 1.6;">
+                Eliminar os erros que custam anos. Dar as ferramentas certas.<br>
+                Conectar você com quem já passou por isso.
+            </div>
+        </div>
+        <div style="background: var(--surface-card); border-radius: 14px; padding: 14px; border: 1px solid var(--border-subtle); box-shadow: var(--shadow-card);">
+            <div style="font-size: 14px; font-weight: 800; margin-bottom: 8px;">Para quem</div>
+            <div style="color: var(--text-secondary); font-size: 13px; line-height: 1.6;">
+                Para o designer que está cansado de trocar horas por dinheiro e
+                quer construir algo maior, mais sólido, mais seu.
+            </div>
+        </div>
+    </div>
+
     <div style="text-align:center; font-size: 13px; font-weight: 800; margin: 26px 0 14px 0;">Recursos essenciais</div>
 
     <div data-tour="home-guides" style="max-width: 520px; margin: 0 auto 26px auto; display:flex; flex-direction:column; gap: 12px;">
@@ -277,7 +297,7 @@
                 Um guia prático para entregar projetos de branding que impressionam e convertem.
             </div>
             <div style="height: 1px; background: rgba(255,255,255,0.08); margin: 10px 0 12px 0;"></div>
-            <a href="/guias/guia-projeto-de-marca.html" target="_blank" rel="noopener" style="
+            <a href="<?= htmlspecialchars($guideHref('/guia/projeto-de-marca')) ?>" <?= $isLogged && $hasPaidActiveSubscription ? 'target="_blank" rel="noopener"' : '' ?> style="
                 display:inline-flex;
                 align-items:center;
                 justify-content:center;
@@ -302,7 +322,7 @@
                 Um guia prático com a metodologia do Tuquinha e como aplicar no seu processo.
             </div>
             <div style="height: 1px; background: rgba(255,255,255,0.08); margin: 10px 0 12px 0;"></div>
-            <a href="/guias/metodologia.html" target="_blank" rel="noopener" style="
+            <a href="<?= htmlspecialchars($guideHref('/guia/metodologia')) ?>" <?= $isLogged && $hasPaidActiveSubscription ? 'target="_blank" rel="noopener"' : '' ?> style="
                 display:inline-flex;
                 align-items:center;
                 justify-content:center;

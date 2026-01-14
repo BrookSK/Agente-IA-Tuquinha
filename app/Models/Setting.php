@@ -18,4 +18,15 @@ class Setting
         }
         return $default;
     }
+
+    public static function set(string $key, ?string $value): void
+    {
+        $pdo = Database::getConnection();
+        $stmt = $pdo->prepare('INSERT INTO settings (`key`, `value`) VALUES (:key, :value)
+            ON DUPLICATE KEY UPDATE `value` = VALUES(`value`)');
+        $stmt->execute([
+            'key' => $key,
+            'value' => $value ?? '',
+        ]);
+    }
 }

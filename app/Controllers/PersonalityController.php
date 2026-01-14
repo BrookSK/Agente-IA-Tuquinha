@@ -72,7 +72,12 @@ class PersonalityController extends Controller
             }
         }
 
-        $personalities = Personality::allVisibleForUsers();
+        $planId = isset($currentPlan['id']) ? (int)$currentPlan['id'] : 0;
+        if (!empty($_SESSION['is_admin']) || $planId <= 0) {
+            $personalities = Personality::allVisibleForUsers();
+        } else {
+            $personalities = Personality::allVisibleForUsersByPlan($planId);
+        }
 
         $this->view('personalities/index', [
             'pageTitle' => 'Escolha a personalidade do Tuquinha',
