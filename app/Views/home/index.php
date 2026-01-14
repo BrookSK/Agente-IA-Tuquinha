@@ -265,7 +265,7 @@
             }
         }
     </style>
-    <div id="home-pillars" style="max-width: 520px; margin: 0 auto 30px auto; display:flex; flex-direction:column; gap: 14px;">
+    <div id="home-pillars" style="max-width: 520px; margin: 30px auto 30px auto; display:flex; flex-direction:column; gap: 14px;">
         <div style="background: var(--surface-card); border-radius: 14px; padding: 14px; border: 1px solid var(--border-subtle); box-shadow: var(--shadow-card);">
             <div style="font-size: 14px; font-weight: 800; margin-bottom: 8px;">Essência</div>
             <div style="color: var(--text-secondary); font-size: 13px; line-height: 1.6;">
