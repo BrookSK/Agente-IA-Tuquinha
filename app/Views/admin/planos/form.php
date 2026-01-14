@@ -256,7 +256,7 @@ if ($slugForCycle !== '') {
             </label>
             <label style="display:flex; align-items:center; gap:5px;">
                 <input type="checkbox" name="allow_courses" value="1" <?= !empty($plan['allow_courses']) ? 'checked' : '' ?>>
-                <span>Permitir acesso a cursos</span>
+                <span>Liberar acesso ao conteúdo dos cursos (quando desmarcado, o acesso segue as regras de cada curso: grátis/pago/matrícula/compra)</span>
             </label>
             <label style="display:flex; align-items:center; gap:5px;">
                 <input type="checkbox" name="allow_video_chat" value="1" <?= !empty($plan['allow_video_chat']) ? 'checked' : '' ?>>
