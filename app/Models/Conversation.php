@@ -281,13 +281,43 @@ class Conversation
     public static function findByIdAndSession(int $id, string $sessionId): ?array
     {
         $pdo = Database::getConnection();
-        $stmt = $pdo->prepare('SELECT * FROM conversations WHERE id = :id AND session_id = :session_id LIMIT 1');
+        $stmt = $pdo->prepare('SELECT * FROM conversations WHERE id = :id LIMIT 1');
         $stmt->execute([
             'id' => $id,
-            'session_id' => $sessionId,
         ]);
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
-        return $row ?: null;
+        if (!$row) {
+            return null;
+        }
+
+        $stored = (string)($row['session_id'] ?? '');
+        if ($stored === '') {
+            return null;
+        }
+
+        // Compatibilidade: se a coluna session_id no banco truncar, aceita match por prefixo.
+        if ($stored === $sessionId) {
+            return $row;
+        }
+        if (str_starts_with($sessionId, $stored) || str_starts_with($stored, $sessionId)) {
+            return $row;
+        }
+
+        return null;
+    }
+
+    public static function updateUserId(int $id, int $userId): void
+    {
+        if ($id <= 0 || $userId <= 0) {
+            return;
+        }
+
+        $pdo = Database::getConnection();
+        $stmt = $pdo->prepare('UPDATE conversations SET user_id = :user_id WHERE id = :id LIMIT 1');
+        $stmt->execute([
+            'id' => $id,
+            'user_id' => $userId,
+        ]);
     }
 
     public static function updatePersona(int $id, ?int $personaId): void

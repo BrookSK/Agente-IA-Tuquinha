@@ -128,8 +128,20 @@ class ChatController extends Controller
             header('Location: /chat?c=' . $conversation->id);
             exit;
         } elseif ($conversationParam > 0) {
+            $row = null;
+            $loadedBySessionFallback = false;
             if ($userId > 0) {
                 $row = Conversation::findByIdForUser($conversationParam, $userId);
+                if (!$row) {
+                    $row = Conversation::findByIdAndSession($conversationParam, $sessionId);
+                    if ($row) {
+                        $loadedBySessionFallback = true;
+                        if (empty($row['user_id'])) {
+                            Conversation::updateUserId((int)$row['id'], $userId);
+                            $row['user_id'] = $userId;
+                        }
+                    }
+                }
             } else {
                 $row = Conversation::findByIdAndSession($conversationParam, $sessionId);
             }
@@ -149,12 +161,22 @@ class ChatController extends Controller
                         exit;
                     }
                 }
+
+                if ($loadedBySessionFallback) {
+                    header('X-Tuq-Conv-Session-Fallback: 1');
+                }
             } else {
                 if ($userId > 0) {
                     $conversation = Conversation::createForUser($userId, $sessionId, null, $projectId > 0 ? $projectId : null);
                 } else {
                     $conversation = Conversation::findOrCreateBySession($sessionId, null, $projectId > 0 ? $projectId : null);
                 }
+
+                header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+                header('Pragma: no-cache');
+                header('X-Tuq-Conv-Redirect: 1');
+                header('Location: /chat?c=' . $conversation->id);
+                exit;
             }
         } else {
             $conversation = Conversation::findOrCreateBySession($sessionId, null, $projectId > 0 ? $projectId : null);
