@@ -1,5 +1,5 @@
-<div data-tour="home-root" style="max-width: 880px; margin: 0 auto; padding: 18px 14px 28px 14px;">
-    <div style="display:flex; flex-direction:column; align-items:center; text-align:center; gap: 10px; margin-bottom: 18px;">
+<div data-tour="home-root" style="max-width: 880px; margin: 0 auto; padding: 22px 14px 34px 14px;">
+    <div style="display:flex; flex-direction:column; align-items:center; text-align:center; gap: 12px; margin-bottom: 22px;">
         <div style="display:inline-flex; align-items:center; gap:8px; padding:6px 12px; border-radius:999px; border:1px solid rgba(229,57,53,0.25); background: rgba(229,57,53,0.10); color: var(--accent-soft); font-size: 12px;">
             <span style="opacity:0.9;">✦</span>
             <span>Nova versão disponível</span>
@@ -264,7 +264,7 @@
             }
         }
     </style>
-    <div id="home-pillars" style="max-width: 520px; margin: 0 auto 26px auto; display:flex; flex-direction:column; gap: 12px;">
+    <div id="home-pillars" style="max-width: 520px; margin: 0 auto 30px auto; display:flex; flex-direction:column; gap: 14px;">
         <div style="background: var(--surface-card); border-radius: 14px; padding: 14px; border: 1px solid var(--border-subtle); box-shadow: var(--shadow-card);">
             <div style="font-size: 14px; font-weight: 800; margin-bottom: 8px;">Essência</div>
             <div style="color: var(--text-secondary); font-size: 13px; line-height: 1.6;">
@@ -288,59 +288,61 @@
         </div>
     </div>
 
-    <div style="text-align:center; font-size: 13px; font-weight: 800; margin: 26px 0 14px 0;">Recursos essenciais</div>
+    <?php if ($isLogged && $hasPaidActiveSubscription): ?>
+        <div style="text-align:center; font-size: 13px; font-weight: 800; margin: 30px 0 14px 0;">Recursos essenciais</div>
 
-    <div data-tour="home-guides" style="max-width: 520px; margin: 0 auto 26px auto; display:flex; flex-direction:column; gap: 12px;">
-        <div data-tour="home-guide-project" style="background: rgba(255,255,255,0.04); border-radius: 14px; padding: 14px; border: 1px solid rgba(255,255,255,0.08); box-shadow: 0 14px 34px rgba(0,0,0,0.42);">
-            <div style="font-size: 16px; font-weight: 700; margin-bottom: 6px;">Guia de Projetos</div>
-            <div style="color: var(--text-secondary); font-size: 13px; line-height: 1.6; margin-bottom: 12px;">
-                Um guia prático para entregar projetos de branding que impressionam e convertem.
+        <div data-tour="home-guides" style="max-width: 520px; margin: 0 auto 30px auto; display:flex; flex-direction:column; gap: 14px;">
+            <div data-tour="home-guide-project" style="background: var(--surface-card); border-radius: 14px; padding: 16px; border: 1px solid var(--border-subtle); box-shadow: var(--shadow-card);">
+                <div style="font-size: 16px; font-weight: 750; margin-bottom: 6px;">Guia de Projetos</div>
+                <div style="color: var(--text-secondary); font-size: 13px; line-height: 1.6; margin-bottom: 12px;">
+                    Um guia prático para entregar projetos de branding que impressionam e convertem.
+                </div>
+                <div style="height: 1px; background: rgba(255,255,255,0.08); margin: 10px 0 12px 0;"></div>
+                <a href="<?= htmlspecialchars($guideHref('/guia/projeto-de-marca')) ?>" target="_blank" rel="noopener" style="
+                    display:inline-flex;
+                    align-items:center;
+                    justify-content:center;
+                    gap:8px;
+                    padding: 10px 14px;
+                    border-radius: 999px;
+                    border: none;
+                    background: linear-gradient(135deg, #e53935, #ff6f60);
+                    color: #050509;
+                    font-weight: 650;
+                    font-size: 13px;
+                    text-decoration:none;
+                ">
+                    <span>Acessar</span>
+                    <span>➜</span>
+                </a>
             </div>
-            <div style="height: 1px; background: rgba(255,255,255,0.08); margin: 10px 0 12px 0;"></div>
-            <a href="<?= htmlspecialchars($guideHref('/guia/projeto-de-marca')) ?>" <?= $isLogged && $hasPaidActiveSubscription ? 'target="_blank" rel="noopener"' : '' ?> style="
-                display:inline-flex;
-                align-items:center;
-                justify-content:center;
-                gap:8px;
-                padding: 10px 14px;
-                border-radius: 999px;
-                border: none;
-                background: linear-gradient(135deg, #e53935, #ff6f60);
-                color: #050509;
-                font-weight: 650;
-                font-size: 13px;
-                text-decoration:none;
-            ">
-                <span>Acessar</span>
-                <span>➜</span>
-            </a>
-        </div>
 
-        <div data-tour="home-guide-method" style="background: rgba(255,255,255,0.04); border-radius: 14px; padding: 14px; border: 1px solid rgba(255,255,255,0.08); box-shadow: 0 14px 34px rgba(0,0,0,0.42);">
-            <div style="font-size: 16px; font-weight: 700; margin-bottom: 6px;">Metodologia</div>
-            <div style="color: var(--text-secondary); font-size: 13px; line-height: 1.6; margin-bottom: 12px;">
-                Um guia prático com a metodologia do Tuquinha e como aplicar no seu processo.
+            <div data-tour="home-guide-method" style="background: var(--surface-card); border-radius: 14px; padding: 16px; border: 1px solid var(--border-subtle); box-shadow: var(--shadow-card);">
+                <div style="font-size: 16px; font-weight: 750; margin-bottom: 6px;">Metodologia</div>
+                <div style="color: var(--text-secondary); font-size: 13px; line-height: 1.6; margin-bottom: 12px;">
+                    Um guia prático com a metodologia do Tuquinha e como aplicar no seu processo.
+                </div>
+                <div style="height: 1px; background: rgba(255,255,255,0.08); margin: 10px 0 12px 0;"></div>
+                <a href="<?= htmlspecialchars($guideHref('/guia/metodologia')) ?>" target="_blank" rel="noopener" style="
+                    display:inline-flex;
+                    align-items:center;
+                    justify-content:center;
+                    gap:8px;
+                    padding: 10px 14px;
+                    border-radius: 999px;
+                    border: none;
+                    background: linear-gradient(135deg, #e53935, #ff6f60);
+                    color: #050509;
+                    font-weight: 650;
+                    font-size: 13px;
+                    text-decoration:none;
+                ">
+                    <span>Acessar</span>
+                    <span>➜</span>
+                </a>
             </div>
-            <div style="height: 1px; background: rgba(255,255,255,0.08); margin: 10px 0 12px 0;"></div>
-            <a href="<?= htmlspecialchars($guideHref('/guia/metodologia')) ?>" <?= $isLogged && $hasPaidActiveSubscription ? 'target="_blank" rel="noopener"' : '' ?> style="
-                display:inline-flex;
-                align-items:center;
-                justify-content:center;
-                gap:8px;
-                padding: 10px 14px;
-                border-radius: 999px;
-                border: none;
-                background: linear-gradient(135deg, #e53935, #ff6f60);
-                color: #050509;
-                font-weight: 650;
-                font-size: 13px;
-                text-decoration:none;
-            ">
-                <span>Acessar</span>
-                <span>➜</span>
-            </a>
         </div>
-    </div>
+    <?php endif; ?>
 
     <!-- CTA para instalar o app (PWA) - exibido apenas em mobile via JS -->
     <div id="pwa-install-banner" style="display:none; margin-bottom: 18px;">
