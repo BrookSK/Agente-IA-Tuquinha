@@ -74,7 +74,7 @@ class ChatController extends Controller
             $requestedPersonaId = isset($_GET['persona_id']) ? (int)$_GET['persona_id'] : 0;
             if ($requestedPersonaId > 0 && $planAllowsPersonalities) {
                 $requestedPersona = Personality::findById($requestedPersonaId);
-                if ($requestedPersona && !empty($requestedPersona['active'])) {
+                if ($requestedPersona && !empty($requestedPersona['active']) && empty($requestedPersona['coming_soon'])) {
                     // Valida também contra a lista do plano (quando existir)
                     $planId = !empty($currentPlan['id']) ? (int)$currentPlan['id'] : 0;
                     if (!empty($_SESSION['is_admin']) || $planId <= 0) {
@@ -93,7 +93,7 @@ class ChatController extends Controller
                 $userDefaultPersonaId = (int)$_SESSION['default_persona_id'];
                 if ($userDefaultPersonaId > 0) {
                     $userPersona = Personality::findById($userDefaultPersonaId);
-                    if ($userPersona && !empty($userPersona['active'])) {
+                    if ($userPersona && !empty($userPersona['active']) && empty($userPersona['coming_soon'])) {
                         $planId = !empty($currentPlan['id']) ? (int)$currentPlan['id'] : 0;
                         if (!empty($_SESSION['is_admin']) || $planId <= 0) {
                             $personaIdForNew = (int)$userPersona['id'];
