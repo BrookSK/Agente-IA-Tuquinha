@@ -412,59 +412,81 @@ if (!empty($currentPlan) && is_array($currentPlan)) {
         <?php
             $currentPersonaId = isset($currentPersonaData['id']) ? (int)$currentPersonaData['id'] : 0;
         ?>
-        <div style="margin-top:10px; margin-bottom:8px;">
-            <div style="margin-bottom:6px; font-size:12px; color:#b0b0b0;">
-                Personalidades (preview):
+        <div style="margin-top:10px; margin-bottom:10px;">
+            <div style="margin-bottom:8px; font-size:12px; color:#b0b0b0;">Personalidades (preview):</div>
+            <div style="position:relative;">
+                <div style="display:flex; gap:12px; width:100%; box-sizing:border-box; overflow-x:auto; overflow-y:hidden; max-width:100%; min-width:0; padding:6px 2px 10px 2px; scroll-snap-type:x mandatory;">
+                    <?php foreach ($personaOptions as $po): ?>
+                        <?php
+                            $pid = (int)($po['id'] ?? 0);
+                            $pname = trim((string)($po['name'] ?? ''));
+                            $parea = trim((string)($po['area'] ?? ''));
+                            $pimg = trim((string)($po['image_path'] ?? ''));
+                            if ($pid <= 0 || $pname === '') { continue; }
+
+                            $isDefault = !empty($po['is_default']);
+                            $isComingSoon = !empty($po['coming_soon']);
+                            $isActive = ($currentPersonaId > 0 && $currentPersonaId === $pid);
+
+                            $isAllowedToClick = ($isDefault && !$isComingSoon);
+                            $disabledReason = '';
+                            if ($isComingSoon) {
+                                $disabledReason = 'Em breve';
+                            } elseif (!$isDefault) {
+                                $disabledReason = 'Disponível nos planos pagos';
+                            }
+
+                            $href = $isAllowedToClick ? '/chat?new=1' : 'javascript:void(0)';
+                        ?>
+                        <a href="<?= $href ?>" title="<?= $disabledReason !== '' ? htmlspecialchars($disabledReason) : '' ?>" style="
+                            flex:0 0 240px;
+                            max-width: 260px;
+                            scroll-snap-align:center;
+                            border:1px solid var(--border-subtle);
+                            background:<?= $isActive ? 'rgba(255,111,96,0.14)' : 'var(--surface-card)' ?>;
+                            border-radius:14px;
+                            padding:10px;
+                            color:var(--text-primary);
+                            text-decoration:none;
+                            cursor:<?= !$isAllowedToClick ? 'not-allowed' : 'pointer' ?>;
+                            opacity:<?= !$isAllowedToClick ? '0.60' : '1' ?>;
+                            pointer-events:<?= !$isAllowedToClick ? 'none' : 'auto' ?>;
+                            display:flex;
+                            gap:10px;
+                            align-items:center;
+                        ">
+                            <?php if ($pimg !== ''): ?>
+                                <img src="<?= htmlspecialchars($pimg) ?>" alt="<?= htmlspecialchars($pname) ?>" style="width:46px; height:46px; border-radius:12px; object-fit:cover; border:1px solid var(--border-subtle); background:var(--surface-subtle); flex:0 0 auto;" />
+                            <?php else: ?>
+                                <div style="width:46px; height:46px; border-radius:12px; border:1px solid var(--border-subtle); background:var(--surface-subtle); display:flex; align-items:center; justify-content:center; flex:0 0 auto;">
+                                    <span style="font-size:12px; color:var(--text-secondary); font-weight:700; line-height:1;">T</span>
+                                </div>
+                            <?php endif; ?>
+                            <div style="min-width:0; flex:1 1 auto;">
+                                <div title="<?= htmlspecialchars($pname) ?>" style="font-weight:700; font-size:13px; line-height:1.2; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
+                                    <?= htmlspecialchars($pname) ?>
+                                </div>
+                                <?php if ($parea !== ''): ?>
+                                    <div title="<?= htmlspecialchars($parea) ?>" style="font-size:11px; color:var(--text-secondary); line-height:1.2; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
+                                        <?= htmlspecialchars($parea) ?>
+                                    </div>
+                                <?php endif; ?>
+                                <div style="margin-top:6px; display:flex; gap:6px; flex-wrap:wrap;">
+                                    <?php if ($isDefault): ?>
+                                        <span style="font-size:9px; text-transform:uppercase; letter-spacing:0.14em; border-radius:999px; padding:2px 7px; background:#102312; color:#c8ffd4; border:1px solid #2e7d32;">Principal</span>
+                                    <?php endif; ?>
+                                    <?php if ($isComingSoon): ?>
+                                        <span style="font-size:9px; text-transform:uppercase; letter-spacing:0.14em; border-radius:999px; padding:2px 7px; background:#201216; color:#ffcc80; border:1px solid #ff6f60;">Em breve</span>
+                                    <?php elseif (!$isDefault): ?>
+                                        <span style="font-size:9px; text-transform:uppercase; letter-spacing:0.14em; border-radius:999px; padding:2px 7px; background:#111118; color:#ffcc80; border:1px solid #272727;">Plano pago</span>
+                                    <?php endif; ?>
+                                </div>
+                            </div>
+                        </a>
+                    <?php endforeach; ?>
+                </div>
             </div>
-            <div style="display:flex; gap:8px; flex-wrap:wrap;">
-                <?php foreach ($personaOptions as $po): ?>
-                    <?php
-                        $pid = (int)($po['id'] ?? 0);
-                        if ($pid <= 0) { continue; }
-                        $pname = trim((string)($po['name'] ?? ''));
-                        $parea = trim((string)($po['area'] ?? ''));
-                        $isDefault = !empty($po['is_default']);
-                        $isComingSoon = !empty($po['coming_soon']);
-
-                        $label = $pname;
-                        if ($parea !== '') { $label .= ' · ' . $parea; }
-
-                        $isActive = ($currentPersonaId > 0 && $currentPersonaId === $pid);
-
-                        $isAllowedToClick = ($isDefault && !$isComingSoon);
-                        $disabledReason = '';
-                        if ($isComingSoon) {
-                            $disabledReason = 'Em breve';
-                        } elseif (!$isDefault) {
-                            $disabledReason = 'Disponível nos planos pagos';
-                        }
-
-                        $href = $isAllowedToClick ? '/chat?new=1' : 'javascript:void(0)';
-                    ?>
-                    <a href="<?= $href ?>" title="<?= $disabledReason !== '' ? htmlspecialchars($disabledReason) : '' ?>" style="
-                        border:1px solid var(--border-subtle);
-                        background:<?= $isActive ? 'rgba(255,111,96,0.14)' : 'var(--surface-subtle)' ?>;
-                        color:var(--text-primary);
-                        padding:6px 10px;
-                        border-radius:999px;
-                        font-size:12px;
-                        text-decoration:none;
-                        display:inline-flex;
-                        gap:6px;
-                        align-items:center;
-                        cursor:<?= !$isAllowedToClick ? 'not-allowed' : 'pointer' ?>;
-                        opacity:<?= !$isAllowedToClick ? '0.55' : '1' ?>;
-                        pointer-events:<?= !$isAllowedToClick ? 'none' : 'auto' ?>;
-                    ">
-                        <?= htmlspecialchars($label) ?>
-                        <?= $isComingSoon ? ' • Em breve' : '' ?>
-                        <?= $isDefault ? ' • Principal' : '' ?>
-                    </a>
-                <?php endforeach; ?>
-            </div>
-            <div style="margin-top:6px; font-size:11px; color:#8d8d8d;">
-                No plano Free você pode ver as personalidades, mas só pode usar a personalidade padrão.
-            </div>
+            <div style="margin-top:6px; font-size:11px; color:#8d8d8d;">No plano Free você pode ver as personalidades, mas só pode usar a personalidade padrão.</div>
         </div>
     <?php endif; ?>
 
