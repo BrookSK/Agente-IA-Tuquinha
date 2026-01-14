@@ -419,6 +419,62 @@ $currentBoardTitle = $currentBoard ? (string)($currentBoard['title'] ?? 'Sem tí
         background: rgba(255,255,255,0.34);
     }
 
+    .kb-cover-box {
+        margin-top: 10px;
+        border-top: 1px solid var(--border-subtle);
+        padding-top: 10px;
+    }
+    .kb-cover-preview {
+        border: 1px solid var(--border-subtle);
+        background: var(--surface-subtle);
+        border-radius: 12px;
+        overflow: hidden;
+    }
+    .kb-cover-preview img {
+        width: 100%;
+        height: 160px;
+        object-fit: cover;
+        display: block;
+    }
+    .kb-cover-empty {
+        padding: 10px;
+        color: var(--text-secondary);
+        font-size: 12px;
+    }
+    .kb-cover-grid {
+        margin-top: 10px;
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 8px;
+    }
+    @media (max-width: 720px) {
+        .kb-cover-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+    .kb-cover-thumb {
+        border: 1px solid var(--border-subtle);
+        background: var(--surface-subtle);
+        border-radius: 12px;
+        overflow: hidden;
+        padding: 0;
+        cursor: pointer;
+        text-align: left;
+    }
+    .kb-cover-thumb img {
+        width: 100%;
+        height: 76px;
+        object-fit: cover;
+        display: block;
+    }
+    .kb-cover-thumb-meta {
+        padding: 8px;
+        font-size: 12px;
+        color: var(--text-secondary);
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        max-width: 100%;
+    }
+
     .kb-attachments {
         margin-top: 10px;
         border-top: 1px solid var(--border-subtle);
@@ -787,6 +843,17 @@ $currentBoardTitle = $currentBoard ? (string)($currentBoard['title'] ?? 'Sem tí
             <input type="date" class="kb-input" id="kb-modal-due-date" />
         </div>
 
+        <div class="kb-cover-box" id="kb-cover-section" style="display:none;">
+            <div style="display:flex; align-items:center; justify-content:space-between; gap:8px;">
+                <div class="kb-attachments-title">Capa do cartão</div>
+                <button type="button" class="kb-btn" id="kb-cover-clear" style="display:none;">Remover capa</button>
+            </div>
+            <div class="kb-cover-preview" id="kb-cover-preview">
+                <div class="kb-cover-empty">Sem capa.</div>
+            </div>
+            <div id="kb-cover-choices"></div>
+        </div>
+
         <div class="kb-attachments" id="kb-checklist" style="display:none;">
             <div class="kb-attachments-title">Checklist</div>
             <div class="kb-attachments-row">
@@ -799,7 +866,6 @@ $currentBoardTitle = $currentBoard ? (string)($currentBoard['title'] ?? 'Sem tí
         <div class="kb-attachments" id="kb-attachments" style="display:none;">
             <div style="display:flex; align-items:center; justify-content:space-between; gap:8px;">
                 <div class="kb-attachments-title">Anexos</div>
-                <button type="button" class="kb-btn" id="kb-cover-clear" style="display:none;">Remover capa</button>
             </div>
             <div class="kb-attachments-row">
                 <input type="file" class="kb-input" id="kb-attach-file" style="flex:1; min-width: 220px;" />
@@ -1028,16 +1094,26 @@ $currentBoardTitle = $currentBoard ? (string)($currentBoard['title'] ?? 'Sem tí
         if (dd) dd.value = opts.dueDate || '';
         $('kb-modal-textarea').style.display = opts.showDesc ? 'block' : 'none';
         var del = $('kb-modal-delete');
-        del.style.display = opts.showDelete ? 'inline-flex' : 'none';
+        if (del) del.style.display = opts.showDelete ? 'inline-flex' : 'none';
+        var mr = $('kb-move-row');
+        if (mr) mr.style.display = opts.showMove ? 'block' : 'none';
+
+        var coverSection = $('kb-cover-section');
+        if (coverSection) {
+            coverSection.style.display = (opts.mode === 'edit-card' && opts.cardId) ? 'block' : 'none';
+        }
 
         modal.dataset.mode = opts.mode || '';
         modal.dataset.cardId = String(opts.cardId || '');
         modal.dataset.listId = String(opts.listId || '');
+        modal.dataset.coverUrl = String(opts.coverUrl || '');
         modal.dataset.boardId = String(opts.boardId || '');
 
-        del.onclick = null;
-        if (opts.onDelete) {
-            del.onclick = opts.onDelete;
+        if (del) {
+            del.onclick = null;
+            if (opts.onDelete) {
+                del.onclick = opts.onDelete;
+            }
         }
 
         $('kb-modal-save').onclick = null;
@@ -1055,6 +1131,7 @@ $currentBoardTitle = $currentBoard ? (string)($currentBoard['title'] ?? 'Sem tí
         modal.dataset.mode = '';
         modal.dataset.cardId = '';
         modal.dataset.listId = '';
+        modal.dataset.coverUrl = '';
         modal.dataset.boardId = '';
 
         var moveRow = $('kb-move-row');
@@ -1080,6 +1157,13 @@ $currentBoardTitle = $currentBoard ? (string)($currentBoard['title'] ?? 'Sem tí
             coverClear.style.display = 'none';
             coverClear.onclick = null;
         }
+
+        var coverSection = $('kb-cover-section');
+        if (coverSection) coverSection.style.display = 'none';
+        var coverPrev = $('kb-cover-preview');
+        if (coverPrev) coverPrev.innerHTML = '<div class="kb-cover-empty">Sem capa.</div>';
+        var coverChoices = $('kb-cover-choices');
+        if (coverChoices) coverChoices.innerHTML = '';
     }
 
     function buildListOptions(selectEl, selectedListId) {
@@ -1163,13 +1247,56 @@ $currentBoardTitle = $currentBoard ? (string)($currentBoard['title'] ?? 'Sem tí
         });
     }
 
+    function renderCoverSection(items) {
+        var modal = $('kb-modal');
+        if (!modal) return;
+        var preview = $('kb-cover-preview');
+        var choices = $('kb-cover-choices');
+        if (!preview || !choices) return;
+
+        var coverUrl = modal.dataset.coverUrl ? String(modal.dataset.coverUrl) : '';
+
+        if (!coverUrl) {
+            preview.innerHTML = '<div class="kb-cover-empty">Sem capa.</div>';
+        } else {
+            preview.innerHTML = '<img src="' + esc(coverUrl) + '" alt="Capa">';
+        }
+
+        var imgs = (items || []).filter(function (a) {
+            var mime = a && a.mime_type ? String(a.mime_type) : '';
+            return mime && mime.toLowerCase().indexOf('image/') === 0;
+        });
+
+        if (!imgs.length) {
+            choices.innerHTML = '<div style="color:var(--text-secondary); font-size:12px; padding:8px 2px;">Envie uma imagem em Anexos para poder escolher uma capa.</div>';
+            return;
+        }
+
+        var html = '<div style="color:var(--text-secondary); font-size:12px; font-weight:700; margin-top:10px;">Escolher capa</div>';
+        html += '<div class="kb-cover-grid">';
+        imgs.forEach(function (a) {
+            var id = a && a.id ? String(a.id) : '';
+            var url = a && a.url ? String(a.url) : '';
+            var name = (a && a.original_name ? String(a.original_name) : (url ? url.split('/').pop() : 'Imagem'));
+            html += ''
+                + '<button type="button" class="kb-cover-thumb" data-action="set-cover" data-attachment-id="' + esc(id) + '" title="Definir como capa">'
+                + '<img src="' + esc(url) + '" alt="' + esc(name) + '">' 
+                + '<div class="kb-cover-thumb-meta">' + esc(name) + '</div>'
+                + '</button>';
+        });
+        html += '</div>';
+        choices.innerHTML = html;
+    }
+
     function loadAttachments(cardId) {
         return postForm('/kanban/cartao/anexos/listar', { card_id: String(cardId) }).then(function (res) {
             if (res.json && res.json.ok) {
                 renderAttachments(res.json.attachments || []);
+                renderCoverSection(res.json.attachments || []);
                 return;
             }
             renderAttachments([]);
+            renderCoverSection([]);
         });
     }
 
@@ -1216,8 +1343,9 @@ $currentBoardTitle = $currentBoard ? (string)($currentBoard['title'] ?? 'Sem tí
             if (!attId) return;
             postForm('/kanban/cartao/capa/definir', { card_id: String(cardId), attachment_id: String(attId) }).then(function (res) {
                 if (res.json && res.json.ok) {
-                    loadAttachments(cardId);
                     var coverUrl = (res.json && res.json.cover_url) ? String(res.json.cover_url) : '';
+                    modal.dataset.coverUrl = coverUrl;
+                    loadAttachments(cardId);
                     var cardEl = getCardEl(cardId);
                     if (cardEl) {
                         cardEl.setAttribute('data-cover-url', coverUrl);
@@ -1538,8 +1666,10 @@ $currentBoardTitle = $currentBoard ? (string)($currentBoard['title'] ?? 'Sem tí
                 dueDate: dueAttr,
                 showDesc: true,
                 showDelete: true,
+                mode: 'edit-card',
                 cardId: cardId,
                 listId: listId3,
+                coverUrl: coverUrlAttr,
                 onDelete: function () {
                     if (!confirm('Excluir este cartão?')) return;
                     postForm('/kanban/cartao/excluir', { card_id: String(cardId) }).then(function (res) {
@@ -1647,7 +1777,10 @@ $currentBoardTitle = $currentBoard ? (string)($currentBoard['title'] ?? 'Sem tí
                                 var coverBox = cardEl2.querySelector('.kb-card-cover');
                                 if (coverBox && coverBox.parentNode) coverBox.parentNode.removeChild(coverBox);
                             }
+                            var modalEl = $('kb-modal');
+                            if (modalEl) modalEl.dataset.coverUrl = '';
                             coverClear.style.display = 'none';
+                            loadAttachments(cardId);
                         } else {
                             alert((res.json && res.json.error) ? res.json.error : 'Falha ao remover capa.');
                         }
