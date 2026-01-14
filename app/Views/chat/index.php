@@ -408,6 +408,66 @@ if (!empty($currentPlan) && is_array($currentPlan)) {
         </div>
     <?php endif; ?>
 
+    <?php if (!empty($conversationId) && !empty($personaOptions) && is_array($personaOptions) && $isFreePlan): ?>
+        <?php
+            $currentPersonaId = isset($currentPersonaData['id']) ? (int)$currentPersonaData['id'] : 0;
+        ?>
+        <div style="margin-top:10px; margin-bottom:8px;">
+            <div style="margin-bottom:6px; font-size:12px; color:#b0b0b0;">
+                Personalidades (preview):
+            </div>
+            <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                <?php foreach ($personaOptions as $po): ?>
+                    <?php
+                        $pid = (int)($po['id'] ?? 0);
+                        if ($pid <= 0) { continue; }
+                        $pname = trim((string)($po['name'] ?? ''));
+                        $parea = trim((string)($po['area'] ?? ''));
+                        $isDefault = !empty($po['is_default']);
+                        $isComingSoon = !empty($po['coming_soon']);
+
+                        $label = $pname;
+                        if ($parea !== '') { $label .= ' · ' . $parea; }
+
+                        $isActive = ($currentPersonaId > 0 && $currentPersonaId === $pid);
+
+                        $isAllowedToClick = ($isDefault && !$isComingSoon);
+                        $disabledReason = '';
+                        if ($isComingSoon) {
+                            $disabledReason = 'Em breve';
+                        } elseif (!$isDefault) {
+                            $disabledReason = 'Disponível nos planos pagos';
+                        }
+
+                        $href = $isAllowedToClick ? '/chat?new=1' : 'javascript:void(0)';
+                    ?>
+                    <a href="<?= $href ?>" title="<?= $disabledReason !== '' ? htmlspecialchars($disabledReason) : '' ?>" style="
+                        border:1px solid var(--border-subtle);
+                        background:<?= $isActive ? 'rgba(255,111,96,0.14)' : 'var(--surface-subtle)' ?>;
+                        color:var(--text-primary);
+                        padding:6px 10px;
+                        border-radius:999px;
+                        font-size:12px;
+                        text-decoration:none;
+                        display:inline-flex;
+                        gap:6px;
+                        align-items:center;
+                        cursor:<?= !$isAllowedToClick ? 'not-allowed' : 'pointer' ?>;
+                        opacity:<?= !$isAllowedToClick ? '0.55' : '1' ?>;
+                        pointer-events:<?= !$isAllowedToClick ? 'none' : 'auto' ?>;
+                    ">
+                        <?= htmlspecialchars($label) ?>
+                        <?= $isComingSoon ? ' • Em breve' : '' ?>
+                        <?= $isDefault ? ' • Principal' : '' ?>
+                    </a>
+                <?php endforeach; ?>
+            </div>
+            <div style="margin-top:6px; font-size:11px; color:#8d8d8d;">
+                No plano Free você pode ver as personalidades, mas só pode usar a personalidade padrão.
+            </div>
+        </div>
+    <?php endif; ?>
+
     <?php if (!empty($conversationId) && $canUseConversationSettings): ?>
         <div style="margin-top:10px; margin-bottom:6px; display:flex; justify-content:flex-end;">
             <button type="button" id="chat-rules-toggle" style="
