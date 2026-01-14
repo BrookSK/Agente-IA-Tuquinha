@@ -316,15 +316,30 @@ class ProjectController extends Controller
 
         $planAllowsPersonalities = false;
         $personalities = [];
+        $planForPersonalities = null;
         if (!empty($_SESSION['is_admin'])) {
             $planAllowsPersonalities = true;
         } else {
             $email = (string)($user['email'] ?? '');
             $plan = $this->getActivePlanForEmail($email);
+            $planForPersonalities = $plan;
             $planAllowsPersonalities = !empty($plan['allow_personalities']);
         }
         if ($planAllowsPersonalities) {
-            $personalities = Personality::allActive();
+            try {
+                if (!empty($_SESSION['is_admin'])) {
+                    $personalities = Personality::allActive();
+                } else {
+                    $planId = !empty($planForPersonalities['id']) ? (int)$planForPersonalities['id'] : 0;
+                    if ($planId > 0) {
+                        $personalities = Personality::allVisibleForUsersByPlan($planId);
+                    } else {
+                        $personalities = Personality::allActive();
+                    }
+                }
+            } catch (\Throwable $e) {
+                $personalities = Personality::allActive();
+            }
         }
 
         $currentPlan = null;
@@ -950,18 +965,28 @@ class ProjectController extends Controller
         $personaIdRaw = isset($_POST['persona_id']) ? (int)$_POST['persona_id'] : 0;
         if ($personaIdRaw > 0) {
             $planAllowsPersonalities = false;
+            $planId = 0;
             if (!empty($_SESSION['is_admin'])) {
                 $planAllowsPersonalities = true;
             } else {
                 $email = (string)($user['email'] ?? '');
                 $plan = $this->getActivePlanForEmail($email);
                 $planAllowsPersonalities = !empty($plan['allow_personalities']);
+                $planId = !empty($plan['id']) ? (int)$plan['id'] : 0;
             }
 
             if ($planAllowsPersonalities) {
                 $p = Personality::findById($personaIdRaw);
                 if ($p && !empty($p['active'])) {
-                    $personaId = (int)$p['id'];
+                    if (!empty($_SESSION['is_admin']) || $planId <= 0) {
+                        $personaId = (int)$p['id'];
+                    } else {
+                        // Se houver allowlist configurada, valida.
+                        $allowedIds = Personality::getPersonalityIdsForPlan($planId);
+                        if (!$allowedIds || in_array((int)$p['id'], $allowedIds, true)) {
+                            $personaId = (int)$p['id'];
+                        }
+                    }
                 }
             }
         }

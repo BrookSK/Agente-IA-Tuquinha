@@ -284,6 +284,9 @@
                 padding: 18px 14px 14px 14px;
                 box-shadow: <?= $cardShadow ?>;
                 overflow: visible;
+                height: 100%;
+                display: flex;
+                flex-direction: column;
             ">
                 <?php if ($isFeatured): ?>
                     <div style="position:absolute; left:50%; top:-12px; transform:translateX(-50%);">
@@ -344,7 +347,7 @@
                     </ul>
                 <?php endif; ?>
 
-                <form action="/checkout" method="get">
+                <form action="/checkout" method="get" style="margin-top:auto;">
                     <input type="hidden" name="plan" value="<?= htmlspecialchars($slug) ?>">
                     <button type="submit" <?= $isCurrent ? 'disabled' : '' ?> style="
                         width: 100%;

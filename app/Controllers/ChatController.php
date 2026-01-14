@@ -49,24 +49,60 @@ class ChatController extends Controller
             exit;
         }
 
+        $currentPlan = null;
+        if (!empty($_SESSION['is_admin'])) {
+            $currentPlan = Plan::findTopActive();
+            if ($currentPlan && !empty($currentPlan['slug'])) {
+                $_SESSION['plan_slug'] = $currentPlan['slug'];
+            }
+        } else {
+            $currentPlan = Plan::findBySessionSlug($_SESSION['plan_slug'] ?? null);
+            if (!$currentPlan) {
+                $currentPlan = Plan::findBySlug('free');
+                if ($currentPlan) {
+                    $_SESSION['plan_slug'] = $currentPlan['slug'];
+                }
+            }
+        }
+
+        // Personalidades: plano free deve ver preview na UI, mas só pode usar a padrão do Tuquinha.
+        $planAllowsPersonalities = !empty($_SESSION['is_admin']) || ($userId > 0 && !empty($currentPlan) && !empty($currentPlan['allow_personalities']));
+
         if ($isNew) {
             $personaIdForNew = null;
 
             $requestedPersonaId = isset($_GET['persona_id']) ? (int)$_GET['persona_id'] : 0;
-            if ($requestedPersonaId > 0) {
+            if ($requestedPersonaId > 0 && $planAllowsPersonalities) {
                 $requestedPersona = Personality::findById($requestedPersonaId);
                 if ($requestedPersona && !empty($requestedPersona['active'])) {
-                    $personaIdForNew = (int)$requestedPersona['id'];
+                    // Valida também contra a lista do plano (quando existir)
+                    $planId = !empty($currentPlan['id']) ? (int)$currentPlan['id'] : 0;
+                    if (!empty($_SESSION['is_admin']) || $planId <= 0) {
+                        $personaIdForNew = (int)$requestedPersona['id'];
+                    } else {
+                        $allowedIds = Personality::getPersonalityIdsForPlan($planId);
+                        if (!$allowedIds || in_array((int)$requestedPersona['id'], $allowedIds, true)) {
+                            $personaIdForNew = (int)$requestedPersona['id'];
+                        }
+                    }
                 }
             }
 
             // Se não veio persona explícita na URL, tenta a personalidade padrão da conta do usuário (se logado)
-            if ($personaIdForNew === null && $userId > 0 && !empty($_SESSION['default_persona_id'])) {
+            if ($personaIdForNew === null && $userId > 0 && $planAllowsPersonalities && !empty($_SESSION['default_persona_id'])) {
                 $userDefaultPersonaId = (int)$_SESSION['default_persona_id'];
                 if ($userDefaultPersonaId > 0) {
                     $userPersona = Personality::findById($userDefaultPersonaId);
                     if ($userPersona && !empty($userPersona['active'])) {
-                        $personaIdForNew = (int)$userPersona['id'];
+                        $planId = !empty($currentPlan['id']) ? (int)$currentPlan['id'] : 0;
+                        if (!empty($_SESSION['is_admin']) || $planId <= 0) {
+                            $personaIdForNew = (int)$userPersona['id'];
+                        } else {
+                            $allowedIds = Personality::getPersonalityIdsForPlan($planId);
+                            if (!$allowedIds || in_array((int)$userPersona['id'], $allowedIds, true)) {
+                                $personaIdForNew = (int)$userPersona['id'];
+                            }
+                        }
                     }
                 }
             }
@@ -147,22 +183,6 @@ class ChatController extends Controller
         $chatError = $_SESSION['chat_error'] ?? null;
         unset($_SESSION['draft_message'], $_SESSION['audio_error'], $_SESSION['chat_error']);
 
-        $currentPlan = null;
-        if (!empty($_SESSION['is_admin'])) {
-            $currentPlan = Plan::findTopActive();
-            if ($currentPlan && !empty($currentPlan['slug'])) {
-                $_SESSION['plan_slug'] = $currentPlan['slug'];
-            }
-        } else {
-            $currentPlan = Plan::findBySessionSlug($_SESSION['plan_slug'] ?? null);
-            if (!$currentPlan) {
-                $currentPlan = Plan::findBySlug('free');
-                if ($currentPlan) {
-                    $_SESSION['plan_slug'] = $currentPlan['slug'];
-                }
-            }
-        }
-
         $allowedModels = [];
         $defaultModel = null;
 
@@ -230,8 +250,9 @@ class ChatController extends Controller
         // Usuários logados podem usar regras/memórias por chat (inclusive plano free)
         $canUseConversationSettings = $userId > 0;
 
-        // Personalidades só estão disponíveis para usuários logados em planos que liberam essa funcionalidade
-        $planAllowsPersonalities = $userId > 0 && !empty($currentPlan['allow_personalities']);
+        // Personalidades: no plano free mostra preview, mas bloqueia uso.
+        $defaultPersona = Personality::findDefault();
+        $defaultPersonaId = $defaultPersona ? (int)($defaultPersona['id'] ?? 0) : 0;
 
         if ($conversationSettings === null && $userId > 0) {
             $conversationSettings = ConversationSetting::findForConversation($conversation->id, $userId) ?: null;
@@ -239,11 +260,38 @@ class ChatController extends Controller
 
         $currentPersona = null;
         $personalities = [];
-        if ($planAllowsPersonalities) {
-            if (!empty($conversation->persona_id)) {
-                $currentPersona = Personality::findById((int)$conversation->persona_id) ?: null;
+        try {
+            if (!empty($_SESSION['is_admin'])) {
+                $personalities = Personality::allActive();
+            } else {
+                $planId = !empty($currentPlan['id']) ? (int)$currentPlan['id'] : 0;
+                if ($planAllowsPersonalities && $planId > 0) {
+                    // Lista filtrada por plano (quando houver allowlist configurada)
+                    $personalities = Personality::allVisibleForUsersByPlan($planId);
+                } else {
+                    // Preview: no free exibe todas as ativas
+                    $personalities = Personality::allActive();
+                }
             }
+        } catch (\Throwable $e) {
             $personalities = Personality::allActive();
+        }
+        if (!empty($conversation->persona_id)) {
+            $currentPersona = Personality::findById((int)$conversation->persona_id) ?: null;
+        }
+
+        // Se o plano restringe personalidades e a conversa atual está com uma não permitida, volta para a padrão
+        if ($currentPersona && $planAllowsPersonalities && empty($_SESSION['is_admin'])) {
+            $planId = !empty($currentPlan['id']) ? (int)$currentPlan['id'] : 0;
+            if ($planId > 0) {
+                try {
+                    $allowedIds = Personality::getPersonalityIdsForPlan($planId);
+                    if ($allowedIds && !in_array((int)$currentPersona['id'], $allowedIds, true)) {
+                        $currentPersona = Personality::findDefault() ?: null;
+                    }
+                } catch (\Throwable $e) {
+                }
+            }
         }
 
         $projectContext = null;
@@ -300,6 +348,7 @@ class ChatController extends Controller
             'currentPersona' => $currentPersona,
             'personalities' => $personalities,
             'planAllowsPersonalities' => $planAllowsPersonalities,
+            'defaultPersonaId' => $defaultPersonaId,
             'projectContext' => $projectContext,
             'conversationTitle' => $conversationTitle,
             'conversationProjectId' => $conversationProjectId,
@@ -2034,7 +2083,7 @@ class ChatController extends Controller
             }
         }
 
-        if (empty($currentPlan['allow_personalities'])) {
+        if (empty($_SESSION['is_admin']) && empty($currentPlan['allow_personalities'])) {
             header('Location: /chat');
             exit;
         }
@@ -2067,7 +2116,23 @@ class ChatController extends Controller
         if ($personaIdRaw > 0) {
             $persona = Personality::findById($personaIdRaw);
             if ($persona && !empty($persona['active']) && empty($persona['coming_soon'])) {
-                $personaId = (int)$persona['id'];
+                if (!empty($_SESSION['is_admin'])) {
+                    $personaId = (int)$persona['id'];
+                } else {
+                    $planId = !empty($currentPlan['id']) ? (int)$currentPlan['id'] : 0;
+                    if ($planId <= 0) {
+                        $personaId = (int)$persona['id'];
+                    } else {
+                        $allowedIds = Personality::getPersonalityIdsForPlan($planId);
+                        if (!$allowedIds || in_array((int)$persona['id'], $allowedIds, true)) {
+                            $personaId = (int)$persona['id'];
+                        } else {
+                            $_SESSION['chat_error'] = 'Esta personalidade não está liberada no seu plano.';
+                            header('Location: /chat?c=' . $conversationId);
+                            exit;
+                        }
+                    }
+                }
             } elseif ($persona && !empty($persona['active']) && !empty($persona['coming_soon'])) {
                 $_SESSION['chat_error'] = 'Esta personalidade está marcada como Em breve e ainda não pode ser usada.';
                 header('Location: /chat?c=' . $conversationId);

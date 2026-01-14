@@ -65,6 +65,79 @@ class Personality
         return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
     }
 
+    public static function getPersonalityIdsForPlan(int $planId): array
+    {
+        if (!self::tableExists('personality_plans')) {
+            return [];
+        }
+
+        $pdo = Database::getConnection();
+
+        // Se não existir nenhum vínculo ainda, mantém comportamento legado (sem restrição)
+        $hasAny = false;
+        try {
+            $stmtAny = $pdo->query('SELECT 1 FROM personality_plans LIMIT 1');
+            $hasAny = (bool)$stmtAny->fetch(PDO::FETCH_ASSOC);
+        } catch (\Throwable $e) {
+            $hasAny = false;
+        }
+        if (!$hasAny) {
+            return [];
+        }
+
+        $stmt = $pdo->prepare('SELECT personality_id FROM personality_plans WHERE plan_id = :pid');
+        $stmt->execute(['pid' => $planId]);
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+        $out = [];
+        foreach ($rows as $r) {
+            $out[] = (int)($r['personality_id'] ?? 0);
+        }
+        $out = array_values(array_filter($out));
+        $out = array_values(array_unique($out));
+        sort($out);
+        return $out;
+    }
+
+    public static function setPersonalityIdsForPlan(int $planId, array $personalityIds): void
+    {
+        if (!self::tableExists('personality_plans')) {
+            return;
+        }
+
+        $pdo = Database::getConnection();
+
+        $normalized = [];
+        foreach ($personalityIds as $pidRaw) {
+            $pid = (int)$pidRaw;
+            if ($pid <= 0) {
+                continue;
+            }
+            $normalized[$pid] = true;
+        }
+        $personalityIds = array_keys($normalized);
+
+        $pdo->beginTransaction();
+        try {
+            $del = $pdo->prepare('DELETE FROM personality_plans WHERE plan_id = :pid');
+            $del->execute(['pid' => $planId]);
+
+            if ($personalityIds) {
+                $ins = $pdo->prepare('INSERT INTO personality_plans (personality_id, plan_id) VALUES (:personality_id, :plan_id)');
+                foreach ($personalityIds as $personalityId) {
+                    $ins->execute([
+                        'personality_id' => (int)$personalityId,
+                        'plan_id' => (int)$planId,
+                    ]);
+                }
+            }
+
+            $pdo->commit();
+        } catch (\Throwable $e) {
+            $pdo->rollBack();
+            throw $e;
+        }
+    }
+
     public static function getPlanIds(int $personalityId): array
     {
         if (!self::tableExists('personality_plans')) {

@@ -387,6 +387,141 @@
           text: 'Aqui você ajusta seu nome, como o Tuquinha deve te chamar e define memórias e regras globais.'
         }
       ]
+    },
+
+    '/caderno': {
+      id: 'caderno_v1',
+      title: 'Tour: Caderno',
+      steps: [
+        {
+          selector: '.notion-shell',
+          title: 'Seu Caderno (estilo Notion)',
+          text: 'Aqui você cria páginas para organizar ideias, briefs e conteúdos. Tudo fica salvo e acessível pelo menu lateral.'
+        },
+        {
+          selector: '#btn-new-page',
+          title: 'Criar uma nova página',
+          text: 'Clique em “+ Nova” para criar uma página e começar a escrever.'
+        },
+        {
+          selector: '#page-title',
+          title: 'Título da página',
+          text: 'Edite aqui o título da sua página. Você pode mudar quando quiser.'
+        },
+        {
+          selector: '.notion-editor-wrap',
+          title: 'Editor',
+          text: 'Digite "/" para inserir blocos (texto, títulos, listas, checklists etc.).'
+        }
+      ]
+    },
+
+    '/kanban': {
+      id: 'kanban_v1',
+      title: 'Tour: Kanban',
+      steps: [
+        {
+          selector: '#kb-new-board',
+          title: 'Criar um quadro',
+          text: 'Use “+ Quadro” para criar seu Kanban (estilo Trello) e organizar tarefas por listas.'
+        },
+        {
+          selector: '#kb-add-list-section',
+          title: 'Adicionar listas',
+          text: 'Crie listas como “A fazer”, “Fazendo” e “Concluído”. Depois é só adicionar cartões em cada lista.'
+        },
+        {
+          selector: '.kb-board',
+          title: 'Arrastar e soltar',
+          text: 'Você pode arrastar listas e cartões para reorganizar (drag & drop).'
+        },
+        {
+          selector: '.kb-card[data-card-id]',
+          title: 'Editar um cartão',
+          text: 'Clique em um cartão para abrir e editar. Na edição você verá capa, checklist e anexos.'
+        }
+      ]
+    },
+
+    '/noticias': {
+      id: 'noticias_v1',
+      title: 'Tour: Notícias',
+      steps: [
+        {
+          selector: '#news-title',
+          title: 'Discover (Notícias)',
+          text: 'Aqui você vê notícias de marketing/branding no Brasil, atualizadas automaticamente.'
+        },
+        {
+          selector: '#news-email-form',
+          title: 'Notificar por e-mail',
+          text: 'Ative/desative as notificações para receber updates por e-mail quando tiver novidades.'
+        },
+        {
+          selector: '#news-hero',
+          title: 'Destaque do dia',
+          text: 'Este é o conteúdo principal. Clique para abrir a matéria completa.'
+        },
+        {
+          selector: '#news-grid',
+          title: 'Mais notícias',
+          text: 'Aqui ficam outras matérias. Clique em qualquer card para ler.'
+        }
+      ]
+    },
+
+    '/perfil': {
+      id: 'perfil_social_v1',
+      title: 'Tour: Perfil social',
+      steps: [
+        {
+          selector: '#socialProfileLayout',
+          title: 'Seu perfil social',
+          text: 'Aqui é seu perfil dentro da rede social do Tuquinha: portfólio, scraps, amigos e informações.'
+        },
+        {
+          selector: '#copyProfileLinkBtn',
+          title: 'Compartilhar seu perfil',
+          text: 'Clique aqui para copiar o link do seu perfil e enviar para alguém.'
+        },
+        {
+          selector: '#openSocialProfileEditBtn',
+          title: 'Editar seu perfil',
+          text: 'Aqui você edita seu perfil (bio, nickname, foto e preferências sociais).'
+        },
+        {
+          selector: 'a[href^="/perfil/portfolio"]',
+          title: 'Portfólio',
+          text: 'Use o portfólio para publicar seus trabalhos e ter uma vitrine estilo Behance.'
+        }
+      ]
+    },
+
+    '/comunidade': {
+      id: 'comunidade_v1',
+      title: 'Tour: Comunidade',
+      steps: [
+        {
+          selector: 'h1',
+          title: 'Comunidade do Tuquinha',
+          text: 'Aqui você troca ideias, dúvidas e processos com outros alunos — tudo num feed só.'
+        },
+        {
+          selector: 'nav',
+          title: 'Navegação',
+          text: 'Use as abas para ver seu perfil, mural (scraps), menções, amigos e comunidades.'
+        },
+        {
+          selector: 'form[action="/comunidade/postar"]',
+          title: 'Publicar um scrap',
+          text: 'Escreva um recado, adicione imagem/arquivo e publique para a comunidade.'
+        },
+        {
+          selector: '#post-1, [id^="post-"]',
+          title: 'Feed de posts',
+          text: 'Aqui ficam os posts da comunidade. Você pode curtir, comentar e interagir.'
+        }
+      ]
     }
   };
 

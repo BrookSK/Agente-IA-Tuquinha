@@ -4,6 +4,7 @@ namespace App\Controllers;
 
 use App\Core\Controller;
 use App\Models\Plan;
+use App\Models\Personality;
 
 class AdminPlanController extends Controller
 {
@@ -55,9 +56,26 @@ class AdminPlanController extends Controller
             $plan = Plan::findById($id);
         }
 
+        $allPersonalities = [];
+        $selectedPersonalityIds = [];
+        try {
+            $allPersonalities = Personality::allActive();
+        } catch (\Throwable $e) {
+            $allPersonalities = [];
+        }
+        if ($plan && !empty($plan['id'])) {
+            try {
+                $selectedPersonalityIds = Personality::getPersonalityIdsForPlan((int)$plan['id']);
+            } catch (\Throwable $e) {
+                $selectedPersonalityIds = [];
+            }
+        }
+
         $this->view('admin/planos/form', [
             'pageTitle' => $plan ? 'Editar plano' : 'Novo plano',
             'plan' => $plan,
+            'allPersonalities' => $allPersonalities,
+            'selectedPersonalityIds' => $selectedPersonalityIds,
         ]);
     }
 
@@ -91,6 +109,10 @@ class AdminPlanController extends Controller
         $isDefaultForUsers = !empty($_POST['is_default_for_users']) ? 1 : 0;
         $allowedModels = isset($_POST['allowed_models']) && is_array($_POST['allowed_models'])
             ? array_values(array_filter(array_map('trim', $_POST['allowed_models'])))
+            : [];
+
+        $allowedPersonalities = isset($_POST['allowed_personalities']) && is_array($_POST['allowed_personalities'])
+            ? array_values(array_filter(array_map('intval', $_POST['allowed_personalities'])))
             : [];
 
         $nanoAllowedModels = [
@@ -233,8 +255,18 @@ class AdminPlanController extends Controller
 
         if ($id > 0) {
             Plan::updateById($id, $data);
+            try {
+                Personality::setPersonalityIdsForPlan($id, $allowedPersonalities);
+            } catch (\Throwable $e) {
+                // Se falhar, mantém o plano salvo mesmo assim.
+            }
         } else {
-            Plan::create($data);
+            $newId = Plan::create($data);
+            try {
+                Personality::setPersonalityIdsForPlan($newId, $allowedPersonalities);
+            } catch (\Throwable $e) {
+                // Se falhar, mantém o plano salvo mesmo assim.
+            }
         }
 
         header('Location: /admin/planos');

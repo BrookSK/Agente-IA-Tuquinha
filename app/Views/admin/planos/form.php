@@ -237,6 +237,59 @@ if ($slugForCycle !== '') {
             <div style="font-size:11px; color:#777; margin-top:3px;">Se vazio, usa o valor padrão configurado em Configurações do sistema.</div>
         </div>
 
+        <div style="margin-top:10px;">
+            <label style="font-size:13px; color:var(--text-primary); display:block; margin-bottom:6px;">Personalidades liberadas neste plano</label>
+            <?php
+                /** @var array $allPersonalities */
+                /** @var array $selectedPersonalityIds */
+                $allPersonalities = isset($allPersonalities) && is_array($allPersonalities) ? $allPersonalities : [];
+                $selectedPersonalityIds = isset($selectedPersonalityIds) && is_array($selectedPersonalityIds) ? $selectedPersonalityIds : [];
+                $selectedLookup = [];
+                foreach ($selectedPersonalityIds as $spid) {
+                    $sid = (int)$spid;
+                    if ($sid > 0) {
+                        $selectedLookup[$sid] = true;
+                    }
+                }
+            ?>
+            <?php if (empty($allPersonalities)): ?>
+                <div style="font-size:12px; color:#777;">Nenhuma personalidade ativa encontrada.</div>
+            <?php else: ?>
+                <div style="display:flex; flex-wrap:wrap; gap:8px; padding:10px; border-radius:12px; border:1px solid var(--border-subtle); background:var(--surface-subtle);">
+                    <?php foreach ($allPersonalities as $p): ?>
+                        <?php
+                            $pid = (int)($p['id'] ?? 0);
+                            if ($pid <= 0) {
+                                continue;
+                            }
+                            $pname = trim((string)($p['name'] ?? ''));
+                            $parea = trim((string)($p['area'] ?? ''));
+                            $isDefault = !empty($p['is_default']);
+                            $isComingSoon = !empty($p['coming_soon']);
+                            $label = $pname !== '' ? $pname : ('Personalidade #' . $pid);
+                            if ($parea !== '') {
+                                $label .= ' · ' . $parea;
+                            }
+                            if ($isDefault) {
+                                $label .= ' (Principal)';
+                            }
+                            if ($isComingSoon) {
+                                $label .= ' (Em breve)';
+                            }
+                            $checked = !empty($selectedLookup[$pid]);
+                        ?>
+                        <label style="display:inline-flex; align-items:center; gap:6px; padding:6px 10px; border-radius:999px; border:1px solid var(--border-subtle); background:var(--surface-card); font-size:12px; color:var(--text-primary);">
+                            <input type="checkbox" name="allowed_personalities[]" value="<?= (int)$pid ?>" <?= $checked ? 'checked' : '' ?> style="transform: translateY(1px);">
+                            <span><?= htmlspecialchars($label) ?></span>
+                        </label>
+                    <?php endforeach; ?>
+                </div>
+                <div style="font-size:11px; color:#777; margin-top:6px;">
+                    Dica: se você não marcar nada aqui, o sistema mantém o comportamento antigo (não restringe por plano).
+                </div>
+            <?php endif; ?>
+        </div>
+
         <div style="display:flex; flex-wrap:wrap; gap:10px; font-size:13px; color:var(--text-secondary); margin-top:8px;">
             <label style="display:flex; align-items:center; gap:5px;">
                 <input type="checkbox" name="allow_audio" value="1" <?= !empty($plan['allow_audio']) ? 'checked' : '' ?>>

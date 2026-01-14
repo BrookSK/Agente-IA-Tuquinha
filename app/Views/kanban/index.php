@@ -916,16 +916,6 @@ $currentBoardTitle = $currentBoard ? (string)($currentBoard['title'] ?? 'Sem tí
                     <select class="kb-select" id="kb-move-list"></select>
                 </div>
 
-                <div style="display:flex; flex-direction:column; gap:8px;">
-                    <input class="kb-input" id="kb-modal-input" placeholder="Título" />
-                    <textarea class="kb-input" id="kb-modal-textarea" placeholder="Descrição" style="min-height:110px; resize:vertical;"></textarea>
-                </div>
-
-                <div style="display:flex; flex-direction:column; gap:6px;">
-                    <div class="kb-modal-field-label">Data de entrega</div>
-                    <input type="date" class="kb-input" id="kb-modal-due-date" />
-                </div>
-
                 <div class="kb-cover-box" id="kb-cover-section" style="display:none;">
                     <div style="display:flex; align-items:center; justify-content:space-between; gap:8px;">
                         <div class="kb-attachments-title">Capa do cartão</div>
@@ -939,6 +929,16 @@ $currentBoardTitle = $currentBoard ? (string)($currentBoard['title'] ?? 'Sem tí
                         <button type="button" class="kb-btn kb-btn--primary" id="kb-cover-upload">Enviar capa</button>
                     </div>
                     <div style="color:var(--text-secondary); font-size:12px; padding:8px 2px;">Apenas 1 capa por cartão. Para trocar, remova e envie outra.</div>
+                </div>
+
+                <div style="display:flex; flex-direction:column; gap:8px;">
+                    <input class="kb-input" id="kb-modal-input" placeholder="Título" />
+                    <textarea class="kb-input" id="kb-modal-textarea" placeholder="Descrição" style="min-height:110px; resize:vertical;"></textarea>
+                </div>
+
+                <div id="kb-due-row" style="display:flex; flex-direction:column; gap:6px;">
+                    <div class="kb-modal-field-label">Data de entrega</div>
+                    <input type="date" class="kb-input" id="kb-modal-due-date" />
                 </div>
 
                 <div class="kb-attachments" id="kb-checklist" style="display:none;">
@@ -962,7 +962,7 @@ $currentBoardTitle = $currentBoard ? (string)($currentBoard['title'] ?? 'Sem tí
                 </div>
             </div>
 
-            <div class="kb-modal-right">
+            <div class="kb-modal-right" id="kb-modal-right">
                 <div class="kb-modal-side-title">Ações</div>
                 <button type="button" class="kb-btn kb-qa-btn" id="kb-qa-checklist">☑ Checklist</button>
                 <button type="button" class="kb-btn kb-qa-btn" id="kb-qa-attachments">📎 Anexos</button>
@@ -1212,6 +1212,19 @@ $currentBoardTitle = $currentBoard ? (string)($currentBoard['title'] ?? 'Sem tí
         var dd = $('kb-modal-due-date');
         if (dd) dd.value = opts.dueDate || '';
         $('kb-modal-textarea').style.display = opts.showDesc ? 'block' : 'none';
+
+        var isEditCard = (opts.mode === 'edit-card' && opts.cardId);
+
+        var right = $('kb-modal-right');
+        if (right) {
+            right.style.display = isEditCard ? 'flex' : 'none';
+        }
+
+        var dueRow = $('kb-due-row');
+        if (dueRow) {
+            dueRow.style.display = isEditCard ? 'flex' : 'none';
+        }
+
         var del = $('kb-modal-delete');
         if (del) del.style.display = opts.showDelete ? 'inline-flex' : 'none';
         var mr = $('kb-move-row');
@@ -1220,6 +1233,15 @@ $currentBoardTitle = $currentBoard ? (string)($currentBoard['title'] ?? 'Sem tí
         var coverSection = $('kb-cover-section');
         if (coverSection) {
             coverSection.style.display = (opts.mode === 'edit-card' && opts.cardId) ? 'block' : 'none';
+        }
+
+        var chk = $('kb-checklist');
+        if (chk) {
+            chk.style.display = isEditCard ? (chk.style.display || 'none') : 'none';
+        }
+        var att = $('kb-attachments');
+        if (att) {
+            att.style.display = isEditCard ? (att.style.display || 'none') : 'none';
         }
 
         modal.dataset.mode = opts.mode || '';
@@ -1907,6 +1929,7 @@ $currentBoardTitle = $currentBoard ? (string)($currentBoard['title'] ?? 'Sem tí
                 dueDate: '',
                 showDesc: true,
                 showDelete: false,
+                mode: 'new-card',
                 onSave: function (title, desc) {
                     var dd = $('kb-modal-due-date');
                     var due = dd ? (dd.value || '') : '';

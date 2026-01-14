@@ -507,8 +507,20 @@
                         <?php if (!empty($planAllowsPersonalities) && !empty($personalities) && is_array($personalities)): ?>
                             <?php
                                 $defaultPersonaId = !empty($_SESSION['default_persona_id']) ? (int)$_SESSION['default_persona_id'] : 0;
+                                $initialPersonaId = 0;
+                                if ($defaultPersonaId > 0) {
+                                    foreach ($personalities as $ppx) {
+                                        if ((int)($ppx['id'] ?? 0) === $defaultPersonaId) {
+                                            $initialPersonaId = $defaultPersonaId;
+                                            break;
+                                        }
+                                    }
+                                }
+                                if ($initialPersonaId <= 0 && !empty($personalities[0]) && is_array($personalities[0])) {
+                                    $initialPersonaId = (int)($personalities[0]['id'] ?? 0);
+                                }
                             ?>
-                            <input type="hidden" name="persona_id" id="projectComposerPersonaId" value="<?= $defaultPersonaId > 0 ? (int)$defaultPersonaId : '' ?>">
+                            <input type="hidden" name="persona_id" id="projectComposerPersonaId" value="<?= $initialPersonaId > 0 ? (int)$initialPersonaId : '' ?>">
                             <div style="margin-bottom:10px;">
                                 <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:8px;">
                                     <div style="font-size:12px; color:var(--text-secondary); white-space:nowrap;">Tuquinha</div>
@@ -524,7 +536,7 @@
                                             $parea = trim((string)($p['area'] ?? ''));
                                             $pimg = trim((string)($p['image_path'] ?? ''));
                                             if ($pid <= 0 || $pname === '') { continue; }
-                                            $selected = $defaultPersonaId > 0 && $pid === $defaultPersonaId;
+                                            $selected = $initialPersonaId > 0 && $pid === $initialPersonaId;
                                         ?>
                                         <button type="button" class="projectPersonaCard" data-persona-id="<?= $pid ?>" aria-pressed="<?= $selected ? 'true' : 'false' ?>" style="
                                             flex:0 0 220px;
