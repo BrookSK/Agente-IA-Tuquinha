@@ -199,6 +199,19 @@
             var activeText = isLight ? '#ffffff' : '#050509';
             var inactiveText = isLight ? 'rgba(15, 23, 42, 0.70)' : 'rgba(255,255,255,0.70)';
 
+            var cards = Array.prototype.slice.call(document.querySelectorAll('[data-plan-cycle]'));
+            // Guarda o display original (inline) para não perder display:flex ao alternar abas.
+            cards.forEach(function (c) {
+                if (!c.getAttribute('data-original-display')) {
+                    var inlineDisplay = '';
+                    try { inlineDisplay = (c.style && typeof c.style.display === 'string') ? c.style.display : ''; } catch (e) { inlineDisplay = ''; }
+                    if (!inlineDisplay) {
+                        try { inlineDisplay = window.getComputedStyle ? String(window.getComputedStyle(c).display || '') : ''; } catch (e) { inlineDisplay = ''; }
+                    }
+                    c.setAttribute('data-original-display', inlineDisplay || 'flex');
+                }
+            });
+
             function setActive(cycle) {
                 buttons.forEach(function (b) {
                     var isActive = (String(b.getAttribute('data-cycle')) === String(cycle));
@@ -209,11 +222,14 @@
                     b.style.color = isActive ? activeText : inactiveText;
                 });
 
-                var cards = Array.prototype.slice.call(document.querySelectorAll('[data-plan-cycle]'));
                 cards.forEach(function (c) {
                     var cardCycle = String(c.getAttribute('data-plan-cycle') || 'mensal');
                     var show = (cycle === 'todos') || (cardCycle === cycle) || (cardCycle === 'free');
-                    c.style.display = show ? '' : 'none';
+                    if (show) {
+                        c.style.display = String(c.getAttribute('data-original-display') || 'flex');
+                    } else {
+                        c.style.display = 'none';
+                    }
                 });
             }
 

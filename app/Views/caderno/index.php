@@ -3,6 +3,7 @@
 /** @var array $pages */
 /** @var array|null $current */
 /** @var array $shares */
+/** @var array $breadcrumb */
 
 $currentId = $current ? (int)($current['id'] ?? 0) : 0;
 $currentTitle = $current ? (string)($current['title'] ?? 'Sem título') : 'Sem título';
@@ -14,6 +15,7 @@ $isOwner = $current && (int)($current['owner_user_id'] ?? 0) === (int)($user['id
 $isPublished = $current && !empty($current['is_published']);
 $publicToken = $current ? (string)($current['public_token'] ?? '') : '';
 $publicUrl = ($isPublished && $publicToken !== '') ? ('/caderno/publico?token=' . urlencode($publicToken)) : '';
+$breadcrumb = isset($breadcrumb) && is_array($breadcrumb) ? $breadcrumb : [];
 ?>
 
 <style>
@@ -924,7 +926,57 @@ $publicUrl = ($isPublished && $publicToken !== '') ? ('/caderno/publico?token=' 
     <div class="notion-sidebar">
         <div class="notion-sidebar-head">
             <div class="notion-sidebar-title">Caderno</div>
-            <button type="button" id="btn-new-page" style="border:none; border-radius:10px; padding:6px 10px; background:linear-gradient(135deg,#e53935,#ff6f60); color:#050509; font-weight:700; font-size:12px; cursor:pointer;">+ Nova</button>
+            <div style="position:relative;">
+                <button type="button" id="btn-new-page" style="border:none; border-radius:10px; padding:6px 10px; background:linear-gradient(135deg,#e53935,#ff6f60); color:#050509; font-weight:700; font-size:12px; cursor:pointer;">+ Nova</button>
+                <div id="new-page-menu" style="
+                    position:absolute;
+                    right:0;
+                    top:42px;
+                    width:220px;
+                    border-radius:12px;
+                    border:1px solid var(--border-subtle);
+                    background:var(--surface-card);
+                    box-shadow: var(--shadow-card-strong);
+                    padding:6px;
+                    display:none;
+                    z-index: 20;
+                ">
+                    <button type="button" class="new-page-menu-item" data-new-kind="page" style="
+                        width:100%;
+                        display:flex;
+                        align-items:center;
+                        justify-content:space-between;
+                        gap:10px;
+                        border:none;
+                        background:transparent;
+                        color:var(--text-primary);
+                        padding:10px 10px;
+                        border-radius:10px;
+                        cursor:pointer;
+                        font-size:13px;
+                    ">
+                        <span style="display:flex; align-items:center; gap:8px;"><span style="width:18px; text-align:center;">📄</span><span>Página</span></span>
+                    </button>
+                    <button type="button" class="new-page-menu-item" data-new-kind="subpage" <?= $currentId > 0 ? '' : 'disabled' ?> style="
+                        width:100%;
+                        display:flex;
+                        align-items:center;
+                        justify-content:space-between;
+                        gap:10px;
+                        border:none;
+                        background:transparent;
+                        color:var(--text-primary);
+                        padding:10px 10px;
+                        border-radius:10px;
+                        cursor:pointer;
+                        font-size:13px;
+                        opacity: <?= $currentId > 0 ? '1' : '0.45' ?>;
+                    ">
+                        <span style="display:flex; align-items:center; gap:8px;"><span style="width:18px; text-align:center;">↳</span><span>Subpágina</span></span>
+                        <small style="color:var(--text-secondary); font-size:11px;">desta página</small>
+                    </button>
+                </div>
+            </div>
         </div>
         <div style="padding:8px; display:flex; flex-direction:column; gap:6px;">
             <?php if (empty($pages)): ?>
@@ -936,10 +988,15 @@ $publicUrl = ($isPublished && $publicToken !== '') ? ('/caderno/publico?token=' 
                         $active = $pid === $currentId;
                         $ptitle = (string)($p['title'] ?? 'Sem título');
                         $picon = trim((string)($p['icon'] ?? ''));
+                        $depth = (int)($p['_depth'] ?? 0);
+                        if ($depth < 0) { $depth = 0; }
+                        if ($depth > 8) { $depth = 8; }
+                        $padLeft = 10 + ($depth * 14);
                     ?>
                     <a href="/caderno?id=<?= $pid ?>" style="
                         display:flex; align-items:center; gap:8px;
                         padding:8px 10px; border-radius:10px;
+                        padding-left: <?= (int)$padLeft ?>px;
                         text-decoration:none;
                         background:<?= $active ? 'rgba(229,57,53,0.14)' : 'transparent' ?>;
                         border:1px solid <?= $active ? 'rgba(229,57,53,0.25)' : 'transparent' ?>;
@@ -956,20 +1013,29 @@ $publicUrl = ($isPublished && $publicToken !== '') ? ('/caderno/publico?token=' 
     <div class="notion-page">
         <div class="notion-page-header">
             <div class="notion-title-wrap">
-                <div class="notion-emoji">
-                    <input type="text" id="page-icon" value="<?= htmlspecialchars($currentIcon) ?>" placeholder="📄" style="
-                        width:100%; height:100%; border:none; outline:none;
-                        background:transparent; color:var(--text-primary); font-size:18px; text-align:center;">
-                </div>
-                <div style="min-width:0; flex:1;">
-                    <input type="text" id="page-title" value="<?= htmlspecialchars($currentTitle) ?>" placeholder="Sem título" class="notion-title">
-                    <div style="font-size:12px; color:var(--text-secondary);">
-                        <?php if (!$current): ?>
-                            Clique em <b>+ Nova</b> para criar sua primeira página.
-                        <?php else: ?>
-                            <?= $canEdit ? 'Você pode editar.' : 'Somente leitura.' ?> Digite <b>/</b> para inserir blocos.
-                        <?php endif; ?>
+                <?php if ($current): ?>
+                    <div class="notion-emoji">
+                        <input type="text" id="page-icon" value="<?= htmlspecialchars($currentIcon) ?>" placeholder="📄" style="
+                            width:100%; height:100%; border:none; outline:none;
+                            background:transparent; color:var(--text-primary); font-size:18px; text-align:center;">
                     </div>
+                <?php endif; ?>
+                <div style="min-width:0; flex:1;">
+                    <?php if (!empty($breadcrumb) && $current): ?>
+                        <div style="font-size:11px; color:var(--text-secondary); margin-bottom:6px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                            <a href="/caderno" style="color:var(--text-secondary); text-decoration:none;">Caderno</a>
+                            <?php foreach ($breadcrumb as $b): ?>
+                                <?php $bid = (int)($b['id'] ?? 0); $btitle = (string)($b['title'] ?? ''); ?>
+                                <?php if ($bid > 0 && $btitle !== '' && $bid !== (int)$currentId): ?>
+                                    <span style="opacity:0.8;"> / </span>
+                                    <a href="/caderno?id=<?= (int)$bid ?>" style="color:var(--text-secondary); text-decoration:none;"><?= htmlspecialchars($btitle) ?></a>
+                                <?php endif; ?>
+                            <?php endforeach; ?>
+                        </div>
+                    <?php endif; ?>
+                    <?php if ($current): ?>
+                        <input type="text" id="page-title" value="<?= htmlspecialchars($currentTitle) ?>" placeholder="Sem título" class="notion-title">
+                    <?php endif; ?>
                 </div>
             </div>
             <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap; justify-content:flex-end;">
@@ -1089,14 +1155,9 @@ $publicUrl = ($isPublished && $publicToken !== '') ? ('/caderno/publico?token=' 
 
         <div class="notion-page-body">
             <div class="notion-editor-wrap">
-                <?php if (!$current): ?>
-                    <div style="padding: 18px; border: 1px dashed var(--border-subtle); border-radius: 12px; color: var(--text-secondary);">
-                        Crie uma página e comece a digitar. Dica: use <b>/</b> para inserir blocos.
-                    </div>
-                <?php else: ?>
+                <?php if ($current): ?>
                     <div id="editorjs" style="background:transparent;"></div>
                 <?php endif; ?>
-                <div id="editor-hint" class="notion-editor-hint"></div>
             </div>
         </div>
     </div>
@@ -2242,11 +2303,42 @@ $publicUrl = ($isPublished && $publicToken !== '') ? ('/caderno/publico?token=' 
     }
 
     var btnNew = $('btn-new-page');
+    var newMenu = $('new-page-menu');
     if (btnNew) {
         btnNew.addEventListener('click', function () {
-            postForm('/caderno/criar', { title: 'Sem título' }).then(function (res) {
+            if (newMenu) {
+                newMenu.style.display = (newMenu.style.display === 'block') ? 'none' : 'block';
+            }
+        });
+    }
+
+    document.addEventListener('click', function (e) {
+        if (!newMenu || newMenu.style.display !== 'block') return;
+        var t = e && e.target ? e.target : null;
+        if (t && t.closest && (t.closest('#new-page-menu') || t.closest('#btn-new-page'))) return;
+        newMenu.style.display = 'none';
+    });
+
+    if (newMenu) {
+        newMenu.addEventListener('click', function (e) {
+            var t = e && e.target ? e.target : null;
+            if (t && t.nodeType === 3) t = t.parentElement;
+            var btn = t && t.closest ? t.closest('.new-page-menu-item') : null;
+            if (!btn) return;
+            if (btn.disabled) return;
+
+            var kind = String(btn.getAttribute('data-new-kind') || 'page');
+            var payload = { title: 'Sem título' };
+            if (kind === 'subpage') {
+                if (!pageId) return;
+                payload.parent_id = String(pageId);
+            }
+            newMenu.style.display = 'none';
+            postForm('/caderno/criar', payload).then(function (res) {
                 if (res.json && res.json.ok && res.json.id) {
                     window.location.href = '/caderno?id=' + encodeURIComponent(res.json.id);
+                } else {
+                    showActionError(res, 'Falha ao criar página.');
                 }
             });
         });

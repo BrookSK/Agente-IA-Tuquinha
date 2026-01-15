@@ -115,7 +115,13 @@ class CadernoController extends Controller
         $this->requireCadernoAccess($user);
 
         $uid = (int)$user['id'];
-        $pages = Page::listForUser($uid);
+        $pages = Page::listForUserTree($uid);
+
+        if (empty($pages)) {
+            $id = Page::create($uid, 'Sem título', null);
+            header('Location: /caderno?id=' . urlencode((string)$id));
+            exit;
+        }
 
         $pageId = isset($_GET['id']) ? (int)$_GET['id'] : 0;
         $current = null;
@@ -134,12 +140,18 @@ class CadernoController extends Controller
             $shares = PageShare::listForPage((int)$current['id']);
         }
 
+        $breadcrumb = [];
+        if ($current && !empty($current['id'])) {
+            $breadcrumb = Page::getBreadcrumb((int)$current['id']);
+        }
+
         $this->view('caderno/index', [
             'pageTitle' => 'Caderno - Tuquinha',
             'user' => $user,
             'pages' => $pages,
             'current' => $current,
             'shares' => $shares,
+            'breadcrumb' => $breadcrumb,
         ]);
     }
 
@@ -150,7 +162,18 @@ class CadernoController extends Controller
 
         $uid = (int)$user['id'];
         $title = trim((string)($_POST['title'] ?? 'Sem título'));
-        $id = Page::create($uid, $title);
+        $parentId = isset($_POST['parent_id']) ? (int)$_POST['parent_id'] : 0;
+        if ($parentId > 0) {
+            $parent = Page::findAccessibleById($parentId, $uid);
+            if (!$parent) {
+                $this->json(['ok' => false, 'error' => 'Sem acesso à página pai.'], 403);
+            }
+            if (!$this->canEditPage($parent, $uid)) {
+                $this->json(['ok' => false, 'error' => 'Sem permissão para criar subpágina aqui.'], 403);
+            }
+        }
+
+        $id = Page::create($uid, $title, $parentId > 0 ? $parentId : null);
         $this->json(['ok' => true, 'id' => $id]);
     }
 

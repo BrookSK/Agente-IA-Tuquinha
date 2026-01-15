@@ -7,6 +7,18 @@ use PDO;
 
 class Page
 {
+    private static function columnExists(string $column): bool
+    {
+        try {
+            $pdo = Database::getConnection();
+            $stmt = $pdo->query("SHOW COLUMNS FROM pages LIKE " . $pdo->quote($column));
+            $row = $stmt ? $stmt->fetch(PDO::FETCH_ASSOC) : false;
+            return (bool)$row;
+        } catch (\Throwable $e) {
+            return false;
+        }
+    }
+
     public static function listForUser(int $userId): array
     {
         $pdo = Database::getConnection();
@@ -24,6 +36,63 @@ class Page
         $stmt = $pdo->prepare($sql);
         $stmt->execute(['uid' => $userId]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+    }
+
+    public static function listForUserTree(int $userId): array
+    {
+        $rows = self::listForUser($userId);
+        if (!$rows) {
+            return [];
+        }
+
+        if (!self::columnExists('parent_id')) {
+            // Sem suporte a subpáginas ainda: retorna lista plana.
+            return $rows;
+        }
+
+        $byId = [];
+        foreach ($rows as $r) {
+            if (!is_array($r)) {
+                continue;
+            }
+            $id = (int)($r['id'] ?? 0);
+            if ($id <= 0) {
+                continue;
+            }
+            $r['_children'] = [];
+            $byId[$id] = $r;
+        }
+
+        $roots = [];
+        foreach ($byId as $id => $r) {
+            $pid = (int)($r['parent_id'] ?? 0);
+            if ($pid > 0 && isset($byId[$pid])) {
+                $byId[$pid]['_children'][] = $id;
+            } else {
+                $roots[] = $id;
+            }
+        }
+
+        $out = [];
+        $seen = [];
+        $walk = function ($id, $depth) use (&$walk, &$out, &$byId, &$seen) {
+            if (isset($seen[$id])) {
+                return;
+            }
+            $seen[$id] = true;
+            $node = $byId[$id];
+            $node['_depth'] = $depth;
+            $children = $node['_children'] ?? [];
+            unset($node['_children']);
+            $out[] = $node;
+            foreach ($children as $childId) {
+                $walk((int)$childId, $depth + 1);
+            }
+        };
+        foreach ($roots as $rid) {
+            $walk((int)$rid, 0);
+        }
+        return $out;
     }
 
     public static function findById(int $id): ?array
@@ -54,16 +123,59 @@ class Page
         return $row ?: null;
     }
 
-    public static function create(int $ownerUserId, string $title = 'Sem título'): int
+    public static function create(int $ownerUserId, string $title = 'Sem título', ?int $parentId = null): int
     {
         $pdo = Database::getConnection();
-        $stmt = $pdo->prepare('INSERT INTO pages (owner_user_id, title, content_json, is_published)
-            VALUES (:uid, :title, NULL, 0)');
-        $stmt->execute([
-            'uid' => $ownerUserId,
-            'title' => $title !== '' ? $title : 'Sem título',
-        ]);
+
+        $hasParent = self::columnExists('parent_id');
+        if ($hasParent) {
+            $stmt = $pdo->prepare('INSERT INTO pages (owner_user_id, parent_id, title, content_json, is_published)
+                VALUES (:uid, :parent_id, :title, NULL, 0)');
+            $stmt->execute([
+                'uid' => $ownerUserId,
+                'parent_id' => ($parentId !== null && $parentId > 0) ? $parentId : null,
+                'title' => $title !== '' ? $title : 'Sem título',
+            ]);
+        } else {
+            $stmt = $pdo->prepare('INSERT INTO pages (owner_user_id, title, content_json, is_published)
+                VALUES (:uid, :title, NULL, 0)');
+            $stmt->execute([
+                'uid' => $ownerUserId,
+                'title' => $title !== '' ? $title : 'Sem título',
+            ]);
+        }
         return (int)$pdo->lastInsertId();
+    }
+
+    public static function getBreadcrumb(int $pageId): array
+    {
+        $pageId = (int)$pageId;
+        if ($pageId <= 0) {
+            return [];
+        }
+
+        $first = self::findById($pageId);
+        if (!$first) {
+            return [];
+        }
+
+        if (!self::columnExists('parent_id')) {
+            return [$first];
+        }
+
+        $path = [];
+        $cur = $first;
+        $guard = 0;
+        while ($cur && $guard < 15) {
+            $path[] = $cur;
+            $pid = (int)($cur['parent_id'] ?? 0);
+            if ($pid <= 0) {
+                break;
+            }
+            $cur = self::findById($pid);
+            $guard++;
+        }
+        return array_reverse($path);
     }
 
     public static function updateContent(int $pageId, string $contentJson): void

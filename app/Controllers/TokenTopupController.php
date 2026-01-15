@@ -147,12 +147,29 @@ class TokenTopupController extends Controller
         }
 
         // Quantidade de tokens desejada pelo usuário (será arredondada para blocos de 1.000)
-        $rawTokens = isset($_POST['tokens']) ? (int)$_POST['tokens'] : 0;
-        if ($rawTokens <= 0) {
-            $rawTokens = 1000;
+        $amountFromPost = $_POST['amount_reais'] ?? null;
+        $amountDesired = null;
+        if (is_string($amountFromPost) && trim($amountFromPost) !== '') {
+            $normalized = str_replace(['.', ' '], ['', ''], trim($amountFromPost));
+            $normalized = str_replace(',', '.', $normalized);
+            $amountDesired = (float)$normalized;
+            if (!is_finite($amountDesired) || $amountDesired <= 0) {
+                $amountDesired = null;
+            }
         }
 
-        $blocks = (int)ceil($rawTokens / 1000);
+        $blocks = 0;
+        if ($amountDesired !== null) {
+            // Converte valor desejado em blocos de 1.000 tokens.
+            // Usa ceil para garantir que o valor final cubra o valor digitado.
+            $blocks = (int)ceil($amountDesired / $pricePer1k);
+        } else {
+            $rawTokens = isset($_POST['tokens']) ? (int)$_POST['tokens'] : 0;
+            if ($rawTokens <= 0) {
+                $rawTokens = 1000;
+            }
+            $blocks = (int)ceil($rawTokens / 1000);
+        }
 
         // garante mínimo em reais
         $minBlocks = (int)ceil($minAmountReais / $pricePer1k);

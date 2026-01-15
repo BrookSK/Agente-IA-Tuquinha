@@ -37,9 +37,14 @@
         $menuTiles = [];
 
         // Novo chat: sempre disponível (se não logado, cai no /login)
+        $newChatHref = $menuHref('/chat?new=1');
+        // Para assinantes pagos: abre o seletor de personalidades antes de criar o chat.
+        if ($isLogged && $hasPaidActiveSubscription) {
+            $newChatHref = $menuHref('/personalities');
+        }
         $menuTiles[] = [
             'label' => 'Novo chat',
-            'href' => $menuHref('/chat?new=1'),
+            'href' => $newChatHref,
             'hot' => true,
             'icon_html' => '<span style="font-size:18px; font-weight:900; line-height:1;">+</span>',
         ];

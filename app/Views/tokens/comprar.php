@@ -66,16 +66,49 @@
         <form action="/tokens/comprar" method="post" style="display:flex; flex-direction:column; gap:12px; margin-bottom:20px;" id="token-topup-form">
             <div>
                 <label style="font-size:13px; color:#ddd; display:block; margin-bottom:4px;">
-                    Quantos tokens extras você quer comprar agora?
+                    Quanto você quer investir em tokens agora?
                 </label>
-                <input type="number" name="tokens" id="tokens-input" min="1000" step="1000" value="1000" style="
-                    width: 220px; padding: 8px 10px; border-radius: 8px; border: 1px solid #272727;
-                    background: #050509; color: #f5f5f5; font-size: 13px;
-                ">
-                <div id="tokens-helper" style="font-size:11px; color:#777; margin-top:3px;">
-                    Você pode repetir compras sempre que precisar. O valor mínimo por compra é de <strong>R$ 25,00</strong>.
+                <div style="display:flex; gap:10px; align-items:flex-start; flex-wrap:wrap;">
+                    <div style="display:flex; flex-direction:column; gap:6px;">
+                        <div style="display:flex; align-items:center; gap:8px;">
+                            <div style="font-size:13px; color:#b0b0b0;">R$</div>
+                            <input
+                                type="text"
+                                inputmode="decimal"
+                                autocomplete="off"
+                                name="amount_reais"
+                                id="amount-input"
+                                placeholder="25,00"
+                                style="
+                                    width: 180px; padding: 10px 12px; border-radius: 10px; border: 1px solid #272727;
+                                    background: #050509; color: #f5f5f5; font-size: 16px; font-weight:650;
+                                "
+                            >
+                        </div>
+                        <div id="amount-helper" style="font-size:11px; color:#777;">
+                            Mínimo por compra: <strong>R$ 25,00</strong>. Cobrança em múltiplos de 1.000 tokens.
+                        </div>
+                    </div>
+
+                    <div style="
+                        flex:1;
+                        min-width: 220px;
+                        padding: 10px 12px;
+                        border-radius: 12px;
+                        border: 1px solid #272727;
+                        background: #0a0a10;
+                        color: #ddd;
+                    ">
+                        <div style="font-size:11px; color:#8d8d8d; margin-bottom:4px;">Você vai receber</div>
+                        <div id="tokens-preview" style="font-size:20px; font-weight:800; line-height:1.1;">— tokens</div>
+                        <div id="tokens-total" style="font-size:12px; color:#bdbdbd; margin-top:6px;"></div>
+                    </div>
                 </div>
-                <div id="tokens-total" style="font-size:12px; color:#e0e0e0; margin-top:4px;"></div>
+
+                <input type="hidden" name="tokens" id="tokens-hidden" value="0">
+                <div id="tokens-helper" style="font-size:11px; color:#777; margin-top:3px;">
+                    Dica: digite o valor que deseja pagar e veja ao lado quantos tokens serão liberados.
+                </div>
             </div>
 
             <div>
@@ -125,46 +158,89 @@
 </div>
 <script>
     (function() {
-        var input = document.getElementById('tokens-input');
+        var amountInput = document.getElementById('amount-input');
+        var tokensHidden = document.getElementById('tokens-hidden');
+        var tokensPreview = document.getElementById('tokens-preview');
         var totalEl = document.getElementById('tokens-total');
+        var form = document.getElementById('token-topup-form');
         <?php $priceJs = $pricePer1k > 0 ? $pricePer1k : 0; ?>
         var pricePer1k = <?= json_encode($priceJs) ?>;
         var MIN_AMOUNT_REAIS = 25.0;
 
-        if (!input || !totalEl || !pricePer1k) return;
+        if (!amountInput || !tokensHidden || !tokensPreview || !totalEl || !pricePer1k) return;
 
-        function updateTotal() {
-            var raw = parseInt(input.value || '0', 10);
-            if (isNaN(raw) || raw <= 0) {
-                raw = 1000;
-            }
-
-            var blocks = Math.ceil(raw / 1000);
-
-            // aplica mínimo em reais
-            var minBlocks = Math.ceil(MIN_AMOUNT_REAIS / pricePer1k);
-            if (blocks < minBlocks) {
-                blocks = minBlocks;
-            }
-
-            var tokens = blocks * 1000;
-            input.value = tokens;
-
-            var amount = (tokens / 1000) * pricePer1k;
-            var formatted = amount.toFixed(2).replace('.', ',');
-            totalEl.textContent = 'Valor final: R$ ' + formatted + ' para ' +
-                tokens.toLocaleString('pt-BR') + ' tokens.';
+        function parseBRL(str) {
+            var s = String(str || '').trim();
+            if (!s) return 0;
+            // remove R$ e espaços
+            s = s.replace(/R\$\s?/g, '').replace(/\s/g, '');
+            // remove separador de milhar e troca vírgula por ponto
+            s = s.replace(/\./g, '').replace(/,/g, '.');
+            var n = parseFloat(s);
+            return isNaN(n) ? 0 : n;
         }
 
-        input.addEventListener('change', updateTotal);
-        input.addEventListener('blur', updateTotal);
-        input.addEventListener('keyup', function(e) {
-            if (['ArrowUp', 'ArrowDown', 'Tab'].indexOf(e.key) === -1) {
-                clearTimeout(window.__tokensTimeout);
-                window.__tokensTimeout = setTimeout(updateTotal, 150);
+        function formatBRL(n) {
+            try {
+                return n.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            } catch (e) {
+                var fixed = (Math.round(n * 100) / 100).toFixed(2);
+                return fixed.replace('.', ',');
             }
+        }
+
+        function compute() {
+            var amountDesired = parseBRL(amountInput.value);
+            if (amountDesired <= 0) {
+                tokensHidden.value = '0';
+                tokensPreview.textContent = '— tokens';
+                totalEl.textContent = '';
+                return;
+            }
+
+            var minBlocks = Math.ceil(MIN_AMOUNT_REAIS / pricePer1k);
+            var blocks = Math.ceil(amountDesired / pricePer1k);
+            if (blocks < minBlocks) blocks = minBlocks;
+
+            var tokens = blocks * 1000;
+            var amountFinal = blocks * pricePer1k;
+
+            tokensHidden.value = String(tokens);
+            tokensPreview.textContent = tokens.toLocaleString('pt-BR') + ' tokens';
+            totalEl.textContent = 'Cobrança: R$ ' + formatBRL(amountFinal) + ' (' + blocks + 'x 1.000 tokens)';
+        }
+
+        function enforceMinOnBlur() {
+            var amountDesired = parseBRL(amountInput.value);
+            if (amountDesired <= 0) return;
+            if (amountDesired < MIN_AMOUNT_REAIS) {
+                amountDesired = MIN_AMOUNT_REAIS;
+            }
+            amountInput.value = formatBRL(amountDesired);
+        }
+
+        amountInput.addEventListener('input', function () {
+            // não força valor enquanto digita (evita “voltar pro mínimo”)
+            compute();
+        });
+        amountInput.addEventListener('blur', function () {
+            enforceMinOnBlur();
+            compute();
         });
 
-        updateTotal();
+        if (form) {
+            form.addEventListener('submit', function (e) {
+                compute();
+                var tokens = parseInt(tokensHidden.value || '0', 10);
+                if (!tokens || tokens <= 0) {
+                    e.preventDefault();
+                    amountInput.focus();
+                }
+            });
+        }
+
+        // default
+        amountInput.value = '25,00';
+        compute();
     })();
 </script>
