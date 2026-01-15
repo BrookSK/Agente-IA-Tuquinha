@@ -566,6 +566,13 @@
     this._boundReposition = null;
   }
 
+  function setStyleImportant(el, prop, value) {
+    try {
+      if (!el || !el.style || typeof el.style.setProperty !== 'function') return;
+      el.style.setProperty(prop, String(value), 'important');
+    } catch (e) {}
+  }
+
   TourRunner.prototype._ensureUi = function () {
     if (this.overlay) return;
 
@@ -598,6 +605,11 @@
     tooltip.style.color = '#f5f5f5';
     tooltip.style.fontFamily = 'system-ui, -apple-system, Segoe UI, sans-serif';
 
+    // Evita CSS global (tema claro) sobrescrever cores do tour
+    setStyleImportant(tooltip, 'background', 'rgba(17,17,24,0.98)');
+    setStyleImportant(tooltip, 'color', '#f5f5f5');
+    setStyleImportant(tooltip, 'border', '1px solid rgba(255,255,255,0.14)');
+
     var header = createEl('div', { 'data-tuquinha-tour': 'header' });
     header.style.display = 'flex';
     header.style.alignItems = 'baseline';
@@ -614,6 +626,8 @@
     counter.style.color = 'rgba(245,245,245,0.65)';
     counter.style.whiteSpace = 'nowrap';
 
+    setStyleImportant(counter, 'color', 'rgba(245,245,245,0.70)');
+
     header.appendChild(title);
     header.appendChild(counter);
 
@@ -622,6 +636,8 @@
     text.style.color = 'rgba(245,245,245,0.82)';
     text.style.lineHeight = '1.45';
     text.style.marginBottom = '10px';
+
+    setStyleImportant(text, 'color', 'rgba(245,245,245,0.86)');
 
     var actions = createEl('div', { 'data-tuquinha-tour': 'actions' });
     actions.style.display = 'flex';
@@ -647,14 +663,24 @@
       btn.style.cursor = 'pointer';
       btn.style.background = 'transparent';
       btn.style.color = '#f5f5f5';
+
+      setStyleImportant(btn, 'color', '#f5f5f5');
+      setStyleImportant(btn, 'background', 'transparent');
+      setStyleImportant(btn, 'border', '1px solid rgba(255,255,255,0.14)');
       if (variant === 'primary') {
         btn.style.border = 'none';
         btn.style.background = 'linear-gradient(135deg, #e53935, #ff6f60)';
         btn.style.color = '#050509';
         btn.style.fontWeight = '750';
+
+        setStyleImportant(btn, 'border', 'none');
+        setStyleImportant(btn, 'background', 'linear-gradient(135deg, #e53935, #ff6f60)');
+        setStyleImportant(btn, 'color', '#050509');
       }
       if (variant === 'danger') {
         btn.style.color = '#ffbaba';
+
+        setStyleImportant(btn, 'color', '#ffbaba');
       }
       return btn;
     }
@@ -701,7 +727,35 @@
   TourRunner.prototype._scrollIntoView = function (el) {
     try {
       if (!el) return;
+      // Primeiro centraliza, depois (no mobile) ajusta para o item não ficar atrás do tooltip fixo.
       el.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
+
+      var self = this;
+      setTimeout(function () {
+        try {
+          if (!self.active) return;
+          if (window.innerWidth > 520) return;
+          if (!self.tooltip) return;
+
+          var ttH = self.tooltip.offsetHeight || 0;
+          if (ttH <= 0) ttH = 180;
+
+          // espaço “seguro” acima do tooltip (tooltip fica bottom=12px)
+          var safeBottom = ttH + 24;
+          var r = el.getBoundingClientRect();
+
+          // Se o elemento estiver “debaixo” do tooltip, sobe a página
+          if (r.bottom > (window.innerHeight - safeBottom)) {
+            var deltaUp = r.bottom - (window.innerHeight - safeBottom);
+            window.scrollBy({ top: deltaUp + 16, left: 0, behavior: 'smooth' });
+          }
+
+          // Se o elemento estiver muito colado no topo, desce um pouco
+          if (r.top < 16) {
+            window.scrollBy({ top: r.top - 16, left: 0, behavior: 'smooth' });
+          }
+        } catch (e) {}
+      }, 260);
     } catch (e) {}
   };
 
