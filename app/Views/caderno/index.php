@@ -1179,10 +1179,11 @@ if (!empty($breadcrumb)) {
                     ?>
                     <?php if (!empty($subpages)): ?>
                         <div style="
+                            width:100%;
                             display:grid;
-                            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+                            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
                             gap: 10px;
-                            margin: 4px 0 14px 0;
+                            margin: 6px 0 16px 0;
                         ">
                             <?php foreach ($subpages as $sp): ?>
                                 <?php
@@ -1197,7 +1198,7 @@ if (!empty($breadcrumb)) {
                                     padding:12px 12px;
                                     border-radius:12px;
                                     border:1px solid var(--border-subtle);
-                                    background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01));
+                                    background: var(--surface-subtle);
                                     text-decoration:none;
                                     color:var(--text-primary);
                                     transition: transform 120ms ease, border-color 120ms ease;
@@ -1209,6 +1210,7 @@ if (!empty($breadcrumb)) {
                                         <div style="font-size:13px; font-weight:800; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"><?= htmlspecialchars($sptitle) ?></div>
                                         <div style="font-size:11px; color:var(--text-secondary);">Subpágina</div>
                                     </div>
+                                    <div style="font-size:12px; color:var(--text-secondary); opacity:0.9;">›</div>
                                 </a>
                             <?php endforeach; ?>
                         </div>
