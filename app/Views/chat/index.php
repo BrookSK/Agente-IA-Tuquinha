@@ -561,7 +561,7 @@ if (!empty($currentPlan) && is_array($currentPlan)) {
                 <button type="button" id="chat-persona-next" class="chat-persona-nav-btn" style="right:0;" aria-label="Próximo">›</button>
 
                 <div id="chat-persona-carousel" style="display:flex;">
-                    <form method="post" action="/chat/changePersona" style="margin:0; display:block;">
+                    <form method="post" action="/chat/persona" style="margin:0; display:block;">
                         <input type="hidden" name="conversation_id" value="<?= (int)$conversationId ?>">
                         <input type="hidden" name="persona_id" value="<?= (int)$defaultPersonaIdForFree ?>">
                         <button type="submit" class="chat-persona-card" style="cursor:pointer; display:block; text-align:left; padding:0;">
