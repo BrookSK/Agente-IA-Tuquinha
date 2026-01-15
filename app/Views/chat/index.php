@@ -409,10 +409,6 @@ if (!empty($currentPlan) && is_array($currentPlan)) {
     <?php endif; ?>
 
     <?php if (!empty($conversationId) && !empty($personaOptions) && is_array($personaOptions) && $isFreePlan): ?>
-        <?php
-            $defaultPersonaRow = \App\Models\Personality::findDefault();
-            $defaultPersonaIdForFree = $defaultPersonaRow ? (int)$defaultPersonaRow['id'] : 0;
-        ?>
         <style>
             .chat-persona-card {
                 width: 300px;
@@ -561,23 +557,19 @@ if (!empty($currentPlan) && is_array($currentPlan)) {
                 <button type="button" id="chat-persona-next" class="chat-persona-nav-btn" style="right:0;" aria-label="Próximo">›</button>
 
                 <div id="chat-persona-carousel" style="display:flex;">
-                    <form method="post" action="/chat/persona" style="margin:0; display:block;">
-                        <input type="hidden" name="conversation_id" value="<?= (int)$conversationId ?>">
-                        <input type="hidden" name="persona_id" value="<?= (int)$defaultPersonaIdForFree ?>">
-                        <button type="submit" class="chat-persona-card" style="cursor:pointer; display:block; text-align:left; padding:0;">
-                            <div class="chat-persona-card-image">
-                                <img src="/public/perso_padrao.png" alt="Padrão do Tuquinha" onerror="this.onerror=null;this.src='/public/favicon.png';" style="width:100%; height:100%; object-fit:cover; display:block;">
+                    <a href="/chat?c=<?= (int)$conversationId ?>" class="chat-persona-card" style="cursor:pointer; display:block; text-align:left; padding:0;">
+                        <div class="chat-persona-card-image">
+                            <img src="/public/perso_padrao.png" alt="Padrão do Tuquinha" onerror="this.onerror=null;this.src='/public/favicon.png';" style="width:100%; height:100%; object-fit:cover; display:block;">
+                        </div>
+                        <div style="padding:10px 12px 12px 12px;">
+                            <div style="display:flex; align-items:center; justify-content:space-between; gap:6px; margin-bottom:4px;">
+                                <div style="font-size:18px; font-weight:650; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">Padrão do Tuquinha</div>
                             </div>
-                            <div style="padding:10px 12px 12px 12px;">
-                                <div style="display:flex; align-items:center; justify-content:space-between; gap:6px; margin-bottom:4px;">
-                                    <div style="font-size:18px; font-weight:650; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">Padrão do Tuquinha</div>
-                                </div>
-                                <div class="chat-persona-card-desc">
-                                    <?= nl2br(htmlspecialchars((string)\App\Models\Setting::get('default_tuquinha_description', 'Deixa o sistema escolher a melhor personalidade global para você.'))) ?>
-                                </div>
+                            <div class="chat-persona-card-desc">
+                                <?= nl2br(htmlspecialchars((string)\App\Models\Setting::get('default_tuquinha_description', 'Deixa o sistema escolher a melhor personalidade global para você.'))) ?>
                             </div>
-                        </button>
-                    </form>
+                        </div>
+                    </a>
 
                     <?php
                         $hasMb = function_exists('mb_substr') && function_exists('mb_strlen');

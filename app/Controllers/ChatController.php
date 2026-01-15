@@ -108,7 +108,8 @@ class ChatController extends Controller
             }
 
             // Fallback: personalidade padrão global do Tuquinha
-            if ($personaIdForNew === null) {
+            // No plano Free, o "Padrão do Tuquinha" não é uma personalidade: deve ficar NULL e usar prompt padrão das configurações.
+            if ($personaIdForNew === null && $planAllowsPersonalities) {
                 $defaultPersona = Personality::findDefault();
                 if ($defaultPersona) {
                     $personaIdForNew = (int)$defaultPersona['id'];
