@@ -16,6 +16,14 @@ $isPublished = $current && !empty($current['is_published']);
 $publicToken = $current ? (string)($current['public_token'] ?? '') : '';
 $publicUrl = ($isPublished && $publicToken !== '') ? ('/caderno/publico?token=' . urlencode($publicToken)) : '';
 $breadcrumb = isset($breadcrumb) && is_array($breadcrumb) ? $breadcrumb : [];
+
+$activeRootId = 0;
+if (!empty($breadcrumb)) {
+    $firstCrumb = $breadcrumb[0] ?? null;
+    if (is_array($firstCrumb) && !empty($firstCrumb['id'])) {
+        $activeRootId = (int)$firstCrumb['id'];
+    }
+}
 ?>
 
 <style>
@@ -985,7 +993,9 @@ $breadcrumb = isset($breadcrumb) && is_array($breadcrumb) ? $breadcrumb : [];
                 <?php foreach ($pages as $p): ?>
                     <?php
                         $pid = (int)($p['id'] ?? 0);
-                        $active = $pid === $currentId;
+                        $pParentId = (int)($p['parent_id'] ?? 0);
+                        if ($pParentId > 0) { continue; }
+                        $active = ($pid === $currentId) || ($activeRootId > 0 && $pid === $activeRootId);
                         $ptitle = (string)($p['title'] ?? 'Sem título');
                         $picon = trim((string)($p['icon'] ?? ''));
                         $depth = (int)($p['_depth'] ?? 0);
@@ -1156,6 +1166,53 @@ $breadcrumb = isset($breadcrumb) && is_array($breadcrumb) ? $breadcrumb : [];
         <div class="notion-page-body">
             <div class="notion-editor-wrap">
                 <?php if ($current): ?>
+                    <?php
+                        $subpages = [];
+                        foreach ($pages as $sp) {
+                            if (!is_array($sp)) { continue; }
+                            $spid = (int)($sp['id'] ?? 0);
+                            $spParent = (int)($sp['parent_id'] ?? 0);
+                            if ($spid > 0 && $spParent > 0 && $spParent === (int)$currentId) {
+                                $subpages[] = $sp;
+                            }
+                        }
+                    ?>
+                    <?php if (!empty($subpages)): ?>
+                        <div style="
+                            display:grid;
+                            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+                            gap: 10px;
+                            margin: 4px 0 14px 0;
+                        ">
+                            <?php foreach ($subpages as $sp): ?>
+                                <?php
+                                    $spid = (int)($sp['id'] ?? 0);
+                                    $sptitle = (string)($sp['title'] ?? 'Sem título');
+                                    $spicon = trim((string)($sp['icon'] ?? ''));
+                                ?>
+                                <a href="/caderno?id=<?= (int)$spid ?>" style="
+                                    display:flex;
+                                    align-items:center;
+                                    gap:10px;
+                                    padding:12px 12px;
+                                    border-radius:12px;
+                                    border:1px solid var(--border-subtle);
+                                    background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01));
+                                    text-decoration:none;
+                                    color:var(--text-primary);
+                                    transition: transform 120ms ease, border-color 120ms ease;
+                                " onmouseover="this.style.transform='translateY(-1px)'; this.style.borderColor='rgba(229,57,53,0.35)';" onmouseout="this.style.transform=''; this.style.borderColor='var(--border-subtle)';">
+                                    <div style="width:34px; height:34px; border-radius:10px; display:flex; align-items:center; justify-content:center; background:rgba(229,57,53,0.10); border:1px solid rgba(229,57,53,0.20);">
+                                        <span style="font-size:16px;"><?= $spicon !== '' ? htmlspecialchars($spicon) : '📄' ?></span>
+                                    </div>
+                                    <div style="min-width:0; flex:1;">
+                                        <div style="font-size:13px; font-weight:800; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"><?= htmlspecialchars($sptitle) ?></div>
+                                        <div style="font-size:11px; color:var(--text-secondary);">Subpágina</div>
+                                    </div>
+                                </a>
+                            <?php endforeach; ?>
+                        </div>
+                    <?php endif; ?>
                     <div id="editorjs" style="background:transparent;"></div>
                 <?php endif; ?>
             </div>
