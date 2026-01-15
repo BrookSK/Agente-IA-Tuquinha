@@ -798,12 +798,35 @@
     var ttW = tt.offsetWidth || 320;
     var ttH = tt.offsetHeight || 140;
 
-    // Mobile: fixa tooltip embaixo, centralizado
+    // Mobile: por padrão fixa tooltip embaixo; se o elemento estiver no fim da página,
+    // posiciona o tooltip acima do elemento para não cobrir.
     if (window.innerWidth <= 520) {
       tt.style.left = '8px';
       tt.style.right = '8px';
-      tt.style.top = '';
-      tt.style.bottom = '12px';
+
+      // segurança: recalcula altura real do tooltip
+      ttH = tt.offsetHeight || ttH;
+      if (ttH <= 0) ttH = 180;
+
+      // área ocupada pelo tooltip quando fixo no rodapé
+      var safeBottom = ttH + 28;
+      var isCovered = (r.bottom > (window.innerHeight - safeBottom));
+
+      if (isCovered) {
+        // coloca acima do elemento
+        var topMobile = r.top - ttH - 12;
+        // se não couber acima, volta pro rodapé
+        if (topMobile < 8) {
+          tt.style.top = '';
+          tt.style.bottom = '12px';
+        } else {
+          tt.style.bottom = '';
+          tt.style.top = clamp(topMobile, 8, window.innerHeight - ttH - 8) + 'px';
+        }
+      } else {
+        tt.style.top = '';
+        tt.style.bottom = '12px';
+      }
       return;
     }
 
