@@ -1166,55 +1166,6 @@ if (!empty($breadcrumb)) {
         <div class="notion-page-body">
             <div class="notion-editor-wrap">
                 <?php if ($current): ?>
-                    <?php
-                        $subpages = [];
-                        foreach ($pages as $sp) {
-                            if (!is_array($sp)) { continue; }
-                            $spid = (int)($sp['id'] ?? 0);
-                            $spParent = (int)($sp['parent_id'] ?? 0);
-                            if ($spid > 0 && $spParent > 0 && $spParent === (int)$currentId) {
-                                $subpages[] = $sp;
-                            }
-                        }
-                    ?>
-                    <?php if (!empty($subpages)): ?>
-                        <div style="
-                            width:100%;
-                            display:grid;
-                            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-                            gap: 10px;
-                            margin: 6px 0 16px 0;
-                        ">
-                            <?php foreach ($subpages as $sp): ?>
-                                <?php
-                                    $spid = (int)($sp['id'] ?? 0);
-                                    $sptitle = (string)($sp['title'] ?? 'Sem título');
-                                    $spicon = trim((string)($sp['icon'] ?? ''));
-                                ?>
-                                <a href="/caderno?id=<?= (int)$spid ?>" style="
-                                    display:flex;
-                                    align-items:center;
-                                    gap:10px;
-                                    padding:12px 12px;
-                                    border-radius:12px;
-                                    border:1px solid var(--border-subtle);
-                                    background: var(--surface-subtle);
-                                    text-decoration:none;
-                                    color:var(--text-primary);
-                                    transition: transform 120ms ease, border-color 120ms ease;
-                                " onmouseover="this.style.transform='translateY(-1px)'; this.style.borderColor='rgba(229,57,53,0.35)';" onmouseout="this.style.transform=''; this.style.borderColor='var(--border-subtle)';">
-                                    <div style="width:34px; height:34px; border-radius:10px; display:flex; align-items:center; justify-content:center; background:rgba(229,57,53,0.10); border:1px solid rgba(229,57,53,0.20);">
-                                        <span style="font-size:16px;"><?= $spicon !== '' ? htmlspecialchars($spicon) : '📄' ?></span>
-                                    </div>
-                                    <div style="min-width:0; flex:1;">
-                                        <div style="font-size:13px; font-weight:800; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"><?= htmlspecialchars($sptitle) ?></div>
-                                        <div style="font-size:11px; color:var(--text-secondary);">Subpágina</div>
-                                    </div>
-                                    <div style="font-size:12px; color:var(--text-secondary); opacity:0.9;">›</div>
-                                </a>
-                            <?php endforeach; ?>
-                        </div>
-                    <?php endif; ?>
                     <div id="editorjs" style="background:transparent;"></div>
                 <?php endif; ?>
             </div>
@@ -1306,6 +1257,36 @@ if (!empty($breadcrumb)) {
     var initialJson = <?= json_encode($contentJson !== '' ? $contentJson : '') ?>;
 
     var $ = function (id) { return document.getElementById(id); };
+
+    document.addEventListener('dragstart', function (e) {
+        try {
+            var t = e && e.target ? e.target : null;
+            if (t && t.closest && (t.closest('.tuq-subpage-card') || t.closest('.tuq-subpage-inline'))) {
+                e.preventDefault();
+            }
+        } catch (err) {}
+    }, true);
+
+    document.addEventListener('drop', function (e) {
+        try {
+            var t = e && e.target ? e.target : null;
+            if (t && t.closest && (t.closest('.tuq-subpage-card') || t.closest('.tuq-subpage-inline'))) {
+                e.preventDefault();
+            }
+        } catch (err) {}
+    }, true);
+
+    document.addEventListener('click', function (e) {
+        try {
+            var t = e && e.target ? e.target : null;
+            var a = t && t.closest ? t.closest('a.tuq-subpage-inline') : null;
+            if (!a) return;
+            var href = a.getAttribute('href');
+            if (!href) return;
+            e.preventDefault();
+            window.location.href = href;
+        } catch (err) {}
+    }, true);
 
     (function () {
         var shell = document.querySelector('.notion-shell');
@@ -2269,13 +2250,59 @@ if (!empty($breadcrumb)) {
                 }
                 if (action === 'create-subpage') {
                     if (!pageId) return;
+                    var atIndex = undefined;
+                    try {
+                        var idx = resolveBlockIndex();
+                        if (typeof idx === 'number' && idx >= 0) atIndex = idx + 1;
+                    } catch (e0) {}
                     hideCtx();
+
                     postForm('/caderno/criar', { title: 'Sem título', parent_id: String(pageId) }).then(function (res) {
-                        if (res.json && res.json.ok && res.json.id) {
-                            window.location.href = '/caderno?id=' + encodeURIComponent(res.json.id);
-                        } else {
+                        if (!res.json || !res.json.ok || !res.json.id) {
                             showActionError(res, 'Falha ao criar subpágina.');
+                            return;
                         }
+
+                        var newId = String(res.json.id);
+                        var href = '/caderno?id=' + encodeURIComponent(newId);
+                        if (!editor || !canEdit) {
+                            window.location.href = href;
+                            return;
+                        }
+
+                        var html = '';
+                        html += '<a class="tuq-subpage-inline" href="' + href + '" draggable="false" style="';
+                        html += 'display:flex; align-items:center; gap:10px; width:100%;';
+                        html += 'padding:12px 12px; border-radius:12px; border:1px solid rgba(255,255,255,0.10);';
+                        html += 'background: rgba(255,255,255,0.02); color: inherit; text-decoration:none;';
+                        html += '">';
+                        html += '<span style="width:34px; height:34px; border-radius:10px; display:flex; align-items:center; justify-content:center; background:rgba(229,57,53,0.10); border:1px solid rgba(229,57,53,0.20);">📄</span>';
+                        html += '<span style="min-width:0; flex:1;">';
+                        html += '<span style="display:block; font-weight:800; font-size:13px;">Sem título</span>';
+                        html += '<span style="display:block; font-size:11px; color: rgba(255,255,255,0.55);">Subpágina</span>';
+                        html += '</span>';
+                        html += '<span style="font-size:12px; color: rgba(255,255,255,0.55);">›</span>';
+                        html += '</a>';
+
+                        try {
+                            editor.blocks.insert('paragraph', { text: html }, {}, atIndex, true);
+                        } catch (eIns) {
+                            window.location.href = href;
+                            return;
+                        }
+
+                        editor.save().then(function (data) {
+                            return postForm('/caderno/salvar', {
+                                page_id: String(pageId),
+                                content_json: JSON.stringify(data)
+                            });
+                        }).then(function (saveRes) {
+                            if (!saveRes || !saveRes.json || saveRes.json.ok !== true) {
+                                showActionError(saveRes, 'Falha ao salvar a página.');
+                                return;
+                            }
+                            window.location.href = href;
+                        });
                     });
                     return;
                 }
