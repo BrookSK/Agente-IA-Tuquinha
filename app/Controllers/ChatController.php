@@ -402,6 +402,13 @@ class ChatController extends Controller
         $convRow = null;
         if ($userId > 0) {
             $convRow = Conversation::findByIdForUser($conversationId, $userId);
+            if (!$convRow) {
+                $convRow = Conversation::findByIdAndSession($conversationId, $sessionId);
+                if ($convRow && empty($convRow['user_id'])) {
+                    Conversation::updateUserId((int)$convRow['id'], $userId);
+                    $convRow['user_id'] = $userId;
+                }
+            }
         } else {
             $convRow = Conversation::findByIdAndSession($conversationId, $sessionId);
         }
@@ -2122,6 +2129,13 @@ class ChatController extends Controller
         $convRow = null;
         if ($userId > 0) {
             $convRow = Conversation::findByIdForUser($conversationId, $userId);
+            if (!$convRow) {
+                $convRow = Conversation::findByIdAndSession($conversationId, $sessionId);
+                if ($convRow && empty($convRow['user_id'])) {
+                    Conversation::updateUserId((int)$convRow['id'], $userId);
+                    $convRow['user_id'] = $userId;
+                }
+            }
         } else {
             $convRow = Conversation::findByIdAndSession($conversationId, $sessionId);
         }
