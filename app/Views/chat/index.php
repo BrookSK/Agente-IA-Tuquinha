@@ -306,6 +306,34 @@ if (!empty($currentPlan) && is_array($currentPlan)) {
                 <div class="tuqChatTitleText" title="<?= htmlspecialchars($conversationTitleText) ?>">
                     <?= htmlspecialchars($conversationTitleText) ?>
                 </div>
+                <?php
+                    $personaBadgeText = 'Padrão do Tuquinha';
+                    if (!empty($currentPersona) && is_array($currentPersona)) {
+                        $pName = trim((string)($currentPersona['name'] ?? ''));
+                        $pArea = trim((string)($currentPersona['area'] ?? ''));
+                        if ($pName !== '') {
+                            $personaBadgeText = $pName;
+                            if ($pArea !== '') {
+                                $personaBadgeText .= ' • ' . $pArea;
+                            }
+                        }
+                    }
+                ?>
+                <div title="Personalidade do chat" style="
+                    border:1px solid var(--border-subtle);
+                    background:var(--surface-subtle);
+                    color:var(--text-secondary);
+                    padding:6px 10px;
+                    border-radius:999px;
+                    font-size:11px;
+                    line-height:1;
+                    max-width:260px;
+                    white-space:nowrap;
+                    overflow:hidden;
+                    text-overflow:ellipsis;
+                ">
+                    <?= htmlspecialchars($personaBadgeText) ?>
+                </div>
                 <?php if (!empty($_SESSION['user_id'])): ?>
                     <form method="post" action="/chat/favoritar" style="margin:0; display:inline;">
                         <input type="hidden" name="conversation_id" value="<?= (int)$conversationId ?>">
