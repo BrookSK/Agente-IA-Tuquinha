@@ -375,26 +375,30 @@
         <div style="text-align:center; font-size: 14px; font-weight: 800; margin-bottom: 8px;">Pronto para começar?</div>
         <div style="text-align:center; color: var(--text-secondary); font-size: 12px; margin-bottom: 14px;">O Tuquinha está esperando para te ajudar.</div>
 
+        <?php
+            $homeCtaHref = $menuHref('/chat?new=1');
+            if ($isLogged && $hasPaidActiveSubscription) {
+                $homeCtaHref = $menuHref('/personalidades');
+            }
+        ?>
         <div style="display:flex; justify-content:center;">
-            <form data-tour="home-cta-chat" action="/chat" method="get">
-                <input type="hidden" name="new" value="1">
-                <button type="submit" style="
-                    display: inline-flex;
-                    align-items: center;
-                    gap: 8px;
-                    padding: 10px 18px;
-                    border-radius: 999px;
-                    border: none;
-                    background: linear-gradient(135deg, #e53935, #ff6f60);
-                    color: #050509;
-                    font-weight: 650;
-                    font-size: 13px;
-                    cursor: pointer;
-                    box-shadow: 0 10px 26px rgba(229, 57, 53, 0.35);
-                ">
-                    <span>Começar um papo com o Tuquinha</span>
-                </button>
-            </form>
+            <a data-tour="home-cta-chat" href="<?= htmlspecialchars($homeCtaHref) ?>" style="
+                display: inline-flex;
+                align-items: center;
+                gap: 8px;
+                padding: 10px 18px;
+                border-radius: 999px;
+                border: none;
+                background: linear-gradient(135deg, #e53935, #ff6f60);
+                color: #050509;
+                font-weight: 650;
+                font-size: 13px;
+                cursor: pointer;
+                box-shadow: 0 10px 26px rgba(229, 57, 53, 0.35);
+                text-decoration: none;
+            ">
+                <span>Começar um papo com o Tuquinha</span>
+            </a>
         </div>
     </div>
 </div>
