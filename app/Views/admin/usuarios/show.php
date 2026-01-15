@@ -9,6 +9,7 @@
 <?php /** @var string|null $trialEndsAt */ ?>
 <?php /** @var string|null $paidStartsAt */ ?>
 <?php /** @var array|null $referral */ ?>
+<?php /** @var array $plans */ ?>
 
 <div style="max-width: 800px; margin: 0 auto;">
     <h1 style="font-size: 22px; margin-bottom: 16px;">Detalhes do usuário</h1>
@@ -122,6 +123,50 @@
         <div style="font-size:13px; color:#b0b0b0; white-space:pre-wrap; border-radius:8px; border:1px solid #272727; padding:8px 10px; background:#050509; min-height:40px;">
             <?= nl2br(htmlspecialchars($user['global_instructions'] ?? '')) ?: '<span style="color:#555;">(vazio)</span>' ?>
         </div>
+    </div>
+
+    <div style="margin-top:18px; padding:14px 16px; border-radius:12px; background:#111118; border:1px solid #272727;">
+        <h2 style="font-size:16px; margin-bottom:10px;">Plano (controle manual do admin)</h2>
+        <p style="font-size:12px; color:#b0b0b0; margin-bottom:10px;">
+            Aviso: esta ação <strong>não cria</strong> assinatura no Asaas. Ela apenas altera os acessos do usuário dentro do sistema.
+        </p>
+
+        <?php
+            $plansList = is_array($plans ?? null) ? $plans : [];
+            $currentPlanId = 0;
+            if (!empty($subscription) && !empty($plan) && is_array($plan) && (($subscription['status'] ?? '') === 'active')) {
+                $currentPlanId = (int)($plan['id'] ?? 0);
+            }
+        ?>
+
+        <form method="post" action="/admin/usuarios/plano" style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+            <input type="hidden" name="user_id" value="<?= (int)($user['id'] ?? 0) ?>">
+            <select name="plan_id" style="
+                flex:1;
+                min-width:240px;
+                padding:7px 10px;
+                border-radius:999px;
+                border:1px solid #272727;
+                background:#111118;
+                color:#f5f5f5;
+                font-size:13px;
+            ">
+                <option value="0" <?= $currentPlanId <= 0 ? 'selected' : '' ?>>Sem plano (voltar para Free)</option>
+                <?php foreach ($plansList as $p): ?>
+                    <?php
+                        $pid = (int)($p['id'] ?? 0);
+                        $pname = trim((string)($p['name'] ?? ''));
+                        if ($pid <= 0 || $pname === '') { continue; }
+                    ?>
+                    <option value="<?= (int)$pid ?>" <?= $currentPlanId === $pid ? 'selected' : '' ?>>
+                        <?= htmlspecialchars($pname, ENT_QUOTES, 'UTF-8') ?>
+                    </option>
+                <?php endforeach; ?>
+            </select>
+            <button type="submit" style="border:none; border-radius:999px; padding:6px 12px; background:linear-gradient(135deg,#e53935,#ff6f60); color:#050509; font-size:13px; font-weight:600; cursor:pointer;">
+                Aplicar
+            </button>
+        </form>
     </div>
 
     <div style="margin-top:18px; padding:14px 16px; border-radius:12px; background:#111118; border:1px solid #272727;">

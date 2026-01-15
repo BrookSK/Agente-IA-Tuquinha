@@ -3,6 +3,7 @@
 namespace App\Controllers;
 
 use App\Core\Controller;
+use App\Core\Database;
 use App\Models\User;
 use App\Models\Subscription;
 use App\Models\Plan;
@@ -21,6 +22,148 @@ class AdminUserController extends Controller
             header('Location: /admin/login');
             exit;
         }
+    }
+
+    private function sendPlanChangeEmail(array $user, ?array $fromPlan, ?array $toPlan, string $action): void
+    {
+        $email = (string)($user['email'] ?? '');
+        if ($email === '') {
+            return;
+        }
+
+        $name = (string)($user['preferred_name'] ?? $user['name'] ?? '');
+        $name = trim($name) !== '' ? $name : 'tudo bem';
+
+        $fromName = $fromPlan ? (string)($fromPlan['name'] ?? '') : '';
+        $toName = $toPlan ? (string)($toPlan['name'] ?? '') : '';
+
+        $subject = 'Atualização do seu plano';
+
+        $contentHtml = '';
+        if ($action === 'removed') {
+            $contentHtml .= '<p style="font-size:13px; margin:0 0 10px 0; color:#f5f5f5;">'
+                . 'O administrador do sistema removeu o seu plano atual.'
+                . '</p>';
+        } elseif ($action === 'changed') {
+            $contentHtml .= '<p style="font-size:13px; margin:0 0 10px 0; color:#f5f5f5;">'
+                . 'O administrador do sistema alterou o seu plano.'
+                . '</p>';
+        } else {
+            $contentHtml .= '<p style="font-size:13px; margin:0 0 10px 0; color:#f5f5f5;">'
+                . 'O administrador do sistema liberou um plano para sua conta.'
+                . '</p>';
+        }
+
+        if ($fromName !== '' && $action === 'changed') {
+            $contentHtml .= '<div style="font-size:13px; color:#b0b0b0; margin:0 0 6px 0;">'
+                . '<strong style="color:#f5f5f5;">Plano anterior:</strong> ' . htmlspecialchars($fromName, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')
+                . '</div>';
+        }
+        if ($toName !== '' && ($action === 'changed' || $action === 'granted')) {
+            $contentHtml .= '<div style="font-size:13px; color:#b0b0b0; margin:0;">'
+                . '<strong style="color:#f5f5f5;">Novo plano:</strong> ' . htmlspecialchars($toName, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')
+                . '</div>';
+        }
+
+        $scheme = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') ? 'https://' : 'http://';
+        $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+        $appUrl = $scheme . $host;
+
+        $body = MailService::buildDefaultTemplate($name, $contentHtml, 'Abrir o Tuquinha', $appUrl . '/chat');
+        try {
+            MailService::send($email, (string)($user['name'] ?? ''), $subject, $body);
+        } catch (\Throwable $e) {
+        }
+    }
+
+    public function changePlan(): void
+    {
+        $this->ensureAdmin();
+
+        $userId = isset($_POST['user_id']) ? (int)$_POST['user_id'] : 0;
+        $planId = isset($_POST['plan_id']) ? (int)$_POST['plan_id'] : 0;
+
+        if ($userId <= 0) {
+            header('Location: /admin/usuarios');
+            exit;
+        }
+
+        $user = User::findById($userId);
+        if (!$user) {
+            $_SESSION['admin_users_error'] = 'Usuário não encontrado.';
+            header('Location: /admin/usuarios');
+            exit;
+        }
+
+        $lastSub = Subscription::findLastByEmail((string)($user['email'] ?? ''));
+        $fromPlan = null;
+        if ($lastSub && !empty($lastSub['plan_id'])) {
+            $fromPlan = Plan::findById((int)$lastSub['plan_id']);
+        }
+
+        if ($planId <= 0) {
+            // Remover plano: cancela quaisquer assinaturas ativas internas (não chama Asaas).
+            try {
+                $pdo = Database::getConnection();
+                $stmt = $pdo->prepare('UPDATE subscriptions SET status = "canceled", canceled_at = NOW() WHERE customer_email = :email AND status = "active"');
+                $stmt->execute(['email' => (string)($user['email'] ?? '')]);
+            } catch (\Throwable $e) {
+            }
+
+            $this->sendPlanChangeEmail($user, $fromPlan, null, 'removed');
+            $_SESSION['admin_users_success'] = 'Plano removido (acesso volta para o Free).';
+            header('Location: /admin/usuarios/ver?id=' . $userId);
+            exit;
+        }
+
+        $toPlan = Plan::findById($planId);
+        if (!$toPlan) {
+            $_SESSION['admin_users_error'] = 'Plano não encontrado.';
+            header('Location: /admin/usuarios/ver?id=' . $userId);
+            exit;
+        }
+
+        // Cria assinatura interna ativa para liberar acessos (não cria assinatura no Asaas).
+        $cpf = (string)($user['billing_cpf'] ?? ($user['cpf'] ?? ''));
+        $cpf = trim($cpf);
+        if ($cpf === '') {
+            $cpf = '00000000000';
+        }
+
+        $subData = [
+            'plan_id' => (int)$toPlan['id'],
+            'customer_name' => (string)($user['name'] ?? ''),
+            'customer_email' => (string)($user['email'] ?? ''),
+            'customer_cpf' => $cpf,
+            'customer_phone' => (string)($user['billing_phone'] ?? null),
+            'customer_postal_code' => (string)($user['billing_postal_code'] ?? null),
+            'customer_address' => (string)($user['billing_address'] ?? null),
+            'customer_address_number' => (string)($user['billing_address_number'] ?? null),
+            'customer_complement' => (string)($user['billing_complement'] ?? null),
+            'customer_province' => (string)($user['billing_province'] ?? null),
+            'customer_city' => (string)($user['billing_city'] ?? null),
+            'customer_state' => (string)($user['billing_state'] ?? null),
+            'asaas_customer_id' => null,
+            'asaas_subscription_id' => null,
+            'status' => 'active',
+            'started_at' => date('Y-m-d H:i:s'),
+        ];
+
+        try {
+            $subId = Subscription::create($subData);
+            Subscription::cancelOtherActivesForEmail((string)($user['email'] ?? ''), $subId);
+        } catch (\Throwable $e) {
+            $_SESSION['admin_users_error'] = 'Não foi possível alterar o plano do usuário.';
+            header('Location: /admin/usuarios/ver?id=' . $userId);
+            exit;
+        }
+
+        $action = ($fromPlan && (int)($fromPlan['id'] ?? 0) !== (int)($toPlan['id'] ?? 0)) ? 'changed' : 'granted';
+        $this->sendPlanChangeEmail($user, $fromPlan, $toPlan, $action);
+
+        $_SESSION['admin_users_success'] = 'Plano alterado com sucesso (apenas libera acessos; não cria assinatura no Asaas).';
+        header('Location: /admin/usuarios/ver?id=' . $userId);
+        exit;
     }
 
     private function sendTokenChangeEmail(array $user, int $amount, string $type): void
@@ -254,6 +397,13 @@ class AdminUserController extends Controller
         $topups = TokenTopup::allByUserId((int)$user['id']);
         $tokenTx = TokenTransaction::allByUserId((int)$user['id'], 500);
 
+        $plans = [];
+        try {
+            $plans = Plan::allActive();
+        } catch (\Throwable $e) {
+            $plans = [];
+        }
+
         $timeline = [];
 
         foreach ($subscriptionsHistory as $s) {
@@ -328,6 +478,7 @@ class AdminUserController extends Controller
             'coursePartner' => $coursePartner,
             'success' => $successMsg,
             'error' => $errorMsg,
+            'plans' => $plans,
         ]);
     }
 

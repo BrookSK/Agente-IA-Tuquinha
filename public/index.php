@@ -339,6 +339,7 @@ $router->get('/admin/personalidades/em-breve/todas', 'AdminPersonalityController
 $router->get('/admin/personalidades/padrao', 'AdminPersonalityController@setDefault');
 $router->get('/admin/usuarios', 'AdminUserController@index');
 $router->get('/admin/usuarios/ver', 'AdminUserController@show');
+$router->post('/admin/usuarios/plano', 'AdminUserController@changePlan');
 $router->post('/admin/usuarios/tokens/adicionar', 'AdminUserController@addTokens');
 $router->post('/admin/usuarios/tokens/remover', 'AdminUserController@removeTokens');
 $router->post('/admin/usuarios/toggle', 'AdminUserController@toggleActive');
