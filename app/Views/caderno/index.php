@@ -1468,9 +1468,16 @@ if (!empty($breadcrumb)) {
                 }
 
                 function SubpageTool(opts) {
-                    this.data = (opts && opts.data) ? opts.data : {};
-                    this.readOnly = !!(opts && opts.readOnly);
+                    opts = opts || {};
+                    this.api = opts.api;
+                    this.data = opts.data || {};
+                    this.readOnly = !!opts.readOnly;
                 }
+                SubpageTool.toolbox = {
+                    title: 'Subpágina',
+                    icon: '↳'
+                };
+                SubpageTool.isReadOnlySupported = true;
                 SubpageTool.prototype.render = function () {
                     var d = this.data || {};
                     var id = String(d.id || '');
@@ -1481,6 +1488,7 @@ if (!empty($breadcrumb)) {
                     var wrap = document.createElement('div');
                     wrap.style.width = '100%';
                     wrap.style.margin = '6px 0';
+                    try { wrap.contentEditable = 'false'; } catch (e) {}
 
                     var a = document.createElement('a');
                     a.className = 'tuq-subpage-inline';
@@ -1519,7 +1527,7 @@ if (!empty($breadcrumb)) {
                     holder: 'editorjs',
                     readOnly: !canEdit,
                     data: editorData,
-                    autofocus: true,
+                    autofocus: false,
                     onReady: function () {
                         try {
                             if (canEdit && typeof Undo !== 'undefined') {
@@ -1559,6 +1567,16 @@ if (!empty($breadcrumb)) {
                         }
                     }
                 });
+
+                try {
+                    if (editor && editor.isReady && typeof editor.isReady.then === 'function') {
+                        editor.isReady.catch(function (e) {
+                            editorInitError = true;
+                            setHint('Erro ao iniciar editor. Recarregue a página.');
+                            try { console.error('Editor isReady failed:', e); } catch (err) {}
+                        });
+                    }
+                } catch (e) {}
             } catch (e) {
                 editorInitError = true;
                 setHint('Erro ao iniciar editor. Recarregue a página.');
@@ -1612,11 +1630,18 @@ if (!empty($breadcrumb)) {
         }
 
         setSaveBtnState('saving');
-        if (!editor) {
+        if (!editor || typeof editor.save !== 'function') {
             saving = false;
             return;
         }
-        editor.save().then(function (data) {
+
+        var ready = (editor && editor.isReady && typeof editor.isReady.then === 'function') ? editor.isReady : Promise.resolve();
+        ready.then(function () {
+            if (!editor || typeof editor.save !== 'function') {
+                throw new Error('Editor not ready');
+            }
+            return editor.save();
+        }).then(function (data) {
             return postForm('/caderno/salvar', {
                 page_id: String(pageId),
                 content_json: JSON.stringify(data)
