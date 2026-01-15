@@ -175,6 +175,9 @@ class ChatController extends Controller
                 header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
                 header('Pragma: no-cache');
                 header('X-Tuq-Conv-Redirect: 1');
+                header('X-Tuq-Conv-Requested: ' . $conversationParam);
+                header('X-Tuq-UserId: ' . $userId);
+                header('X-Tuq-Sess-Len: ' . strlen($sessionId));
                 header('Location: /chat?c=' . $conversation->id);
                 exit;
             }
@@ -412,6 +415,11 @@ class ChatController extends Controller
         } else {
             $convRow = Conversation::findByIdAndSession($conversationId, $sessionId);
         }
+
+        header('X-Tuq-Persona-UserId: ' . $userId);
+        header('X-Tuq-Persona-Sess-Len: ' . strlen($sessionId));
+        header('X-Tuq-Persona-Conv: ' . $conversationId);
+        header('X-Tuq-Persona-Found: ' . ($convRow ? 1 : 0));
 
         if (!$convRow) {
             header('Location: /chat');
@@ -2101,6 +2109,8 @@ class ChatController extends Controller
 
         // Apenas usuários logados podem trocar a personalidade da conversa
         if ($userId <= 0) {
+            header('X-Tuq-Persona-UserId: 0');
+            header('X-Tuq-Persona-Sess-Len: ' . strlen($sessionId));
             header('Location: /chat');
             exit;
         }
@@ -2196,6 +2206,7 @@ class ChatController extends Controller
 
         $_SESSION['current_conversation_id'] = $conversationId;
 
+        header('X-Tuq-Persona-Redirect: 1');
         header('Location: /chat?c=' . $conversationId);
         exit;
     }
