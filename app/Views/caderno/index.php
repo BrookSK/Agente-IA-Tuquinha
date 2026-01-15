@@ -1174,6 +1174,12 @@ $breadcrumb = isset($breadcrumb) && is_array($breadcrumb) ? $breadcrumb : [];
             <span>Cor</span>
             <small>›</small>
         </div>
+        <?php if ($current && $canEdit): ?>
+            <div class="tuq-ctx-item" data-action="create-subpage">
+                <span class="tuq-ctx-item-left"><span class="tuq-ctx-icon">↳</span><span>Subpágina</span></span>
+                <small>Criar</small>
+            </div>
+        <?php endif; ?>
         <div class="tuq-ctx-item" data-action="insert-image">
             <span class="tuq-ctx-item-left"><span class="tuq-ctx-icon">🖼</span><span>Imagem</span></span>
             <small>Upload</small>
@@ -2200,6 +2206,18 @@ $breadcrumb = isset($breadcrumb) && is_array($breadcrumb) ? $breadcrumb : [];
                 }
                 if (action === 'toggle-color') {
                     showFlyout('color');
+                    return;
+                }
+                if (action === 'create-subpage') {
+                    if (!pageId) return;
+                    hideCtx();
+                    postForm('/caderno/criar', { title: 'Sem título', parent_id: String(pageId) }).then(function (res) {
+                        if (res.json && res.json.ok && res.json.id) {
+                            window.location.href = '/caderno?id=' + encodeURIComponent(res.json.id);
+                        } else {
+                            showActionError(res, 'Falha ao criar subpágina.');
+                        }
+                    });
                     return;
                 }
                 if (action === 'insert-image') {
