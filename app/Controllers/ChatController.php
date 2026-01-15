@@ -2112,10 +2112,7 @@ class ChatController extends Controller
             }
         }
 
-        if (empty($_SESSION['is_admin']) && empty($currentPlan['allow_personalities'])) {
-            header('Location: /chat');
-            exit;
-        }
+        $planAllowsPersonalities = !empty($_SESSION['is_admin']) || !empty($currentPlan['allow_personalities']);
 
         if ($conversationId <= 0) {
             header('Location: /chat');
@@ -2145,7 +2142,19 @@ class ChatController extends Controller
         if ($personaIdRaw > 0) {
             $persona = Personality::findById($personaIdRaw);
             if ($persona && !empty($persona['active']) && empty($persona['coming_soon'])) {
-                if (!empty($_SESSION['is_admin'])) {
+                $defaultPersona = Personality::findDefault();
+                $defaultPersonaId = $defaultPersona ? (int)$defaultPersona['id'] : 0;
+
+                // Plano free (ou qualquer plano sem allow_personalities): só permite usar a personalidade padrão.
+                if (!$planAllowsPersonalities && empty($_SESSION['is_admin'])) {
+                    if ($defaultPersonaId > 0 && (int)$persona['id'] === $defaultPersonaId) {
+                        $personaId = (int)$persona['id'];
+                    } else {
+                        $_SESSION['chat_error'] = 'No seu plano atual, apenas a personalidade padrão do Tuquinha está disponível.';
+                        header('Location: /chat?c=' . $conversationId);
+                        exit;
+                    }
+                } elseif (!empty($_SESSION['is_admin'])) {
                     $personaId = (int)$persona['id'];
                 } else {
                     $planId = !empty($currentPlan['id']) ? (int)$currentPlan['id'] : 0;
