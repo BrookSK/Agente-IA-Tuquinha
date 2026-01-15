@@ -17,6 +17,23 @@ $publicToken = $current ? (string)($current['public_token'] ?? '') : '';
 $publicUrl = ($isPublished && $publicToken !== '') ? ('/caderno/publico?token=' . urlencode($publicToken)) : '';
 $breadcrumb = isset($breadcrumb) && is_array($breadcrumb) ? $breadcrumb : [];
 
+$pagesById = [];
+if (isset($pages) && is_array($pages)) {
+    foreach ($pages as $p) {
+        if (!is_array($p)) {
+            continue;
+        }
+        $pid = (int)($p['id'] ?? 0);
+        if ($pid <= 0) {
+            continue;
+        }
+        $pagesById[(string)$pid] = [
+            'title' => (string)($p['title'] ?? 'Sem título'),
+            'icon' => (string)($p['icon'] ?? ''),
+        ];
+    }
+}
+
 $activeRootId = 0;
 if (!empty($breadcrumb)) {
     $firstCrumb = $breadcrumb[0] ?? null;
@@ -965,24 +982,6 @@ if (!empty($breadcrumb)) {
                     ">
                         <span style="display:flex; align-items:center; gap:8px;"><span style="width:18px; text-align:center;">📄</span><span>Página</span></span>
                     </button>
-                    <button type="button" class="new-page-menu-item" data-new-kind="subpage" <?= $currentId > 0 ? '' : 'disabled' ?> style="
-                        width:100%;
-                        display:flex;
-                        align-items:center;
-                        justify-content:space-between;
-                        gap:10px;
-                        border:none;
-                        background:transparent;
-                        color:var(--text-primary);
-                        padding:10px 10px;
-                        border-radius:10px;
-                        cursor:pointer;
-                        font-size:13px;
-                        opacity: <?= $currentId > 0 ? '1' : '0.45' ?>;
-                    ">
-                        <span style="display:flex; align-items:center; gap:8px;"><span style="width:18px; text-align:center;">↳</span><span>Subpágina</span></span>
-                        <small style="color:var(--text-secondary); font-size:11px;">desta página</small>
-                    </button>
                 </div>
             </div>
         </div>
@@ -1255,6 +1254,7 @@ if (!empty($breadcrumb)) {
     var canEdit = <?= $canEdit ? 'true' : 'false' ?>;
     var isOwner = <?= $isOwner ? 'true' : 'false' ?>;
     var initialJson = <?= json_encode($contentJson !== '' ? $contentJson : '') ?>;
+    var pagesById = <?= json_encode($pagesById) ?>;
 
     var $ = function (id) { return document.getElementById(id); };
 
@@ -1366,6 +1366,22 @@ if (!empty($breadcrumb)) {
     if (!editorData) {
         editorData = { time: Date.now(), blocks: [] };
     }
+
+    try {
+        if (editorData && editorData.blocks && pagesById) {
+            for (var bi = 0; bi < editorData.blocks.length; bi++) {
+                var b = editorData.blocks[bi];
+                if (!b || b.type !== 'subpage') continue;
+                var d = b.data || {};
+                var sid = (d.id !== null && typeof d.id !== 'undefined') ? String(d.id) : '';
+                if (!sid || !pagesById[sid]) continue;
+                var p = pagesById[sid] || {};
+                if (typeof p.title === 'string' && p.title !== '') d.title = p.title;
+                if (typeof p.icon === 'string') d.icon = p.icon;
+                b.data = d;
+            }
+        }
+    } catch (e) {}
 
     function getMissingEditorTools() {
         var missing = [];
