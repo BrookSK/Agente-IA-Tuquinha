@@ -408,7 +408,7 @@ if (!empty($currentPlan) && is_array($currentPlan)) {
         </div>
     <?php endif; ?>
 
-    <?php if (!empty($conversationId) && !empty($personaOptions) && is_array($personaOptions) && $isFreePlan): ?>
+    <?php if (!empty($conversationId) && !empty($personaOptions) && is_array($personaOptions) && $isFreePlan && empty(($_SESSION['free_persona_confirmed'][(int)$conversationId] ?? null))): ?>
         <style>
             .chat-persona-card {
                 width: 300px;
@@ -557,7 +557,7 @@ if (!empty($currentPlan) && is_array($currentPlan)) {
                 <button type="button" id="chat-persona-next" class="chat-persona-nav-btn" style="right:0;" aria-label="Próximo">›</button>
 
                 <div id="chat-persona-carousel" style="display:flex;">
-                    <a href="/chat?c=<?= (int)$conversationId ?>" class="chat-persona-card" style="cursor:pointer; display:block; text-align:left; padding:0;">
+                    <a href="/chat?c=<?= (int)$conversationId ?>&confirm_default=1" class="chat-persona-card" style="cursor:pointer; display:block; text-align:left; padding:0;">
                         <div class="chat-persona-card-image">
                             <img src="/public/perso_padrao.png" alt="Padrão do Tuquinha" onerror="this.onerror=null;this.src='/public/favicon.png';" style="width:100%; height:100%; object-fit:cover; display:block;">
                         </div>

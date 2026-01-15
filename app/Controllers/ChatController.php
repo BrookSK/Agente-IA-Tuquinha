@@ -28,6 +28,7 @@ class ChatController extends Controller
         $userId = !empty($_SESSION['user_id']) ? (int)$_SESSION['user_id'] : 0;
         $conversationParam = isset($_GET['c']) ? (int)$_GET['c'] : 0;
         $isNew = isset($_GET['new']);
+        $confirmDefault = isset($_GET['confirm_default']);
         $projectId = isset($_GET['project_id']) ? (int)$_GET['project_id'] : 0;
 
         if ($projectId > 0) {
@@ -205,6 +206,18 @@ class ChatController extends Controller
         }
 
         $_SESSION['current_conversation_id'] = $conversation->id;
+
+        if ($confirmDefault) {
+            if (!isset($_SESSION['free_persona_confirmed']) || !is_array($_SESSION['free_persona_confirmed'])) {
+                $_SESSION['free_persona_confirmed'] = [];
+            }
+            $_SESSION['free_persona_confirmed'][(int)$conversation->id] = true;
+
+            header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+            header('Pragma: no-cache');
+            header('Location: /chat?c=' . (int)$conversation->id);
+            exit;
+        }
 
         $history = Message::allByConversation($conversation->id);
         $attachments = Attachment::allByConversation($conversation->id);
