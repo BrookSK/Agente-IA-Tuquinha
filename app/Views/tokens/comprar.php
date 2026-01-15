@@ -8,31 +8,45 @@
 /** @var int $tokenBalance */
 /** @var string|null $error */
 ?>
-<div style="max-width:640px; margin:0 auto; padding:0 8px;">
+<style>
+    .tuq-tokens-wrap { max-width: 860px; margin: 0 auto; padding: 0 14px; }
+    .tuq-tokens-top { display:grid; grid-template-columns: 1fr 1fr; gap: 12px; align-items: stretch; }
+    .tuq-tokens-card { padding: 12px 14px; border-radius: 12px; border: 1px solid #272727; background: #0a0a10; }
+    .tuq-tokens-sub { font-size: 12px; color: #8d8d8d; }
+    .tuq-tokens-val { font-size: 16px; font-weight: 650; color: #ddd; }
+    .tuq-tokens-form-row { display:grid; grid-template-columns: 320px 1fr; gap: 12px; align-items: start; }
+    .tuq-tokens-inputbox { display:flex; align-items:center; gap: 10px; padding: 12px 12px; border-radius: 12px; border: 1px solid #272727; background: #050509; }
+    .tuq-tokens-inputbox input { width: 100%; min-width: 0; padding: 0; border: none; outline: none; background: transparent; color: #f5f5f5; font-size: 18px; font-weight: 750; }
+    .tuq-tokens-actions { margin-top: 6px; display:flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+    .tuq-tokens-pay { display:flex; flex-direction:column; gap: 8px; }
+    .tuq-tokens-pay-options { display:flex; flex-wrap:wrap; gap: 10px; font-size: 13px; color:#ddd; }
+    @media (max-width: 760px) {
+        .tuq-tokens-top { grid-template-columns: 1fr; }
+        .tuq-tokens-form-row { grid-template-columns: 1fr; }
+    }
+</style>
+
+<div class="tuq-tokens-wrap">
     <h1 style="font-size:22px; margin:18px 0 8px; font-weight:650;">Comprar tokens extras</h1>
     <p style="color:#b0b0b0; font-size:13px; margin-bottom:14px;">
         Aqui você pode adicionar mais tokens ao seu saldo atual para continuar usando o Tuquinha mesmo depois de atingir o limite do seu plano.
     </p>
 
-    <div style="margin-bottom:12px; padding:10px 12px; border-radius:10px; border:1px solid #272727; background:#0a0a10; font-size:13px; color:#ddd; display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap;">
-        <div>
-            <div style="font-size:12px; color:#8d8d8d;">Seu saldo atual</div>
-            <div style="font-size:16px; font-weight:600;">
-                <?= (int)$tokenBalance ?> tokens
-            </div>
+    <div class="tuq-tokens-top" style="margin-bottom:12px;">
+        <div class="tuq-tokens-card">
+            <div class="tuq-tokens-sub">Seu saldo atual</div>
+            <div class="tuq-tokens-val"><?= (int)$tokenBalance ?> tokens</div>
         </div>
-        <?php if ($pricePer1k > 0): ?>
-            <div>
-                <div style="font-size:12px; color:#8d8d8d;">Preço global por 1.000 tokens extras</div>
-                <div style="font-size:16px; font-weight:600;">
-                    R$ <?= number_format($pricePer1k, 4, ',', '.') ?>
+        <div class="tuq-tokens-card">
+            <?php if ($pricePer1k > 0): ?>
+                <div class="tuq-tokens-sub">Preço global por 1.000 tokens extras</div>
+                <div class="tuq-tokens-val">R$ <?= number_format($pricePer1k, 4, ',', '.') ?></div>
+            <?php else: ?>
+                <div style="font-size:12px; color:#ffbaba;">
+                    O preço global por 1.000 tokens extras ainda não foi configurado pelo administrador. Entre em contato com o suporte.
                 </div>
-            </div>
-        <?php else: ?>
-            <div style="font-size:12px; color:#ffbaba; max-width:320px;">
-                O preço global por 1.000 tokens extras ainda não foi configurado pelo administrador. Entre em contato com o suporte.
-            </div>
-        <?php endif; ?>
+            <?php endif; ?>
+        </div>
     </div>
 
     <?php if (!empty($error)): ?>
@@ -68,9 +82,9 @@
                 <label style="font-size:13px; color:#ddd; display:block; margin-bottom:4px;">
                     Quanto você quer investir em tokens agora?
                 </label>
-                <div style="display:flex; gap:10px; align-items:flex-start; flex-wrap:wrap;">
-                    <div style="display:flex; flex-direction:column; gap:6px;">
-                        <div style="display:flex; align-items:center; gap:8px;">
+                <div class="tuq-tokens-form-row">
+                    <div>
+                        <div class="tuq-tokens-inputbox">
                             <div style="font-size:13px; color:#b0b0b0;">R$</div>
                             <input
                                 type="text"
@@ -79,28 +93,16 @@
                                 name="amount_reais"
                                 id="amount-input"
                                 placeholder="25,00"
-                                style="
-                                    width: 180px; padding: 10px 12px; border-radius: 10px; border: 1px solid #272727;
-                                    background: #050509; color: #f5f5f5; font-size: 16px; font-weight:650;
-                                "
                             >
                         </div>
-                        <div id="amount-helper" style="font-size:11px; color:#777;">
+                        <div id="amount-helper" style="font-size:11px; color:#777; margin-top:6px;">
                             Mínimo por compra: <strong>R$ 25,00</strong>. Cobrança em múltiplos de 1.000 tokens.
                         </div>
                     </div>
 
-                    <div style="
-                        flex:1;
-                        min-width: 220px;
-                        padding: 10px 12px;
-                        border-radius: 12px;
-                        border: 1px solid #272727;
-                        background: #0a0a10;
-                        color: #ddd;
-                    ">
+                    <div class="tuq-tokens-card">
                         <div style="font-size:11px; color:#8d8d8d; margin-bottom:4px;">Você vai receber</div>
-                        <div id="tokens-preview" style="font-size:20px; font-weight:800; line-height:1.1;">— tokens</div>
+                        <div id="tokens-preview" style="font-size:22px; font-weight:850; line-height:1.1;">— tokens</div>
                         <div id="tokens-total" style="font-size:12px; color:#bdbdbd; margin-top:6px;"></div>
                     </div>
                 </div>
@@ -113,26 +115,31 @@
 
             <div>
                 <label style="font-size:13px; color:#ddd; display:block; margin-bottom:4px;">Forma de pagamento</label>
-                <div style="display:flex; flex-wrap:wrap; gap:10px; font-size:13px; color:#ddd;">
-                    <label style="display:flex; align-items:center; gap:5px;">
-                        <input type="radio" name="billing_type" value="PIX" checked>
-                        <span>PIX</span>
-                    </label>
-                    <label style="display:flex; align-items:center; gap:5px;">
-                        <input type="radio" name="billing_type" value="BOLETO">
-                        <span>Boleto bancário</span>
-                    </label>
-                    <label style="display:flex; align-items:center; gap:5px;">
-                        <input type="radio" name="billing_type" value="CREDIT_CARD">
-                        <span>Cartão de crédito (pela tela do Asaas)</span>
-                    </label>
+                <div class="tuq-tokens-card tuq-tokens-pay">
+                    <div class="tuq-tokens-pay-options">
+                        <label style="display:flex; align-items:center; gap:6px; padding:6px 8px; border-radius:10px; border:1px solid #272727; background:#050509;">
+                            <input type="radio" name="billing_type" value="PIX" checked>
+                            <span>PIX</span>
+                        </label>
+                        <label style="display:flex; align-items:center; gap:6px; padding:6px 8px; border-radius:10px; border:1px solid #272727; background:#050509;">
+                            <input type="radio" name="billing_type" value="BOLETO">
+                            <span>Boleto bancário</span>
+                        </label>
+                        <label style="display:flex; align-items:center; gap:6px; padding:6px 8px; border-radius:10px; border:1px solid #272727; background:#050509;">
+                            <input type="radio" name="billing_type" value="CREDIT_CARD">
+                            <span>Cartão de crédito (pela tela do Asaas)</span>
+                        </label>
+                    </div>
+                    <div style="font-size:11px; color:#777; max-width:560px;">
+                        O pagamento é processado pelo mesmo gateway usado nas assinaturas. Assim que o pagamento for confirmado, seus tokens extras serão liberados automaticamente.
+                    </div>
                 </div>
                 <div style="font-size:11px; color:#777; margin-top:3px; max-width:420px;">
                     O pagamento é processado pelo mesmo gateway usado nas assinaturas. Assim que o pagamento for confirmado, seus tokens extras serão liberados automaticamente.
                 </div>
             </div>
 
-            <div style="margin-top:4px; display:flex; gap:8px; align-items:center;">
+            <div class="tuq-tokens-actions">
                 <button type="submit" style="
                     border:none; border-radius:999px; padding:8px 16px;
                     background:linear-gradient(135deg,#e53935,#ff6f60); color:#050509;
