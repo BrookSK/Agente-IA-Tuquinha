@@ -40,7 +40,7 @@
         $newChatHref = $menuHref('/chat?new=1');
         // Para assinantes pagos: abre o seletor de personalidades antes de criar o chat.
         if ($isLogged && $hasPaidActiveSubscription) {
-            $newChatHref = $menuHref('/personalities');
+            $newChatHref = $menuHref('/personalidades');
         }
         $menuTiles[] = [
             'label' => 'Novo chat',
