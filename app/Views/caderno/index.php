@@ -1011,14 +1011,6 @@ if (!empty($breadcrumb)) {
         /* No mobile, não mostrar botão desktop de colapsar (ele estava escondendo o + Nova) */
         .notion-sidebar-head .notion-toggle-sidebar { display: none !important; }
 
-        /* No mobile, ações vão para o menu de 3 pontos */
-        #btn-save,
-        #btn-publish,
-        #btn-share,
-        #btn-delete {
-            display: none !important;
-        }
-
         .notion-shell {
             display: block;
             min-height: calc(100vh - 64px);
@@ -1092,13 +1084,11 @@ if (!empty($breadcrumb)) {
             flex: 0 0 auto;
         }
 
-        #notion-mobile-actions {
-            width: 100%;
-        }
         #notion-mobile-actions-menu {
             left: 8px !important;
             right: 8px !important;
             width: calc(100vw - 16px) !important;
+            z-index: 100005 !important;
         }
 
         /* Menus/contexto no mobile: não estourar lateral */
@@ -1230,6 +1220,11 @@ if (!empty($breadcrumb)) {
                 </div>
             </div>
             <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap; justify-content:flex-end;">
+                <button type="button" id="btn-mobile-pages" class="notion-mobile-only" style="
+                    border:1px solid var(--border-subtle); border-radius:999px; padding:7px 12px;
+                    background:var(--surface-subtle); color:var(--text-primary); font-size:12px; cursor:pointer;">
+                    Páginas
+                </button>
                 <div id="notion-mobile-actions" class="notion-mobile-only" style="position:relative;">
                     <button type="button" id="btn-mobile-actions" style="
                         border:1px solid var(--border-subtle); border-radius:999px; padding:7px 12px;
@@ -1570,6 +1565,7 @@ if (!empty($breadcrumb)) {
 
     (function () {
         var shell = document.querySelector('.notion-shell');
+        var btn = $('btn-mobile-pages');
         var overlay = $('notion-sidebar-overlay');
         if (!shell || !overlay) return;
 
@@ -1582,6 +1578,13 @@ if (!empty($breadcrumb)) {
         function toggleSidebar() {
             if (shell.classList.contains('notion-shell--sidebar-open')) closeSidebar();
             else openSidebar();
+        }
+
+        if (btn) {
+            btn.addEventListener('click', function (e) {
+                e.preventDefault();
+                toggleSidebar();
+            });
         }
 
         overlay.addEventListener('click', function () {
@@ -1616,7 +1619,7 @@ if (!empty($breadcrumb)) {
 
         btn.addEventListener('click', function (e) {
             e.preventDefault();
-            e.stopPropagation();
+            e.stopImmediatePropagation();
             toggleMenu();
         });
 
@@ -1625,7 +1628,7 @@ if (!empty($breadcrumb)) {
             if (!t) return;
             if (t.closest && t.closest('#notion-mobile-actions')) return;
             closeMenu();
-        });
+        }, true);
 
         menu.addEventListener('click', function (e) {
             var t = e && e.target ? e.target : null;
