@@ -1084,13 +1084,6 @@ if (!empty($breadcrumb)) {
             flex: 0 0 auto;
         }
 
-        #notion-mobile-actions-menu {
-            left: 8px !important;
-            right: 8px !important;
-            width: calc(100vw - 16px) !important;
-            z-index: 100005 !important;
-        }
-
         /* Menus/contexto no mobile: não estourar lateral */
         .tuq-ctx {
             width: calc(100vw - 16px);
@@ -1220,100 +1213,6 @@ if (!empty($breadcrumb)) {
                 </div>
             </div>
             <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap; justify-content:flex-end;">
-                <button type="button" id="btn-mobile-pages" class="notion-mobile-only" style="
-                    border:1px solid var(--border-subtle); border-radius:999px; padding:7px 12px;
-                    background:var(--surface-subtle); color:var(--text-primary); font-size:12px; cursor:pointer;">
-                    Páginas
-                </button>
-                <div id="notion-mobile-actions" class="notion-mobile-only" style="position:relative;">
-                    <button type="button" id="btn-mobile-actions" style="
-                        border:1px solid var(--border-subtle); border-radius:999px; padding:7px 12px;
-                        background:var(--surface-subtle); color:var(--text-primary); font-size:16px; cursor:pointer; line-height:1;">
-                        ⋯
-                    </button>
-                    <div id="notion-mobile-actions-menu" style="
-                        position:absolute;
-                        right:0;
-                        top:42px;
-                        width: 220px;
-                        border-radius:12px;
-                        border:1px solid var(--border-subtle);
-                        background:var(--surface-card);
-                        box-shadow: var(--shadow-card-strong);
-                        padding:6px;
-                        display:none;
-                        z-index: 100001;
-                    ">
-                        <?php if ($current && $canEdit): ?>
-                            <button type="button" class="new-page-menu-item" data-action="mobile-save" style="
-                                width:100%;
-                                display:flex;
-                                align-items:center;
-                                justify-content:space-between;
-                                gap:10px;
-                                border:none;
-                                background:transparent;
-                                color:var(--text-primary);
-                                padding:10px 10px;
-                                border-radius:10px;
-                                cursor:pointer;
-                                font-size:13px;
-                            ">
-                                <span style="display:flex; align-items:center; gap:8px;"><span style="width:18px; text-align:center;">💾</span><span>Salvar</span></span>
-                            </button>
-                        <?php endif; ?>
-                        <?php if ($current && $isOwner): ?>
-                            <button type="button" class="new-page-menu-item" data-action="mobile-publish" style="
-                                width:100%;
-                                display:flex;
-                                align-items:center;
-                                justify-content:space-between;
-                                gap:10px;
-                                border:none;
-                                background:transparent;
-                                color:var(--text-primary);
-                                padding:10px 10px;
-                                border-radius:10px;
-                                cursor:pointer;
-                                font-size:13px;
-                            ">
-                                <span style="display:flex; align-items:center; gap:8px;"><span style="width:18px; text-align:center;">🌐</span><span><?= $isPublished ? 'Despublicar' : 'Publicar' ?></span></span>
-                            </button>
-                            <button type="button" class="new-page-menu-item" data-action="mobile-share" style="
-                                width:100%;
-                                display:flex;
-                                align-items:center;
-                                justify-content:space-between;
-                                gap:10px;
-                                border:none;
-                                background:transparent;
-                                color:var(--text-primary);
-                                padding:10px 10px;
-                                border-radius:10px;
-                                cursor:pointer;
-                                font-size:13px;
-                            ">
-                                <span style="display:flex; align-items:center; gap:8px;"><span style="width:18px; text-align:center;">👥</span><span>Compartilhar</span></span>
-                            </button>
-                            <button type="button" class="new-page-menu-item" data-action="mobile-delete" style="
-                                width:100%;
-                                display:flex;
-                                align-items:center;
-                                justify-content:space-between;
-                                gap:10px;
-                                border:none;
-                                background:transparent;
-                                color:var(--accent);
-                                padding:10px 10px;
-                                border-radius:10px;
-                                cursor:pointer;
-                                font-size:13px;
-                            ">
-                                <span style="display:flex; align-items:center; gap:8px;"><span style="width:18px; text-align:center;">🗑</span><span>Excluir</span></span>
-                            </button>
-                        <?php endif; ?>
-                    </div>
-                </div>
                 <?php if ($current && $canEdit): ?>
                     <button type="button" id="btn-save" style="
                         border:1px solid var(--border-subtle); border-radius:999px; padding:7px 12px;
@@ -1565,9 +1464,11 @@ if (!empty($breadcrumb)) {
 
     (function () {
         var shell = document.querySelector('.notion-shell');
-        var btn = $('btn-mobile-pages');
+        var btn = $('notion-toggle-sidebar-alt');
         var overlay = $('notion-sidebar-overlay');
-        if (!shell || !overlay) return;
+        if (!shell || !btn || !overlay) return;
+
+        if (!window.matchMedia || !window.matchMedia('(max-width: 720px)').matches) return;
 
         function openSidebar() {
             shell.classList.add('notion-shell--sidebar-open');
@@ -1580,13 +1481,10 @@ if (!empty($breadcrumb)) {
             else openSidebar();
         }
 
-        if (btn) {
-            btn.addEventListener('click', function (e) {
-                e.preventDefault();
-                toggleSidebar();
-            });
-        }
-
+        btn.addEventListener('click', function (e) {
+            e.preventDefault();
+            toggleSidebar();
+        });
         overlay.addEventListener('click', function () {
             closeSidebar();
         });
@@ -1599,63 +1497,6 @@ if (!empty($breadcrumb)) {
                 if (a) closeSidebar();
             });
         }
-    })();
-
-    (function () {
-        var btn = $('btn-mobile-actions');
-        var menu = $('notion-mobile-actions-menu');
-        if (!btn || !menu) return;
-
-        function openMenu() {
-            menu.style.display = 'block';
-        }
-        function closeMenu() {
-            menu.style.display = 'none';
-        }
-        function toggleMenu() {
-            if (menu.style.display === 'block') closeMenu();
-            else openMenu();
-        }
-
-        btn.addEventListener('click', function (e) {
-            e.preventDefault();
-            e.stopImmediatePropagation();
-            toggleMenu();
-        });
-
-        document.addEventListener('click', function (e) {
-            var t = e && e.target ? e.target : null;
-            if (!t) return;
-            if (t.closest && t.closest('#notion-mobile-actions')) return;
-            closeMenu();
-        }, true);
-
-        menu.addEventListener('click', function (e) {
-            var t = e && e.target ? e.target : null;
-            var item = t && t.closest ? t.closest('[data-action]') : null;
-            if (!item) return;
-            var act = item.getAttribute('data-action');
-            if (!act) return;
-            e.preventDefault();
-            closeMenu();
-
-            if (act === 'mobile-save') {
-                var b = $('btn-save');
-                if (b) b.click();
-            }
-            if (act === 'mobile-publish') {
-                var b = $('btn-publish');
-                if (b) b.click();
-            }
-            if (act === 'mobile-share') {
-                var b = $('btn-share');
-                if (b) b.click();
-            }
-            if (act === 'mobile-delete') {
-                var b = $('btn-delete');
-                if (b) b.click();
-            }
-        });
     })();
 
     function openPreviewModal(url, name, mime) {
@@ -1766,6 +1607,10 @@ if (!empty($breadcrumb)) {
 
     (function () {
         var SIDEBAR_KEY = 'caderno.sidebarCollapsed';
+
+        if (window.matchMedia && window.matchMedia('(max-width: 720px)').matches) {
+            return;
+        }
 
         function setSidebarCollapsed(collapsed) {
             if (collapsed) {
