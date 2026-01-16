@@ -403,6 +403,40 @@ if (!empty($breadcrumb)) {
     body[data-theme="light"] .notion-preview-body {
         background: rgba(15,23,42,0.06);
     }
+    /* Scrollbars (preview modal) */
+    .notion-preview-body {
+        scrollbar-width: thin;
+        scrollbar-color: rgba(0,0,0,0.95) rgba(0,0,0,0.55);
+    }
+    body[data-theme="light"] .notion-preview-body {
+        scrollbar-color: rgba(15,23,42,0.35) rgba(15,23,42,0.10);
+    }
+    .notion-preview-body::-webkit-scrollbar {
+        width: 10px;
+        height: 10px;
+    }
+    .notion-preview-body::-webkit-scrollbar-track {
+        background: rgba(0,0,0,0.55);
+        border-radius: 999px;
+    }
+    .notion-preview-body::-webkit-scrollbar-thumb {
+        background: rgba(0,0,0,0.95);
+        border-radius: 999px;
+        border: 2px solid rgba(0,0,0,0.55);
+    }
+    .notion-preview-body::-webkit-scrollbar-thumb:hover {
+        background: rgba(20,20,20,0.98);
+    }
+    body[data-theme="light"] .notion-preview-body::-webkit-scrollbar-track {
+        background: rgba(15,23,42,0.10);
+    }
+    body[data-theme="light"] .notion-preview-body::-webkit-scrollbar-thumb {
+        background: rgba(15,23,42,0.28);
+        border: 2px solid rgba(15,23,42,0.10);
+    }
+    body[data-theme="light"] .notion-preview-body::-webkit-scrollbar-thumb:hover {
+        background: rgba(15,23,42,0.38);
+    }
     .notion-preview-body img {
         display: block;
         max-width: 100%;
@@ -974,6 +1008,9 @@ if (!empty($breadcrumb)) {
     @media (max-width: 720px) {
         .notion-mobile-only { display: inline-flex; }
 
+        /* No mobile, não mostrar botão desktop de colapsar (ele estava escondendo o + Nova) */
+        .notion-sidebar-head .notion-toggle-sidebar { display: none !important; }
+
         .notion-shell {
             display: block;
             min-height: calc(100vh - 64px);
@@ -1482,11 +1519,11 @@ if (!empty($breadcrumb)) {
         titleEl.textContent = name || 'Arquivo';
         bodyEl.innerHTML = '';
 
-        downloadEl.href = url;
         downloadEl.style.display = 'inline-flex';
-        try {
-            if (name) downloadEl.setAttribute('download', name);
-        } catch (e) {}
+        try { downloadEl.removeAttribute('download'); } catch (e) {}
+        downloadEl.href = '/caderno/midia/download?page_id=' + encodeURIComponent(String(pageId || ''))
+            + '&url=' + encodeURIComponent(url)
+            + '&name=' + encodeURIComponent(name || 'arquivo');
 
         var lowerMime = mime.toLowerCase();
         var lowerUrl = url.toLowerCase();

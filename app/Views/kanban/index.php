@@ -666,6 +666,40 @@ $currentBoardTitle = $currentBoard ? (string)($currentBoard['title'] ?? 'Sem tí
     body[data-theme="light"] .kb-preview-body {
         background: rgba(15,23,42,0.06);
     }
+    /* Scrollbars (preview modal) */
+    .kb-preview-body {
+        scrollbar-width: thin;
+        scrollbar-color: rgba(0,0,0,0.95) rgba(0,0,0,0.55);
+    }
+    body[data-theme="light"] .kb-preview-body {
+        scrollbar-color: rgba(15,23,42,0.35) rgba(15,23,42,0.10);
+    }
+    .kb-preview-body::-webkit-scrollbar {
+        width: 10px;
+        height: 10px;
+    }
+    .kb-preview-body::-webkit-scrollbar-track {
+        background: rgba(0,0,0,0.55);
+        border-radius: 999px;
+    }
+    .kb-preview-body::-webkit-scrollbar-thumb {
+        background: rgba(0,0,0,0.95);
+        border-radius: 999px;
+        border: 2px solid rgba(0,0,0,0.55);
+    }
+    .kb-preview-body::-webkit-scrollbar-thumb:hover {
+        background: rgba(20,20,20,0.98);
+    }
+    body[data-theme="light"] .kb-preview-body::-webkit-scrollbar-track {
+        background: rgba(15,23,42,0.10);
+    }
+    body[data-theme="light"] .kb-preview-body::-webkit-scrollbar-thumb {
+        background: rgba(15,23,42,0.28);
+        border: 2px solid rgba(15,23,42,0.10);
+    }
+    body[data-theme="light"] .kb-preview-body::-webkit-scrollbar-thumb:hover {
+        background: rgba(15,23,42,0.38);
+    }
     .kb-preview-body img {
         display: block;
         max-width: 100%;
@@ -1142,7 +1176,7 @@ $currentBoardTitle = $currentBoard ? (string)($currentBoard['title'] ?? 'Sem tí
         return div.innerHTML;
     }
 
-    function openPreviewModal(url, name, mime) {
+    function openPreviewModal(url, name, mime, attachmentId) {
         var modal = $('kb-preview-modal');
         var backdrop = $('kb-preview-backdrop');
         var closeBtn = $('kb-preview-close');
@@ -1159,11 +1193,13 @@ $currentBoardTitle = $currentBoard ? (string)($currentBoard['title'] ?? 'Sem tí
         titleEl.textContent = name || 'Arquivo';
         bodyEl.innerHTML = '';
 
-        downloadEl.href = url;
         downloadEl.style.display = 'inline-flex';
-        try {
-            if (name) downloadEl.setAttribute('download', name);
-        } catch (e) {}
+        try { downloadEl.removeAttribute('download'); } catch (e) {}
+        if (attachmentId) {
+            downloadEl.href = '/kanban/cartao/anexos/download?attachment_id=' + encodeURIComponent(String(attachmentId));
+        } else {
+            downloadEl.href = url;
+        }
 
         var lowerMime = mime.toLowerCase();
         var lowerUrl = url.toLowerCase();
@@ -1523,8 +1559,8 @@ $currentBoardTitle = $currentBoard ? (string)($currentBoard['title'] ?? 'Sem tí
             var actions = document.createElement('div');
             actions.className = 'kb-attachment-actions';
             actions.innerHTML = ''
-                + '<button type="button" class="kb-btn" data-action="preview-attachment" data-url="' + esc(url) + '" data-name="' + esc(name) + '" data-mime="' + esc(mime) + '">Abrir</button>'
-                + (isImage ? '<a class="kb-btn" href="' + esc(url) + '" download>Baixar</a>' : '')
+                + '<button type="button" class="kb-btn" data-action="preview-attachment" data-attachment-id="' + esc(id) + '" data-url="' + esc(url) + '" data-name="' + esc(name) + '" data-mime="' + esc(mime) + '">Abrir</button>'
+                + '<button type="button" class="kb-btn" data-action="download-attachment" data-attachment-id="' + esc(id) + '">Baixar</button>'
                 + '<button type="button" class="kb-btn kb-btn--danger" data-action="delete-attachment" data-attachment-id="' + esc(id) + '">Remover</button>';
 
             row.appendChild(left);
@@ -1568,7 +1604,15 @@ $currentBoardTitle = $currentBoard ? (string)($currentBoard['title'] ?? 'Sem tí
             var url = t.getAttribute('data-url');
             var name = t.getAttribute('data-name');
             var mime = t.getAttribute('data-mime');
-            openPreviewModal(url, name, mime);
+            var attId = t.getAttribute('data-attachment-id');
+            openPreviewModal(url, name, mime, attId);
+            return;
+        }
+        if (act === 'download-attachment') {
+            e.preventDefault();
+            var attId = t.getAttribute('data-attachment-id');
+            if (!attId) return;
+            window.location.href = '/kanban/cartao/anexos/download?attachment_id=' + encodeURIComponent(String(attId));
             return;
         }
         if (act === 'delete-attachment') {

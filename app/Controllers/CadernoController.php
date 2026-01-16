@@ -388,6 +388,88 @@ class CadernoController extends Controller
         ]);
     }
 
+    public function downloadMedia(): void
+    {
+        $user = $this->requireLogin();
+        $this->requireCadernoAccess($user);
+
+        $uid = (int)($user['id'] ?? 0);
+        $pageId = (int)($_GET['page_id'] ?? 0);
+        $url = (string)($_GET['url'] ?? '');
+        $name = (string)($_GET['name'] ?? 'arquivo');
+
+        if ($pageId <= 0 || $url === '') {
+            http_response_code(400);
+            echo 'Parâmetros inválidos';
+            return;
+        }
+
+        $page = Page::findAccessibleById($pageId, $uid);
+        if (!$page) {
+            http_response_code(403);
+            echo 'Sem acesso à página';
+            return;
+        }
+
+        $u = @parse_url($url);
+        $scheme = is_array($u) ? strtolower((string)($u['scheme'] ?? '')) : '';
+        $host = is_array($u) ? strtolower((string)($u['host'] ?? '')) : '';
+        if (!in_array($scheme, ['http', 'https'], true) || $host === '') {
+            http_response_code(400);
+            echo 'URL inválida';
+            return;
+        }
+        if ($host === 'localhost' || $host === '127.0.0.1') {
+            http_response_code(400);
+            echo 'Host inválido';
+            return;
+        }
+
+        $ip = @gethostbyname($host);
+        if (is_string($ip) && $ip !== $host) {
+            if (preg_match('/^(10\.|127\.|192\.168\.|172\.(1[6-9]|2\d|3[0-1])\.)/', $ip)) {
+                http_response_code(400);
+                echo 'Host inválido';
+                return;
+            }
+        }
+
+        $ch = curl_init();
+        curl_setopt_array($ch, [
+            CURLOPT_URL => $url,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_FOLLOWLOCATION => true,
+            CURLOPT_TIMEOUT => 60,
+            CURLOPT_SSL_VERIFYPEER => true,
+            CURLOPT_SSL_VERIFYHOST => 2,
+        ]);
+        $data = curl_exec($ch);
+        if ($data === false) {
+            curl_close($ch);
+            http_response_code(502);
+            echo 'Falha ao baixar arquivo';
+            return;
+        }
+        $httpCode = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $ct = (string)curl_getinfo($ch, CURLINFO_CONTENT_TYPE);
+        curl_close($ch);
+
+        if ($httpCode < 200 || $httpCode >= 300) {
+            http_response_code(502);
+            echo 'Falha ao baixar arquivo';
+            return;
+        }
+        if ($ct === '') {
+            $ct = 'application/octet-stream';
+        }
+
+        header('Content-Type: ' . $ct);
+        header('Content-Disposition: attachment; filename="' . str_replace('"', '', $name) . '"');
+        header('X-Content-Type-Options: nosniff');
+        echo $data;
+        exit;
+    }
+
     public function shareRemove(): void
     {
         $user = $this->requireLogin();

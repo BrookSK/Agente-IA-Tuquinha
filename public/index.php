@@ -175,6 +175,7 @@ $router->post('/kanban/sync', 'KanbanController@sync');
 $router->post('/kanban/cartao/anexos/listar', 'KanbanController@listCardAttachments');
 $router->post('/kanban/cartao/anexos/upload', 'KanbanController@uploadCardAttachment');
 $router->post('/kanban/cartao/anexos/excluir', 'KanbanController@deleteCardAttachment');
+$router->get('/kanban/cartao/anexos/download', 'KanbanController@downloadCardAttachment');
 
 $router->post('/kanban/cartao/capa/definir', 'KanbanController@setCardCover');
 $router->post('/kanban/cartao/capa/upload', 'KanbanController@uploadCardCover');
@@ -192,6 +193,7 @@ $router->post('/caderno/renomear', 'CadernoController@rename');
 $router->post('/caderno/excluir', 'CadernoController@delete');
 $router->post('/caderno/publicar', 'CadernoController@publish');
 $router->post('/caderno/midia/upload', 'CadernoController@uploadMedia');
+$router->get('/caderno/midia/download', 'CadernoController@downloadMedia');
 $router->post('/caderno/compartilhar/adicionar', 'CadernoController@shareAdd');
 $router->post('/caderno/compartilhar/remover', 'CadernoController@shareRemove');
 $router->get('/caderno/publico', 'CadernoController@publico');
