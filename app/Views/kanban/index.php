@@ -609,6 +609,76 @@ $currentBoardTitle = $currentBoard ? (string)($currentBoard['title'] ?? 'Sem tí
         gap: 8px;
         align-items: center;
     }
+
+    .kb-preview-modal {
+        position: fixed;
+        inset: 0;
+        z-index: 100000;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 16px;
+    }
+    .kb-preview-modal.is-open {
+        display: flex;
+    }
+    .kb-preview-backdrop {
+        position: absolute;
+        inset: 0;
+        background: rgba(0,0,0,0.70);
+    }
+    .kb-preview-card {
+        position: relative;
+        width: min(980px, calc(100vw - 28px));
+        max-height: calc(100vh - 28px);
+        border-radius: 16px;
+        border: 1px solid var(--border-subtle);
+        background: var(--surface-card);
+        box-shadow: var(--shadow-card-strong);
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+    }
+    .kb-preview-head {
+        padding: 10px 12px;
+        border-bottom: 1px solid var(--border-subtle);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+    }
+    .kb-preview-title {
+        font-size: 13px;
+        font-weight: 800;
+        color: var(--text-primary);
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    .kb-preview-body {
+        padding: 0;
+        overflow: auto;
+        background: rgba(0,0,0,0.25);
+        flex: 1;
+        min-height: 260px;
+    }
+    body[data-theme="light"] .kb-preview-body {
+        background: rgba(15,23,42,0.06);
+    }
+    .kb-preview-body img {
+        display: block;
+        max-width: 100%;
+        height: auto;
+        margin: 0 auto;
+    }
+    .kb-preview-frame {
+        width: 100%;
+        height: 70vh;
+        border: none;
+        display: block;
+        background: transparent;
+    }
     @media (max-width: 720px) {
         .kb-attachment-name { max-width: 220px; }
     }
@@ -1000,6 +1070,20 @@ $currentBoardTitle = $currentBoard ? (string)($currentBoard['title'] ?? 'Sem tí
     </div>
 </div>
 
+<div class="kb-preview-modal" id="kb-preview-modal" aria-hidden="true">
+    <div class="kb-preview-backdrop" id="kb-preview-backdrop"></div>
+    <div class="kb-preview-card" role="dialog" aria-modal="true" aria-label="Pré-visualização">
+        <div class="kb-preview-head">
+            <div class="kb-preview-title" id="kb-preview-title">Arquivo</div>
+            <div style="display:flex; gap:8px; align-items:center;">
+                <a class="kb-btn" id="kb-preview-download" href="#" download style="display:none;">Baixar</a>
+                <button type="button" class="kb-btn" id="kb-preview-close">Fechar</button>
+            </div>
+        </div>
+        <div class="kb-preview-body" id="kb-preview-body"></div>
+    </div>
+</div>
+
 <script>
 (function () {
     var boardId = <?= (int)$currentBoardId ?>;
@@ -1056,6 +1140,68 @@ $currentBoardTitle = $currentBoard ? (string)($currentBoard['title'] ?? 'Sem tí
         var div = document.createElement('div');
         div.textContent = String(s == null ? '' : s);
         return div.innerHTML;
+    }
+
+    function openPreviewModal(url, name, mime) {
+        var modal = $('kb-preview-modal');
+        var backdrop = $('kb-preview-backdrop');
+        var closeBtn = $('kb-preview-close');
+        var titleEl = $('kb-preview-title');
+        var bodyEl = $('kb-preview-body');
+        var downloadEl = $('kb-preview-download');
+        if (!modal || !backdrop || !closeBtn || !titleEl || !bodyEl || !downloadEl) return;
+
+        url = String(url || '');
+        name = String(name || 'Arquivo');
+        mime = String(mime || '');
+        if (!url) return;
+
+        titleEl.textContent = name || 'Arquivo';
+        bodyEl.innerHTML = '';
+
+        downloadEl.href = url;
+        downloadEl.style.display = 'inline-flex';
+        try {
+            if (name) downloadEl.setAttribute('download', name);
+        } catch (e) {}
+
+        var lowerMime = mime.toLowerCase();
+        var lowerUrl = url.toLowerCase();
+        var isImage = (lowerMime.indexOf('image/') === 0) || /\.(png|jpe?g|gif|webp|bmp|svg)$/i.test(lowerUrl);
+        var isPdf = (lowerMime.indexOf('application/pdf') === 0) || /\.pdf($|\?)/i.test(lowerUrl);
+
+        if (isImage) {
+            var img = document.createElement('img');
+            img.src = url;
+            img.alt = name || 'Imagem';
+            bodyEl.appendChild(img);
+        } else if (isPdf) {
+            var frame = document.createElement('iframe');
+            frame.className = 'kb-preview-frame';
+            frame.src = url;
+            bodyEl.appendChild(frame);
+        } else {
+            bodyEl.innerHTML = '<div style="padding:14px; color:var(--text-secondary); font-size:13px;">Pré-visualização indisponível para este tipo de arquivo. Use <b>Baixar</b>.</div>';
+        }
+
+        modal.classList.add('is-open');
+        modal.setAttribute('aria-hidden', 'false');
+
+        function close() {
+            modal.classList.remove('is-open');
+            modal.setAttribute('aria-hidden', 'true');
+            bodyEl.innerHTML = '';
+        }
+
+        backdrop.onclick = close;
+        closeBtn.onclick = close;
+        document.addEventListener('keydown', function escClose(e) {
+            if (!modal.classList.contains('is-open')) return;
+            if (e && e.key === 'Escape') {
+                close();
+                document.removeEventListener('keydown', escClose);
+            }
+        });
     }
 
     // (funções utilitárias acima)
@@ -1377,7 +1523,7 @@ $currentBoardTitle = $currentBoard ? (string)($currentBoard['title'] ?? 'Sem tí
             var actions = document.createElement('div');
             actions.className = 'kb-attachment-actions';
             actions.innerHTML = ''
-                + '<a class="kb-btn" href="' + esc(url) + '" target="_blank" rel="noopener">Abrir</a>'
+                + '<button type="button" class="kb-btn" data-action="preview-attachment" data-url="' + esc(url) + '" data-name="' + esc(name) + '" data-mime="' + esc(mime) + '">Abrir</button>'
                 + (isImage ? '<a class="kb-btn" href="' + esc(url) + '" download>Baixar</a>' : '')
                 + '<button type="button" class="kb-btn kb-btn--danger" data-action="delete-attachment" data-attachment-id="' + esc(id) + '">Remover</button>';
 
@@ -1417,6 +1563,14 @@ $currentBoardTitle = $currentBoard ? (string)($currentBoard['title'] ?? 'Sem tí
         var t = e.target;
         if (!t) return;
         var act = t.getAttribute && t.getAttribute('data-action');
+        if (act === 'preview-attachment') {
+            e.preventDefault();
+            var url = t.getAttribute('data-url');
+            var name = t.getAttribute('data-name');
+            var mime = t.getAttribute('data-mime');
+            openPreviewModal(url, name, mime);
+            return;
+        }
         if (act === 'delete-attachment') {
             var attId = t.getAttribute('data-attachment-id');
             if (!attId) return;

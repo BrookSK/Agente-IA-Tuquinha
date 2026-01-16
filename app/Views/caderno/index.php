@@ -49,6 +49,12 @@ if (!empty($breadcrumb)) {
         gap: 12px;
         min-height: calc(100vh - 64px);
     }
+
+    @media (min-width: 721px) {
+        body.notion-sidebar-collapsed .notion-shell {
+            gap: 0;
+        }
+    }
     .notion-sidebar {
         width: 280px;
         flex: 0 0 280px;
@@ -56,6 +62,20 @@ if (!empty($breadcrumb)) {
         border-radius: 12px;
         background: var(--surface-card);
         overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        transition: width 160ms ease, flex-basis 160ms ease, opacity 160ms ease;
+    }
+
+    @media (min-width: 721px) {
+        body.notion-sidebar-collapsed .notion-sidebar {
+            width: 0;
+            flex: 0 0 0;
+            opacity: 0;
+            border: none;
+            margin: 0;
+            padding: 0;
+        }
     }
     .notion-sidebar-head {
         padding: 12px;
@@ -71,6 +91,31 @@ if (!empty($breadcrumb)) {
         letter-spacing: 0.02em;
         text-transform: uppercase;
         color: var(--text-secondary);
+    }
+    .notion-btn {
+        border: 1px solid var(--border-subtle);
+        background: var(--surface-subtle);
+        color: var(--text-primary);
+        border-radius: 10px;
+        padding: 8px 10px;
+        font-size: 12px;
+        cursor: pointer;
+        line-height: 1;
+    }
+    .notion-btn:focus {
+        outline: 2px solid rgba(229,57,53,0.35);
+        outline-offset: 2px;
+    }
+    .notion-toggle-sidebar {
+        width: 36px;
+        height: 36px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 10px;
+        padding: 0;
+        font-size: 16px;
+        line-height: 1;
     }
     .notion-page {
         flex: 1;
@@ -201,6 +246,15 @@ if (!empty($breadcrumb)) {
     .notion-editor-wrap {
         max-width: 900px;
         margin: 0 auto;
+        padding-left: 42px;
+        padding-right: 6px;
+    }
+
+    @media (max-width: 640px) {
+        .notion-editor-wrap {
+            padding-left: 28px;
+            padding-right: 0;
+        }
     }
 
     /* Editor.js look (aproxima Notion) */
@@ -291,6 +345,76 @@ if (!empty($breadcrumb)) {
         border-radius: 12px;
         border: 1px solid var(--border-subtle);
         box-shadow: none;
+    }
+
+    .notion-preview-modal {
+        position: fixed;
+        inset: 0;
+        z-index: 100000;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 16px;
+    }
+    .notion-preview-modal.is-open {
+        display: flex;
+    }
+    .notion-preview-backdrop {
+        position: absolute;
+        inset: 0;
+        background: rgba(0,0,0,0.70);
+    }
+    .notion-preview-card {
+        position: relative;
+        width: min(980px, calc(100vw - 28px));
+        max-height: calc(100vh - 28px);
+        border-radius: 16px;
+        border: 1px solid var(--border-subtle);
+        background: var(--surface-card);
+        box-shadow: var(--shadow-card-strong);
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+    }
+    .notion-preview-head {
+        padding: 10px 12px;
+        border-bottom: 1px solid var(--border-subtle);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+    }
+    .notion-preview-title {
+        font-size: 13px;
+        font-weight: 800;
+        color: var(--text-primary);
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    .notion-preview-body {
+        padding: 0;
+        overflow: auto;
+        background: rgba(0,0,0,0.25);
+        flex: 1;
+        min-height: 260px;
+    }
+    body[data-theme="light"] .notion-preview-body {
+        background: rgba(15,23,42,0.06);
+    }
+    .notion-preview-body img {
+        display: block;
+        max-width: 100%;
+        height: auto;
+        margin: 0 auto;
+    }
+    .notion-preview-frame {
+        width: 100%;
+        height: 70vh;
+        border: none;
+        display: block;
+        background: transparent;
     }
 
     .notion-editor-wrap .cdx-quote__caption {
@@ -951,7 +1075,9 @@ if (!empty($breadcrumb)) {
     <div class="notion-sidebar">
         <div class="notion-sidebar-head">
             <div class="notion-sidebar-title">Caderno</div>
-            <div style="position:relative;">
+            <div style="display:flex; gap:8px; align-items:center; justify-content:flex-end;">
+                <button type="button" class="notion-btn notion-toggle-sidebar" id="notion-toggle-sidebar" title="Minimizar painel">❮</button>
+                <div style="position:relative;">
                 <button type="button" id="btn-new-page" style="border:none; border-radius:10px; padding:6px 10px; background:linear-gradient(135deg,#e53935,#ff6f60); color:#050509; font-weight:700; font-size:12px; cursor:pointer;">+ Nova</button>
                 <div id="new-page-menu" style="
                     position:absolute;
@@ -982,6 +1108,7 @@ if (!empty($breadcrumb)) {
                     ">
                         <span style="display:flex; align-items:center; gap:8px;"><span style="width:18px; text-align:center;">📄</span><span>Página</span></span>
                     </button>
+                </div>
                 </div>
             </div>
         </div>
@@ -1022,6 +1149,7 @@ if (!empty($breadcrumb)) {
     <div class="notion-page">
         <div class="notion-page-header">
             <div class="notion-title-wrap">
+                <button type="button" class="notion-btn notion-toggle-sidebar" id="notion-toggle-sidebar-alt" title="Mostrar/ocultar painel">☰</button>
                 <?php if ($current): ?>
                     <div class="notion-emoji">
                         <input type="text" id="page-icon" value="<?= htmlspecialchars($currentIcon) ?>" placeholder="📄" style="
@@ -1172,6 +1300,20 @@ if (!empty($breadcrumb)) {
     </div>
 </div>
 
+<div class="notion-preview-modal" id="notion-preview-modal" aria-hidden="true">
+    <div class="notion-preview-backdrop" id="notion-preview-backdrop"></div>
+    <div class="notion-preview-card" role="dialog" aria-modal="true" aria-label="Pré-visualização">
+        <div class="notion-preview-head">
+            <div class="notion-preview-title" id="notion-preview-title">Arquivo</div>
+            <div style="display:flex; gap:8px; align-items:center;">
+                <a class="notion-btn" id="notion-preview-download" href="#" download style="display:none;">Baixar</a>
+                <button type="button" class="notion-btn" id="notion-preview-close">Fechar</button>
+            </div>
+        </div>
+        <div class="notion-preview-body" id="notion-preview-body"></div>
+    </div>
+</div>
+
 <div class="tuq-ctx" id="tuq-ctx">
     <input class="tuq-ctx-search" id="tuq-ctx-search" type="text" placeholder="Pesquisar ações..." />
     <div class="tuq-ctx-scroll" id="tuq-ctx-scroll">
@@ -1318,8 +1460,158 @@ if (!empty($breadcrumb)) {
         if (sidebar) {
             sidebar.addEventListener('click', function (e) {
                 var a = e.target && e.target.closest ? e.target.closest('a[href^="/caderno"]') : null;
-                if (!a) return;
-                closeSidebar();
+                if (a) closeSidebar();
+            });
+        }
+    })();
+
+    function openPreviewModal(url, name, mime) {
+        var modal = $('notion-preview-modal');
+        var backdrop = $('notion-preview-backdrop');
+        var closeBtn = $('notion-preview-close');
+        var titleEl = $('notion-preview-title');
+        var bodyEl = $('notion-preview-body');
+        var downloadEl = $('notion-preview-download');
+        if (!modal || !backdrop || !closeBtn || !titleEl || !bodyEl || !downloadEl) return;
+
+        url = String(url || '');
+        name = String(name || 'Arquivo');
+        mime = String(mime || '');
+        if (!url) return;
+
+        titleEl.textContent = name || 'Arquivo';
+        bodyEl.innerHTML = '';
+
+        downloadEl.href = url;
+        downloadEl.style.display = 'inline-flex';
+        try {
+            if (name) downloadEl.setAttribute('download', name);
+        } catch (e) {}
+
+        var lowerMime = mime.toLowerCase();
+        var lowerUrl = url.toLowerCase();
+        var isImage = (lowerMime.indexOf('image/') === 0) || /\.(png|jpe?g|gif|webp|bmp|svg)$/i.test(lowerUrl);
+        var isPdf = (lowerMime.indexOf('application/pdf') === 0) || /\.pdf($|\?)/i.test(lowerUrl);
+
+        if (isImage) {
+            var img = document.createElement('img');
+            img.src = url;
+            img.alt = name || 'Imagem';
+            bodyEl.appendChild(img);
+        } else if (isPdf) {
+            var frame = document.createElement('iframe');
+            frame.className = 'notion-preview-frame';
+            frame.src = url;
+            bodyEl.appendChild(frame);
+        } else {
+            bodyEl.innerHTML = '<div style="padding:14px; color:var(--text-secondary); font-size:13px;">Pré-visualização indisponível para este tipo de arquivo. Use <b>Baixar</b>.</div>';
+        }
+
+        modal.classList.add('is-open');
+        modal.setAttribute('aria-hidden', 'false');
+
+        function close() {
+            modal.classList.remove('is-open');
+            modal.setAttribute('aria-hidden', 'true');
+            bodyEl.innerHTML = '';
+        }
+
+        backdrop.onclick = close;
+        closeBtn.onclick = close;
+        document.addEventListener('keydown', function escClose(e) {
+            if (!modal.classList.contains('is-open')) return;
+            if (e && e.key === 'Escape') {
+                close();
+                document.removeEventListener('keydown', escClose);
+            }
+        });
+    }
+
+    document.addEventListener('click', function (e) {
+        try {
+            var t = e && e.target ? e.target : null;
+            if (!t) return;
+
+            var inEditor = t.closest && t.closest('.notion-editor-wrap');
+            if (!inEditor) return;
+
+            // AttachesTool: botão/link de download normalmente é um <a>
+            var attBtn = t.closest ? t.closest('.cdx-attaches__download-button') : null;
+            if (attBtn && attBtn.getAttribute) {
+                var href = attBtn.getAttribute('href');
+                if (!href) return;
+                e.preventDefault();
+                var titleEl = attBtn.closest('.cdx-attaches') ? attBtn.closest('.cdx-attaches').querySelector('.cdx-attaches__title') : null;
+                var fname = titleEl ? String(titleEl.textContent || '').trim() : 'Arquivo';
+                openPreviewModal(href, fname, '');
+                return;
+            }
+
+            // ImageTool: se clicar na imagem, abre modal
+            var img = t.closest ? t.closest('.image-tool__image-picture img') : null;
+            if (img && img.getAttribute) {
+                var src = img.getAttribute('src');
+                if (!src) return;
+                e.preventDefault();
+                openPreviewModal(src, 'Imagem', 'image/*');
+                return;
+            }
+
+            // Fallback: qualquer link dentro do editor que estaria abrindo nova guia
+            var a = t.closest ? t.closest('a[href]') : null;
+            if (a && a.getAttribute) {
+                var ah = a.getAttribute('href');
+                var target = (a.getAttribute('target') || '').toLowerCase();
+                if (ah && (target === '_blank')) {
+                    e.preventDefault();
+                    openPreviewModal(ah, 'Arquivo', '');
+                    return;
+                }
+            }
+        } catch (err) {}
+    }, true);
+
+    (function () {
+        var SIDEBAR_KEY = 'caderno.sidebarCollapsed';
+
+        function setSidebarCollapsed(collapsed) {
+            if (collapsed) {
+                document.body.classList.add('notion-sidebar-collapsed');
+            } else {
+                document.body.classList.remove('notion-sidebar-collapsed');
+            }
+            try {
+                localStorage.setItem(SIDEBAR_KEY, collapsed ? '1' : '0');
+            } catch (e) {}
+
+            var btn = $('notion-toggle-sidebar');
+            if (btn) {
+                btn.textContent = collapsed ? '❯' : '❮';
+                btn.title = collapsed ? 'Expandir painel' : 'Minimizar painel';
+            }
+        }
+
+        function getSidebarCollapsed() {
+            try {
+                return localStorage.getItem(SIDEBAR_KEY) === '1';
+            } catch (e) {
+                return false;
+            }
+        }
+
+        setSidebarCollapsed(getSidebarCollapsed());
+
+        var toggleBtn = $('notion-toggle-sidebar');
+        if (toggleBtn) {
+            toggleBtn.addEventListener('click', function () {
+                setSidebarCollapsed(!document.body.classList.contains('notion-sidebar-collapsed'));
+            });
+        }
+
+        var toggleBtnAlt = $('notion-toggle-sidebar-alt');
+        if (toggleBtnAlt) {
+            toggleBtnAlt.addEventListener('click', function () {
+                setSidebarCollapsed(!document.body.classList.contains('notion-sidebar-collapsed'));
             });
         }
     })();
