@@ -1823,6 +1823,18 @@ if (!empty($breadcrumb)) {
     var editor = null;
     function initEditor() {
         if (!pageId) return;
+        setHint('Carregando editor...');
+
+        var initWatchdog = null;
+        try {
+            initWatchdog = setTimeout(function () {
+                if (!editorInitError && (!editor || !editor.isReady)) {
+                    editorInitError = true;
+                    setHint('O editor está demorando para iniciar. Recarregue a página.');
+                }
+            }, 12000);
+        } catch (eWd) {}
+
         var missingTools = getMissingEditorTools();
         if (missingTools.length) {
             editorInitError = true;
@@ -1900,7 +1912,7 @@ if (!empty($breadcrumb)) {
             editor = new EditorJS({
                 holder: 'editorjs',
                 readOnly: !canEdit,
-                data: editorData,
+                data: { time: Date.now(), blocks: [] },
                 autofocus: false,
                 onReady: function () {
                     try {
@@ -1908,6 +1920,29 @@ if (!empty($breadcrumb)) {
                             new Undo({ editor: editor });
                         }
                     } catch (e) {}
+
+                    // Renderiza o conteúdo real em seguida, fora do caminho crítico de inicialização.
+                    runIdle(function () {
+                        try {
+                            if (!editor || typeof editor.render !== 'function') return;
+                            var ready = (editor && editor.isReady && typeof editor.isReady.then === 'function') ? editor.isReady : Promise.resolve();
+                            ready.then(function () {
+                                return editor.render(editorData);
+                            }).then(function () {
+                                try { if (initWatchdog) clearTimeout(initWatchdog); } catch (e0) {}
+                                if (!editorInitError && pageId && !canEdit) {
+                                    setHint('Somente leitura (sem permissão de edição).');
+                                } else {
+                                    setHint('');
+                                }
+                            }).catch(function (e1) {
+                                editorInitError = true;
+                                try { if (initWatchdog) clearTimeout(initWatchdog); } catch (e2) {}
+                                setHint('Erro ao carregar conteúdo do editor. Recarregue a página.');
+                                try { console.error('Editor render failed:', e1); } catch (e3) {}
+                            });
+                        } catch (e4) {}
+                    });
                 },
                 tools: {
                     subpage: { class: SubpageTool },
@@ -1946,6 +1981,7 @@ if (!empty($breadcrumb)) {
                 if (editor && editor.isReady && typeof editor.isReady.then === 'function') {
                     editor.isReady.catch(function (e) {
                         editorInitError = true;
+                        try { if (initWatchdog) clearTimeout(initWatchdog); } catch (e0) {}
                         setHint('Erro ao iniciar editor. Recarregue a página.');
                         try { console.error('Editor isReady failed:', e); } catch (err) {}
                     });
@@ -1953,6 +1989,7 @@ if (!empty($breadcrumb)) {
             } catch (e) {}
         } catch (e) {
             editorInitError = true;
+            try { if (initWatchdog) clearTimeout(initWatchdog); } catch (e0) {}
             setHint('Erro ao iniciar editor. Recarregue a página.');
             try { console.error('Editor init error:', e); } catch (err) {}
         }

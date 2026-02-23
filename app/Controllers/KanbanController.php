@@ -121,20 +121,6 @@ class KanbanController extends Controller
             exit;
         }
 
-        // Se o usuário não é o dono, valida se o plano do dono permite compartilhamento.
-        $ownerId = (int)($board['owner_user_id'] ?? 0);
-        if ($ownerId > 0 && $ownerId !== $userId && empty($_SESSION['is_admin'])) {
-            $owner = User::findById($ownerId);
-            if (!$owner) {
-                $this->json(['ok' => false, 'error' => 'Quadro não encontrado.'], 404);
-            }
-
-            $ownerPlan = $this->getActivePlanForEmail((string)($owner['email'] ?? ''));
-            if (!$ownerPlan || empty($ownerPlan['allow_kanban_sharing'])) {
-                $this->json(['ok' => false, 'error' => 'O compartilhamento do Kanban não está disponível neste quadro.'], 403);
-            }
-        }
-
         return $board;
     }
 
