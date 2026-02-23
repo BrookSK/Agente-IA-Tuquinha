@@ -1704,21 +1704,39 @@ if (!empty($breadcrumb)) {
         editorData.blocks = [];
     }
 
-    try {
-        if (editorData && editorData.blocks && pagesById) {
-            for (var bi = 0; bi < editorData.blocks.length; bi++) {
-                var b = editorData.blocks[bi];
-                if (!b || b.type !== 'subpage') continue;
-                var d = b.data || {};
-                var sid = (d.id !== null && typeof d.id !== 'undefined') ? String(d.id) : '';
-                if (!sid || !pagesById[sid]) continue;
-                var p = pagesById[sid] || {};
-                if (typeof p.title === 'string' && p.title !== '') d.title = p.title;
-                if (typeof p.icon === 'string') d.icon = p.icon;
-                b.data = d;
+    function runIdle(fn) {
+        try {
+            if (window.requestIdleCallback) {
+                window.requestIdleCallback(function () {
+                    try { fn(); } catch (e) {}
+                }, { timeout: 700 });
+                return;
             }
-        }
-    } catch (e) {}
+        } catch (e) {}
+        setTimeout(function () {
+            try { fn(); } catch (e2) {}
+        }, 0);
+    }
+
+    function enrichSubpagesFromSidebar() {
+        try {
+            if (editorData && editorData.blocks && pagesById) {
+                for (var bi = 0; bi < editorData.blocks.length; bi++) {
+                    var b = editorData.blocks[bi];
+                    if (!b || b.type !== 'subpage') continue;
+                    var d = b.data || {};
+                    var sid = (d.id !== null && typeof d.id !== 'undefined') ? String(d.id) : '';
+                    if (!sid || !pagesById[sid]) continue;
+                    var p = pagesById[sid] || {};
+                    if (typeof p.title === 'string' && p.title !== '') d.title = p.title;
+                    if (typeof p.icon === 'string') d.icon = p.icon;
+                    b.data = d;
+                }
+            }
+        } catch (e) {}
+    }
+
+    runIdle(enrichSubpagesFromSidebar);
 
     function getMissingEditorTools() {
         var missing = [];
@@ -1803,139 +1821,145 @@ if (!empty($breadcrumb)) {
 
     var editorInitError = false;
     var editor = null;
-    if (pageId) {
+    function initEditor() {
+        if (!pageId) return;
         var missingTools = getMissingEditorTools();
         if (missingTools.length) {
             editorInitError = true;
             setHint('Erro ao carregar editor: ' + missingTools.join(', ') + '. Recarregue a página.');
             try { console.error('Editor tools missing:', missingTools); } catch (e) {}
-        } else {
-            try {
-                function esc(s) {
-                    return String(s || '')
-                        .replace(/&/g, '&amp;')
-                        .replace(/</g, '&lt;')
-                        .replace(/>/g, '&gt;')
-                        .replace(/"/g, '&quot;')
-                        .replace(/'/g, '&#39;');
-                }
+            return;
+        }
 
-                function SubpageTool(opts) {
-                    opts = opts || {};
-                    this.api = opts.api;
-                    this.data = opts.data || {};
-                    this.readOnly = !!opts.readOnly;
-                }
-                SubpageTool.toolbox = {
-                    title: 'Subpágina',
-                    icon: '↳'
+        try {
+            function esc(s) {
+                return String(s || '')
+                    .replace(/&/g, '&amp;')
+                    .replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;')
+                    .replace(/"/g, '&quot;')
+                    .replace(/'/g, '&#39;');
+            }
+
+            function SubpageTool(opts) {
+                opts = opts || {};
+                this.api = opts.api;
+                this.data = opts.data || {};
+                this.readOnly = !!opts.readOnly;
+            }
+            SubpageTool.toolbox = {
+                title: 'Subpágina',
+                icon: '↳'
+            };
+            SubpageTool.isReadOnlySupported = true;
+            SubpageTool.prototype.render = function () {
+                var d = this.data || {};
+                var id = String(d.id || '');
+                var title = String(d.title || 'Sem título');
+                var icon = String(d.icon || '📄');
+                var href = id ? ('/caderno?id=' + encodeURIComponent(id)) : '#';
+
+                var wrap = document.createElement('div');
+                wrap.style.width = '100%';
+                wrap.style.margin = '6px 0';
+                try { wrap.contentEditable = 'false'; } catch (e) {}
+
+                var a = document.createElement('a');
+                a.className = 'tuq-subpage-inline';
+                a.setAttribute('href', href);
+                a.setAttribute('draggable', 'false');
+                a.style.cssText = 'display:flex; align-items:center; gap:10px; width:100%; padding:12px 12px; border-radius:12px; border:1px solid var(--border-subtle); background: var(--surface-subtle); color: var(--text-primary); text-decoration:none;';
+
+                var iconBox = document.createElement('div');
+                iconBox.style.cssText = 'width:34px; height:34px; border-radius:10px; display:flex; align-items:center; justify-content:center; background:rgba(229,57,53,0.10); border:1px solid rgba(229,57,53,0.20);';
+                iconBox.innerHTML = '<span style="font-size:16px;">' + esc(icon) + '</span>';
+
+                var text = document.createElement('div');
+                text.style.cssText = 'min-width:0; flex:1;';
+                text.innerHTML = '<div style="font-size:13px; font-weight:800; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">' + esc(title) + '</div><div style="font-size:11px; color:var(--text-secondary);">Subpágina</div>';
+
+                var chevron = document.createElement('div');
+                chevron.style.cssText = 'font-size:12px; color:var(--text-secondary); opacity:0.9;';
+                chevron.textContent = '›';
+
+                a.appendChild(iconBox);
+                a.appendChild(text);
+                a.appendChild(chevron);
+                wrap.appendChild(a);
+                return wrap;
+            };
+            SubpageTool.prototype.save = function () {
+                var d = this.data || {};
+                return {
+                    id: d.id ? String(d.id) : '',
+                    title: d.title ? String(d.title) : 'Sem título',
+                    icon: d.icon ? String(d.icon) : '📄'
                 };
-                SubpageTool.isReadOnlySupported = true;
-                SubpageTool.prototype.render = function () {
-                    var d = this.data || {};
-                    var id = String(d.id || '');
-                    var title = String(d.title || 'Sem título');
-                    var icon = String(d.icon || '📄');
-                    var href = id ? ('/caderno?id=' + encodeURIComponent(id)) : '#';
+            };
 
-                    var wrap = document.createElement('div');
-                    wrap.style.width = '100%';
-                    wrap.style.margin = '6px 0';
-                    try { wrap.contentEditable = 'false'; } catch (e) {}
-
-                    var a = document.createElement('a');
-                    a.className = 'tuq-subpage-inline';
-                    a.setAttribute('href', href);
-                    a.setAttribute('draggable', 'false');
-                    a.style.cssText = 'display:flex; align-items:center; gap:10px; width:100%; padding:12px 12px; border-radius:12px; border:1px solid var(--border-subtle); background: var(--surface-subtle); color: var(--text-primary); text-decoration:none;';
-
-                    var iconBox = document.createElement('div');
-                    iconBox.style.cssText = 'width:34px; height:34px; border-radius:10px; display:flex; align-items:center; justify-content:center; background:rgba(229,57,53,0.10); border:1px solid rgba(229,57,53,0.20);';
-                    iconBox.innerHTML = '<span style="font-size:16px;">' + esc(icon) + '</span>';
-
-                    var text = document.createElement('div');
-                    text.style.cssText = 'min-width:0; flex:1;';
-                    text.innerHTML = '<div style="font-size:13px; font-weight:800; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">' + esc(title) + '</div><div style="font-size:11px; color:var(--text-secondary);">Subpágina</div>';
-
-                    var chevron = document.createElement('div');
-                    chevron.style.cssText = 'font-size:12px; color:var(--text-secondary); opacity:0.9;';
-                    chevron.textContent = '›';
-
-                    a.appendChild(iconBox);
-                    a.appendChild(text);
-                    a.appendChild(chevron);
-                    wrap.appendChild(a);
-                    return wrap;
-                };
-                SubpageTool.prototype.save = function () {
-                    var d = this.data || {};
-                    return {
-                        id: d.id ? String(d.id) : '',
-                        title: d.title ? String(d.title) : 'Sem título',
-                        icon: d.icon ? String(d.icon) : '📄'
-                    };
-                };
-
-                editor = new EditorJS({
-                    holder: 'editorjs',
-                    readOnly: !canEdit,
-                    data: editorData,
-                    autofocus: false,
-                    onReady: function () {
-                        try {
-                            if (canEdit && typeof Undo !== 'undefined') {
-                                new Undo({ editor: editor });
-                            }
-                        } catch (e) {}
+            editor = new EditorJS({
+                holder: 'editorjs',
+                readOnly: !canEdit,
+                data: editorData,
+                autofocus: false,
+                onReady: function () {
+                    try {
+                        if (canEdit && typeof Undo !== 'undefined') {
+                            new Undo({ editor: editor });
+                        }
+                    } catch (e) {}
+                },
+                tools: {
+                    subpage: { class: SubpageTool },
+                    header: { class: Header, inlineToolbar: true, config: { levels: [1,2,3], defaultLevel: 2 } },
+                    list: { class: List, inlineToolbar: true },
+                    checklist: { class: Checklist, inlineToolbar: true },
+                    quote: { class: Quote, inlineToolbar: true },
+                    code: { class: CodeTool },
+                    image: {
+                        class: ImageTool,
+                        inlineToolbar: true,
+                        config: {
+                            field: 'file',
+                            endpoints: { byFile: '/caderno/midia/upload', byUrl: '/caderno/midia/upload' },
+                            additionalRequestData: { page_id: String(pageId) },
+                            captionPlaceholder: 'Legenda',
+                            buttonContent: 'Enviar imagem'
+                        }
                     },
-                    tools: {
-                        subpage: { class: SubpageTool },
-                        header: { class: Header, inlineToolbar: true, config: { levels: [1,2,3], defaultLevel: 2 } },
-                        list: { class: List, inlineToolbar: true },
-                        checklist: { class: Checklist, inlineToolbar: true },
-                        quote: { class: Quote, inlineToolbar: true },
-                        code: { class: CodeTool },
-                        image: {
-                            class: ImageTool,
-                            inlineToolbar: true,
-                            config: {
-                                field: 'file',
-                                endpoints: { byFile: '/caderno/midia/upload', byUrl: '/caderno/midia/upload' },
-                                additionalRequestData: { page_id: String(pageId) },
-                                captionPlaceholder: 'Legenda',
-                                buttonContent: 'Enviar imagem'
-                            }
-                        },
-                        attaches: {
-                            class: AttachesTool,
-                            config: {
-                                endpoint: '/caderno/midia/upload',
-                                field: 'file',
-                                types: '*/*',
-                                buttonText: 'Enviar arquivo',
-                                errorMessage: 'Falha ao enviar arquivo',
-                                additionalRequestHeaders: { 'X-Requested-With': 'XMLHttpRequest' },
-                                additionalRequestData: { page_id: String(pageId) }
-                            }
+                    attaches: {
+                        class: AttachesTool,
+                        config: {
+                            endpoint: '/caderno/midia/upload',
+                            field: 'file',
+                            types: '*/*',
+                            buttonText: 'Enviar arquivo',
+                            errorMessage: 'Falha ao enviar arquivo',
+                            additionalRequestHeaders: { 'X-Requested-With': 'XMLHttpRequest' },
+                            additionalRequestData: { page_id: String(pageId) }
                         }
                     }
-                });
+                }
+            });
 
-                try {
-                    if (editor && editor.isReady && typeof editor.isReady.then === 'function') {
-                        editor.isReady.catch(function (e) {
-                            editorInitError = true;
-                            setHint('Erro ao iniciar editor. Recarregue a página.');
-                            try { console.error('Editor isReady failed:', e); } catch (err) {}
-                        });
-                    }
-                } catch (e) {}
-            } catch (e) {
-                editorInitError = true;
-                setHint('Erro ao iniciar editor. Recarregue a página.');
-                try { console.error('Editor init error:', e); } catch (err) {}
-            }
+            try {
+                if (editor && editor.isReady && typeof editor.isReady.then === 'function') {
+                    editor.isReady.catch(function (e) {
+                        editorInitError = true;
+                        setHint('Erro ao iniciar editor. Recarregue a página.');
+                        try { console.error('Editor isReady failed:', e); } catch (err) {}
+                    });
+                }
+            } catch (e) {}
+        } catch (e) {
+            editorInitError = true;
+            setHint('Erro ao iniciar editor. Recarregue a página.');
+            try { console.error('Editor init error:', e); } catch (err) {}
         }
+    }
+
+    if (pageId) {
+        runIdle(initEditor);
     }
 
     var saving = false;
