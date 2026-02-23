@@ -908,6 +908,15 @@
                     var personaPicker = document.getElementById('projectPersonaPicker');
                     if (!personaPicker) return;
 
+                    var btn = document.getElementById('filesPlusBtn');
+                    var menu = document.getElementById('filesPlusMenu');
+                    var uploadForm = document.getElementById('filesUploadForm');
+                    var textForm = document.getElementById('filesTextForm');
+
+                    function closeMenu() {
+                        if (menu) menu.style.display = 'none';
+                    }
+
                     function showUpload() {
                         if (uploadForm) uploadForm.style.display = 'flex';
                         if (textForm) textForm.style.display = 'none';
