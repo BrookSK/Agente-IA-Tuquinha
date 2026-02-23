@@ -1691,10 +1691,17 @@ if (!empty($breadcrumb)) {
     var editorData = null;
     if (initialJson && typeof initialJson === 'string') {
         editorData = safeJsonParse(initialJson);
+        if (editorData && typeof editorData === 'string') {
+            editorData = safeJsonParse(editorData);
+        }
     }
 
-    if (!editorData) {
+    if (!editorData || typeof editorData !== 'object') {
         editorData = { time: Date.now(), blocks: [] };
+    }
+
+    if (!editorData.blocks || !Array.isArray(editorData.blocks)) {
+        editorData.blocks = [];
     }
 
     try {
