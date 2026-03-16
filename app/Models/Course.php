@@ -7,6 +7,43 @@ use PDO;
 
 class Course
 {
+    public static function findByExternalToken(string $token): ?array
+    {
+        $token = trim($token);
+        if ($token === '') {
+            return null;
+        }
+
+        $pdo = Database::getConnection();
+        $stmt = $pdo->prepare('SELECT * FROM courses WHERE external_token = :t AND is_active = 1 AND is_external = 1 LIMIT 1');
+        $stmt->execute(['t' => $token]);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $row ?: null;
+    }
+
+    public static function ensureExternalToken(int $courseId): ?string
+    {
+        if ($courseId <= 0) {
+            return null;
+        }
+
+        $course = self::findById($courseId);
+        if (!$course) {
+            return null;
+        }
+
+        $existing = trim((string)($course['external_token'] ?? ''));
+        if ($existing !== '') {
+            return $existing;
+        }
+
+        $token = bin2hex(random_bytes(24));
+        $pdo = Database::getConnection();
+        $stmt = $pdo->prepare('UPDATE courses SET external_token = :t WHERE id = :id LIMIT 1');
+        $stmt->execute(['t' => $token, 'id' => $courseId]);
+        return $token;
+    }
+
     public static function all(): array
     {
         $pdo = Database::getConnection();
@@ -17,7 +54,7 @@ class Course
     public static function allActive(): array
     {
         $pdo = Database::getConnection();
-        $stmt = $pdo->query('SELECT * FROM courses WHERE is_active = 1 ORDER BY created_at DESC');
+        $stmt = $pdo->query('SELECT * FROM courses WHERE is_active = 1 AND is_external = 0 ORDER BY created_at DESC');
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
@@ -50,8 +87,8 @@ class Course
     public static function create(array $data): int
     {
         $pdo = Database::getConnection();
-        $stmt = $pdo->prepare('INSERT INTO courses (owner_user_id, title, slug, short_description, description, image_path, badge_image_path, certificate_syllabus, certificate_workload_hours, certificate_location, is_paid, price_cents, allow_plan_access_only, allow_public_purchase, is_active)
-            VALUES (:owner_user_id, :title, :slug, :short_description, :description, :image_path, :badge_image_path, :certificate_syllabus, :certificate_workload_hours, :certificate_location, :is_paid, :price_cents, :allow_plan_access_only, :allow_public_purchase, :is_active)');
+        $stmt = $pdo->prepare('INSERT INTO courses (owner_user_id, title, slug, short_description, description, image_path, badge_image_path, certificate_syllabus, certificate_workload_hours, certificate_location, is_paid, price_cents, allow_plan_access_only, allow_public_purchase, is_active, is_external)
+            VALUES (:owner_user_id, :title, :slug, :short_description, :description, :image_path, :badge_image_path, :certificate_syllabus, :certificate_workload_hours, :certificate_location, :is_paid, :price_cents, :allow_plan_access_only, :allow_public_purchase, :is_active, :is_external)');
         $stmt->execute([
             'owner_user_id' => $data['owner_user_id'] ?? null,
             'title' => $data['title'] ?? '',
@@ -68,6 +105,7 @@ class Course
             'allow_plan_access_only' => (int)($data['allow_plan_access_only'] ?? 1),
             'allow_public_purchase' => (int)($data['allow_public_purchase'] ?? 0),
             'is_active' => (int)($data['is_active'] ?? 1),
+            'is_external' => (int)($data['is_external'] ?? 0),
         ]);
         return (int)$pdo->lastInsertId();
     }
@@ -91,6 +129,7 @@ class Course
             allow_plan_access_only = :allow_plan_access_only,
             allow_public_purchase = :allow_public_purchase,
             is_active = :is_active,
+            is_external = :is_external,
             updated_at = NOW()
             WHERE id = :id');
         $stmt->execute([
@@ -110,6 +149,7 @@ class Course
             'allow_plan_access_only' => (int)($data['allow_plan_access_only'] ?? 1),
             'allow_public_purchase' => (int)($data['allow_public_purchase'] ?? 0),
             'is_active' => (int)($data['is_active'] ?? 1),
+            'is_external' => (int)($data['is_external'] ?? 0),
         ]);
     }
 }

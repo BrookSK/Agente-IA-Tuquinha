@@ -1,0 +1,589 @@
+<?php
+
+namespace App\Controllers;
+
+use App\Core\Controller;
+use App\Models\Course;
+use App\Models\CourseEnrollment;
+use App\Models\CourseLesson;
+use App\Models\CourseLessonComment;
+use App\Models\CourseLessonProgress;
+use App\Models\CoursePartnerBranding;
+use App\Models\CoursePurchase;
+use App\Models\Plan;
+use App\Models\Subscription;
+use App\Models\User;
+use App\Services\AsaasClient;
+use App\Services\MailService;
+
+class ExternalCourseController extends Controller
+{
+    private function requireLogin(): array
+    {
+        if (empty($_SESSION['user_id'])) {
+            header('Location: /login');
+            exit;
+        }
+
+        $user = User::findById((int)$_SESSION['user_id']);
+        if (!$user) {
+            unset($_SESSION['user_id'], $_SESSION['user_name'], $_SESSION['user_email']);
+            header('Location: /login');
+            exit;
+        }
+
+        return $user;
+    }
+
+    private function canAccessExternalCourse(array $course, array $user): bool
+    {
+        $courseId = (int)($course['id'] ?? 0);
+        $userId = (int)($user['id'] ?? 0);
+        if ($courseId <= 0 || $userId <= 0) {
+            return false;
+        }
+
+        if (!empty($_SESSION['is_admin'])) {
+            return true;
+        }
+
+        if (!empty($course['owner_user_id']) && (int)$course['owner_user_id'] === $userId) {
+            return true;
+        }
+
+        if (CoursePurchase::userHasPaidPurchase($userId, $courseId)) {
+            return true;
+        }
+
+        if (CourseEnrollment::isEnrolled($courseId, $userId)) {
+            return true;
+        }
+
+        return false;
+    }
+
+    private function resolvePlanForUser(?array $user): ?array
+    {
+        $plan = null;
+        if ($user && !empty($user['email'])) {
+            $sub = Subscription::findLastByEmail((string)$user['email']);
+            if ($sub && !empty($sub['plan_id'])) {
+                $plan = Plan::findById((int)$sub['plan_id']);
+            }
+        }
+        if (!$plan) {
+            $plan = Plan::findBySessionSlug($_SESSION['plan_slug'] ?? null) ?: Plan::findBySlug('free');
+        }
+        return $plan;
+    }
+
+    private function applyCoursePlanDiscountCents(int $priceCents, ?array $plan): int
+    {
+        if ($priceCents <= 0) {
+            return 0;
+        }
+        $p = 0.0;
+        if ($plan && isset($plan['course_discount_percent']) && $plan['course_discount_percent'] !== null && $plan['course_discount_percent'] !== '') {
+            $p = (float)$plan['course_discount_percent'];
+        }
+        if ($p <= 0) {
+            return $priceCents;
+        }
+        if ($p > 100) {
+            $p = 100.0;
+        }
+        $final = (int)round($priceCents * (1.0 - ($p / 100.0)));
+        return max(0, $final);
+    }
+
+    private function json(array $payload, int $status = 200): void
+    {
+        http_response_code($status);
+        header('Content-Type: application/json; charset=utf-8');
+        echo json_encode($payload);
+        exit;
+    }
+
+    private function buildExternalBaseUrl(): string
+    {
+        $scheme = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') ? 'https://' : 'http://';
+        $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+        return $scheme . $host;
+    }
+
+    private function buildLoginUrlWithPendingCourse(int $courseId): string
+    {
+        return '/login?pending_external_course_id=' . urlencode((string)$courseId);
+    }
+
+    public function show(): void
+    {
+        $token = isset($_GET['token']) ? trim((string)$_GET['token']) : '';
+        $course = $token !== '' ? Course::findByExternalToken($token) : null;
+        if (!$course) {
+            http_response_code(404);
+            echo 'Curso não encontrado';
+            return;
+        }
+
+        $branding = null;
+        if (!empty($course['owner_user_id'])) {
+            $branding = CoursePartnerBranding::findByUserId((int)$course['owner_user_id']);
+        }
+
+        $this->view('external_courses/show', [
+            'pageTitle' => (string)($branding['company_name'] ?? ($course['title'] ?? 'Curso')),
+            'course' => $course,
+            'branding' => $branding,
+            'token' => $token,
+            'layout' => 'external_course',
+        ]);
+    }
+
+    public function checkout(): void
+    {
+        $token = isset($_GET['token']) ? trim((string)$_GET['token']) : '';
+        $course = $token !== '' ? Course::findByExternalToken($token) : null;
+        if (!$course) {
+            header('Location: /');
+            exit;
+        }
+
+        $branding = null;
+        if (!empty($course['owner_user_id'])) {
+            $branding = CoursePartnerBranding::findByUserId((int)$course['owner_user_id']);
+        }
+
+        $priceCents = isset($course['price_cents']) ? (int)$course['price_cents'] : 0;
+        $isPaid = !empty($course['is_paid']) && $priceCents > 0;
+        if (!$isPaid) {
+            http_response_code(400);
+            echo 'Este curso não está configurado como pago.';
+            return;
+        }
+
+        $this->view('external_courses/checkout', [
+            'pageTitle' => 'Comprar: ' . (string)($course['title'] ?? 'Curso'),
+            'course' => $course,
+            'branding' => $branding,
+            'token' => $token,
+            'savedCustomer' => null,
+            'error' => null,
+            'layout' => 'external_course',
+        ]);
+    }
+
+    public function processCheckout(): void
+    {
+        $token = isset($_POST['token']) ? trim((string)$_POST['token']) : '';
+        $course = $token !== '' ? Course::findByExternalToken($token) : null;
+        if (!$course) {
+            header('Location: /');
+            exit;
+        }
+
+        $branding = null;
+        if (!empty($course['owner_user_id'])) {
+            $branding = CoursePartnerBranding::findByUserId((int)$course['owner_user_id']);
+        }
+
+        $name = trim((string)($_POST['name'] ?? ''));
+        $email = trim((string)($_POST['email'] ?? ''));
+        $password = (string)($_POST['password'] ?? '');
+
+        $required = ['name', 'email', 'password', 'cpf', 'birthdate', 'postal_code', 'address', 'address_number', 'province', 'city', 'state'];
+        foreach ($required as $field) {
+            if (empty($_POST[$field])) {
+                $this->view('external_courses/checkout', [
+                    'pageTitle' => 'Comprar: ' . (string)($course['title'] ?? 'Curso'),
+                    'course' => $course,
+                    'branding' => $branding,
+                    'token' => $token,
+                    'savedCustomer' => null,
+                    'error' => 'Por favor, preencha todos os campos obrigatórios.',
+                    'layout' => 'external_course',
+                ]);
+                return;
+            }
+        }
+
+        if (strlen($password) < 8) {
+            $this->view('external_courses/checkout', [
+                'pageTitle' => 'Comprar: ' . (string)($course['title'] ?? 'Curso'),
+                'course' => $course,
+                'branding' => $branding,
+                'token' => $token,
+                'savedCustomer' => null,
+                'error' => 'Sua senha deve ter pelo menos 8 caracteres.',
+                'layout' => 'external_course',
+            ]);
+            return;
+        }
+
+        $existingUser = User::findByEmail($email);
+        $userId = 0;
+
+        if ($existingUser) {
+            // Usuário já existe: exige que ele informe a senha atual (para evitar conflito de contas)
+            $this->view('external_courses/checkout', [
+                'pageTitle' => 'Comprar: ' . (string)($course['title'] ?? 'Curso'),
+                'course' => $course,
+                'branding' => $branding,
+                'token' => $token,
+                'savedCustomer' => null,
+                'error' => 'Já existe uma conta com este e-mail. Faça login e depois tente novamente.',
+                'layout' => 'external_course',
+            ]);
+            return;
+        }
+
+        $hash = password_hash($password, PASSWORD_DEFAULT);
+        $userId = User::createUser($name, $email, $hash);
+
+        // Marca como verificado para permitir login imediato
+        try {
+            User::setEmailVerifiedAt($userId, date('Y-m-d H:i:s'));
+        } catch (\Throwable $e) {
+        }
+
+        // Login automático
+        $_SESSION['user_id'] = (int)$userId;
+        $_SESSION['user_name'] = $name;
+        $_SESSION['user_email'] = $email;
+        unset($_SESSION['is_admin']);
+
+        $plan = $this->resolvePlanForUser(['id' => $userId, 'email' => $email]);
+
+        $originalPriceCents = isset($course['price_cents']) ? (int)$course['price_cents'] : 0;
+        $finalPriceCents = $this->applyCoursePlanDiscountCents($originalPriceCents, $plan);
+        if ($finalPriceCents <= 0) {
+            $this->view('external_courses/checkout', [
+                'pageTitle' => 'Comprar: ' . (string)($course['title'] ?? 'Curso'),
+                'course' => $course,
+                'branding' => $branding,
+                'token' => $token,
+                'savedCustomer' => null,
+                'error' => 'Valor inválido para este curso.',
+                'layout' => 'external_course',
+            ]);
+            return;
+        }
+
+        $billingType = isset($_POST['billing_type']) ? (string)$_POST['billing_type'] : 'PIX';
+        if (!in_array($billingType, ['PIX', 'BOLETO', 'CREDIT_CARD'], true)) {
+            $billingType = 'PIX';
+        }
+
+        $purchaseId = CoursePurchase::create([
+            'user_id' => (int)$userId,
+            'course_id' => (int)($course['id'] ?? 0),
+            'amount_cents' => $finalPriceCents,
+            'billing_type' => $billingType,
+            'asaas_payment_id' => null,
+            'status' => 'pending',
+            'paid_at' => null,
+        ]);
+
+        $customer = [
+            'name' => $name,
+            'email' => $email,
+            'cpfCnpj' => preg_replace('/\D+/', '', (string)($_POST['cpf'] ?? '')),
+            'phone' => (string)($_POST['phone'] ?? ''),
+            'postalCode' => preg_replace('/\D+/', '', (string)($_POST['postal_code'] ?? '')),
+            'address' => trim((string)($_POST['address'] ?? '')),
+            'addressNumber' => trim((string)($_POST['address_number'] ?? '')),
+            'complement' => (string)($_POST['complement'] ?? ''),
+            'province' => trim((string)($_POST['province'] ?? '')),
+            'city' => trim((string)($_POST['city'] ?? '')),
+            'state' => trim((string)($_POST['state'] ?? '')),
+        ];
+
+        try {
+            $asaas = new AsaasClient();
+
+            $customerResp = $asaas->createOrUpdateCustomer($customer);
+            $customerId = $customerResp['id'] ?? null;
+            if (!$customerId) {
+                throw new \RuntimeException('Falha ao criar cliente no Asaas.');
+            }
+
+            $dueDate = date('Y-m-d');
+            if ($billingType === 'BOLETO') {
+                $dueDate = date('Y-m-d', strtotime('+3 days'));
+            } elseif ($billingType === 'PIX') {
+                $dueDate = date('Y-m-d', strtotime('+1 day'));
+            }
+
+            $payload = [
+                'customer' => $customerId,
+                'billingType' => $billingType,
+                'value' => $finalPriceCents / 100,
+                'description' => 'Compra avulsa do curso ' . (string)($course['title'] ?? ''),
+                'externalReference' => 'course_purchase:' . $purchaseId,
+                'dueDate' => $dueDate,
+            ];
+
+            $resp = $asaas->createPayment($payload);
+            $paymentId = $resp['id'] ?? null;
+            if ($paymentId) {
+                CoursePurchase::attachPaymentId($purchaseId, (string)$paymentId);
+            }
+
+            $redirectUrl = $resp['invoiceUrl'] ?? null;
+            if (!$redirectUrl && !empty($resp['bankSlipUrl'])) {
+                $redirectUrl = (string)$resp['bankSlipUrl'];
+            }
+
+            // Email com branding e senha em texto (conforme solicitado)
+            try {
+                $companyName = (string)($branding['company_name'] ?? '');
+                $logoUrl = (string)($branding['logo_url'] ?? '');
+                $greeting = $name !== '' ? $name : 'cliente';
+                $loginUrl = $this->buildExternalBaseUrl() . '/login';
+                $content = '<p style="font-size:13px; color:#b0b0b0; line-height:1.55;">Sua conta foi criada para acessar o curso <b>' . htmlspecialchars((string)($course['title'] ?? ''), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') . '</b>.</p>'
+                    . '<p style="font-size:13px; color:#b0b0b0; line-height:1.55;">Dados de acesso:</p>'
+                    . '<div style="font-size:13px; color:#f5f5f5; line-height:1.55; border:1px solid #272727; border-radius:12px; padding:10px 12px; background:#050509;">'
+                    . '<div><b>E-mail:</b> ' . htmlspecialchars($email, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') . '</div>'
+                    . '<div><b>Senha:</b> ' . htmlspecialchars($password, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') . '</div>'
+                    . '</div>'
+                    . '<p style="font-size:12px; color:#777; line-height:1.55; margin-top:10px;">Guarde esta senha em local seguro.</p>';
+
+                $subject = ($companyName !== '' ? $companyName . ' - ' : '') . 'Acesso ao curso: ' . (string)($course['title'] ?? '');
+                $body = MailService::buildDefaultTemplate($greeting, $content, 'Entrar', $loginUrl, $logoUrl);
+                MailService::send($email, $name, $subject, $body);
+            } catch (\Throwable $eMail) {
+            }
+
+            if ($redirectUrl) {
+                $this->view('courses/abrir_pagamento', [
+                    'pageTitle' => 'Pagamento do curso',
+                    'course' => $course,
+                    'billingType' => $billingType,
+                    'amountReais' => $finalPriceCents / 100,
+                    'redirectUrl' => $redirectUrl,
+                    'returnUrl' => '/curso-externo/membros?token=' . urlencode($token),
+                ]);
+                return;
+            }
+
+            header('Location: /curso-externo?token=' . urlencode($token));
+            exit;
+        } catch (\Throwable $e) {
+            $this->view('external_courses/checkout', [
+                'pageTitle' => 'Comprar: ' . (string)($course['title'] ?? 'Curso'),
+                'course' => $course,
+                'branding' => $branding,
+                'token' => $token,
+                'savedCustomer' => null,
+                'error' => 'Não consegui criar a cobrança para este curso. Tente novamente em alguns minutos.',
+                'layout' => 'external_course',
+            ]);
+            return;
+        }
+    }
+
+    public function members(): void
+    {
+        $token = isset($_GET['token']) ? trim((string)$_GET['token']) : '';
+        if ($token === '') {
+            header('Location: /');
+            exit;
+        }
+
+        $course = Course::findByExternalToken($token);
+        if (!$course) {
+            http_response_code(404);
+            echo 'Curso não encontrado';
+            return;
+        }
+
+        $user = $this->requireLogin();
+
+        if (!$this->canAccessExternalCourse($course, $user)) {
+            header('Location: /curso-externo?token=' . urlencode($token));
+            exit;
+        }
+
+        $branding = null;
+        if (!empty($course['owner_user_id'])) {
+            $branding = CoursePartnerBranding::findByUserId((int)$course['owner_user_id']);
+        }
+
+        $lessons = CourseLesson::allByCourseId((int)($course['id'] ?? 0));
+        $firstLessonId = 0;
+        foreach ($lessons as $l) {
+            if (empty($l['is_published'])) {
+                continue;
+            }
+            $lid = (int)($l['id'] ?? 0);
+            if ($lid > 0) {
+                $firstLessonId = $lid;
+                break;
+            }
+        }
+
+        $this->view('external_courses/members', [
+            'pageTitle' => (string)($branding['company_name'] ?? ($course['title'] ?? 'Curso')),
+            'course' => $course,
+            'branding' => $branding,
+            'token' => $token,
+            'firstLessonId' => $firstLessonId,
+            'layout' => 'external_course',
+        ]);
+    }
+
+    public function lesson(): void
+    {
+        $token = isset($_GET['token']) ? trim((string)$_GET['token']) : '';
+        $lessonId = isset($_GET['lesson_id']) ? (int)$_GET['lesson_id'] : 0;
+        if ($token === '' || $lessonId <= 0) {
+            header('Location: /');
+            exit;
+        }
+
+        $course = Course::findByExternalToken($token);
+        if (!$course) {
+            http_response_code(404);
+            echo 'Curso não encontrado';
+            return;
+        }
+
+        $lesson = CourseLesson::findById($lessonId);
+        if (!$lesson || empty($lesson['is_published']) || (int)($lesson['course_id'] ?? 0) !== (int)($course['id'] ?? 0)) {
+            http_response_code(404);
+            echo 'Aula não encontrada';
+            return;
+        }
+
+        $user = $this->requireLogin();
+        if (!$this->canAccessExternalCourse($course, $user)) {
+            header('Location: /curso-externo?token=' . urlencode($token));
+            exit;
+        }
+
+        $branding = null;
+        if (!empty($course['owner_user_id'])) {
+            $branding = CoursePartnerBranding::findByUserId((int)$course['owner_user_id']);
+        }
+
+        $courseId = (int)($course['id'] ?? 0);
+        $userId = (int)($user['id'] ?? 0);
+
+        $lessons = CourseLesson::allByCourseId($courseId);
+        $completedLessonIds = CourseLessonProgress::completedLessonIdsByUserAndCourse($courseId, $userId);
+        $lessonComments = CourseLessonComment::allByLessonWithUser($lessonId);
+
+        $prevLessonId = 0;
+        $nextLessonId = 0;
+        $publishedLessonIds = [];
+        foreach ($lessons as $l) {
+            if (empty($l['is_published'])) {
+                continue;
+            }
+            $lid = (int)($l['id'] ?? 0);
+            if ($lid > 0) {
+                $publishedLessonIds[] = $lid;
+            }
+        }
+        $count = count($publishedLessonIds);
+        for ($i = 0; $i < $count; $i++) {
+            if ($publishedLessonIds[$i] === $lessonId) {
+                if ($i - 1 >= 0) {
+                    $prevLessonId = (int)$publishedLessonIds[$i - 1];
+                }
+                if ($i + 1 < $count) {
+                    $nextLessonId = (int)$publishedLessonIds[$i + 1];
+                }
+                break;
+            }
+        }
+
+        $this->view('external_courses/lesson_player', [
+            'pageTitle' => 'Aula: ' . (string)($lesson['title'] ?? ''),
+            'course' => $course,
+            'lesson' => $lesson,
+            'lessons' => $lessons,
+            'completedLessonIds' => $completedLessonIds,
+            'lessonComments' => $lessonComments,
+            'token' => $token,
+            'prevLessonId' => $prevLessonId,
+            'nextLessonId' => $nextLessonId,
+            'layout' => 'external_course',
+            'branding' => $branding,
+            'user' => $user,
+        ]);
+    }
+
+    public function completeLesson(): void
+    {
+        $user = $this->requireLogin();
+
+        $token = isset($_POST['token']) ? trim((string)$_POST['token']) : '';
+        $lessonId = isset($_POST['lesson_id']) ? (int)$_POST['lesson_id'] : 0;
+        if ($token === '' || $lessonId <= 0) {
+            header('Location: /');
+            exit;
+        }
+
+        $course = Course::findByExternalToken($token);
+        if (!$course) {
+            header('Location: /');
+            exit;
+        }
+
+        if (!$this->canAccessExternalCourse($course, $user)) {
+            header('Location: /curso-externo?token=' . urlencode($token));
+            exit;
+        }
+
+        $lesson = CourseLesson::findById($lessonId);
+        if (!$lesson || empty($lesson['is_published']) || (int)($lesson['course_id'] ?? 0) !== (int)($course['id'] ?? 0)) {
+            header('Location: /curso-externo/membros?token=' . urlencode($token));
+            exit;
+        }
+
+        CourseLessonProgress::markCompleted((int)($course['id'] ?? 0), $lessonId, (int)($user['id'] ?? 0));
+        header('Location: /curso-externo/aula?token=' . urlencode($token) . '&lesson_id=' . $lessonId);
+        exit;
+    }
+
+    public function commentLesson(): void
+    {
+        $user = $this->requireLogin();
+
+        $token = isset($_POST['token']) ? trim((string)$_POST['token']) : '';
+        $lessonId = isset($_POST['lesson_id']) ? (int)$_POST['lesson_id'] : 0;
+        $body = trim((string)($_POST['body'] ?? ''));
+        if ($token === '' || $lessonId <= 0 || $body === '') {
+            header('Location: /');
+            exit;
+        }
+
+        $course = Course::findByExternalToken($token);
+        if (!$course) {
+            header('Location: /');
+            exit;
+        }
+
+        if (!$this->canAccessExternalCourse($course, $user)) {
+            header('Location: /curso-externo?token=' . urlencode($token));
+            exit;
+        }
+
+        $lesson = CourseLesson::findById($lessonId);
+        if (!$lesson || empty($lesson['is_published']) || (int)($lesson['course_id'] ?? 0) !== (int)($course['id'] ?? 0)) {
+            header('Location: /curso-externo/membros?token=' . urlencode($token));
+            exit;
+        }
+
+        CourseLessonComment::create([
+            'course_id' => (int)($course['id'] ?? 0),
+            'lesson_id' => $lessonId,
+            'user_id' => (int)($user['id'] ?? 0),
+            'body' => $body,
+        ]);
+
+        header('Location: /curso-externo/aula?token=' . urlencode($token) . '&lesson_id=' . $lessonId);
+        exit;
+    }
+}

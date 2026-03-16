@@ -3,8 +3,10 @@
 /** @var string $redirectUrl */
 /** @var string $billingType */
 /** @var float $amountReais */
+/** @var string|null $returnUrl */
 
 $title = trim((string)($course['title'] ?? ''));
+$returnUrl = isset($returnUrl) ? (string)$returnUrl : '';
 ?>
 <div style="max-width:640px; margin:0 auto; padding:16px 8px; text-align:center;">
     <h1 style="font-size:22px; margin-bottom:10px; font-weight:650;">Abrimos seu pagamento em outra aba</h1>
@@ -27,7 +29,7 @@ $title = trim((string)($course['title'] ?? ''));
         Abrir pagamento
     </a>
     <div style="margin-top:8px;">
-        <a href="<?= \App\Controllers\CourseController::buildCourseUrl($course) ?>" style="font-size:13px; color:#b0b0b0; text-decoration:none; margin-right:10px;">Voltar para o curso</a>
+        <a href="<?= $returnUrl !== '' ? htmlspecialchars($returnUrl, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') : \App\Controllers\CourseController::buildCourseUrl($course) ?>" style="font-size:13px; color:#b0b0b0; text-decoration:none; margin-right:10px;">Voltar</a>
         <a href="/conta" style="font-size:13px; color:#b0b0b0; text-decoration:none;">Ir para minha conta</a>
     </div>
 </div>

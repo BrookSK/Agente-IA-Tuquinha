@@ -132,6 +132,16 @@ $router->get('/tokens/comprar', 'TokenTopupController@show');
 $router->post('/tokens/comprar', 'TokenTopupController@create');
 $router->get('/tokens/historico', 'TokenTopupController@history');
 $router->get('/personalidades', 'PersonalityController@index');
+
+// Curso externo (white-label)
+$router->get('/curso-externo', 'ExternalCourseController@show');
+$router->get('/curso-externo/checkout', 'ExternalCourseController@checkout');
+$router->post('/curso-externo/checkout', 'ExternalCourseController@processCheckout');
+$router->get('/curso-externo/membros', 'ExternalCourseController@members');
+$router->get('/curso-externo/aula', 'ExternalCourseController@lesson');
+$router->post('/curso-externo/aula/concluir', 'ExternalCourseController@completeLesson');
+$router->post('/curso-externo/aula/comentar', 'ExternalCourseController@commentLesson');
+
 $router->get('/cursos', 'CourseController@index');
 $router->get('/cursos/ver', 'CourseController@show');
 $router->post('/cursos/inscrever', 'CourseController@enroll');

@@ -3,10 +3,21 @@
 /** @var float|null $partnerCommissionPercent */
 /** @var float|null $partnerDefaultPercent */
 /** @var string $partnerEmail */
+/** @var array|null $partnerBranding */
 $isEdit = !empty($course);
 $partnerCommissionPercent = $partnerCommissionPercent ?? null;
 $partnerDefaultPercent = $partnerDefaultPercent ?? null;
 $partnerEmail = $partnerEmail ?? '';
+$partnerBranding = $partnerBranding ?? null;
+
+$isExternal = !empty($course['is_external']);
+$externalToken = isset($course['external_token']) ? trim((string)$course['external_token']) : '';
+$externalUrl = '';
+if ($externalToken !== '') {
+    $scheme = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') ? 'https://' : 'http://';
+    $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+    $externalUrl = $scheme . $host . '/curso-externo?token=' . urlencode($externalToken);
+}
 ?>
 <div style="max-width: 720px; margin: 0 auto;">
     <h1 style="font-size: 22px; margin-bottom: 10px; font-weight: 650;">
@@ -201,6 +212,57 @@ $partnerEmail = $partnerEmail ?? '';
         <div style="display:flex; flex-direction:column; gap:6px; font-size:13px; color:var(--text-secondary); margin-top:4px;">
             <div style="display:flex; flex-wrap:wrap; gap:10px; align-items:center;">
                 <label style="display:flex; align-items:center; gap:5px;">
+                    <input type="checkbox" name="is_external" value="1" <?= $isExternal ? 'checked' : '' ?>>
+                    <span>Curso externo (acesso e compra apenas via link)</span>
+                </label>
+            </div>
+            <div style="font-size:11px; color:#777; margin-left:20px;">
+                Ao marcar, este curso não aparece na vitrine normal e só pode ser acessado por um link externo.
+            </div>
+
+            <?php if ($isExternal && $externalUrl !== ''): ?>
+                <div style="margin-left:20px; margin-top:6px; border:1px solid var(--border-subtle); background:var(--surface-card); border-radius:12px; padding:10px 12px;">
+                    <div style="font-size:11px; color:var(--text-secondary); margin-bottom:6px;">Link externo do curso</div>
+                    <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+                        <input type="text" id="externalCourseLink" value="<?= htmlspecialchars($externalUrl, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?>" readonly style="flex:1 1 260px; min-width:240px; padding:8px 10px; border-radius:10px; border:1px solid var(--border-subtle); background:var(--surface-subtle); color:var(--text-primary); font-size:12px;" />
+                        <button type="button" id="copyExternalCourseLink" style="border:none; border-radius:999px; padding:8px 12px; background:linear-gradient(135deg,#e53935,#ff6f60); color:#050509; font-weight:700; font-size:12px; cursor:pointer;">Copiar</button>
+                    </div>
+                </div>
+            <?php elseif ($isExternal): ?>
+                <div style="font-size:11px; color:#ffcc80; margin-left:20px;">
+                    Salve o curso para gerar o link externo.
+                </div>
+            <?php endif; ?>
+
+            <div style="margin-left:20px; margin-top:10px; border:1px solid var(--border-subtle); background:var(--surface-subtle); border-radius:12px; padding:10px 12px;">
+                <div style="font-size:13px; font-weight:650; margin-bottom:6px;">Branding do parceiro/dono</div>
+                <div style="display:flex; gap:12px; flex-wrap:wrap;">
+                    <div style="flex:1 1 240px; min-width:220px;">
+                        <label style="font-size:12px; color:var(--text-secondary); display:block; margin-bottom:4px;">Nome da empresa</label>
+                        <input type="text" name="partner_company_name" value="<?= htmlspecialchars((string)($partnerBranding['company_name'] ?? ''), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?>" style="width:100%; padding:8px 10px; border-radius:10px; border:1px solid var(--border-subtle); background:var(--surface-card); color:var(--text-primary); font-size:13px;">
+                    </div>
+                    <div style="flex:1 1 240px; min-width:220px;">
+                        <label style="font-size:12px; color:var(--text-secondary); display:block; margin-bottom:4px;">Logo (URL)</label>
+                        <input type="text" name="partner_logo_url" value="<?= htmlspecialchars((string)($partnerBranding['logo_url'] ?? ''), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?>" style="width:100%; padding:8px 10px; border-radius:10px; border:1px solid var(--border-subtle); background:var(--surface-card); color:var(--text-primary); font-size:13px;">
+                    </div>
+                </div>
+                <div style="display:flex; gap:12px; flex-wrap:wrap; margin-top:8px;">
+                    <div style="flex:1 1 180px; min-width:160px;">
+                        <label style="font-size:12px; color:var(--text-secondary); display:block; margin-bottom:4px;">Cor base (HEX)</label>
+                        <input type="text" name="partner_primary_color" value="<?= htmlspecialchars((string)($partnerBranding['primary_color'] ?? ''), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?>" placeholder="#e53935" style="width:100%; padding:8px 10px; border-radius:10px; border:1px solid var(--border-subtle); background:var(--surface-card); color:var(--text-primary); font-size:13px;">
+                    </div>
+                    <div style="flex:1 1 180px; min-width:160px;">
+                        <label style="font-size:12px; color:var(--text-secondary); display:block; margin-bottom:4px;">Cor secundária (HEX)</label>
+                        <input type="text" name="partner_secondary_color" value="<?= htmlspecialchars((string)($partnerBranding['secondary_color'] ?? ''), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?>" placeholder="#ff6f60" style="width:100%; padding:8px 10px; border-radius:10px; border:1px solid var(--border-subtle); background:var(--surface-card); color:var(--text-primary); font-size:13px;">
+                    </div>
+                </div>
+                <div style="font-size:11px; color:#777; margin-top:6px;">
+                    Dica: configure o e-mail do professor/parceiro para que este branding fique vinculado corretamente.
+                </div>
+            </div>
+
+            <div style="display:flex; flex-wrap:wrap; gap:10px; align-items:center;">
+                <label style="display:flex; align-items:center; gap:5px;">
                     <input type="checkbox" name="is_paid" value="1" <?= !empty($course['is_paid']) ? 'checked' : '' ?>>
                     <span>Curso pago (define um preço avulso para este curso)</span>
                 </label>
@@ -257,6 +319,21 @@ $partnerEmail = $partnerEmail ?? '';
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {
+    var copyBtn = document.getElementById('copyExternalCourseLink');
+    var linkInput = document.getElementById('externalCourseLink');
+    if (copyBtn && linkInput) {
+        copyBtn.addEventListener('click', function () {
+            try {
+                linkInput.focus();
+                linkInput.select();
+                document.execCommand('copy');
+                copyBtn.textContent = 'Copiado!';
+                setTimeout(function () { try { copyBtn.textContent = 'Copiar'; } catch (e) {} }, 1400);
+            } catch (e) {
+            }
+        });
+    }
+
     var fileInput = document.querySelector('input[name="image_upload"]');
     var wrapper = document.getElementById('course-image-preview-wrapper');
     var imgEl = document.getElementById('course-image-preview');

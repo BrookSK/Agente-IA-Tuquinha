@@ -10,6 +10,7 @@ use App\Models\CourseLive;
 use App\Models\CourseLiveParticipant;
 use App\Models\CoursePartner;
 use App\Models\CoursePartnerCommission;
+use App\Models\CoursePartnerBranding;
 use App\Models\CourseModule;
 use App\Models\CourseModuleExam;
 use App\Models\CourseExamQuestion;
@@ -50,6 +51,11 @@ class AdminCourseController extends Controller
             $course = Course::findById($id);
         }
 
+        $partnerBranding = null;
+        if ($course && !empty($course['owner_user_id'])) {
+            $partnerBranding = CoursePartnerBranding::findByUserId((int)$course['owner_user_id']);
+        }
+
         $partnerCommissionPercent = null;
         $partnerDefaultPercent = null;
         $partnerEmail = '';
@@ -82,6 +88,7 @@ class AdminCourseController extends Controller
             'partnerCommissionPercent' => $partnerCommissionPercent,
             'partnerDefaultPercent' => $partnerDefaultPercent,
             'partnerEmail' => $partnerEmail,
+            'partnerBranding' => $partnerBranding,
         ]);
     }
 
@@ -115,6 +122,20 @@ class AdminCourseController extends Controller
         $allowPlanAccessOnly = !empty($_POST['allow_plan_access_only']) ? 1 : 0;
         $allowPublicPurchase = !empty($_POST['allow_public_purchase']) ? 1 : 0;
         $isActive = !empty($_POST['is_active']) ? 1 : 0;
+
+        $isExternal = !empty($_POST['is_external']) ? 1 : 0;
+
+        $brandingCompanyName = trim((string)($_POST['partner_company_name'] ?? ''));
+        $brandingLogoUrl = trim((string)($_POST['partner_logo_url'] ?? ''));
+        $brandingPrimaryColor = trim((string)($_POST['partner_primary_color'] ?? ''));
+        $brandingSecondaryColor = trim((string)($_POST['partner_secondary_color'] ?? ''));
+
+        if ($isExternal) {
+            // Modo exclusivo: curso acessível apenas por link externo.
+            $allowPlanAccessOnly = 0;
+            $allowPublicPurchase = 0;
+            $isActive = 1;
+        }
 
         // Upload de imagem do curso para o servidor de mídia externo, se um arquivo tiver sido enviado
         if (!$removeImage && !empty($_FILES['image_upload']['tmp_name'])) {
@@ -212,6 +233,7 @@ class AdminCourseController extends Controller
             'allow_plan_access_only' => $allowPlanAccessOnly,
             'allow_public_purchase' => $allowPublicPurchase,
             'is_active' => $isActive,
+            'is_external' => $isExternal,
         ];
 
         if ($id > 0) {
@@ -219,6 +241,19 @@ class AdminCourseController extends Controller
             $courseId = $id;
         } else {
             $courseId = Course::create($data);
+        }
+
+        if ($isExternal) {
+            Course::ensureExternalToken((int)$courseId);
+        }
+
+        if ($ownerUserId) {
+            CoursePartnerBranding::upsert((int)$ownerUserId, [
+                'company_name' => $brandingCompanyName,
+                'logo_url' => $brandingLogoUrl,
+                'primary_color' => $brandingPrimaryColor,
+                'secondary_color' => $brandingSecondaryColor,
+            ]);
         }
 
         if ($ownerUserId) {

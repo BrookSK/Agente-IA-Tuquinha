@@ -14,6 +14,15 @@ class Controller
             return;
         }
 
+        $layout = isset($data['layout']) ? (string)$data['layout'] : '';
+        if ($layout !== '') {
+            $layoutFile = __DIR__ . '/../Views/layouts/' . $layout . '.php';
+            if (is_file($layoutFile)) {
+                include $layoutFile;
+                return;
+            }
+        }
+
         include __DIR__ . '/../Views/layouts/main.php';
     }
 }
