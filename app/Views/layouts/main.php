@@ -1054,6 +1054,10 @@ if (!empty($_SESSION['user_id'])) {
                         <span class="icon" aria-hidden="true"><?php echo $renderMenuIcon('admin_config', '⚙'); ?></span>
                         <span>Configurações do sistema</span>
                     </a>
+                    <a href="/admin/branding-parceiros" class="sidebar-button" style="margin-top: 6px;">
+                        <span class="icon" aria-hidden="true"><?php echo $renderMenuIcon('admin_partner_branding', '🏷️'); ?></span>
+                        <span>Branding de parceiros</span>
+                    </a>
                     <a href="/admin/menu-icones" class="sidebar-button" style="margin-top: 6px;">
                         <span class="icon" aria-hidden="true"><?php echo $renderMenuIcon('admin_menu_icons', '🖼'); ?></span>
                         <span>Ícones do menu</span>
