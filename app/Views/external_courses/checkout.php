@@ -16,6 +16,17 @@ $price = number_format(max($priceCents, 0) / 100, 2, ',', '.');
     <div class="error"><?= htmlspecialchars($error, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?></div>
 <?php endif; ?>
 
+<style>
+    .billing-grid { display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:10px; }
+    @media (max-width: 720px) { .billing-grid { grid-template-columns:1fr; } }
+    .billing-option { display:flex; align-items:center; justify-content:space-between; gap:10px; padding:12px 12px; border-radius:14px; border:1px solid var(--border-subtle); background:var(--surface-subtle); cursor:pointer; user-select:none; }
+    .billing-option:hover { border-color: rgba(255,255,255,0.20); }
+    .billing-option input { width:16px; height:16px; }
+    .billing-option-title { font-weight:800; color:var(--text-primary); font-size:13px; line-height:1.2; white-space:nowrap; }
+    .billing-option-hint { font-size:11px; color:var(--text-secondary); margin-top:3px; }
+    .billing-option-left { display:flex; align-items:flex-start; gap:10px; min-width:0; }
+</style>
+
 <form action="/curso-externo/checkout" method="post" class="grid">
     <input type="hidden" name="token" value="<?= htmlspecialchars($token, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?>">
 
@@ -83,18 +94,33 @@ $price = number_format(max($priceCents, 0) / 100, 2, ',', '.');
 
     <div style="grid-column: 1 / -1; margin-top:8px; font-size: 12px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--text-secondary);">Forma de pagamento</div>
 
-    <div style="grid-column: 1 / -1; display:flex; flex-wrap:wrap; gap:10px; align-items:center;">
-        <label style="display:flex; align-items:center; gap:6px;">
-            <input type="radio" name="billing_type" value="PIX" checked>
-            <span>PIX</span>
+    <div style="grid-column: 1 / -1;" class="billing-grid">
+        <label class="billing-option">
+            <div class="billing-option-left">
+                <input type="radio" name="billing_type" value="PIX" checked>
+                <div>
+                    <div class="billing-option-title">PIX</div>
+                    <div class="billing-option-hint">Aprovação rápida</div>
+                </div>
+            </div>
         </label>
-        <label style="display:flex; align-items:center; gap:6px;">
-            <input type="radio" name="billing_type" value="BOLETO">
-            <span>Boleto</span>
+        <label class="billing-option">
+            <div class="billing-option-left">
+                <input type="radio" name="billing_type" value="BOLETO">
+                <div>
+                    <div class="billing-option-title">Boleto</div>
+                    <div class="billing-option-hint">Pode levar até 3 dias</div>
+                </div>
+            </div>
         </label>
-        <label style="display:flex; align-items:center; gap:6px;">
-            <input type="radio" name="billing_type" value="CREDIT_CARD">
-            <span>Cartão de crédito</span>
+        <label class="billing-option">
+            <div class="billing-option-left">
+                <input type="radio" name="billing_type" value="CREDIT_CARD">
+                <div>
+                    <div class="billing-option-title">Cartão de crédito</div>
+                    <div class="billing-option-hint">Pague no cartão</div>
+                </div>
+            </div>
         </label>
     </div>
 

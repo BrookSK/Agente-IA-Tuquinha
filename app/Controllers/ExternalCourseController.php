@@ -358,10 +358,14 @@ class ExternalCourseController extends Controller
                 $this->view('courses/abrir_pagamento', [
                     'pageTitle' => 'Pagamento do curso',
                     'course' => $course,
+                    'branding' => $branding,
                     'billingType' => $billingType,
                     'amountReais' => $finalPriceCents / 100,
                     'redirectUrl' => $redirectUrl,
                     'returnUrl' => '/curso-externo/membros?token=' . urlencode($token),
+                    'layout' => 'external_course',
+                    'hideTopbarAction' => true,
+                    'brandSubtitle' => 'Pagamento',
                 ]);
                 return;
             }

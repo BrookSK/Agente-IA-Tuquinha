@@ -3,6 +3,9 @@
 /** @var array $course */
 /** @var array|null $branding */
 
+$brandSubtitle = isset($brandSubtitle) ? (string)$brandSubtitle : 'Área de membros';
+$hideTopbarAction = !empty($hideTopbarAction);
+
 $companyName = '';
 $logoUrl = '';
 $primary = '';
@@ -167,12 +170,14 @@ function esc_attr(string $s): string {
                 </div>
                 <div style="min-width:0;">
                     <div class="brand-title"><?= esc_attr($companyName) ?></div>
-                    <div class="brand-sub">Área de membros</div>
+                    <div class="brand-sub"><?= esc_attr($brandSubtitle) ?></div>
                 </div>
             </div>
-            <div>
-                <a class="btn-outline" href="/login">Entrar</a>
-            </div>
+            <?php if (!$hideTopbarAction): ?>
+                <div>
+                    <a class="btn-outline" href="/login">Entrar</a>
+                </div>
+            <?php endif; ?>
         </div>
 
         <div class="content">

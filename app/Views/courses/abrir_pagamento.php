@@ -1,5 +1,6 @@
 <?php
 /** @var array $course */
+/** @var array|null $branding */
 /** @var string $redirectUrl */
 /** @var string $billingType */
 /** @var float $amountReais */
@@ -30,7 +31,6 @@ $returnUrl = isset($returnUrl) ? (string)$returnUrl : '';
     </a>
     <div style="margin-top:8px;">
         <a href="<?= $returnUrl !== '' ? htmlspecialchars($returnUrl, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') : \App\Controllers\CourseController::buildCourseUrl($course) ?>" style="font-size:13px; color:#b0b0b0; text-decoration:none; margin-right:10px;">Voltar</a>
-        <a href="/conta" style="font-size:13px; color:#b0b0b0; text-decoration:none;">Ir para minha conta</a>
     </div>
 </div>
 <script>
