@@ -4,7 +4,7 @@
 /** @var array|null $branding */
 
 $brandSubtitle = isset($brandSubtitle) ? (string)$brandSubtitle : 'Área de membros';
-$hideTopbarAction = !empty($hideTopbarAction);
+$hideTopbarAction = array_key_exists('hideTopbarAction', get_defined_vars()) ? !empty($hideTopbarAction) : true;
 
 $companyName = '';
 $logoUrl = '';
