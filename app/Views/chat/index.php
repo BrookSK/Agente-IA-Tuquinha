@@ -402,6 +402,28 @@ function render_markdown_safe(string $text): string {
      height: calc(100vh - 56px - 80px);
      overflow: hidden;
  }
+
+ body.tuq-body-lock {
+     overflow: hidden !important;
+ }
+
+ html.tuq-body-lock {
+     overflow: hidden !important;
+ }
+
+ body.tuq-body-lock::-webkit-scrollbar,
+ html.tuq-body-lock::-webkit-scrollbar {
+     width: 0 !important;
+     height: 0 !important;
+ }
+
+ body.tuq-body-lock {
+     scrollbar-width: none;
+ }
+
+ html.tuq-body-lock {
+     scrollbar-width: none;
+ }
 </style>
 <?php
 $convSettings = $conversationSettings ?? null;
@@ -476,6 +498,16 @@ if (!empty($conversationId) && !empty($personaOptions) && is_array($personaOptio
     }
 }
 ?>
+<?php if (!empty($shouldShowPersonaShowcase)): ?>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            try {
+                document.body.classList.add('tuq-body-lock');
+                document.documentElement.classList.add('tuq-body-lock');
+            } catch (e) {}
+        });
+    </script>
+<?php endif; ?>
 <div id="tuq-chat-root" class="<?= !empty($shouldShowPersonaShowcase) ? 'tuq-has-showcase' : '' ?>" style="max-width: 900px; width: 100%; margin: 0 auto; padding: 0 8px; display: flex; flex-direction: column; min-height: calc(100vh - 56px - 80px); box-sizing: border-box;">
     <?php if (!empty($conversationId)): ?>
         <div class="tuqChatTopbar">
@@ -2446,6 +2478,10 @@ if (!empty($conversationId) && !empty($personaOptions) && is_array($personaOptio
                     if (root) {
                         root.classList.remove('tuq-has-showcase');
                     }
+                    try {
+                        document.body.classList.remove('tuq-body-lock');
+                        document.documentElement.classList.remove('tuq-body-lock');
+                    } catch (e) {}
                 }
             } catch (e) {}
 
