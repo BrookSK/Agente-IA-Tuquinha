@@ -93,6 +93,26 @@ class AdminPartnerBrandingController extends Controller
             $logoUrl = null;
         }
 
+        $removeHeaderImage = !empty($_POST['remove_header_image']);
+        if ($removeHeaderImage) {
+            $headerImageUrl = null;
+        }
+
+        $removeHeroImage = !empty($_POST['remove_hero_image']);
+        if ($removeHeroImage) {
+            $heroImageUrl = null;
+        }
+
+        $removeFooterImage = !empty($_POST['remove_footer_image']);
+        if ($removeFooterImage) {
+            $footerImageUrl = null;
+        }
+
+        $removeBackgroundImage = !empty($_POST['remove_background_image']);
+        if ($removeBackgroundImage) {
+            $backgroundImageUrl = null;
+        }
+
         if (!$removeLogo && !empty($_FILES['logo_upload']['tmp_name'])) {
             $err = $_FILES['logo_upload']['error'] ?? UPLOAD_ERR_NO_FILE;
             if ($err === UPLOAD_ERR_OK) {
@@ -108,7 +128,7 @@ class AdminPartnerBrandingController extends Controller
             }
         }
 
-        if (!empty($_FILES['header_image_upload']['tmp_name'])) {
+        if (!$removeHeaderImage && !empty($_FILES['header_image_upload']['tmp_name'])) {
             $err = $_FILES['header_image_upload']['error'] ?? UPLOAD_ERR_NO_FILE;
             if ($err === UPLOAD_ERR_OK) {
                 $tmp = (string)($_FILES['header_image_upload']['tmp_name'] ?? '');
@@ -123,7 +143,7 @@ class AdminPartnerBrandingController extends Controller
             }
         }
 
-        if (!empty($_FILES['footer_image_upload']['tmp_name'])) {
+        if (!$removeFooterImage && !empty($_FILES['footer_image_upload']['tmp_name'])) {
             $err = $_FILES['footer_image_upload']['error'] ?? UPLOAD_ERR_NO_FILE;
             if ($err === UPLOAD_ERR_OK) {
                 $tmp = (string)($_FILES['footer_image_upload']['tmp_name'] ?? '');
@@ -138,7 +158,7 @@ class AdminPartnerBrandingController extends Controller
             }
         }
 
-        if (!empty($_FILES['hero_image_upload']['tmp_name'])) {
+        if (!$removeHeroImage && !empty($_FILES['hero_image_upload']['tmp_name'])) {
             $err = $_FILES['hero_image_upload']['error'] ?? UPLOAD_ERR_NO_FILE;
             if ($err === UPLOAD_ERR_OK) {
                 $tmp = (string)($_FILES['hero_image_upload']['tmp_name'] ?? '');
@@ -153,7 +173,7 @@ class AdminPartnerBrandingController extends Controller
             }
         }
 
-        if (!empty($_FILES['background_image_upload']['tmp_name'])) {
+        if (!$removeBackgroundImage && !empty($_FILES['background_image_upload']['tmp_name'])) {
             $err = $_FILES['background_image_upload']['error'] ?? UPLOAD_ERR_NO_FILE;
             if ($err === UPLOAD_ERR_OK) {
                 $tmp = (string)($_FILES['background_image_upload']['tmp_name'] ?? '');

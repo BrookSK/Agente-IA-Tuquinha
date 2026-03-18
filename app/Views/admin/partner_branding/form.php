@@ -7,6 +7,10 @@ $companyName = trim((string)($branding['company_name'] ?? ''));
 $logoUrl = trim((string)($branding['logo_url'] ?? ''));
 $primary = trim((string)($branding['primary_color'] ?? ''));
 $secondary = trim((string)($branding['secondary_color'] ?? ''));
+$headerImageUrl = trim((string)($branding['header_image_url'] ?? ''));
+$heroImageUrl = trim((string)($branding['hero_image_url'] ?? ''));
+$footerImageUrl = trim((string)($branding['footer_image_url'] ?? ''));
+$backgroundImageUrl = trim((string)($branding['background_image_url'] ?? ''));
 ?>
 
 <div style="max-width: 860px; margin: 0 auto;">
@@ -105,24 +109,68 @@ $secondary = trim((string)($branding['secondary_color'] ?? ''));
             
             <div style="margin-bottom:12px;">
                 <label style="font-size:13px; color:var(--text-primary); display:block; margin-bottom:4px;">Imagem do Header</label>
+                <?php if ($headerImageUrl !== ''): ?>
+                    <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap; margin-bottom:10px;">
+                        <div style="width:120px; height:60px; border-radius:8px; overflow:hidden; border:1px solid var(--border-subtle); background:var(--surface-subtle);">
+                            <img src="<?= htmlspecialchars($headerImageUrl, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?>" alt="header" style="width:100%; height:100%; object-fit:cover; display:block;">
+                        </div>
+                        <label style="display:flex; align-items:center; gap:6px; font-size:12px; color:var(--text-secondary);">
+                            <input type="checkbox" name="remove_header_image" value="1">
+                            <span>Remover imagem atual</span>
+                        </label>
+                    </div>
+                <?php endif; ?>
                 <input type="file" name="header_image_upload" accept="image/*" style="width:100%; padding:10px; border-radius:12px; border:1px solid var(--border-subtle); background:var(--surface-subtle); color:var(--text-primary);">
                 <div style="font-size:11px; color:var(--text-secondary); margin-top:6px;">Tamanho recomendado: 400x80px</div>
             </div>
 
             <div style="margin-bottom:12px;">
                 <label style="font-size:13px; color:var(--text-primary); display:block; margin-bottom:4px;">Imagem Hero (Destaque)</label>
+                <?php if ($heroImageUrl !== ''): ?>
+                    <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap; margin-bottom:10px;">
+                        <div style="width:120px; height:60px; border-radius:8px; overflow:hidden; border:1px solid var(--border-subtle); background:var(--surface-subtle);">
+                            <img src="<?= htmlspecialchars($heroImageUrl, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?>" alt="hero" style="width:100%; height:100%; object-fit:cover; display:block;">
+                        </div>
+                        <label style="display:flex; align-items:center; gap:6px; font-size:12px; color:var(--text-secondary);">
+                            <input type="checkbox" name="remove_hero_image" value="1">
+                            <span>Remover imagem atual</span>
+                        </label>
+                    </div>
+                <?php endif; ?>
                 <input type="file" name="hero_image_upload" accept="image/*" style="width:100%; padding:10px; border-radius:12px; border:1px solid var(--border-subtle); background:var(--surface-subtle); color:var(--text-primary);">
                 <div style="font-size:11px; color:var(--text-secondary); margin-top:6px;">Tamanho recomendado: 1200x600px</div>
             </div>
 
             <div style="margin-bottom:12px;">
                 <label style="font-size:13px; color:var(--text-primary); display:block; margin-bottom:4px;">Imagem do Footer</label>
+                <?php if ($footerImageUrl !== ''): ?>
+                    <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap; margin-bottom:10px;">
+                        <div style="width:120px; height:60px; border-radius:8px; overflow:hidden; border:1px solid var(--border-subtle); background:var(--surface-subtle);">
+                            <img src="<?= htmlspecialchars($footerImageUrl, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?>" alt="footer" style="width:100%; height:100%; object-fit:cover; display:block;">
+                        </div>
+                        <label style="display:flex; align-items:center; gap:6px; font-size:12px; color:var(--text-secondary);">
+                            <input type="checkbox" name="remove_footer_image" value="1">
+                            <span>Remover imagem atual</span>
+                        </label>
+                    </div>
+                <?php endif; ?>
                 <input type="file" name="footer_image_upload" accept="image/*" style="width:100%; padding:10px; border-radius:12px; border:1px solid var(--border-subtle); background:var(--surface-subtle); color:var(--text-primary);">
                 <div style="font-size:11px; color:var(--text-secondary); margin-top:6px;">Tamanho recomendado: 300x150px</div>
             </div>
 
             <div style="margin-bottom:12px;">
                 <label style="font-size:13px; color:var(--text-primary); display:block; margin-bottom:4px;">Imagem de Fundo</label>
+                <?php if ($backgroundImageUrl !== ''): ?>
+                    <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap; margin-bottom:10px;">
+                        <div style="width:120px; height:60px; border-radius:8px; overflow:hidden; border:1px solid var(--border-subtle); background:var(--surface-subtle);">
+                            <img src="<?= htmlspecialchars($backgroundImageUrl, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?>" alt="background" style="width:100%; height:100%; object-fit:cover; display:block;">
+                        </div>
+                        <label style="display:flex; align-items:center; gap:6px; font-size:12px; color:var(--text-secondary);">
+                            <input type="checkbox" name="remove_background_image" value="1">
+                            <span>Remover imagem atual</span>
+                        </label>
+                    </div>
+                <?php endif; ?>
                 <input type="file" name="background_image_upload" accept="image/*" style="width:100%; padding:10px; border-radius:12px; border:1px solid var(--border-subtle); background:var(--surface-subtle); color:var(--text-primary);">
                 <div style="font-size:11px; color:var(--text-secondary); margin-top:6px;">Tamanho recomendado: 1920x1080px</div>
             </div>
