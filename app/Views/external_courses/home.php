@@ -47,10 +47,15 @@ $heroImageUrl = isset($branding) && is_array($branding) ? trim((string)($brandin
     
     <?php if ($imagePath !== ''): ?>
         <div style="max-width: 900px; margin: 3rem auto;">
-            <div class="card">
-                <img src="<?= htmlspecialchars($imagePath, ENT_QUOTES, 'UTF-8') ?>" 
-                     alt="<?= htmlspecialchars($title, ENT_QUOTES, 'UTF-8') ?>" 
-                     style="width: 100%; border-radius: 12px;">
+            <h2 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 1.5rem; text-align: center;">Conteúdo do Curso</h2>
+            <div style="display: flex; justify-content: center;">
+                <div style="width: 100%; max-width: 400px; border-radius: 12px; overflow: hidden; box-shadow: 0 8px 24px rgba(0,0,0,0.3); transition: transform 0.3s ease, box-shadow 0.3s ease;" 
+                     onmouseover="this.style.transform='scale(1.05)'; this.style.boxShadow='0 12px 32px rgba(0,0,0,0.4)';" 
+                     onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='0 8px 24px rgba(0,0,0,0.3)';">
+                    <img src="<?= htmlspecialchars($imagePath, ENT_QUOTES, 'UTF-8') ?>" 
+                         alt="<?= htmlspecialchars($title, ENT_QUOTES, 'UTF-8') ?>" 
+                         style="width: 100%; height: auto; display: block; aspect-ratio: 16/9; object-fit: cover;">
+                </div>
             </div>
         </div>
     <?php endif; ?>
