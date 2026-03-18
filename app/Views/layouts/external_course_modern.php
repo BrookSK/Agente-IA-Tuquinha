@@ -10,6 +10,7 @@ $secondary = '';
 $textColor = '';
 $buttonTextColor = '';
 $linkColor = '';
+$paragraphColor = '';
 $headerImageUrl = '';
 $footerImageUrl = '';
 $heroImageUrl = '';
@@ -24,6 +25,7 @@ if (isset($branding) && is_array($branding)) {
     $textColor = trim((string)($branding['text_color'] ?? ''));
     $buttonTextColor = trim((string)($branding['button_text_color'] ?? ''));
     $linkColor = trim((string)($branding['link_color'] ?? ''));
+    $paragraphColor = trim((string)($branding['paragraph_color'] ?? ''));
     $headerImageUrl = trim((string)($branding['header_image_url'] ?? ''));
     $footerImageUrl = trim((string)($branding['footer_image_url'] ?? ''));
     $heroImageUrl = trim((string)($branding['hero_image_url'] ?? ''));
@@ -56,11 +58,12 @@ function esc_attr(string $s): string {
             --text-primary: <?= $textColor !== '' ? esc_attr($textColor) : '#ffffff' ?>;
             --text-secondary: #a0a0b0;
             --text-muted: #6b6b7b;
+            --paragraph-color: <?= $paragraphColor !== '' ? esc_attr($paragraphColor) : '#a0a0b0' ?>;
             --border: #2a2a3e;
-            --accent: <?= $primary !== '' ? esc_attr($primary) : '#6366f1' ?>;
-            --accent2: <?= $secondary !== '' ? esc_attr($secondary) : '#8b5cf6' ?>;
+            --accent: <?= $primary !== '' ? esc_attr($primary) : '#e53935' ?>;
+            --accent2: <?= $secondary !== '' ? esc_attr($secondary) : ($primary !== '' ? esc_attr($primary) : '#c62828') ?>;
             --button-text: <?= $buttonTextColor !== '' ? esc_attr($buttonTextColor) : '#ffffff' ?>;
-            --link-color: <?= $linkColor !== '' ? esc_attr($linkColor) : '#6366f1' ?>;
+            --link-color: <?= $linkColor !== '' ? esc_attr($linkColor) : ($primary !== '' ? esc_attr($primary) : '#e53935') ?>;
             --success: #10b981;
             --error: #ef4444;
             --warning: #f59e0b;
@@ -186,6 +189,10 @@ function esc_attr(string $s): string {
         
         a:not(.btn):not(.header-brand):not(.nav-item):hover {
             opacity: 0.8;
+        }
+        
+        p {
+            color: var(--paragraph-color);
         }
         
         /* Main Content */

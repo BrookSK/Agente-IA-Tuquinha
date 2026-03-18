@@ -147,9 +147,27 @@ $logoUrl = isset($branding) && is_array($branding) && !empty($branding['logo_url
     position: relative; overflow: hidden;
   }
   .login-card::before {
-    content: ''; position: absolute; top: 0; left: 50%; transform: translateX(-50%);
-    width: 200px; height: 1px;
-    background: linear-gradient(90deg, transparent, var(--accent), var(--accent2), transparent);
+    content: ''; position: absolute; inset: -2px;
+    background: conic-gradient(
+      from 0deg at 50% 50%,
+      transparent 0deg,
+      var(--accent) 60deg,
+      var(--accent2) 120deg,
+      transparent 180deg,
+      transparent 360deg
+    );
+    border-radius: 24px;
+    animation: rotate-border 4s linear infinite;
+    z-index: -1;
+  }
+  .login-card::after {
+    content: ''; position: absolute; inset: 1px;
+    background: var(--card); border-radius: 23px;
+    z-index: -1;
+  }
+  @keyframes rotate-border {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
   }
   .card-head { text-align: center; margin-bottom: 32px; }
   .card-head h2 {
@@ -414,7 +432,8 @@ $logoUrl = isset($branding) && is_array($branding) && !empty($branding['logo_url
         </div>
 
         <div id="panel-login" class="panel active">
-          <form action="/curso-externo/login?token=<?= urlencode($token) ?>" method="post">
+          <form action="/curso-externo/login" method="post">
+            <input type="hidden" name="token" value="<?= htmlspecialchars($token, ENT_QUOTES, 'UTF-8') ?>">
             <div class="form-group">
               <label>E-mail</label>
               <div class="input-wrap">
@@ -437,7 +456,8 @@ $logoUrl = isset($branding) && is_array($branding) && !empty($branding['logo_url
         </div>
 
         <div id="panel-register" class="panel">
-          <form action="/curso-externo/checkout?token=<?= urlencode($token) ?>" method="post">
+          <form action="/curso-externo/checkout" method="post">
+            <input type="hidden" name="token" value="<?= htmlspecialchars($token, ENT_QUOTES, 'UTF-8') ?>">
             <div class="form-row">
               <div class="form-group">
                 <label>Nome</label>
