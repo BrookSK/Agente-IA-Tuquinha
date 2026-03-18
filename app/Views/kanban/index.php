@@ -1036,8 +1036,10 @@ $currentBoardTitle = $currentBoard ? (string)($currentBoard['title'] ?? 'Sem tí
                 </div>
 
                 <div style="display:flex; flex-direction:column; gap:8px;">
-                    <input class="kb-input" id="kb-modal-input" placeholder="Título" />
-                    <textarea class="kb-input" id="kb-modal-textarea" placeholder="Descrição" style="min-height:110px; resize:vertical;"></textarea>
+                    <div class="kb-modal-field-label">Título</div>
+                    <input class="kb-input" id="kb-modal-input" placeholder="" />
+                    <div class="kb-modal-field-label">Descrição</div>
+                    <textarea class="kb-input" id="kb-modal-textarea" placeholder="" style="min-height:110px; resize:vertical;"></textarea>
                 </div>
 
                 <div id="kb-due-row" style="display:flex; flex-direction:column; gap:6px;">
@@ -1079,6 +1081,48 @@ $currentBoardTitle = $currentBoard ? (string)($currentBoard['title'] ?? 'Sem tí
             <button type="button" class="kb-btn" id="kb-modal-cancel">Cancelar</button>
             <button type="button" class="kb-btn kb-btn--danger" id="kb-modal-delete" style="display:none;">Excluir</button>
             <button type="button" class="kb-btn kb-btn--primary" id="kb-modal-save">Salvar</button>
+        </div>
+    </div>
+</div>
+
+<div class="kb-modal" id="kb-cover-modal" style="display:none;">
+    <div class="kb-modal-backdrop" id="kb-cover-modal-backdrop"></div>
+    <div class="kb-modal-card" style="max-width:560px;">
+        <div class="kb-modal-title">Capa</div>
+        <div class="kb-cover-box" id="kb-cover-section-popup" style="display:block;">
+            <div style="display:flex; align-items:center; justify-content:space-between; gap:8px;">
+                <div class="kb-attachments-title">Capa do cartão</div>
+                <button type="button" class="kb-btn" id="kb-cover-modal-close">Fechar</button>
+            </div>
+            <div class="kb-cover-preview" id="kb-cover-preview-popup">
+                <div class="kb-cover-empty">Sem capa.</div>
+            </div>
+            <div class="kb-attachments-row" style="margin-top:10px;">
+                <input type="file" accept="image/*" class="kb-input" id="kb-cover-file-popup" style="flex:1; min-width: 220px;" />
+                <button type="button" class="kb-btn kb-btn--primary" id="kb-cover-upload-popup">Enviar capa</button>
+            </div>
+            <div style="display:flex; justify-content:flex-end; padding-top:10px;">
+                <button type="button" class="kb-btn" id="kb-cover-clear-popup" style="display:none;">Remover capa</button>
+            </div>
+            <div style="color:var(--text-secondary); font-size:12px; padding:8px 2px;">Apenas 1 capa por cartão. Para trocar, remova e envie outra.</div>
+        </div>
+    </div>
+</div>
+
+<div class="kb-modal" id="kb-attachments-modal" style="display:none;">
+    <div class="kb-modal-backdrop" id="kb-attachments-modal-backdrop"></div>
+    <div class="kb-modal-card" style="max-width:560px;">
+        <div class="kb-modal-title">Anexos</div>
+        <div class="kb-attachments" id="kb-attachments-popup" style="display:block;">
+            <div style="display:flex; align-items:center; justify-content:space-between; gap:8px;">
+                <div class="kb-attachments-title">Anexos</div>
+                <button type="button" class="kb-btn" id="kb-attachments-modal-close">Fechar</button>
+            </div>
+            <div class="kb-attachments-row">
+                <input type="file" class="kb-input" id="kb-attach-file-popup" style="flex:1; min-width: 220px;" />
+                <button type="button" class="kb-btn kb-btn--primary" id="kb-attach-upload-popup">Enviar</button>
+            </div>
+            <div class="kb-attachments-list" id="kb-attach-list-popup"></div>
         </div>
     </div>
 </div>
@@ -1532,41 +1576,104 @@ $currentBoardTitle = $currentBoard ? (string)($currentBoard['title'] ?? 'Sem tí
     }
 
     function renderAttachments(items) {
-        var list = $('kb-attach-list');
-        if (!list) return;
-        list.innerHTML = '';
+        var mainList = $('kb-attach-list');
+        var popupList = $('kb-attach-list-popup');
 
-        if (!items || !items.length) {
-            list.innerHTML = '<div style="color:var(--text-secondary); font-size:12px; padding:6px 2px;">Nenhum anexo.</div>';
+        function renderInto(list) {
+            if (!list) return;
+            list.innerHTML = '';
+
+            if (!items || !items.length) {
+                list.innerHTML = '<div style="color:var(--text-secondary); font-size:12px; padding:6px 2px;">Nenhum anexo.</div>';
+                return;
+            }
+
+            items.forEach(function (a) {
+                var id = a && a.id ? String(a.id) : '';
+                var url = a && a.url ? String(a.url) : '';
+                var name = (a && a.original_name ? String(a.original_name) : (url ? url.split('/').pop() : 'Arquivo'));
+                var mime = a && a.mime_type ? String(a.mime_type) : '';
+
+                var row = document.createElement('div');
+                row.className = 'kb-attachment-item';
+                row.setAttribute('data-attachment-id', id);
+
+                var left = document.createElement('div');
+                left.className = 'kb-attachment-left';
+                left.innerHTML = '<div class="kb-attachment-name">' + esc(name) + '</div>';
+
+                var actions = document.createElement('div');
+                actions.className = 'kb-attachment-actions';
+                actions.innerHTML = ''
+                    + '<button type="button" class="kb-btn" data-action="preview-attachment" data-attachment-id="' + esc(id) + '" data-url="' + esc(url) + '" data-name="' + esc(name) + '" data-mime="' + esc(mime) + '">Abrir</button>'
+                    + '<button type="button" class="kb-btn" data-action="download-attachment" data-attachment-id="' + esc(id) + '">Baixar</button>'
+                    + '<button type="button" class="kb-btn kb-btn--danger" data-action="delete-attachment" data-attachment-id="' + esc(id) + '">Remover</button>';
+
+                row.appendChild(left);
+                row.appendChild(actions);
+                list.appendChild(row);
+            });
+        }
+
+        renderInto(mainList);
+        renderInto(popupList);
+    }
+
+    function updateCardChecklistBadge(cardId, doneCount, totalCount) {
+        var cardEl = getCardEl(cardId);
+        if (!cardEl) return;
+
+        var done = parseInt(String(doneCount || 0), 10) || 0;
+        var total = parseInt(String(totalCount || 0), 10) || 0;
+
+        cardEl.setAttribute('data-checklist-done', String(done));
+        cardEl.setAttribute('data-checklist-total', String(total));
+
+        var badgesWrap = cardEl.querySelector('.kb-card-badges');
+        var badge = badgesWrap ? badgesWrap.querySelector('[data-badge="checklist"]') : null;
+
+        if (total <= 0) {
+            if (badge && badge.parentNode) badge.parentNode.removeChild(badge);
+            if (badgesWrap && (!badgesWrap.querySelector('.kb-badge'))) {
+                if (badgesWrap.parentNode) badgesWrap.parentNode.removeChild(badgesWrap);
+            }
             return;
         }
 
-        items.forEach(function (a) {
-            var id = a && a.id ? String(a.id) : '';
-            var url = a && a.url ? String(a.url) : '';
-            var name = (a && a.original_name ? String(a.original_name) : (url ? url.split('/').pop() : 'Arquivo'));
-            var mime = a && a.mime_type ? String(a.mime_type) : '';
-            var isImage = mime && mime.toLowerCase().indexOf('image/') === 0;
+        if (!badgesWrap) {
+            badgesWrap = document.createElement('div');
+            badgesWrap.className = 'kb-card-badges';
+            cardEl.appendChild(badgesWrap);
+        }
 
-            var row = document.createElement('div');
-            row.className = 'kb-attachment-item';
-            row.setAttribute('data-attachment-id', id);
+        if (!badge) {
+            badge = document.createElement('span');
+            badge.className = 'kb-badge';
+            badge.setAttribute('data-badge', 'checklist');
+            badge.innerHTML = '<span style="opacity:0.9;">☑</span><span></span>';
+            badgesWrap.appendChild(badge);
+        }
 
-            var left = document.createElement('div');
-            left.className = 'kb-attachment-left';
-            left.innerHTML = '<div class="kb-attachment-name">' + esc(name) + '</div>';
+        var spans = badge.querySelectorAll('span');
+        var textSpan = spans && spans.length ? spans[spans.length - 1] : null;
+        if (textSpan) {
+            textSpan.textContent = String(done) + '/' + String(total);
+        }
+    }
 
-            var actions = document.createElement('div');
-            actions.className = 'kb-attachment-actions';
-            actions.innerHTML = ''
-                + '<button type="button" class="kb-btn" data-action="preview-attachment" data-attachment-id="' + esc(id) + '" data-url="' + esc(url) + '" data-name="' + esc(name) + '" data-mime="' + esc(mime) + '">Abrir</button>'
-                + '<button type="button" class="kb-btn" data-action="download-attachment" data-attachment-id="' + esc(id) + '">Baixar</button>'
-                + '<button type="button" class="kb-btn kb-btn--danger" data-action="delete-attachment" data-attachment-id="' + esc(id) + '">Remover</button>';
-
-            row.appendChild(left);
-            row.appendChild(actions);
-            list.appendChild(row);
-        });
+    function getChecklistCounts(items) {
+        var total = 0;
+        var done = 0;
+        if (items && items.length) {
+            total = items.length;
+            for (var i = 0; i < items.length; i++) {
+                var it = items[i];
+                if (it && it.is_done && String(it.is_done) !== '0') {
+                    done++;
+                }
+            }
+        }
+        return { total: total, done: done };
     }
 
     function loadAttachments(cardId) {
@@ -1661,10 +1768,14 @@ $currentBoardTitle = $currentBoard ? (string)($currentBoard['title'] ?? 'Sem tí
     function loadChecklist(cardId) {
         return postForm('/kanban/cartao/checklist/listar', { card_id: String(cardId) }).then(function (res) {
             if (res.json && res.json.ok) {
-                renderChecklist(res.json.items || []);
+                var items = res.json.items || [];
+                renderChecklist(items);
+                var counts = getChecklistCounts(items);
+                updateCardChecklistBadge(cardId, counts.done, counts.total);
                 return;
             }
             renderChecklist([]);
+            updateCardChecklistBadge(cardId, 0, 0);
         });
     }
 
@@ -1696,7 +1807,13 @@ $currentBoardTitle = $currentBoard ? (string)($currentBoard['title'] ?? 'Sem tí
         if (act === 'toggle-check') {
             var itemId = t.getAttribute('data-item-id');
             if (!itemId) return;
-            postForm('/kanban/cartao/checklist/toggle', { item_id: String(itemId), done: t.checked ? '1' : '0' });
+            postForm('/kanban/cartao/checklist/toggle', { item_id: String(itemId), done: t.checked ? '1' : '0' }).then(function () {
+                var modal = $('kb-modal');
+                if (!modal) return;
+                var cardId = modal.dataset.cardId;
+                if (!cardId) return;
+                loadChecklist(cardId);
+            });
         }
     });
 
@@ -1787,11 +1904,12 @@ $currentBoardTitle = $currentBoard ? (string)($currentBoard['title'] ?? 'Sem tí
             if (!modal) return;
             var cardId = modal.dataset.cardId;
             if (!cardId) return;
-            var att = $('kb-attachments');
-            if (att) att.style.display = 'block';
+            var pop = $('kb-attachments-modal');
+            if (!pop) return;
+            pop.dataset.cardId = String(cardId);
+            pop.style.display = 'block';
             loadAttachments(cardId);
-            scrollIntoModalView(att);
-            var input = $('kb-attach-file');
+            var input = $('kb-attach-file-popup');
             if (input) input.focus();
         });
     }
@@ -1803,11 +1921,141 @@ $currentBoardTitle = $currentBoard ? (string)($currentBoard['title'] ?? 'Sem tí
             if (!modal) return;
             var cardId = modal.dataset.cardId;
             if (!cardId) return;
-            var cover = $('kb-cover-section');
-            if (cover) {
-                cover.style.display = 'block';
-                scrollIntoModalView(cover);
+            var pop = $('kb-cover-modal');
+            if (!pop) return;
+            pop.dataset.cardId = String(cardId);
+            pop.style.display = 'block';
+            syncCoverPopupFromMain();
+            var input = $('kb-cover-file-popup');
+            if (input) input.focus();
+        });
+    }
+
+    function closeCoverPopup() {
+        var pop = $('kb-cover-modal');
+        if (!pop) return;
+        pop.style.display = 'none';
+        pop.dataset.cardId = '';
+        var f = $('kb-cover-file-popup');
+        if (f) f.value = '';
+    }
+
+    function closeAttachmentsPopup() {
+        var pop = $('kb-attachments-modal');
+        if (!pop) return;
+        pop.style.display = 'none';
+        pop.dataset.cardId = '';
+        var f = $('kb-attach-file-popup');
+        if (f) f.value = '';
+    }
+
+    var coverBackdrop = $('kb-cover-modal-backdrop');
+    if (coverBackdrop) coverBackdrop.addEventListener('click', closeCoverPopup);
+    var coverCloseBtn = $('kb-cover-modal-close');
+    if (coverCloseBtn) coverCloseBtn.addEventListener('click', closeCoverPopup);
+
+    var attBackdrop = $('kb-attachments-modal-backdrop');
+    if (attBackdrop) attBackdrop.addEventListener('click', closeAttachmentsPopup);
+    var attCloseBtn = $('kb-attachments-modal-close');
+    if (attCloseBtn) attCloseBtn.addEventListener('click', closeAttachmentsPopup);
+
+    function syncCoverPopupFromMain() {
+        var mainPreview = $('kb-cover-preview');
+        var popPreview = $('kb-cover-preview-popup');
+        if (mainPreview && popPreview) {
+            popPreview.innerHTML = mainPreview.innerHTML;
+        }
+        var mainClear = $('kb-cover-clear');
+        var popClear = $('kb-cover-clear-popup');
+        if (mainClear && popClear) {
+            popClear.style.display = (mainClear.style.display === 'none' ? 'none' : 'inline-flex');
+        }
+    }
+
+    var coverUploadPopup = $('kb-cover-upload-popup');
+    if (coverUploadPopup) {
+        coverUploadPopup.addEventListener('click', function () {
+            var pop = $('kb-cover-modal');
+            if (!pop) return;
+            var cardId = pop.dataset.cardId;
+            if (!cardId) return;
+
+            var input = $('kb-cover-file-popup');
+            if (!input || !input.files || !input.files[0]) {
+                alert('Selecione uma imagem.');
+                return;
             }
+
+            var fd = new FormData();
+            fd.append('card_id', String(cardId));
+            fd.append('file', input.files[0]);
+
+            coverUploadPopup.disabled = true;
+            coverUploadPopup.textContent = 'Enviando...';
+
+            postFile('/kanban/cartao/capa/upload', fd).then(function (res) {
+                coverUploadPopup.disabled = false;
+                coverUploadPopup.textContent = 'Enviar capa';
+
+                if (res.json && res.json.ok) {
+                    var coverUrl = (res.json && res.json.cover_url) ? String(res.json.cover_url) : '';
+                    updateModalCoverVisual(coverUrl);
+                    updateCardCoverVisual(cardId, coverUrl);
+                    input.value = '';
+                    setTimeout(syncCoverPopupFromMain, 50);
+                } else {
+                    alert((res.json && res.json.error) ? res.json.error : 'Falha ao enviar capa.');
+                }
+            });
+        });
+    }
+
+    var coverClearPopup = $('kb-cover-clear-popup');
+    if (coverClearPopup) {
+        coverClearPopup.addEventListener('click', function () {
+            var pop = $('kb-cover-modal');
+            if (!pop) return;
+            var cardId = pop.dataset.cardId;
+            if (!cardId) return;
+            postForm('/kanban/cartao/capa/remover', { card_id: String(cardId) }).then(function () {
+                loadCardCover(cardId);
+                setTimeout(syncCoverPopupFromMain, 100);
+            });
+        });
+    }
+
+    var attachUploadPopup = $('kb-attach-upload-popup');
+    if (attachUploadPopup) {
+        attachUploadPopup.addEventListener('click', function () {
+            var pop = $('kb-attachments-modal');
+            if (!pop) return;
+            var cardId = pop.dataset.cardId;
+            if (!cardId) return;
+
+            var input = $('kb-attach-file-popup');
+            if (!input || !input.files || !input.files[0]) {
+                alert('Selecione um arquivo.');
+                return;
+            }
+
+            var fd = new FormData();
+            fd.append('card_id', String(cardId));
+            fd.append('file', input.files[0]);
+
+            attachUploadPopup.disabled = true;
+            attachUploadPopup.textContent = 'Enviando...';
+
+            postFile('/kanban/cartao/anexos/upload', fd).then(function (res) {
+                attachUploadPopup.disabled = false;
+                attachUploadPopup.textContent = 'Enviar';
+
+                if (res.json && res.json.ok && res.json.attachment) {
+                    input.value = '';
+                    loadAttachments(cardId);
+                } else {
+                    alert((res.json && res.json.error) ? res.json.error : 'Falha ao enviar anexo.');
+                }
+            });
         });
     }
 
@@ -2472,7 +2720,21 @@ $currentBoardTitle = $currentBoard ? (string)($currentBoard['title'] ?? 'Sem tí
                 if (before2) listContainer.insertBefore(dnd.cardPlaceholder, overCard);
                 else listContainer.insertBefore(dnd.cardPlaceholder, overCard.nextSibling);
             } else {
-                listContainer.appendChild(dnd.cardPlaceholder);
+                // Quando o mouse está sobre o container (e não sobre um card),
+                // precisamos decidir entre topo e fim.
+                var firstCard = listContainer.querySelector('.kb-card[data-card-id]:not(.kb-card--dragging)');
+                if (firstCard) {
+                    var firstRect = firstCard.getBoundingClientRect();
+                    var beforeFirst = e.clientY < (firstRect.top + firstRect.height / 2);
+                    if (beforeFirst) {
+                        listContainer.insertBefore(dnd.cardPlaceholder, firstCard);
+                    } else {
+                        listContainer.appendChild(dnd.cardPlaceholder);
+                    }
+                } else {
+                    // lista vazia
+                    listContainer.appendChild(dnd.cardPlaceholder);
+                }
             }
         }
     });

@@ -118,12 +118,45 @@ function render_markdown_safe(string $text): string {
 }
 ?>
 <style>
-.tuq-chat-md { line-height: 1.6; }
+.tuq-chat-md { line-height: 1.65; }
 .tuq-chat-md p { margin: 0 0 0.9em 0; }
 .tuq-chat-md p:last-child { margin-bottom: 0; }
 .tuq-chat-md ul, .tuq-chat-md ol { margin: 0 0 0.9em 1.2em; padding: 0; }
 .tuq-chat-md li { margin: 0.15em 0; }
 .tuq-chat-md .tuq-chat-hr { border: none; border-top: 1px solid var(--border-subtle); margin: 14px 0; opacity: 0.8; }
+.tuq-chat-md h2, .tuq-chat-md h3, .tuq-chat-md h4 {
+    margin: 0.2em 0 0.65em 0;
+    line-height: 1.25;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+}
+.tuq-chat-md h2 { font-size: 18px; }
+.tuq-chat-md h3 { font-size: 16px; }
+.tuq-chat-md h4 { font-size: 14px; opacity: 0.95; }
+.tuq-chat-md strong { font-weight: 800; }
+.tuq-chat-md .tuq-md-table-wrap { overflow-x: auto; margin: 0 0 0.95em 0; }
+.tuq-chat-md table { width: 100%; border-collapse: separate; border-spacing: 0; min-width: 520px; }
+.tuq-chat-md th, .tuq-chat-md td {
+    border: 1px solid var(--border-subtle);
+    padding: 8px 10px;
+    text-align: left;
+    vertical-align: top;
+    font-size: 13px;
+}
+.tuq-chat-md th {
+    background: rgba(255,255,255,0.06);
+    font-weight: 800;
+}
+.tuq-chat-md tr:nth-child(even) td { background: rgba(255,255,255,0.03); }
+.tuq-chat-md .tuq-md-kbd {
+    display: inline-flex;
+    padding: 2px 6px;
+    border-radius: 8px;
+    border: 1px solid var(--border-subtle);
+    background: rgba(255,255,255,0.06);
+    font-size: 12px;
+    line-height: 1.2;
+}
 
  #chat-send-btn {
      flex: 0 0 auto !important;
@@ -323,7 +356,7 @@ if (!empty($currentPlan) && is_array($currentPlan)) {
                     border:1px solid var(--border-subtle);
                     background:var(--surface-subtle);
                     color:var(--text-secondary);
-                    padding:6px 10px;
+                    padding:6px 10px 6px 6px;
                     border-radius:999px;
                     font-size:11px;
                     line-height:1;
@@ -331,8 +364,27 @@ if (!empty($currentPlan) && is_array($currentPlan)) {
                     white-space:nowrap;
                     overflow:hidden;
                     text-overflow:ellipsis;
+                    display:inline-flex;
+                    align-items:center;
+                    gap:8px;
                 ">
-                    <?= htmlspecialchars($personaBadgeText) ?>
+                    <span aria-hidden="true" style="
+                        width:18px;
+                        height:18px;
+                        border-radius:999px;
+                        overflow:hidden;
+                        display:inline-flex;
+                        align-items:center;
+                        justify-content:center;
+                        border:1px solid var(--border-subtle);
+                        background:rgba(255,255,255,0.06);
+                        flex:0 0 auto;
+                    ">
+                        <img src="<?= $tuqChatAvatarUrlSafe ?>" alt="" onerror="this.onerror=null;this.src='/public/perso_padrao.png';" style="width:100%; height:100%; object-fit:cover; display:block;">
+                    </span>
+                    <span style="min-width:0; overflow:hidden; text-overflow:ellipsis;">
+                        <?= htmlspecialchars($personaBadgeText) ?>
+                    </span>
                 </div>
                 <?php if (!empty($_SESSION['user_id'])): ?>
                     <form method="post" action="/chat/favoritar" style="margin:0; display:inline;">
@@ -1633,8 +1685,10 @@ if (!empty($currentPlan) && is_array($currentPlan)) {
                 .replace(/'/g, '&#039;');
 
             let out = escapeHtml(text || '');
-            // ### títulos -> <strong>
-            out = out.replace(/^#{3,6}\s*(.+)$/gm, '<strong>$1</strong>');
+            // ##/###/#### títulos -> headings
+            out = out.replace(/^####\s*(.+)$/gm, '<h4>$1</h4>');
+            out = out.replace(/^###\s*(.+)$/gm, '<h3>$1</h3>');
+            out = out.replace(/^##\s*(.+)$/gm, '<h2>$1</h2>');
             // **negrito** -> <strong>
             out = out.replace(/\*\*([\s\S]+?)\*\*/g, '<strong>$1</strong>');
             out = out.replace(/(^|[^*])\*([^*\n][^*]*?)\*(?!\*)/g, '$1<em>$2</em>');
@@ -1683,10 +1737,63 @@ if (!empty($currentPlan) && is_array($currentPlan)) {
 
             // Blocos separados por linha em branco viram parágrafos
             const blocks = out.split(/\n{2,}/g).map((b) => (b || '').trim()).filter(Boolean);
+
+            const splitTableLine = (line) => {
+                line = (line || '').toString().trim();
+                if (line.startsWith('|')) line = line.slice(1);
+                if (line.endsWith('|')) line = line.slice(0, -1);
+                return line.split('|').map((c) => (c || '').toString().trim());
+            };
+
+            const isTableSeparatorLine = (line) => {
+                const s = (line || '').toString().trim();
+                if (!s) return false;
+                // aceita: | --- | ---: |
+                const cleaned = s.replace(/\|/g, ' ').trim();
+                return /^:?-{3,}:?(\s+:?-{3,}:?)*$/g.test(cleaned.replace(/\s+/g, ' '));
+            };
+
+            const renderTableBlock = (b) => {
+                const lines = (b || '').split(/\n/g).map((l) => (l || '').trim()).filter(Boolean);
+                if (lines.length < 2) return null;
+                if (lines[0].indexOf('|') === -1) return null;
+                if (!isTableSeparatorLine(lines[1])) return null;
+                const headers = splitTableLine(lines[0]);
+                if (!headers.length) return null;
+                const rows = [];
+                for (let i = 2; i < lines.length; i++) {
+                    if (lines[i].indexOf('|') === -1) continue;
+                    rows.push(splitTableLine(lines[i]));
+                }
+                let html = '<div class="tuq-md-table-wrap"><table><thead><tr>';
+                headers.forEach((h) => { html += '<th>' + h + '</th>'; });
+                html += '</tr></thead><tbody>';
+                rows.forEach((r) => {
+                    html += '<tr>';
+                    for (let ci = 0; ci < headers.length; ci++) {
+                        html += '<td>' + (r[ci] || '') + '</td>';
+                    }
+                    html += '</tr>';
+                });
+                html += '</tbody></table></div>';
+                return html;
+            };
+
             const html = blocks.map((b) => {
                 if (b === '[[HR]]') {
                     return '<hr class="tuq-chat-hr">';
                 }
+
+                const tbl = renderTableBlock(b);
+                if (tbl) {
+                    return tbl;
+                }
+
+                // Se o bloco já é um heading, não embrulha em <p>
+                if (b.startsWith('<h2>') || b.startsWith('<h3>') || b.startsWith('<h4>')) {
+                    return b;
+                }
+
                 return '<p>' + b.replace(/\n/g, '<br>') + '</p>';
             }).join('');
             return '<div class="tuq-chat-md">' + html + '</div>';

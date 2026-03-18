@@ -19,6 +19,42 @@ class Page
         }
     }
 
+    private static function isDescendantOrSelf(int $candidateId, int $rootId): bool
+    {
+        $candidateId = (int)$candidateId;
+        $rootId = (int)$rootId;
+        if ($candidateId <= 0 || $rootId <= 0) {
+            return false;
+        }
+        if ($candidateId === $rootId) {
+            return true;
+        }
+
+        if (!self::columnExists('parent_id')) {
+            return false;
+        }
+
+        $guard = 0;
+        $curId = $candidateId;
+        while ($guard < 50 && $curId > 0) {
+            $row = self::findById($curId);
+            if (!$row) {
+                return false;
+            }
+            $pid = (int)($row['parent_id'] ?? 0);
+            if ($pid <= 0) {
+                return false;
+            }
+            if ($pid === $rootId) {
+                return true;
+            }
+            $curId = $pid;
+            $guard++;
+        }
+
+        return false;
+    }
+
     public static function listForUser(int $userId): array
     {
         $pdo = Database::getConnection();
@@ -225,5 +261,29 @@ class Page
         $stmt->execute(['t' => $token]);
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
         return $row ?: null;
+    }
+
+    public static function findPublicByTokenAndId(string $token, int $pageId): ?array
+    {
+        $root = self::findPublicByToken($token);
+        if (!$root) {
+            return null;
+        }
+
+        $pageId = (int)$pageId;
+        $rootId = (int)($root['id'] ?? 0);
+        if ($pageId <= 0 || $rootId <= 0) {
+            return $root;
+        }
+        if ($pageId === $rootId) {
+            return $root;
+        }
+
+        if (!self::isDescendantOrSelf($pageId, $rootId)) {
+            return null;
+        }
+
+        $target = self::findById($pageId);
+        return $target ?: null;
     }
 }

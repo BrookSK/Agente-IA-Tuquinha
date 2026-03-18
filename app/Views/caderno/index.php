@@ -1253,7 +1253,7 @@ if (!empty($breadcrumb)) {
                     <input type="text" id="emoji-picker-search" class="tuq-emoji-search" placeholder="Pesquisar (ex: fogo, check, pasta, ideia)" autocomplete="off">
                 </div>
                 <div id="emoji-picker-grid" class="tuq-emoji-grid"></div>
-                <div class="tuq-emoji-hint">Dica: no Windows você também pode usar <b>Win + .</b> para abrir o painel de emojis.</div>
+                <div class="tuq-emoji-hint">Dica: no Windows você também pode usar <b>(Win + .)</b> para abrir o painel de emojis.</div>
             </div>
         </div>
 
