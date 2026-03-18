@@ -391,6 +391,15 @@ function render_markdown_safe(string $text): string {
      color:var(--text-secondary);
      padding:6px 10px 0 10px;
  }
+
+ .tuq-has-showcase #chat-window {
+     flex: 0 0 auto !important;
+     overflow: visible !important;
+ }
+
+ .tuq-has-showcase #chat-window {
+     display: none !important;
+ }
 </style>
 <?php
 $convSettings = $conversationSettings ?? null;
@@ -453,8 +462,19 @@ if (!empty($currentPlan) && is_array($currentPlan)) {
         $canShowBuyTokensCta = true;
     }
 }
+
+$isLoggedIn = !empty($_SESSION['user_id']);
+$shouldShowPersonaShowcase = false;
+if (!empty($conversationId) && !empty($personaOptions) && is_array($personaOptions) && $isFreePlan) {
+    if ($isLoggedIn) {
+        $shouldShowPersonaShowcase = empty(($_SESSION['free_persona_confirmed'][(int)$conversationId] ?? null));
+    } else {
+        // Sem login: exibe como vitrine, mas some quando o usuário começar o chat (primeira mensagem)
+        $shouldShowPersonaShowcase = !$hasUserMessageInChat;
+    }
+}
 ?>
-<div style="max-width: 900px; width: 100%; margin: 0 auto; padding: 0 8px; display: flex; flex-direction: column; min-height: calc(100vh - 56px - 80px); box-sizing: border-box;">
+<div id="tuq-chat-root" class="<?= !empty($shouldShowPersonaShowcase) ? 'tuq-has-showcase' : '' ?>" style="max-width: 900px; width: 100%; margin: 0 auto; padding: 0 8px; display: flex; flex-direction: column; min-height: calc(100vh - 56px - 80px); box-sizing: border-box;">
     <?php if (!empty($conversationId)): ?>
         <div class="tuqChatTopbar">
             <div class="tuqChatTitleWrap">
@@ -610,18 +630,6 @@ if (!empty($currentPlan) && is_array($currentPlan)) {
         </div>
     <?php endif; ?>
 
-    <?php
-        $isLoggedIn = !empty($_SESSION['user_id']);
-        $shouldShowPersonaShowcase = false;
-        if (!empty($conversationId) && !empty($personaOptions) && is_array($personaOptions) && $isFreePlan) {
-            if ($isLoggedIn) {
-                $shouldShowPersonaShowcase = empty(($_SESSION['free_persona_confirmed'][(int)$conversationId] ?? null));
-            } else {
-                // Sem login: exibe como vitrine, mas some quando o usuário começar o chat (primeira mensagem)
-                $shouldShowPersonaShowcase = !$hasUserMessageInChat;
-            }
-        }
-    ?>
     <?php if (!empty($shouldShowPersonaShowcase)): ?>
         <div id="chat-persona-showcase" data-hide-on-first-message="<?= $isLoggedIn ? '0' : '1' ?>">
         <style>
@@ -2429,9 +2437,13 @@ if (!empty($currentPlan) && is_array($currentPlan)) {
 
             // Modo sem login: ao enviar a primeira mensagem, esconde a vitrine de personalidades imediatamente
             try {
+                const root = document.getElementById('tuq-chat-root');
                 const showcase = document.getElementById('chat-persona-showcase');
                 if (showcase && showcase.getAttribute('data-hide-on-first-message') === '1') {
                     showcase.style.display = 'none';
+                    if (root) {
+                        root.classList.remove('tuq-has-showcase');
+                    }
                 }
             } catch (e) {}
 
