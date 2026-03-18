@@ -377,7 +377,7 @@ class ExternalUserDashboardController extends Controller
 
         // Auto-join user if they have access but aren't member yet
         if (!$isMember) {
-            \App\Models\CommunityMember::addMember($communityId, (int)$user['id'], 'member');
+            \App\Models\CommunityMember::join($communityId, (int)$user['id'], 'member');
             $isMember = true;
         }
 
