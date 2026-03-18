@@ -11,6 +11,8 @@ use App\Models\CourseLesson;
 use App\Models\CourseLessonProgress;
 use App\Models\CoursePartnerBranding;
 use App\Models\CourseAllowedCommunity;
+use App\Models\CourseLessonComment;
+use App\Models\CoursePurchase;
 
 class ExternalUserDashboardController extends Controller
 {
@@ -172,5 +174,163 @@ class ExternalUserDashboardController extends Controller
             'modules' => $modules,
             'layout' => 'external_user_dashboard',
         ]);
+    }
+
+    public function watchLesson(): void
+    {
+        $user = $this->requireLogin();
+        $branding = $this->getBrandingForUser($user);
+        $partnerId = User::getExternalCoursePartnerId((int)$user['id']);
+
+        $lessonId = isset($_GET['id']) ? (int)$_GET['id'] : 0;
+        $courseId = isset($_GET['course_id']) ? (int)$_GET['course_id'] : 0;
+
+        if ($lessonId <= 0 || $courseId <= 0) {
+            header('Location: /painel-externo/cursos');
+            exit;
+        }
+
+        $lesson = CourseLesson::findById($lessonId);
+        if (!$lesson || empty($lesson['is_published'])) {
+            header('Location: /painel-externo/curso?id=' . $courseId);
+            exit;
+        }
+
+        $course = Course::findById($courseId);
+        if (!$course || empty($course['is_active'])) {
+            header('Location: /painel-externo/cursos');
+            exit;
+        }
+
+        if ($partnerId && (int)$course['owner_user_id'] !== $partnerId) {
+            header('Location: /painel-externo/cursos');
+            exit;
+        }
+
+        $isEnrolled = CourseEnrollment::isEnrolled($courseId, (int)$user['id']);
+        if (!$isEnrolled) {
+            $hasPaidPurchase = CoursePurchase::userHasPaidPurchase((int)$user['id'], $courseId);
+            if (!$hasPaidPurchase) {
+                header('Location: /painel-externo/curso?id=' . $courseId);
+                exit;
+            }
+        }
+
+        $completedLessonIds = CourseLessonProgress::completedLessonIdsByUserAndCourse($courseId, (int)$user['id']);
+        $isLessonCompleted = !empty($completedLessonIds[$lessonId]);
+
+        $lessons = CourseLesson::allByCourseId($courseId);
+        $lessonComments = CourseLessonComment::allByLessonWithUser($lessonId);
+
+        $prevUrl = null;
+        $nextUrl = null;
+        $currentModuleId = (int)($lesson['module_id'] ?? 0);
+
+        $countLessons = count($lessons);
+        $currentIndex = null;
+        for ($i = 0; $i < $countLessons; $i++) {
+            $lid = (int)($lessons[$i]['id'] ?? 0);
+            if ($lid === $lessonId) {
+                $currentIndex = $i;
+                break;
+            }
+        }
+
+        if ($currentIndex !== null) {
+            if ($currentIndex - 1 >= 0) {
+                $prevLesson = $lessons[$currentIndex - 1];
+                $prevLessonId = (int)($prevLesson['id'] ?? 0);
+                if ($prevLessonId > 0) {
+                    $prevUrl = '/painel-externo/aula?id=' . $prevLessonId . '&course_id=' . $courseId;
+                }
+            }
+
+            if ($currentIndex + 1 < $countLessons) {
+                $nextLesson = $lessons[$currentIndex + 1];
+                $nextLessonId = (int)($nextLesson['id'] ?? 0);
+                if ($nextLessonId > 0) {
+                    $nextUrl = '/painel-externo/aula?id=' . $nextLessonId . '&course_id=' . $courseId;
+                }
+            }
+        }
+
+        $this->view('external_dashboard/watch_lesson', [
+            'pageTitle' => $lesson['title'] ?? 'Aula',
+            'user' => $user,
+            'branding' => $branding,
+            'course' => $course,
+            'lesson' => $lesson,
+            'lessons' => $lessons,
+            'lessonComments' => $lessonComments,
+            'isEnrolled' => $isEnrolled,
+            'completedLessonIds' => $completedLessonIds,
+            'currentModuleId' => $currentModuleId,
+            'hasModuleExam' => false,
+            'canTakeModuleExam' => false,
+            'showExamPrompt' => false,
+            'prevUrl' => $prevUrl,
+            'nextUrl' => $nextUrl,
+            'nextIsExam' => false,
+            'isLessonCompleted' => $isLessonCompleted,
+            'canAccessContent' => true,
+            'layout' => 'external_user_dashboard',
+        ]);
+    }
+
+    public function completeLesson(): void
+    {
+        $user = $this->requireLogin();
+        $partnerId = User::getExternalCoursePartnerId((int)$user['id']);
+
+        $courseId = isset($_POST['course_id']) ? (int)$_POST['course_id'] : 0;
+        $lessonId = isset($_POST['lesson_id']) ? (int)$_POST['lesson_id'] : 0;
+
+        if ($courseId <= 0 || $lessonId <= 0) {
+            header('Location: /painel-externo/cursos');
+            exit;
+        }
+
+        $course = Course::findById($courseId);
+        if (!$course || ($partnerId && (int)$course['owner_user_id'] !== $partnerId)) {
+            header('Location: /painel-externo/cursos');
+            exit;
+        }
+
+        $isEnrolled = CourseEnrollment::isEnrolled($courseId, (int)$user['id']);
+        if ($isEnrolled) {
+            CourseLessonProgress::markCompleted((int)$user['id'], $lessonId);
+        }
+
+        header('Location: /painel-externo/aula?id=' . $lessonId . '&course_id=' . $courseId);
+        exit;
+    }
+
+    public function commentLesson(): void
+    {
+        $user = $this->requireLogin();
+        $partnerId = User::getExternalCoursePartnerId((int)$user['id']);
+
+        $courseId = isset($_POST['course_id']) ? (int)$_POST['course_id'] : 0;
+        $lessonId = isset($_POST['lesson_id']) ? (int)$_POST['lesson_id'] : 0;
+        $body = trim((string)($_POST['body'] ?? ''));
+
+        if ($courseId <= 0 || $lessonId <= 0 || $body === '') {
+            header('Location: /painel-externo/cursos');
+            exit;
+        }
+
+        $course = Course::findById($courseId);
+        if (!$course || ($partnerId && (int)$course['owner_user_id'] !== $partnerId)) {
+            header('Location: /painel-externo/cursos');
+            exit;
+        }
+
+        $isEnrolled = CourseEnrollment::isEnrolled($courseId, (int)$user['id']);
+        if ($isEnrolled) {
+            CourseLessonComment::create((int)$user['id'], $lessonId, $body);
+        }
+
+        header('Location: /painel-externo/aula?id=' . $lessonId . '&course_id=' . $courseId);
+        exit;
     }
 }

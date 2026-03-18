@@ -13,8 +13,6 @@ class HomeController extends Controller
 {
     public function index(): void
     {
-        $tuquinhaAboutVideoUrl = Setting::get('tuquinha_about_video_url', '') ?? '';
-
         $isLogged = !empty($_SESSION['user_id']);
         $user = null;
         if ($isLogged) {
@@ -22,8 +20,13 @@ class HomeController extends Controller
             if (!$user) {
                 unset($_SESSION['user_id'], $_SESSION['user_name'], $_SESSION['user_email']);
                 $isLogged = false;
+            } elseif (!empty($user['is_external_course_user'])) {
+                header('Location: /painel-externo');
+                exit;
             }
         }
+
+        $tuquinhaAboutVideoUrl = Setting::get('tuquinha_about_video_url', '') ?? '';
 
         $currentPlan = null;
         $hasPaidActiveSubscription = false;

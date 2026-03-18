@@ -133,11 +133,12 @@ $router->post('/tokens/comprar', 'TokenTopupController@create');
 $router->get('/tokens/historico', 'TokenTopupController@history');
 $router->get('/personalidades', 'PersonalityController@index');
 
-// Curso externo (white-label)
+// Cursos externos (white-label)
 $router->get('/curso-externo', 'ExternalCourseController@show');
 $router->get('/curso-externo/checkout', 'ExternalCourseController@checkout');
 $router->post('/curso-externo/checkout', 'ExternalCourseController@processCheckout');
-$router->get('/curso-externo/status-pagamento', 'ExternalCourseController@checkPaymentStatus');
+$router->post('/curso-externo/login', 'ExternalCourseController@login');
+$router->get('/curso-externo/payment-status', 'ExternalCourseController@paymentStatus');
 $router->get('/curso-externo/membros', 'ExternalCourseController@members');
 $router->get('/curso-externo/aula', 'ExternalCourseController@lesson');
 $router->post('/curso-externo/aula/concluir', 'ExternalCourseController@completeLesson');
@@ -149,6 +150,9 @@ $router->get('/painel-externo/cursos', 'ExternalUserDashboardController@allCours
 $router->get('/painel-externo/meus-cursos', 'ExternalUserDashboardController@myCourses');
 $router->get('/painel-externo/comunidade', 'ExternalUserDashboardController@community');
 $router->get('/painel-externo/curso', 'ExternalUserDashboardController@viewCourse');
+$router->get('/painel-externo/aula', 'ExternalUserDashboardController@watchLesson');
+$router->post('/painel-externo/aula/concluir', 'ExternalUserDashboardController@completeLesson');
+$router->post('/painel-externo/aula/comentar', 'ExternalUserDashboardController@commentLesson');
 
 $router->get('/cursos', 'CourseController@index');
 $router->get('/cursos/ver', 'CourseController@show');

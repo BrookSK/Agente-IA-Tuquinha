@@ -64,6 +64,17 @@ class ProjectController extends Controller
             exit;
         }
 
+        if (!empty($user['is_external_course_user'])) {
+            if ($this->wantsJson()) {
+                http_response_code(403);
+                header('Content-Type: application/json; charset=utf-8');
+                echo json_encode(['ok' => false, 'error' => 'Acesso negado.']);
+                exit;
+            }
+            header('Location: /painel-externo');
+            exit;
+        }
+
         return $user;
     }
 

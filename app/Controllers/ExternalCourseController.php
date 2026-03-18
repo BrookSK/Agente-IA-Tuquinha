@@ -18,6 +18,88 @@ use App\Services\MailService;
 
 class ExternalCourseController extends Controller
 {
+    public function login(): void
+    {
+        $token = isset($_POST['token']) ? trim((string)$_POST['token']) : '';
+        $course = $token !== '' ? Course::findByExternalToken($token) : null;
+        if (!$course) {
+            header('Location: /');
+            exit;
+        }
+
+        $branding = null;
+        if (!empty($course['owner_user_id'])) {
+            $branding = CoursePartnerBranding::findByUserId((int)$course['owner_user_id']);
+        }
+
+        $email = trim($_POST['email'] ?? '');
+        $password = (string)($_POST['password'] ?? '');
+
+        if ($email === '' || $password === '') {
+            $this->view('external_courses/checkout', [
+                'pageTitle' => 'Comprar: ' . (string)($course['title'] ?? 'Curso'),
+                'course' => $course,
+                'branding' => $branding,
+                'token' => $token,
+                'savedCustomer' => null,
+                'error' => 'Informe seu e-mail e senha.',
+                'layout' => 'external_course',
+            ]);
+            return;
+        }
+
+        $user = User::findByEmail($email);
+        if (!$user || !password_verify($password, $user['password_hash'])) {
+            $this->view('external_courses/checkout', [
+                'pageTitle' => 'Comprar: ' . (string)($course['title'] ?? 'Curso'),
+                'course' => $course,
+                'branding' => $branding,
+                'token' => $token,
+                'savedCustomer' => null,
+                'error' => 'E-mail ou senha inválidos.',
+                'layout' => 'external_course',
+            ]);
+            return;
+        }
+
+        if (empty($user['is_admin']) && empty($user['email_verified_at'])) {
+            $this->view('external_courses/checkout', [
+                'pageTitle' => 'Comprar: ' . (string)($course['title'] ?? 'Curso'),
+                'course' => $course,
+                'branding' => $branding,
+                'token' => $token,
+                'savedCustomer' => null,
+                'error' => 'Antes de entrar, confirme seu e-mail.',
+                'layout' => 'external_course',
+            ]);
+            return;
+        }
+
+        if (isset($user['is_active']) && (int)$user['is_active'] === 0) {
+            $this->view('external_courses/checkout', [
+                'pageTitle' => 'Comprar: ' . (string)($course['title'] ?? 'Curso'),
+                'course' => $course,
+                'branding' => $branding,
+                'token' => $token,
+                'savedCustomer' => null,
+                'error' => 'Sua conta foi desativada.',
+                'layout' => 'external_course',
+            ]);
+            return;
+        }
+
+        $_SESSION['user_id'] = (int)$user['id'];
+        $_SESSION['user_name'] = $user['name'];
+        $_SESSION['user_email'] = $user['email'];
+
+        if (!empty($user['is_external_course_user'])) {
+            header('Location: /painel-externo');
+        } else {
+            header('Location: /curso-externo/checkout?token=' . urlencode($token));
+        }
+        exit;
+    }
+
     private function requireLogin(): array
     {
         if (empty($_SESSION['user_id'])) {

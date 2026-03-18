@@ -19,10 +19,45 @@ $price = number_format(max($priceCents, 0) / 100, 2, ',', '.');
 <div style="padding: 14px; background: rgba(255,204,128,0.1); border: 1px solid #ffcc80; border-radius: 12px; margin-bottom: 20px;">
     <div style="font-size: 14px; font-weight: 600; color: #ffcc80; margin-bottom: 8px;">👤 Já tem uma conta?</div>
     <p style="font-size: 13px; color: var(--text-secondary); margin: 0 0 12px 0;">Se você já possui uma conta, faça login para continuar a compra.</p>
-    <a href="/login" class="btn-outline" style="display: inline-block; padding: 8px 16px; border-radius: 999px; border: 1px solid var(--border); color: var(--text-primary); font-size: 13px; font-weight: 600; text-decoration: none;">
+    <button type="button" onclick="toggleLoginForm()" class="btn-outline" style="display: inline-block; padding: 8px 16px; border-radius: 999px; border: 1px solid var(--border); background: transparent; color: var(--text-primary); font-size: 13px; font-weight: 600; cursor: pointer;">
         Fazer login
-    </a>
+    </button>
 </div>
+
+<div id="loginFormContainer" style="display: none; padding: 16px; background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 12px; margin-bottom: 20px;">
+    <h3 style="font-size: 16px; font-weight: 700; margin: 0 0 12px 0;">Login</h3>
+    
+    <form action="/curso-externo/login" method="post" style="display: flex; flex-direction: column; gap: 12px;">
+        <input type="hidden" name="token" value="<?= htmlspecialchars($token, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?>">
+        
+        <div>
+            <label style="display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px;">E-mail</label>
+            <input type="email" name="email" required style="width: 100%; padding: 10px 12px; background: rgba(255,255,255,0.05); border: 1px solid var(--border); border-radius: 10px; color: var(--text-primary); font-size: 14px;">
+        </div>
+        
+        <div>
+            <label style="display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px;">Senha</label>
+            <input type="password" name="password" required style="width: 100%; padding: 10px 12px; background: rgba(255,255,255,0.05); border: 1px solid var(--border); border-radius: 10px; color: var(--text-primary); font-size: 14px;">
+        </div>
+        
+        <div style="display: flex; gap: 10px; align-items: center;">
+            <button type="submit" class="btn">Entrar</button>
+            <button type="button" onclick="toggleLoginForm()" class="btn-outline">Cancelar</button>
+        </div>
+    </form>
+</div>
+
+<script>
+function toggleLoginForm() {
+    const container = document.getElementById('loginFormContainer');
+    if (container.style.display === 'none') {
+        container.style.display = 'block';
+        container.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    } else {
+        container.style.display = 'none';
+    }
+}
+</script>
 
 <style>
     .billing-grid { display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:10px; }

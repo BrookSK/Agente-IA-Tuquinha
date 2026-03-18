@@ -38,6 +38,12 @@ class CourseController extends Controller
             unset($_SESSION['user_id'], $_SESSION['user_name'], $_SESSION['user_email']);
             return null;
         }
+
+        if (!empty($user['is_external_course_user'])) {
+            header('Location: /painel-externo');
+            exit;
+        }
+
         return $user;
     }
 

@@ -26,6 +26,11 @@ class AccountController extends Controller
             exit;
         }
 
+        if (!empty($user['is_external_course_user'])) {
+            header('Location: /painel-externo');
+            exit;
+        }
+
         return $user;
     }
 

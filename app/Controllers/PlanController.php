@@ -12,13 +12,21 @@ class PlanController extends Controller
 {
     public function index(): void
     {
+        $userId = !empty($_SESSION['user_id']) ? (int)$_SESSION['user_id'] : 0;
+        if ($userId > 0) {
+            $user = User::findById($userId);
+            if ($user && !empty($user['is_external_course_user'])) {
+                header('Location: /painel-externo');
+                exit;
+            }
+        }
+
         $plans = Plan::allActive();
         $currentPlan = null;
         $hasPaidActiveSubscription = false;
         $isAdmin = !empty($_SESSION['is_admin']);
 
         // Se o usuário estiver logado, tenta descobrir o plano pela assinatura (igual à Minha Conta)
-        $userId = !empty($_SESSION['user_id']) ? (int)$_SESSION['user_id'] : 0;
         if ($userId > 0) {
             $user = User::findById($userId);
             if ($user && !empty($user['email'])) {
