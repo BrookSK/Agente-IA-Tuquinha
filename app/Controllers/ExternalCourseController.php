@@ -246,6 +246,12 @@ class ExternalCourseController extends Controller
         } catch (\Throwable $e) {
         }
 
+        // Marca como usuário de curso externo
+        $partnerId = !empty($course['owner_user_id']) ? (int)$course['owner_user_id'] : 0;
+        if ($partnerId > 0) {
+            User::markAsExternalCourseUser($userId, $partnerId);
+        }
+
         // Login automático
         $_SESSION['user_id'] = (int)$userId;
         $_SESSION['user_name'] = $name;
@@ -280,6 +286,8 @@ class ExternalCourseController extends Controller
             'amount_cents' => $finalPriceCents,
             'billing_type' => $billingType,
             'asaas_payment_id' => null,
+            'external_token' => $token,
+            'redirect_after_payment' => 1,
             'status' => 'pending',
             'paid_at' => null,
         ]);
@@ -354,24 +362,22 @@ class ExternalCourseController extends Controller
             } catch (\Throwable $eMail) {
             }
 
-            if ($redirectUrl) {
-                $this->view('courses/abrir_pagamento', [
-                    'pageTitle' => 'Pagamento do curso',
-                    'course' => $course,
-                    'branding' => $branding,
-                    'billingType' => $billingType,
-                    'amountReais' => $finalPriceCents / 100,
-                    'redirectUrl' => $redirectUrl,
-                    'returnUrl' => '/curso-externo/membros?token=' . urlencode($token),
-                    'layout' => 'external_course',
-                    'hideTopbarAction' => true,
-                    'brandSubtitle' => 'Pagamento',
-                ]);
-                return;
-            }
+            $_SESSION['external_purchase_id'] = $purchaseId;
 
-            header('Location: /curso-externo?token=' . urlencode($token));
-            exit;
+            $this->view('external_courses/awaiting_payment', [
+                'pageTitle' => 'Aguardando pagamento',
+                'course' => $course,
+                'branding' => $branding,
+                'token' => $token,
+                'purchaseId' => $purchaseId,
+                'billingType' => $billingType,
+                'amountReais' => $finalPriceCents / 100,
+                'paymentUrl' => $redirectUrl ?? null,
+                'layout' => 'external_course',
+                'hideTopbarAction' => true,
+                'brandSubtitle' => 'Pagamento',
+            ]);
+            return;
         } catch (\Throwable $e) {
             $this->view('external_courses/checkout', [
                 'pageTitle' => 'Comprar: ' . (string)($course['title'] ?? 'Curso'),
@@ -589,5 +595,35 @@ class ExternalCourseController extends Controller
 
         header('Location: /curso-externo/aula?token=' . urlencode($token) . '&lesson_id=' . $lessonId);
         exit;
+    }
+
+    public function checkPaymentStatus(): void
+    {
+        $purchaseId = isset($_GET['purchase_id']) ? (int)$_GET['purchase_id'] : 0;
+        
+        if ($purchaseId <= 0) {
+            $this->json(['status' => 'error', 'message' => 'ID de compra inválido'], 400);
+            return;
+        }
+
+        $purchase = CoursePurchase::findById($purchaseId);
+        
+        if (!$purchase) {
+            $this->json(['status' => 'error', 'message' => 'Compra não encontrada'], 404);
+            return;
+        }
+
+        if ($purchase['status'] === 'paid') {
+            $token = (string)($purchase['external_token'] ?? '');
+            $redirectUrl = $token !== '' ? '/painel-externo/meus-cursos?token=' . urlencode($token) : '/painel-externo/meus-cursos';
+            
+            $this->json([
+                'status' => 'paid',
+                'redirect' => $redirectUrl,
+            ]);
+            return;
+        }
+
+        $this->json(['status' => 'pending']);
     }
 }

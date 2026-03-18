@@ -207,7 +207,74 @@ if ($externalToken !== '') {
             </div>
         </div>
 
-        <div style="display:flex; flex-direction:column; gap:6px; font-size:13px; color:var(--text-secondary); margin-top:4px;">
+        <?php if ($partnerEmail !== ''): ?>
+        <div style="margin-top:14px; padding:12px 14px; border-radius:12px; border:1px solid var(--border-subtle); background:var(--surface-subtle);">
+            <div style="font-size:14px; font-weight:650; margin-bottom:10px;">Personalização Visual (Branding)</div>
+            
+            <div style="display:flex; gap:12px; flex-wrap:wrap; margin-bottom:10px;">
+                <div style="flex:1 1 240px;">
+                    <label style="font-size:13px; color:var(--text-primary); display:block; margin-bottom:4px;">Nome da empresa</label>
+                    <input type="text" name="branding_company_name" value="<?= htmlspecialchars($branding['company_name'] ?? '', ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?>" placeholder="Ex: Minha Escola" style="
+                        width:100%; padding:8px 10px; border-radius:8px; border:1px solid var(--border-subtle);
+                        background:var(--surface-card); color:var(--text-primary); font-size:13px;">
+                </div>
+            </div>
+
+            <div style="display:flex; gap:12px; flex-wrap:wrap; margin-bottom:10px;">
+                <div style="flex:1 1 180px;">
+                    <label style="font-size:13px; color:var(--text-primary); display:block; margin-bottom:4px;">Cor primária (HEX)</label>
+                    <input type="text" name="branding_primary_color" value="<?= htmlspecialchars($branding['primary_color'] ?? '', ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?>" placeholder="#e53935" style="
+                        width:100%; padding:8px 10px; border-radius:8px; border:1px solid var(--border-subtle);
+                        background:var(--surface-card); color:var(--text-primary); font-size:13px;">
+                </div>
+                <div style="flex:1 1 180px;">
+                    <label style="font-size:13px; color:var(--text-primary); display:block; margin-bottom:4px;">Cor secundária (HEX)</label>
+                    <input type="text" name="branding_secondary_color" value="<?= htmlspecialchars($branding['secondary_color'] ?? '', ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?>" placeholder="#ff6f60" style="
+                        width:100%; padding:8px 10px; border-radius:8px; border:1px solid var(--border-subtle);
+                        background:var(--surface-card); color:var(--text-primary); font-size:13px;">
+                </div>
+            </div>
+
+            <div>
+                <label style="font-size:13px; color:var(--text-primary); display:block; margin-bottom:4px;">Logo do parceiro</label>
+                <?php if (!empty($branding['logo_url'])): ?>
+                    <div style="display:flex; gap:10px; align-items:center; margin-bottom:8px;">
+                        <div style="width:48px; height:48px; border-radius:8px; overflow:hidden; border:1px solid var(--border-subtle);">
+                            <img src="<?= htmlspecialchars($branding['logo_url'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?>" alt="Logo" style="width:100%; height:100%; object-fit:cover;">
+                        </div>
+                        <label style="display:flex; align-items:center; gap:6px; font-size:12px; color:var(--text-secondary); cursor:pointer;">
+                            <input type="checkbox" name="remove_branding_logo" value="1">
+                            <span>Remover logo atual</span>
+                        </label>
+                    </div>
+                <?php endif; ?>
+                <input type="file" name="branding_logo_upload" accept="image/*" style="width:100%; padding:8px; border-radius:8px; border:1px solid var(--border-subtle); background:var(--surface-card); color:var(--text-primary); font-size:12px;">
+                <div style="font-size:11px; color:#777; margin-top:4px;">Será enviado para o servidor de mídia externo.</div>
+            </div>
+        </div>
+        <?php endif; ?>
+
+        <?php if ($partnerEmail !== '' && !empty($partnerCommunities)): ?>
+        <div style="margin-top:14px; padding:12px 14px; border-radius:12px; border:1px solid var(--border-subtle); background:var(--surface-subtle);">
+            <div style="font-size:14px; font-weight:650; margin-bottom:6px;">Acesso a Comunidades</div>
+            <label style="display:flex; align-items:center; gap:6px; font-size:13px; margin-bottom:10px;">
+                <input type="checkbox" name="allow_community_access" value="1" <?= !empty($course['allow_community_access']) ? 'checked' : '' ?> id="allowCommunityCheckbox">
+                <span>Permitir acesso a comunidades?</span>
+            </label>
+            
+            <div id="communitySelection" style="<?= empty($course['allow_community_access']) ? 'display:none;' : '' ?> margin-left:20px; padding:10px; border-radius:8px; background:var(--surface-card); border:1px solid var(--border-subtle);">
+                <div style="font-size:12px; color:var(--text-secondary); margin-bottom:8px;">Selecione as comunidades que os alunos deste curso poderão acessar:</div>
+                <?php foreach ($partnerCommunities as $comm): ?>
+                    <label style="display:flex; align-items:center; gap:6px; font-size:13px; margin-bottom:6px; cursor:pointer;">
+                        <input type="checkbox" name="community_ids[]" value="<?= (int)$comm['id'] ?>" <?= in_array((int)$comm['id'], $selectedCommunityIds) ? 'checked' : '' ?>>
+                        <span><?= htmlspecialchars($comm['name'] ?? '', ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?></span>
+                    </label>
+                <?php endforeach; ?>
+            </div>
+        </div>
+        <?php endif; ?>
+
+        <div style="display:flex; flex-direction:column; gap:6px; font-size:13px; color:var(--text-secondary); margin-top:14px;">
             <div style="display:flex; flex-wrap:wrap; gap:10px; align-items:center;">
                 <label style="display:flex; align-items:center; gap:5px;">
                     <input type="checkbox" name="is_external" value="1" <?= $isExternal ? 'checked' : '' ?>>
@@ -302,6 +369,14 @@ document.addEventListener('DOMContentLoaded', function () {
                 setTimeout(function () { try { copyBtn.textContent = 'Copiar'; } catch (e) {} }, 1400);
             } catch (e) {
             }
+        });
+    }
+
+    var allowCommunityCheckbox = document.getElementById('allowCommunityCheckbox');
+    var communitySelection = document.getElementById('communitySelection');
+    if (allowCommunityCheckbox && communitySelection) {
+        allowCommunityCheckbox.addEventListener('change', function () {
+            communitySelection.style.display = this.checked ? 'block' : 'none';
         });
     }
 

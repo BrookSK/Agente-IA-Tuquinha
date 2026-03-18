@@ -53,6 +53,9 @@ class AdminCourseController extends Controller
         $partnerCommissionPercent = null;
         $partnerDefaultPercent = null;
         $partnerEmail = '';
+        $partnerCommunities = [];
+        $selectedCommunityIds = [];
+        $branding = null;
 
         if ($course && !empty($course['owner_user_id'])) {
             $partner = CoursePartner::findByUserId((int)$course['owner_user_id']);
@@ -74,6 +77,13 @@ class AdminCourseController extends Controller
             if ($owner && !empty($owner['email'])) {
                 $partnerEmail = (string)$owner['email'];
             }
+
+            $partnerCommunities = Community::allActiveWithUserFilter((int)$course['owner_user_id'], null, null, 'owner');
+            $branding = CoursePartnerBranding::findByUserId((int)$course['owner_user_id']);
+        }
+
+        if ($course && !empty($course['id'])) {
+            $selectedCommunityIds = CourseAllowedCommunity::communityIdsByCourse((int)$course['id']);
         }
 
         $this->view('admin/cursos/form', [
@@ -82,6 +92,9 @@ class AdminCourseController extends Controller
             'partnerCommissionPercent' => $partnerCommissionPercent,
             'partnerDefaultPercent' => $partnerDefaultPercent,
             'partnerEmail' => $partnerEmail,
+            'partnerCommunities' => $partnerCommunities,
+            'selectedCommunityIds' => $selectedCommunityIds,
+            'branding' => $branding,
         ]);
     }
 
@@ -205,6 +218,8 @@ class AdminCourseController extends Controller
             $badgeImagePath = '';
         }
 
+        $allowCommunityAccess = !empty($_POST['allow_community_access']) ? 1 : 0;
+
         $data = [
             'owner_user_id' => $ownerUserId ?: null,
             'title' => $title,
@@ -222,6 +237,7 @@ class AdminCourseController extends Controller
             'allow_public_purchase' => $allowPublicPurchase,
             'is_active' => $isActive,
             'is_external' => $isExternal,
+            'allow_community_access' => $allowCommunityAccess,
         ];
 
         if ($id > 0) {
@@ -253,6 +269,53 @@ class AdminCourseController extends Controller
                     CoursePartnerCommission::setCommission($partnerId, (int)$courseId, (float)$partnerCommissionPercent);
                 }
             }
+
+            $brandingCompanyName = trim($_POST['branding_company_name'] ?? '');
+            $brandingPrimaryColor = trim($_POST['branding_primary_color'] ?? '');
+            $brandingSecondaryColor = trim($_POST['branding_secondary_color'] ?? '');
+            $brandingLogoUrl = '';
+            $removeBrandingLogo = !empty($_POST['remove_branding_logo']);
+
+            $existingBranding = CoursePartnerBranding::findByUserId((int)$ownerUserId);
+            if ($existingBranding && !empty($existingBranding['logo_url'])) {
+                $brandingLogoUrl = (string)$existingBranding['logo_url'];
+            }
+
+            if ($removeBrandingLogo) {
+                $brandingLogoUrl = '';
+            }
+
+            if (!$removeBrandingLogo && !empty($_FILES['branding_logo_upload']['tmp_name'])) {
+                $logoError = $_FILES['branding_logo_upload']['error'] ?? UPLOAD_ERR_NO_FILE;
+                if ($logoError === UPLOAD_ERR_OK) {
+                    $logoTmp = (string)($_FILES['branding_logo_upload']['tmp_name'] ?? '');
+                    $logoName = (string)($_FILES['branding_logo_upload']['name'] ?? '');
+                    $logoMime = (string)($_FILES['branding_logo_upload']['type'] ?? '');
+
+                    if ($logoTmp !== '' && is_file($logoTmp)) {
+                        $remoteLogoUrl = MediaStorageService::uploadFile($logoTmp, $logoName, $logoMime);
+                        if ($remoteLogoUrl !== null) {
+                            $brandingLogoUrl = $remoteLogoUrl;
+                        }
+                    }
+                }
+            }
+
+            if ($brandingCompanyName !== '' || $brandingPrimaryColor !== '' || $brandingSecondaryColor !== '' || $brandingLogoUrl !== '') {
+                CoursePartnerBranding::upsert((int)$ownerUserId, [
+                    'company_name' => $brandingCompanyName !== '' ? $brandingCompanyName : null,
+                    'logo_url' => $brandingLogoUrl !== '' ? $brandingLogoUrl : null,
+                    'primary_color' => $brandingPrimaryColor !== '' ? $brandingPrimaryColor : null,
+                    'secondary_color' => $brandingSecondaryColor !== '' ? $brandingSecondaryColor : null,
+                ]);
+            }
+        }
+
+        if ($allowCommunityAccess && isset($_POST['community_ids']) && is_array($_POST['community_ids'])) {
+            $communityIds = array_map('intval', $_POST['community_ids']);
+            CourseAllowedCommunity::saveByCourse((int)$courseId, $communityIds);
+        } else {
+            CourseAllowedCommunity::deleteByCourse((int)$courseId);
         }
 
         header('Location: /admin/cursos');

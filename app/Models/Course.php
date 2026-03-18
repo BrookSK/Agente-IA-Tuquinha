@@ -87,8 +87,8 @@ class Course
     public static function create(array $data): int
     {
         $pdo = Database::getConnection();
-        $stmt = $pdo->prepare('INSERT INTO courses (owner_user_id, title, slug, short_description, description, image_path, badge_image_path, certificate_syllabus, certificate_workload_hours, certificate_location, is_paid, price_cents, allow_plan_access_only, allow_public_purchase, is_active, is_external)
-            VALUES (:owner_user_id, :title, :slug, :short_description, :description, :image_path, :badge_image_path, :certificate_syllabus, :certificate_workload_hours, :certificate_location, :is_paid, :price_cents, :allow_plan_access_only, :allow_public_purchase, :is_active, :is_external)');
+        $stmt = $pdo->prepare('INSERT INTO courses (owner_user_id, title, slug, short_description, description, image_path, badge_image_path, certificate_syllabus, certificate_workload_hours, certificate_location, is_paid, price_cents, allow_plan_access_only, allow_public_purchase, is_active, is_external, allow_community_access)
+            VALUES (:owner_user_id, :title, :slug, :short_description, :description, :image_path, :badge_image_path, :certificate_syllabus, :certificate_workload_hours, :certificate_location, :is_paid, :price_cents, :allow_plan_access_only, :allow_public_purchase, :is_active, :is_external, :allow_community_access)');
         $stmt->execute([
             'owner_user_id' => $data['owner_user_id'] ?? null,
             'title' => $data['title'] ?? '',
@@ -106,6 +106,7 @@ class Course
             'allow_public_purchase' => (int)($data['allow_public_purchase'] ?? 0),
             'is_active' => (int)($data['is_active'] ?? 1),
             'is_external' => (int)($data['is_external'] ?? 0),
+            'allow_community_access' => (int)($data['allow_community_access'] ?? 0),
         ]);
         return (int)$pdo->lastInsertId();
     }
@@ -130,6 +131,7 @@ class Course
             allow_public_purchase = :allow_public_purchase,
             is_active = :is_active,
             is_external = :is_external,
+            allow_community_access = :allow_community_access,
             updated_at = NOW()
             WHERE id = :id');
         $stmt->execute([
@@ -150,6 +152,7 @@ class Course
             'allow_public_purchase' => (int)($data['allow_public_purchase'] ?? 0),
             'is_active' => (int)($data['is_active'] ?? 1),
             'is_external' => (int)($data['is_external'] ?? 0),
+            'allow_community_access' => (int)($data['allow_community_access'] ?? 0),
         ]);
     }
 }

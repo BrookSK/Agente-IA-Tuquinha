@@ -10,14 +10,16 @@ class CoursePurchase
     public static function create(array $data): int
     {
         $pdo = Database::getConnection();
-        $stmt = $pdo->prepare('INSERT INTO course_purchases (user_id, course_id, amount_cents, billing_type, asaas_payment_id, status, paid_at)
-            VALUES (:user_id, :course_id, :amount_cents, :billing_type, :asaas_payment_id, :status, :paid_at)');
+        $stmt = $pdo->prepare('INSERT INTO course_purchases (user_id, course_id, amount_cents, billing_type, asaas_payment_id, external_token, redirect_after_payment, status, paid_at)
+            VALUES (:user_id, :course_id, :amount_cents, :billing_type, :asaas_payment_id, :external_token, :redirect_after_payment, :status, :paid_at)');
         $stmt->execute([
             'user_id' => (int)($data['user_id'] ?? 0),
             'course_id' => (int)($data['course_id'] ?? 0),
             'amount_cents' => (int)($data['amount_cents'] ?? 0),
             'billing_type' => (string)($data['billing_type'] ?? 'PIX'),
             'asaas_payment_id' => $data['asaas_payment_id'] ?? null,
+            'external_token' => $data['external_token'] ?? null,
+            'redirect_after_payment' => (int)($data['redirect_after_payment'] ?? 0),
             'status' => (string)($data['status'] ?? 'pending'),
             'paid_at' => $data['paid_at'] ?? null,
         ]);
@@ -98,5 +100,18 @@ class CoursePurchase
         }
 
         return array_keys($ids);
+    }
+
+    public static function findByExternalToken(string $token): ?array
+    {
+        if ($token === '') {
+            return null;
+        }
+
+        $pdo = Database::getConnection();
+        $stmt = $pdo->prepare('SELECT * FROM course_purchases WHERE external_token = :token ORDER BY created_at DESC LIMIT 1');
+        $stmt->execute(['token' => $token]);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $row ?: null;
     }
 }

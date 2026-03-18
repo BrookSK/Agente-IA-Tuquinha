@@ -390,4 +390,49 @@ class User
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
         return $row ?: null;
     }
+
+    public static function markAsExternalCourseUser(int $id, int $partnerId): void
+    {
+        if ($id <= 0) {
+            return;
+        }
+
+        $pdo = Database::getConnection();
+        $stmt = $pdo->prepare('UPDATE users SET 
+            is_external_course_user = 1,
+            external_course_partner_id = :partner_id
+            WHERE id = :id LIMIT 1');
+        $stmt->execute([
+            'id' => $id,
+            'partner_id' => $partnerId > 0 ? $partnerId : null,
+        ]);
+    }
+
+    public static function isExternalCourseUser(int $id): bool
+    {
+        if ($id <= 0) {
+            return false;
+        }
+
+        $pdo = Database::getConnection();
+        $stmt = $pdo->prepare('SELECT is_external_course_user FROM users WHERE id = :id LIMIT 1');
+        $stmt->execute(['id' => $id]);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        return !empty($row['is_external_course_user']);
+    }
+
+    public static function getExternalCoursePartnerId(int $id): ?int
+    {
+        if ($id <= 0) {
+            return null;
+        }
+
+        $pdo = Database::getConnection();
+        $stmt = $pdo->prepare('SELECT external_course_partner_id FROM users WHERE id = :id LIMIT 1');
+        $stmt->execute(['id' => $id]);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        $partnerId = isset($row['external_course_partner_id']) ? (int)$row['external_course_partner_id'] : 0;
+        return $partnerId > 0 ? $partnerId : null;
+    }
 }

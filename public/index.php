@@ -137,10 +137,17 @@ $router->get('/personalidades', 'PersonalityController@index');
 $router->get('/curso-externo', 'ExternalCourseController@show');
 $router->get('/curso-externo/checkout', 'ExternalCourseController@checkout');
 $router->post('/curso-externo/checkout', 'ExternalCourseController@processCheckout');
+$router->get('/curso-externo/status-pagamento', 'ExternalCourseController@checkPaymentStatus');
 $router->get('/curso-externo/membros', 'ExternalCourseController@members');
 $router->get('/curso-externo/aula', 'ExternalCourseController@lesson');
 $router->post('/curso-externo/aula/concluir', 'ExternalCourseController@completeLesson');
 $router->post('/curso-externo/aula/comentar', 'ExternalCourseController@commentLesson');
+
+// Painel de usuário externo
+$router->get('/painel-externo', 'ExternalUserDashboardController@index');
+$router->get('/painel-externo/cursos', 'ExternalUserDashboardController@allCourses');
+$router->get('/painel-externo/meus-cursos', 'ExternalUserDashboardController@myCourses');
+$router->get('/painel-externo/comunidade', 'ExternalUserDashboardController@community');
 
 $router->get('/cursos', 'CourseController@index');
 $router->get('/cursos/ver', 'CourseController@show');
@@ -300,6 +307,15 @@ $router->post('/comunidades/membros/denuncias/resolver', 'CommunitiesController@
 $router->get('/parceiro/cursos', 'CoursePartnerDashboardController@index');
 $router->get('/parceiro/comissoes', 'PartnerCommissionsController@index');
 $router->post('/parceiro/comissoes/salvar-dados', 'PartnerCommissionsController@savePayoutDetails');
+
+// Painel do profissional
+$router->get('/profissional', 'ProfessionalDashboardController@index');
+$router->get('/profissional/cursos', 'ProfessionalDashboardController@courses');
+$router->get('/profissional/alunos', 'ProfessionalDashboardController@students');
+$router->get('/profissional/vendas', 'ProfessionalDashboardController@sales');
+$router->get('/profissional/comunidades', 'ProfessionalDashboardController@communities');
+$router->get('/profissional/configuracoes', 'ProfessionalDashboardController@settings');
+$router->post('/profissional/configuracoes/branding', 'ProfessionalDashboardController@saveBranding');
 $router->get('/admin/login', 'AdminAuthController@login');
 $router->post('/admin/login', 'AdminAuthController@authenticate');
 $router->get('/admin/logout', 'AdminAuthController@logout');
