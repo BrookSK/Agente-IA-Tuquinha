@@ -145,33 +145,35 @@ $logoUrl = isset($branding) && is_array($branding) && !empty($branding['logo_url
     justify-content: center; animation: fadeUp .8s .15s ease both;
   }
   .login-card {
-    background: var(--card); border: 1px solid var(--border); border-radius: 24px;
+    background: var(--card); border: 1px solid transparent; border-radius: 24px;
     padding: 44px 40px; width: 100%; max-width: 420px;
     box-shadow: 0 24px 80px rgba(0,0,0,.4), 0 0 0 1px rgba(255,255,255,.03);
     position: relative;
+    background-clip: padding-box;
   }
   .login-card::before {
-    content: ''; position: absolute; inset: -2px;
-    background: conic-gradient(
-      from 0deg at 50% 50%,
-      transparent 0deg,
-      var(--accent) 60deg,
-      var(--accent2) 120deg,
-      transparent 180deg,
-      transparent 360deg
+    content: ''; position: absolute; inset: 0;
+    border-radius: 24px; padding: 1px;
+    background: linear-gradient(90deg, 
+      transparent 0%, 
+      transparent 25%, 
+      var(--accent) 50%, 
+      var(--accent2) 55%,
+      transparent 60%,
+      transparent 100%
     );
-    border-radius: 24px;
-    animation: rotate-border 4s linear infinite;
-    z-index: -1;
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    animation: border-travel 3s linear infinite;
+    pointer-events: none;
   }
-  .login-card::after {
-    content: ''; position: absolute; inset: 1px;
-    background: var(--card); border-radius: 23px;
-    z-index: -1;
-  }
-  @keyframes rotate-border {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
+  @keyframes border-travel {
+    0% { background-position: 0% 0%; }
+    25% { background-position: 100% 0%; }
+    50% { background-position: 100% 100%; }
+    75% { background-position: 0% 100%; }
+    100% { background-position: 0% 0%; }
   }
   .card-head { text-align: center; margin-bottom: 32px; }
   .card-head h2 {
