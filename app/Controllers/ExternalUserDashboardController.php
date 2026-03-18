@@ -161,11 +161,13 @@ class ExternalUserDashboardController extends Controller
         if ($hasAccess) {
             $allModules = CourseModule::allByCourse($courseId);
             $allLessons = CourseLesson::allByCourseId($courseId);
+            $completedLessonIds = CourseLessonProgress::completedLessonIdsByUserAndCourse($courseId, (int)$user['id']);
+            
             foreach ($allModules as $module) {
                 $moduleLessons = [];
                 foreach ($allLessons as $lesson) {
                     if ((int)($lesson['module_id'] ?? 0) === (int)$module['id'] && !empty($lesson['is_published'])) {
-                        $lesson['is_completed'] = CourseLessonProgress::isCompleted((int)$user['id'], (int)$lesson['id']);
+                        $lesson['is_completed'] = !empty($completedLessonIds[(int)$lesson['id']]);
                         $moduleLessons[] = $lesson;
                     }
                 }
