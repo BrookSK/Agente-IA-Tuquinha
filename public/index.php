@@ -148,6 +148,7 @@ $router->get('/painel-externo', 'ExternalUserDashboardController@index');
 $router->get('/painel-externo/cursos', 'ExternalUserDashboardController@allCourses');
 $router->get('/painel-externo/meus-cursos', 'ExternalUserDashboardController@myCourses');
 $router->get('/painel-externo/comunidade', 'ExternalUserDashboardController@community');
+$router->get('/painel-externo/curso', 'ExternalUserDashboardController@viewCourse');
 
 $router->get('/cursos', 'CourseController@index');
 $router->get('/cursos/ver', 'CourseController@show');

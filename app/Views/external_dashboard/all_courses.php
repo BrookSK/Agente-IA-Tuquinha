@@ -40,7 +40,11 @@
                         <span style="font-size: 14px; font-weight: 600; color: #6be28d;">Gratuito</span>
                     <?php endif; ?>
                     
-                    <a href="/cursos/ver?id=<?= (int)$course['id'] ?>" class="btn" style="margin-left: auto;">
+                    <?php 
+                    $courseToken = !empty($course['external_token']) ? $course['external_token'] : '';
+                    $courseLink = $courseToken !== '' ? '/curso-externo?token=' . urlencode($courseToken) : '/painel-externo/curso/' . (int)$course['id'];
+                    ?>
+                    <a href="<?= $courseLink ?>" class="btn" style="margin-left: auto;">
                         Ver curso
                     </a>
                 </div>

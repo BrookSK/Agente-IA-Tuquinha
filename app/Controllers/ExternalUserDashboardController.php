@@ -116,4 +116,42 @@ class ExternalUserDashboardController extends Controller
             'layout' => 'external_user_dashboard',
         ]);
     }
+
+    public function viewCourse(): void
+    {
+        $user = $this->requireLogin();
+        $branding = $this->getBrandingForUser($user);
+        $partnerId = User::getExternalCoursePartnerId((int)$user['id']);
+        
+        $courseId = isset($_GET['id']) ? (int)$_GET['id'] : 0;
+        $course = Course::findById($courseId);
+        
+        if (!$course) {
+            header('Location: /painel-externo/cursos');
+            exit;
+        }
+
+        if ($partnerId && (int)$course['owner_user_id'] !== $partnerId) {
+            header('Location: /painel-externo/cursos');
+            exit;
+        }
+
+        $hasAccess = false;
+        $enrollments = CourseEnrollment::allByUser((int)$user['id']);
+        foreach ($enrollments as $enrollment) {
+            if ((int)$enrollment['course_id'] === $courseId) {
+                $hasAccess = true;
+                break;
+            }
+        }
+
+        $this->view('external_dashboard/view_course', [
+            'pageTitle' => $course['title'] ?? 'Curso',
+            'user' => $user,
+            'branding' => $branding,
+            'course' => $course,
+            'hasAccess' => $hasAccess,
+            'layout' => 'external_user_dashboard',
+        ]);
+    }
 }

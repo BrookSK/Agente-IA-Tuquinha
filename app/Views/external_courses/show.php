@@ -8,7 +8,16 @@ $desc = trim((string)($course['short_description'] ?? ''));
 $long = trim((string)($course['description'] ?? ''));
 $priceCents = isset($course['price_cents']) ? (int)$course['price_cents'] : 0;
 $price = number_format(max($priceCents, 0) / 100, 2, ',', '.');
+$imagePath = trim((string)($course['image_path'] ?? ''));
 ?>
+
+<?php if ($imagePath !== ''): ?>
+<div style="width: 100%; max-width: 600px; margin: 0 auto 20px; border-radius: 14px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.3);">
+    <img src="<?= htmlspecialchars($imagePath, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?>" 
+         alt="<?= htmlspecialchars($title, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?>" 
+         style="width: 100%; height: auto; display: block;">
+</div>
+<?php endif; ?>
 
 <h1 style="font-size:22px; font-weight:900; margin:0 0 8px 0;"><?= htmlspecialchars($title, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?></h1>
 

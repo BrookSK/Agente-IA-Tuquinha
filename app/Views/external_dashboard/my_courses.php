@@ -32,7 +32,11 @@
                     </p>
                 <?php endif; ?>
                 
-                <a href="/cursos/ver?id=<?= (int)$course['id'] ?>" class="btn" style="width: 100%; text-align: center;">
+                <?php 
+                $courseToken = !empty($course['external_token']) ? $course['external_token'] : '';
+                $courseLink = $courseToken !== '' ? '/curso-externo/membros?token=' . urlencode($courseToken) : '/painel-externo/curso/' . (int)$course['id'];
+                ?>
+                <a href="<?= $courseLink ?>" class="btn" style="width: 100%; text-align: center;">
                     Acessar curso
                 </a>
             </div>
