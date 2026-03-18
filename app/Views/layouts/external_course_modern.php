@@ -108,9 +108,7 @@ function esc_attr(string $s): string {
         
         /* Header */
         .site-header {
-            background: rgba(20, 20, 31, 0.8);
-            backdrop-filter: blur(20px);
-            border-bottom: 1px solid var(--border);
+            background: transparent;
             position: sticky;
             top: 0;
             z-index: 100;
