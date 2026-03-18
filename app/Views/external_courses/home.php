@@ -28,7 +28,6 @@ $logoUrl = isset($branding) && is_array($branding) && !empty($branding['logo_url
     --accent2: <?= htmlspecialchars($branding['secondary_color'] ?? '#00c8ff', ENT_QUOTES, 'UTF-8') ?>;
     --gold: #f5c842; --text: #e8eaf2; --muted: #6b7289; --radius: 18px;
     --glow: 0 0 60px rgba(45,110,246,.25);
-    --paragraph-color: <?= htmlspecialchars($branding['paragraph_color'] ?? '#6b7289', ENT_QUOTES, 'UTF-8') ?>;
   }
   html { scroll-behavior: smooth; }
   body {
@@ -115,10 +114,10 @@ $logoUrl = isset($branding) && is_array($branding) && !empty($branding['logo_url
     background-clip: text;
   }
   .hero-sub {
-    font-size: 1rem; color: var(--paragraph-color); line-height: 1.7; max-width: 420px;
+    font-size: 1rem; color: #ffffff; line-height: 1.7; max-width: 420px;
   }
   p {
-    color: var(--paragraph-color);
+    color: #ffffff;
   }
   .hero-cta { display: flex; gap: 12px; flex-wrap: wrap; }
   .btn-lg {
@@ -285,7 +284,7 @@ $logoUrl = isset($branding) && is_array($branding) && !empty($branding['logo_url
     margin-bottom: 8px; line-height: 1.3;
   }
   .course-desc {
-    font-size: .83rem; color: var(--paragraph-color); line-height: 1.6; margin-bottom: 20px;
+    font-size: .83rem; color: #ffffff; line-height: 1.6; margin-bottom: 20px;
   }
   .course-foot {
     display: flex; align-items: center; justify-content: space-between;

@@ -76,10 +76,6 @@ $secondary = trim((string)($branding['secondary_color'] ?? ''));
                 <label style="font-size:13px; color:var(--text-primary); display:block; margin-bottom:4px;">Cor dos Links (HEX)</label>
                 <input type="text" name="link_color" value="<?= htmlspecialchars(trim((string)($branding['link_color'] ?? '')), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?>" placeholder="#2d6ef6" style="width:100%; padding:9px 10px; border-radius:10px; border:1px solid var(--border-subtle); background:var(--surface-subtle); color:var(--text-primary); font-size:13px;">
             </div>
-            <div style="flex:1 1 200px;">
-                <label style="font-size:13px; color:var(--text-primary); display:block; margin-bottom:4px;">Cor dos Parágrafos (HEX)</label>
-                <input type="text" name="paragraph_color" value="<?= htmlspecialchars(trim((string)($branding['paragraph_color'] ?? '')), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?>" placeholder="#a0a0b0" style="width:100%; padding:9px 10px; border-radius:10px; border:1px solid var(--border-subtle); background:var(--surface-subtle); color:var(--text-primary); font-size:13px;">
-            </div>
         </div>
 
         <div style="margin-top:12px; border-top:1px dashed var(--border-subtle); padding-top:12px;">

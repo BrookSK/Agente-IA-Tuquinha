@@ -176,7 +176,6 @@ class AdminPartnerBrandingController extends Controller
             'text_color' => $textColor,
             'button_text_color' => $buttonTextColor,
             'link_color' => $linkColor,
-            'paragraph_color' => $paragraphColor,
             'header_image_url' => $headerImageUrl,
             'footer_image_url' => $footerImageUrl,
             'hero_image_url' => $heroImageUrl,
