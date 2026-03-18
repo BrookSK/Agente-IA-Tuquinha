@@ -80,6 +80,7 @@ $contentJson = (string)($page['content_json'] ?? '');
 <script src="https://unpkg.com/@editorjs/attaches@1.3.0/dist/bundle.js"></script>
 <script>
 (function () {
+    var token = <?= json_encode((string)($_GET['token'] ?? '')) ?>;
     var raw = <?= json_encode($contentJson !== '' ? $contentJson : '') ?>;
     var data = null;
     try {
@@ -92,11 +93,71 @@ $contentJson = (string)($page['content_json'] ?? '');
     } catch (e) {}
     if (!data) data = { time: Date.now(), blocks: [] };
 
+    function esc(s) {
+        s = String(s === null || typeof s === 'undefined' ? '' : s);
+        return s
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
+
+    function SubpageTool(opts) {
+        opts = opts || {};
+        this.api = opts.api;
+        this.data = opts.data || {};
+        this.readOnly = true;
+    }
+    SubpageTool.toolbox = { title: 'Subpágina', icon: '↳' };
+    SubpageTool.isReadOnlySupported = true;
+    SubpageTool.prototype.render = function () {
+        var d = this.data || {};
+        var id = String(d.id || '');
+        var title = String(d.title || 'Sem título');
+
+        var wrap = document.createElement('div');
+        wrap.className = 'tuq-subpage-card';
+        try { wrap.contentEditable = 'false'; } catch (e) {}
+
+        var a = document.createElement('a');
+        a.className = 'tuq-subpage-inline';
+        var href = '/caderno/publico?token=' + encodeURIComponent(String(token || '')) + '&id=' + encodeURIComponent(id);
+        a.setAttribute('href', href);
+        a.setAttribute('draggable', 'false');
+        a.style.cssText = 'display:flex; align-items:center; gap:10px; width:100%; padding:12px 12px; border-radius:12px; border:1px solid var(--border-subtle); background: var(--surface-subtle); color: var(--text-primary); text-decoration:none;';
+
+        var iconBox = document.createElement('div');
+        iconBox.style.width = '34px';
+        iconBox.style.height = '34px';
+        iconBox.style.borderRadius = '10px';
+        iconBox.style.display = 'flex';
+        iconBox.style.alignItems = 'center';
+        iconBox.style.justifyContent = 'center';
+        iconBox.style.background = 'rgba(255,255,255,0.06)';
+        iconBox.style.border = '1px solid var(--border-subtle)';
+        iconBox.textContent = '↳';
+
+        var text = document.createElement('div');
+        text.style.minWidth = '0';
+        text.innerHTML = '<div style="font-weight:750;">' + esc(title) + '</div>'
+            + '<div style="font-size:12px; color:var(--text-secondary);">Abrir subpágina</div>';
+
+        a.appendChild(iconBox);
+        a.appendChild(text);
+        wrap.appendChild(a);
+        return wrap;
+    };
+    SubpageTool.prototype.save = function () {
+        return this.data || {};
+    };
+
     new EditorJS({
         holder: 'public-editor',
         readOnly: true,
         data: data,
         tools: {
+            subpage: { class: SubpageTool },
             header: { class: (window.Header || null), inlineToolbar: false, config: { levels: [1,2,3], defaultLevel: 2 } },
             list: { class: (window.List || null), inlineToolbar: false },
             checklist: { class: (window.Checklist || null), inlineToolbar: false },

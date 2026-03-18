@@ -500,7 +500,10 @@ class CadernoController extends Controller
     public function publico(): void
     {
         $token = (string)($_GET['token'] ?? '');
-        $page = Page::findPublicByToken($token);
+        $pageId = (int)($_GET['id'] ?? 0);
+        $page = $pageId > 0
+            ? Page::findPublicByTokenAndId($token, $pageId)
+            : Page::findPublicByToken($token);
         if (!$page) {
             http_response_code(404);
             echo 'Página não encontrada';

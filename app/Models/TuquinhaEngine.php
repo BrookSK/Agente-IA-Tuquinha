@@ -38,6 +38,8 @@ class TuquinhaEngine
         $configuredModel = Setting::get('openai_default_model', AI_MODEL);
         $modelToUse = $model ?: $configuredModel;
 
+        $messages = $this->prepareMessagesForModel($messages, (string)$modelToUse);
+
         // Decide provedor com base no nome do modelo
         if ($this->isClaudeModel($modelToUse)) {
             return $this->callAnthropicClaude($messages, $modelToUse, $user, $conversationSettings, $persona, $fileInputs);
@@ -819,11 +821,18 @@ class TuquinhaEngine
         // Regras fixas de formatação: garantem legibilidade mesmo se o admin alterar o prompt
         $formatAppendix = "\n\nFORMATAÇÃO (OBRIGATÓRIA)\n" .
             "- Sempre use quebras de linha e linhas em branco para separar blocos.\n" .
-            "- Quando fizer sentido, organize em seções com títulos usando '###' (ex: ### Contexto, ### Resposta pronta, ### Próximos passos).\n" .
+            "- Quando fizer sentido, organize em seções com títulos usando '##' e '###'.\n" .
+            "  Preferência: comece cada título com 1 emoji curto para guiar o olho (ex: ## 📌 Resumo rápido, ### ✅ Próximos passos, ### 💡 Dicas).\n" .
             "- Use listas com '-' para itens e listas numeradas para passo a passo.\n" .
-            "- Não use separadores como '---'. Para dividir partes, use uma linha em branco e/ou um título '###'.\n" .
+            "- Quando for útil, use um divisor com uma linha contendo apenas: ---\n" .
+            "- Quando fizer sentido, use tabelas em Markdown no estilo GitHub:\n" .
+            "  | Coluna | Coluna |\n" .
+            "  | --- | --- |\n" .
+            "  | Valor | Valor |\n" .
+            "  (nunca use tabelas ASCII com bordas tipo '+---+' ou caracteres de caixa).\n" .
             "- Separe claramente: (1) entendimento/contexto, (2) entrega/resposta pronta, (3) próximos passos/pergunta final.\n" .
-            "- Evite parágrafos longos: prefira 1–3 frases por parágrafo.\n";
+            "- Evite parágrafos longos: prefira 1–3 frases por parágrafo.\n" .
+            "- Pode usar emojis de forma moderada para guiar o olho (ex: ✅ ⚠️ 💡 🎯), sem poluir.\n";
 
         if (stripos($prompt, 'FORMATAÇÃO (OBRIGATÓRIA)') === false) {
             $prompt .= $formatAppendix;
@@ -944,6 +953,166 @@ class TuquinhaEngine
         }
 
         return implode("\n\n---\n\n", $parts);
+    }
+
+    private function prepareMessagesForModel(array $messages, string $model): array
+    {
+        $maxChars = $this->getMaxInputCharsForModel($model);
+        if ($maxChars <= 0) {
+            return $messages;
+        }
+
+        $messages = $this->normalizeChatMessages($messages);
+        $messages = $this->trimHistoryToCharBudget($messages, $maxChars);
+        $messages = $this->splitOversizedLastUserMessage($messages, $maxChars, $model);
+        $messages = $this->trimHistoryToCharBudget($messages, $maxChars);
+
+        return $messages;
+    }
+
+    private function getMaxInputCharsForModel(string $model): int
+    {
+        $cfg = Setting::get('chat_max_input_chars', '');
+        if (is_string($cfg)) {
+            $cfg = trim($cfg);
+            if ($cfg !== '' && ctype_digit($cfg)) {
+                $v = (int)$cfg;
+                if ($v > 0) {
+                    return $v;
+                }
+            }
+        }
+
+        $m = strtolower(trim($model));
+        if ($m === '') {
+            return 24000;
+        }
+
+        if (strpos($m, 'gpt-4o-mini') !== false) {
+            return 24000;
+        }
+        if (strpos($m, 'gpt-4o') !== false || strpos($m, 'gpt-4.1') !== false || strpos($m, 'gpt-4') !== false) {
+            return 42000;
+        }
+        if (str_starts_with($m, 'claude-')) {
+            return 42000;
+        }
+
+        return 24000;
+    }
+
+    private function normalizeChatMessages(array $messages): array
+    {
+        $out = [];
+        foreach ($messages as $m) {
+            if (!is_array($m)) {
+                continue;
+            }
+            $role = isset($m['role']) ? (string)$m['role'] : '';
+            $content = isset($m['content']) ? (string)$m['content'] : '';
+            if ($role !== 'user' && $role !== 'assistant') {
+                continue;
+            }
+            $content = str_replace(["\r\n", "\r"], "\n", $content);
+            $content = trim($content);
+            if ($content === '') {
+                continue;
+            }
+            $out[] = [
+                'role' => $role,
+                'content' => $content,
+            ];
+        }
+        return $out;
+    }
+
+    private function estimateMessagesChars(array $messages): int
+    {
+        $sum = 0;
+        foreach ($messages as $m) {
+            $sum += mb_strlen((string)($m['role'] ?? ''), 'UTF-8');
+            $sum += mb_strlen((string)($m['content'] ?? ''), 'UTF-8');
+            $sum += 8;
+        }
+        return $sum;
+    }
+
+    private function trimHistoryToCharBudget(array $messages, int $maxChars): array
+    {
+        if (count($messages) <= 1) {
+            return $messages;
+        }
+
+        while (count($messages) > 1 && $this->estimateMessagesChars($messages) > $maxChars) {
+            array_shift($messages);
+        }
+
+        return $messages;
+    }
+
+    private function splitOversizedLastUserMessage(array $messages, int $maxChars, string $model): array
+    {
+        $lastUserIndex = null;
+        for ($i = count($messages) - 1; $i >= 0; $i--) {
+            if (($messages[$i]['role'] ?? '') === 'user') {
+                $lastUserIndex = $i;
+                break;
+            }
+        }
+
+        if ($lastUserIndex === null) {
+            return $messages;
+        }
+
+        $content = (string)($messages[$lastUserIndex]['content'] ?? '');
+        $len = mb_strlen($content, 'UTF-8');
+        if ($len <= $maxChars) {
+            return $messages;
+        }
+
+        $partMax = max(1000, (int)floor($maxChars * 0.7));
+        $parts = [];
+        $offset = 0;
+        while ($offset < $len) {
+            $chunk = mb_substr($content, $offset, $partMax, 'UTF-8');
+            $chunk = trim($chunk);
+            if ($chunk !== '') {
+                $parts[] = $chunk;
+            }
+            $offset += $partMax;
+            if (count($parts) >= 20) {
+                break;
+            }
+        }
+
+        if (!$parts) {
+            return $messages;
+        }
+
+        $prefix = array_slice($messages, 0, $lastUserIndex);
+        $suffix = array_slice($messages, $lastUserIndex + 1);
+
+        $rebuilt = $prefix;
+        $total = count($parts);
+        for ($i = 0; $i < $total; $i++) {
+            $rebuilt[] = [
+                'role' => 'user',
+                'content' => "(Mensagem longa, parte " . (string)($i + 1) . "/" . (string)$total . ")\n" . $parts[$i],
+            ];
+        }
+
+        $rebuilt[] = [
+            'role' => 'user',
+            'content' => 'Agora considere todas as partes acima como UMA única mensagem e responda normalmente.',
+        ];
+
+        foreach ($suffix as $m) {
+            $rebuilt[] = $m;
+        }
+
+        error_log('[TuquinhaEngine] Long user message split into parts=' . (string)$total . '; maxChars=' . (string)$maxChars . '; model=' . (string)$model);
+
+        return $rebuilt;
     }
 
     public static function getDefaultPrompt(): string
