@@ -64,9 +64,16 @@ class ExternalUserDashboardController extends Controller
 
         $courses = [];
         if ($partnerId) {
-            $allPartnerCourses = Course::allByOwner($partnerId);
-            foreach ($allPartnerCourses as $course) {
-                if (!empty($course['is_active'])) {
+            $allCourses = Course::allActive();
+            $enrollments = CourseEnrollment::allByUser((int)$user['id']);
+            $enrolledCourseIds = [];
+            foreach ($enrollments as $enrollment) {
+                $enrolledCourseIds[(int)$enrollment['course_id']] = true;
+            }
+
+            foreach ($allCourses as $course) {
+                if ((int)$course['owner_user_id'] === $partnerId) {
+                    $course['user_has_access'] = !empty($enrolledCourseIds[(int)$course['id']]);
                     $courses[] = $course;
                 }
             }
@@ -332,5 +339,52 @@ class ExternalUserDashboardController extends Controller
 
         header('Location: /painel-externo/aula?id=' . $lessonId . '&course_id=' . $courseId);
         exit;
+    }
+
+    public function viewCommunity(): void
+    {
+        $user = $this->requireLogin();
+        $branding = $this->getBrandingForUser($user);
+
+        $slug = isset($_GET['slug']) ? trim((string)$_GET['slug']) : '';
+        if ($slug === '') {
+            header('Location: /painel-externo/comunidade');
+            exit;
+        }
+
+        $community = \App\Models\Community::findBySlug($slug);
+        if (!$community || empty($community['is_active'])) {
+            header('Location: /painel-externo/comunidade');
+            exit;
+        }
+
+        $allowedCommunities = CourseAllowedCommunity::allowedCommunitiesByUser((int)$user['id']);
+        $hasAccess = false;
+        foreach ($allowedCommunities as $allowed) {
+            if ((int)$allowed['id'] === (int)$community['id']) {
+                $hasAccess = true;
+                break;
+            }
+        }
+
+        if (!$hasAccess) {
+            header('Location: /painel-externo/comunidade');
+            exit;
+        }
+
+        $communityId = (int)$community['id'];
+        $isMember = \App\Models\CommunityMember::isMember($communityId, (int)$user['id']);
+
+        $topics = \App\Models\CommunityTopic::allByCommunity($communityId);
+
+        $this->view('external_dashboard/view_community', [
+            'pageTitle' => $community['name'] ?? 'Comunidade',
+            'user' => $user,
+            'branding' => $branding,
+            'community' => $community,
+            'isMember' => $isMember,
+            'topics' => $topics,
+            'layout' => 'external_user_dashboard',
+        ]);
     }
 }

@@ -7,12 +7,16 @@ $companyName = '';
 $logoUrl = '';
 $primary = '';
 $secondary = '';
+$textColor = '';
+$buttonTextColor = '';
 
 if (isset($branding) && is_array($branding)) {
     $companyName = trim((string)($branding['company_name'] ?? ''));
     $logoUrl = trim((string)($branding['logo_url'] ?? ''));
     $primary = trim((string)($branding['primary_color'] ?? ''));
     $secondary = trim((string)($branding['secondary_color'] ?? ''));
+    $textColor = trim((string)($branding['text_color'] ?? ''));
+    $buttonTextColor = trim((string)($branding['button_text_color'] ?? ''));
 }
 
 if ($companyName === '') {
@@ -34,11 +38,12 @@ function esc_attr(string $s): string {
         :root {
             --bg-main: #050509;
             --bg-card: #111118;
-            --text-primary: #f5f5f5;
+            --text-primary: <?= $textColor !== '' ? esc_attr($textColor) : '#f5f5f5' ?>;
             --text-secondary: #b0b0b0;
             --border: #272727;
             --accent: <?= $primary !== '' ? esc_attr($primary) : '#e53935' ?>;
             --accent2: <?= $secondary !== '' ? esc_attr($secondary) : '#ff6f60' ?>;
+            --button-text: <?= $buttonTextColor !== '' ? esc_attr($buttonTextColor) : '#050509' ?>;
         }
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
@@ -79,7 +84,7 @@ function esc_attr(string $s): string {
             align-items: center;
             justify-content: center;
             font-weight: 800;
-            color: #050509;
+            color: var(--button-text);
         }
         .logo-img img { width: 100%; height: 100%; object-fit: cover; }
         .logo-text { font-weight: 700; font-size: 16px; }
@@ -97,7 +102,7 @@ function esc_attr(string $s): string {
         .nav-item:hover { background: rgba(255,255,255,0.05); }
         .nav-item.active {
             background: linear-gradient(135deg, var(--accent), var(--accent2));
-            color: #050509;
+            color: var(--button-text);
             font-weight: 700;
         }
         .main-content {
@@ -129,7 +134,7 @@ function esc_attr(string $s): string {
             padding: 10px 16px;
             border-radius: 999px;
             background: linear-gradient(135deg, var(--accent), var(--accent2));
-            color: #050509;
+            color: var(--button-text);
             font-weight: 700;
             font-size: 13px;
             border: none;

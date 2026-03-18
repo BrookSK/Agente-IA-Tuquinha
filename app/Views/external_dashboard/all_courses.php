@@ -32,21 +32,30 @@
                 <?php endif; ?>
                 
                 <div style="display: flex; gap: 8px; align-items: center; margin-top: auto;">
-                    <?php if (!empty($course['is_paid']) && !empty($course['price_cents'])): ?>
+                    <?php 
+                    $hasAccess = !empty($course['user_has_access']);
+                    if (!$hasAccess && !empty($course['is_paid']) && !empty($course['price_cents'])): 
+                    ?>
                         <span style="font-size: 16px; font-weight: 700; color: var(--accent);">
                             R$ <?= number_format($course['price_cents'] / 100, 2, ',', '.') ?>
                         </span>
-                    <?php else: ?>
+                    <?php elseif (!$hasAccess): ?>
                         <span style="font-size: 14px; font-weight: 600; color: #6be28d;">Gratuito</span>
                     <?php endif; ?>
                     
-                    <?php 
-                    $courseToken = !empty($course['external_token']) ? $course['external_token'] : '';
-                    $courseLink = $courseToken !== '' ? '/curso-externo?token=' . urlencode($courseToken) : '/painel-externo/curso/' . (int)$course['id'];
-                    ?>
-                    <a href="<?= $courseLink ?>" class="btn" style="margin-left: auto;">
-                        Ver curso
-                    </a>
+                    <?php if ($hasAccess): ?>
+                        <a href="/painel-externo/curso?id=<?= (int)$course['id'] ?>" class="btn" style="margin-left: auto;">
+                            Acessar curso
+                        </a>
+                    <?php else: ?>
+                        <?php 
+                        $courseToken = !empty($course['external_token']) ? $course['external_token'] : '';
+                        $courseLink = $courseToken !== '' ? '/curso-externo?token=' . urlencode($courseToken) : '/painel-externo/curso?id=' . (int)$course['id'];
+                        ?>
+                        <a href="<?= $courseLink ?>" class="btn" style="margin-left: auto;">
+                            Ver curso
+                        </a>
+                    <?php endif; ?>
                 </div>
             </div>
         <?php endforeach; ?>

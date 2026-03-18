@@ -38,7 +38,7 @@
                     <span>💬 <?= number_format((int)($community['topics_count'] ?? 0)) ?> tópicos</span>
                 </div>
                 
-                <a href="/comunidades/ver?slug=<?= urlencode($community['slug'] ?? '') ?>" class="btn" style="width: 100%; text-align: center;">
+                <a href="/painel-externo/comunidade/ver?slug=<?= urlencode($community['slug'] ?? '') ?>" class="btn" style="width: 100%; text-align: center;">
                     Acessar comunidade
                 </a>
             </div>

@@ -35,9 +35,16 @@ $imagePath = trim((string)($course['image_path'] ?? ''));
 
 <div style="display:flex; flex-wrap:wrap; gap:10px; align-items:center; margin-top:10px;">
     <div style="font-size:14px; font-weight:900; color: var(--text-primary);">
-        Valor: R$ <?= $price ?>
+      <?php if (!empty($course['is_paid']) && !empty($course['price_cents'])): ?>
+        <a href="/curso-externo/checkout?token=<?= urlencode($token) ?>" class="btn">
+            Comprar por R$ <?= number_format($course['price_cents'] / 100, 2, ',', '.') ?>
+        </a>
+    <?php else: ?>
+        <a href="/curso-externo/checkout?token=<?= urlencode($token) ?>" class="btn">
+            Cadastrar-se gratuitamente
+        </a>
+    <?php endif; ?>
     </div>
-    <a class="btn" href="/curso-externo/checkout?token=<?= urlencode($token) ?>">Comprar agora</a>
 </div>
 
 <div class="hint" style="margin-top:12px;">

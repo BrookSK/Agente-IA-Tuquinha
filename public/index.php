@@ -153,6 +153,7 @@ $router->get('/painel-externo/curso', 'ExternalUserDashboardController@viewCours
 $router->get('/painel-externo/aula', 'ExternalUserDashboardController@watchLesson');
 $router->post('/painel-externo/aula/concluir', 'ExternalUserDashboardController@completeLesson');
 $router->post('/painel-externo/aula/comentar', 'ExternalUserDashboardController@commentLesson');
+$router->get('/painel-externo/comunidade/ver', 'ExternalUserDashboardController@viewCommunity');
 
 $router->get('/cursos', 'CourseController@index');
 $router->get('/cursos/ver', 'CourseController@show');

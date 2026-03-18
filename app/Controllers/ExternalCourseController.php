@@ -237,14 +237,6 @@ class ExternalCourseController extends Controller
             $branding = CoursePartnerBranding::findByUserId((int)$course['owner_user_id']);
         }
 
-        $priceCents = isset($course['price_cents']) ? (int)$course['price_cents'] : 0;
-        $isPaid = !empty($course['is_paid']) && $priceCents > 0;
-        if (!$isPaid) {
-            http_response_code(400);
-            echo 'Este curso não está configurado como pago.';
-            return;
-        }
-
         $this->view('external_courses/checkout', [
             'pageTitle' => 'Comprar: ' . (string)($course['title'] ?? 'Curso'),
             'course' => $course,
@@ -345,17 +337,32 @@ class ExternalCourseController extends Controller
 
         $originalPriceCents = isset($course['price_cents']) ? (int)$course['price_cents'] : 0;
         $finalPriceCents = $this->applyCoursePlanDiscountCents($originalPriceCents, $plan);
+        
+        // Se for cadastro gratuito (curso sem preço ou preço zero)
         if ($finalPriceCents <= 0) {
-            $this->view('external_courses/checkout', [
-                'pageTitle' => 'Comprar: ' . (string)($course['title'] ?? 'Curso'),
-                'course' => $course,
-                'branding' => $branding,
-                'token' => $token,
-                'savedCustomer' => null,
-                'error' => 'Valor inválido para este curso.',
-                'layout' => 'external_course',
-            ]);
-            return;
+            // Envia email com credenciais
+            try {
+                $companyName = (string)($branding['company_name'] ?? '');
+                $logoUrl = (string)($branding['logo_url'] ?? '');
+                $greeting = $name !== '' ? $name : 'cliente';
+                $loginUrl = $this->buildExternalBaseUrl() . '/painel-externo';
+                $content = '<p style="font-size:13px; color:#b0b0b0; line-height:1.55;">Sua conta foi criada com sucesso!</p>'
+                    . '<p style="font-size:13px; color:#b0b0b0; line-height:1.55;">Dados de acesso:</p>'
+                    . '<div style="font-size:13px; color:#f5f5f5; line-height:1.55; border:1px solid #272727; border-radius:12px; padding:10px 12px; background:#050509;">'
+                    . '<div><b>E-mail:</b> ' . htmlspecialchars($email, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') . '</div>'
+                    . '<div><b>Senha:</b> ' . htmlspecialchars($password, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') . '</div>'
+                    . '</div>'
+                    . '<p style="font-size:12px; color:#777; line-height:1.55; margin-top:10px;">Guarde esta senha em local seguro.</p>';
+
+                $subject = ($companyName !== '' ? $companyName . ' - ' : '') . 'Bem-vindo!';
+                $body = MailService::buildDefaultTemplate($greeting, $content, 'Acessar Painel', $loginUrl, $logoUrl);
+                MailService::send($email, $name, $subject, $body);
+            } catch (\Throwable $eMail) {
+            }
+            
+            // Redireciona para o painel externo
+            header('Location: /painel-externo');
+            exit;
         }
 
         $billingType = isset($_POST['billing_type']) ? (string)$_POST['billing_type'] : 'PIX';

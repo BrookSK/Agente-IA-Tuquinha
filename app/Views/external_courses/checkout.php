@@ -9,8 +9,18 @@ $priceCents = isset($course['price_cents']) ? (int)$course['price_cents'] : 0;
 $price = number_format(max($priceCents, 0) / 100, 2, ',', '.');
 ?>
 
-<h1 style="font-size:20px; font-weight:900; margin:0 0 8px 0;">Checkout: <?= htmlspecialchars($courseTitle, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?></h1>
-<div class="hint" style="margin-bottom:12px;">Valor: <b>R$ <?= $price ?></b> (pagamento único via Asaas).</div>
+<h1 style="font-size:20px; font-weight:900; margin:0 0 8px 0;">
+    <?php if ($priceCents > 0): ?>
+        Checkout: <?= htmlspecialchars($courseTitle, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?>
+    <?php else: ?>
+        Cadastro Gratuito
+    <?php endif; ?>
+</h1>
+<?php if ($priceCents > 0): ?>
+    <div class="hint" style="margin-bottom:12px;">Valor: <b>R$ <?= $price ?></b> (pagamento único via Asaas).</div>
+<?php else: ?>
+    <div class="hint" style="margin-bottom:12px;">Crie sua conta gratuitamente para acessar conteúdos e comunidades.</div>
+<?php endif; ?>
 
 <?php if (!empty($error)): ?>
     <div class="error"><?= htmlspecialchars($error, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?></div>
@@ -135,40 +145,48 @@ function toggleLoginForm() {
         <input name="state" maxlength="2" required style="text-transform:uppercase;">
     </div>
 
-    <div style="grid-column: 1 / -1; margin-top:8px; font-size: 12px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--text-secondary);">Forma de pagamento</div>
+    <?php if ($priceCents > 0): ?>
+        <div style="grid-column: 1 / -1; margin-top:8px; font-size: 12px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--text-secondary);">Forma de pagamento</div>
 
-    <div style="grid-column: 1 / -1;" class="billing-grid">
-        <label class="billing-option">
-            <div class="billing-option-left">
-                <input type="radio" name="billing_type" value="PIX" checked>
-                <div>
-                    <div class="billing-option-title">PIX</div>
-                    <div class="billing-option-hint">Aprovação rápida</div>
+        <div style="grid-column: 1 / -1;" class="billing-grid">
+            <label class="billing-option">
+                <div class="billing-option-left">
+                    <input type="radio" name="billing_type" value="PIX" checked>
+                    <div>
+                        <div class="billing-option-title">PIX</div>
+                        <div class="billing-option-hint">Aprovação rápida</div>
+                    </div>
                 </div>
-            </div>
-        </label>
-        <label class="billing-option">
-            <div class="billing-option-left">
-                <input type="radio" name="billing_type" value="BOLETO">
-                <div>
-                    <div class="billing-option-title">Boleto</div>
-                    <div class="billing-option-hint">Pode levar até 3 dias</div>
+            </label>
+            <label class="billing-option">
+                <div class="billing-option-left">
+                    <input type="radio" name="billing_type" value="BOLETO">
+                    <div>
+                        <div class="billing-option-title">Boleto</div>
+                        <div class="billing-option-hint">Pode levar até 3 dias</div>
+                    </div>
                 </div>
-            </div>
-        </label>
-        <label class="billing-option">
-            <div class="billing-option-left">
-                <input type="radio" name="billing_type" value="CREDIT_CARD">
-                <div>
-                    <div class="billing-option-title">Cartão de crédito</div>
-                    <div class="billing-option-hint">Pague no cartão</div>
+            </label>
+            <label class="billing-option">
+                <div class="billing-option-left">
+                    <input type="radio" name="billing_type" value="CREDIT_CARD">
+                    <div>
+                        <div class="billing-option-title">Cartão de crédito</div>
+                        <div class="billing-option-hint">Pague no cartão</div>
+                    </div>
                 </div>
-            </div>
-        </label>
-    </div>
+            </label>
+        </div>
+    <?php endif; ?>
 
     <div style="grid-column: 1 / -1; display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-top:8px;">
-        <button type="submit" class="btn">Gerar pagamento</button>
+        <button type="submit" class="btn">
+            <?php if ($priceCents > 0): ?>
+                Gerar pagamento
+            <?php else: ?>
+                Criar conta gratuita
+            <?php endif; ?>
+        </button>
         <a class="btn-outline" href="/curso-externo?token=<?= urlencode($token) ?>">Voltar</a>
     </div>
 </form>
