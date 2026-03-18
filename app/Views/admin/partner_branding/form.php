@@ -7,6 +7,10 @@ $companyName = trim((string)($branding['company_name'] ?? ''));
 $logoUrl = trim((string)($branding['logo_url'] ?? ''));
 $primary = trim((string)($branding['primary_color'] ?? ''));
 $secondary = trim((string)($branding['secondary_color'] ?? ''));
+$headerImageUrl = trim((string)($branding['header_image_url'] ?? ''));
+$heroImageUrl = trim((string)($branding['hero_image_url'] ?? ''));
+$footerImageUrl = trim((string)($branding['footer_image_url'] ?? ''));
+$backgroundImageUrl = trim((string)($branding['background_image_url'] ?? ''));
 ?>
 
 <div style="max-width: 860px; margin: 0 auto;">
