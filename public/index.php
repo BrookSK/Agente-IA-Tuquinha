@@ -135,9 +135,12 @@ $router->get('/personalidades', 'PersonalityController@index');
 
 // Cursos externos (white-label)
 $router->get('/curso-externo', 'ExternalCourseController@show');
+$router->get('/curso-externo/login', 'ExternalCourseController@showLogin');
+$router->post('/curso-externo/login', 'ExternalCourseController@login');
+$router->get('/curso-externo/senha/esqueci', 'ExternalCourseController@showForgotPassword');
+$router->post('/curso-externo/senha/esqueci', 'ExternalCourseController@sendForgotPassword');
 $router->get('/curso-externo/checkout', 'ExternalCourseController@checkout');
 $router->post('/curso-externo/checkout', 'ExternalCourseController@processCheckout');
-$router->post('/curso-externo/login', 'ExternalCourseController@login');
 $router->get('/curso-externo/payment-status', 'ExternalCourseController@paymentStatus');
 $router->get('/curso-externo/membros', 'ExternalCourseController@members');
 $router->get('/curso-externo/aula', 'ExternalCourseController@lesson');

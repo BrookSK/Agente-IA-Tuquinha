@@ -375,6 +375,12 @@ class ExternalUserDashboardController extends Controller
         $communityId = (int)$community['id'];
         $isMember = \App\Models\CommunityMember::isMember($communityId, (int)$user['id']);
 
+        // Auto-join user if they have access but aren't member yet
+        if (!$isMember) {
+            \App\Models\CommunityMember::addMember($communityId, (int)$user['id'], 'member');
+            $isMember = true;
+        }
+
         $topics = \App\Models\CommunityTopic::allByCommunity($communityId);
 
         $this->view('external_dashboard/view_community', [
