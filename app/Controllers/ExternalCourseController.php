@@ -91,6 +91,7 @@ class ExternalCourseController extends Controller
         $_SESSION['user_id'] = (int)$user['id'];
         $_SESSION['user_name'] = $user['name'];
         $_SESSION['user_email'] = $user['email'];
+        $_SESSION['external_course_token'] = $token;
 
         if (!empty($user['is_external_course_user'])) {
             header('Location: /painel-externo');
@@ -331,6 +332,7 @@ class ExternalCourseController extends Controller
         $_SESSION['user_id'] = (int)$userId;
         $_SESSION['user_name'] = $name;
         $_SESSION['user_email'] = $email;
+        $_SESSION['external_course_token'] = $token;
         unset($_SESSION['is_admin']);
 
         $plan = $this->resolvePlanForUser(['id' => $userId, 'email' => $email]);
