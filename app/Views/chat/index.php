@@ -118,12 +118,12 @@ function render_markdown_safe(string $text): string {
 }
 ?>
 <style>
-.tuq-chat-md { line-height: 1.65; }
-.tuq-chat-md p { margin: 0 0 1.05em 0; }
+.tuq-chat-md { line-height: 1.75; }
+.tuq-chat-md p { margin: 0 0 1.25em 0; }
 .tuq-chat-md p:last-child { margin-bottom: 0; }
-.tuq-chat-md ul, .tuq-chat-md ol { margin: 0 0 0.9em 1.2em; padding: 0; }
-.tuq-chat-md li { margin: 0.15em 0; }
-.tuq-chat-md .tuq-chat-hr { border: none; border-top: 1px solid var(--border-subtle); margin: 14px 0; opacity: 0.8; }
+.tuq-chat-md ul, .tuq-chat-md ol { margin: 0 0 1.15em 1.3em; padding: 0; }
+.tuq-chat-md li { margin: 0.28em 0; }
+.tuq-chat-md .tuq-chat-hr { border: none; border-top: 1px solid var(--border-subtle); margin: 18px 0; opacity: 0.85; }
 .tuq-chat-md h2, .tuq-chat-md h3, .tuq-chat-md h4 {
     margin: 0.35em 0 0.7em 0;
     line-height: 1.25;
@@ -134,6 +134,8 @@ function render_markdown_safe(string $text): string {
 .tuq-chat-md h3 { font-size: 17px; }
 .tuq-chat-md h4 { font-size: 14px; opacity: 0.95; }
 .tuq-chat-md strong { font-weight: 800; }
+.tuq-chat-md h2 + p, .tuq-chat-md h3 + p, .tuq-chat-md h4 + p { margin-top: 0.25em; }
+.tuq-chat-md h2, .tuq-chat-md h3, .tuq-chat-md h4 { padding-top: 0.2em; }
 .tuq-chat-md .tuq-md-table-wrap { overflow-x: auto; margin: 0 0 1.05em 0; }
 .tuq-chat-md .tuq-md-table-head { display:flex; align-items:center; justify-content:space-between; gap:10px; margin: 0 0 8px 0; }
 .tuq-chat-md .tuq-md-table-title { font-size:12px; font-weight:800; color: var(--text-secondary); }
@@ -496,6 +498,7 @@ if (!empty($currentPlan) && is_array($currentPlan)) {
                 </form>
             </div>
         </div>
+        </div>
     <?php endif; ?>
     <?php if (!empty($projectContext) && !empty($projectContext['project']) && !empty($conversationId)): ?>
         <?php
@@ -532,6 +535,7 @@ if (!empty($currentPlan) && is_array($currentPlan)) {
         }
     ?>
     <?php if (!empty($shouldShowPersonaShowcase)): ?>
+        <div id="chat-persona-showcase" data-hide-on-first-message="<?= $isLoggedIn ? '0' : '1' ?>">
         <style>
             .chat-persona-card {
                 width: 300px;
@@ -2333,6 +2337,14 @@ if (!empty($currentPlan) && is_array($currentPlan)) {
             if (!text) {
                 return;
             }
+
+            // Modo sem login: ao enviar a primeira mensagem, esconde a vitrine de personalidades imediatamente
+            try {
+                const showcase = document.getElementById('chat-persona-showcase');
+                if (showcase && showcase.getAttribute('data-hide-on-first-message') === '1') {
+                    showcase.style.display = 'none';
+                }
+            } catch (e) {}
 
             // Captura anexos selecionados para renderizar imediatamente na UI
             const selectedFiles = (window.fileInput && window.fileInput.files)
