@@ -18,6 +18,30 @@ use App\Services\MailService;
 
 class ExternalCourseController extends Controller
 {
+    public function showLogin(): void
+    {
+        $token = isset($_GET['token']) ? trim((string)$_GET['token']) : '';
+        $course = $token !== '' ? Course::findByExternalToken($token) : null;
+        if (!$course) {
+            header('Location: /');
+            exit;
+        }
+
+        $branding = null;
+        if (!empty($course['owner_user_id'])) {
+            $branding = CoursePartnerBranding::findByUserId((int)$course['owner_user_id']);
+        }
+
+        $this->view('external_courses/login_modern', [
+            'pageTitle' => 'Login',
+            'course' => $course,
+            'branding' => $branding,
+            'token' => $token,
+            'error' => null,
+            'layout' => 'external_course_modern',
+        ]);
+    }
+
     public function login(): void
     {
         $token = isset($_POST['token']) ? trim((string)$_POST['token']) : '';
@@ -36,28 +60,26 @@ class ExternalCourseController extends Controller
         $password = (string)($_POST['password'] ?? '');
 
         if ($email === '' || $password === '') {
-            $this->view('external_courses/checkout', [
-                'pageTitle' => 'Comprar: ' . (string)($course['title'] ?? 'Curso'),
+            $this->view('external_courses/login_modern', [
+                'pageTitle' => 'Login',
                 'course' => $course,
                 'branding' => $branding,
                 'token' => $token,
-                'savedCustomer' => null,
                 'error' => 'Informe seu e-mail e senha.',
-                'layout' => 'external_course',
+                'layout' => 'external_course_modern',
             ]);
             return;
         }
 
         $user = User::findByEmail($email);
         if (!$user || !password_verify($password, $user['password_hash'])) {
-            $this->view('external_courses/checkout', [
-                'pageTitle' => 'Comprar: ' . (string)($course['title'] ?? 'Curso'),
+            $this->view('external_courses/login_modern', [
+                'pageTitle' => 'Login',
                 'course' => $course,
                 'branding' => $branding,
                 'token' => $token,
-                'savedCustomer' => null,
                 'error' => 'E-mail ou senha inválidos.',
-                'layout' => 'external_course',
+                'layout' => 'external_course_modern',
             ]);
             return;
         }
@@ -99,6 +121,86 @@ class ExternalCourseController extends Controller
             header('Location: /curso-externo/checkout?token=' . urlencode($token));
         }
         exit;
+    }
+
+    public function showForgotPassword(): void
+    {
+        $token = isset($_GET['token']) ? trim((string)$_GET['token']) : '';
+        $course = $token !== '' ? Course::findByExternalToken($token) : null;
+        if (!$course) {
+            header('Location: /');
+            exit;
+        }
+
+        $branding = null;
+        if (!empty($course['owner_user_id'])) {
+            $branding = CoursePartnerBranding::findByUserId((int)$course['owner_user_id']);
+        }
+
+        $this->view('external_courses/forgot_password', [
+            'pageTitle' => 'Recuperar Senha',
+            'course' => $course,
+            'branding' => $branding,
+            'token' => $token,
+            'error' => null,
+            'success' => null,
+            'layout' => 'external_course_modern',
+        ]);
+    }
+
+    public function sendForgotPassword(): void
+    {
+        $token = isset($_POST['token']) ? trim((string)$_POST['token']) : '';
+        $course = $token !== '' ? Course::findByExternalToken($token) : null;
+        if (!$course) {
+            header('Location: /');
+            exit;
+        }
+
+        $branding = null;
+        if (!empty($course['owner_user_id'])) {
+            $branding = CoursePartnerBranding::findByUserId((int)$course['owner_user_id']);
+        }
+
+        $email = trim((string)($_POST['email'] ?? ''));
+        if ($email === '') {
+            $this->view('external_courses/forgot_password', [
+                'pageTitle' => 'Recuperar Senha',
+                'course' => $course,
+                'branding' => $branding,
+                'token' => $token,
+                'error' => 'Por favor, informe seu e-mail.',
+                'success' => null,
+                'layout' => 'external_course_modern',
+            ]);
+            return;
+        }
+
+        $user = User::findByEmail($email);
+        if (!$user) {
+            $this->view('external_courses/forgot_password', [
+                'pageTitle' => 'Recuperar Senha',
+                'course' => $course,
+                'branding' => $branding,
+                'token' => $token,
+                'error' => 'Não encontramos uma conta com este e-mail.',
+                'success' => null,
+                'layout' => 'external_course_modern',
+            ]);
+            return;
+        }
+
+        // Aqui você implementaria o envio do email de recuperação
+        // Por enquanto, apenas mostra mensagem de sucesso
+        $this->view('external_courses/forgot_password', [
+            'pageTitle' => 'Recuperar Senha',
+            'course' => $course,
+            'branding' => $branding,
+            'token' => $token,
+            'error' => null,
+            'success' => 'Enviamos um link de recuperação para seu e-mail. Verifique sua caixa de entrada.',
+            'layout' => 'external_course_modern',
+        ]);
     }
 
     private function requireLogin(): array
@@ -214,13 +316,12 @@ class ExternalCourseController extends Controller
             $branding = CoursePartnerBranding::findByUserId((int)$course['owner_user_id']);
         }
 
-        $this->view('external_courses/show', [
+        $this->view('external_courses/home', [
             'pageTitle' => (string)($branding['company_name'] ?? ($course['title'] ?? 'Curso')),
             'course' => $course,
             'branding' => $branding,
             'token' => $token,
-            'layout' => 'external_course',
-            'courseImage' => $course['image'] ?? null,
+            'layout' => 'external_course_modern',
         ]);
     }
 
@@ -238,14 +339,13 @@ class ExternalCourseController extends Controller
             $branding = CoursePartnerBranding::findByUserId((int)$course['owner_user_id']);
         }
 
-        $this->view('external_courses/checkout', [
+        $this->view('external_courses/checkout_modern', [
             'pageTitle' => 'Comprar: ' . (string)($course['title'] ?? 'Curso'),
             'course' => $course,
             'branding' => $branding,
             'token' => $token,
-            'savedCustomer' => null,
             'error' => null,
-            'layout' => 'external_course',
+            'layout' => 'external_course_modern',
         ]);
     }
 

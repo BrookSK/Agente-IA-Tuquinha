@@ -29,68 +29,54 @@ $coverImage = trim((string)($community['cover_image_path'] ?? ''));
     <?php endif; ?>
 </div>
 
-<?php if (!$isMember): ?>
-    <div class="card" style="text-align: center; padding: 40px; background: rgba(255,204,128,0.05); border-color: rgba(255,204,128,0.2);">
-        <div style="font-size: 48px; margin-bottom: 12px;">🔒</div>
-        <h3 style="font-size: 18px; font-weight: 700; margin-bottom: 8px;">Você precisa ser membro</h3>
-        <p style="font-size: 14px; color: var(--text-secondary); margin-bottom: 16px;">
-            Para participar desta comunidade, você precisa se tornar membro primeiro.
-        </p>
-        <form action="/painel-externo/comunidade/entrar" method="post" style="display: inline;">
-            <input type="hidden" name="slug" value="<?= htmlspecialchars($communitySlug, ENT_QUOTES, 'UTF-8') ?>">
-            <button type="submit" class="btn">Entrar na comunidade</button>
-        </form>
-    </div>
-<?php else: ?>
-    <div class="card">
-        <h2 style="font-size: 20px; font-weight: 700; margin-bottom: 16px;">Tópicos da Comunidade</h2>
-        
-        <?php if (empty($topics)): ?>
-            <div style="text-align: center; padding: 40px;">
-                <div style="font-size: 48px; margin-bottom: 12px;">💬</div>
-                <p style="font-size: 14px; color: var(--text-secondary);">
-                    Ainda não há tópicos nesta comunidade. Seja o primeiro a criar um!
-                </p>
-            </div>
-        <?php else: ?>
-            <div style="display: flex; flex-direction: column; gap: 12px;">
-                <?php foreach ($topics as $topic): ?>
-                    <?php
-                        $topicTitle = trim((string)($topic['title'] ?? ''));
-                        $topicId = (int)($topic['id'] ?? 0);
-                        $authorName = trim((string)($topic['author_name'] ?? 'Anônimo'));
-                        $createdAt = $topic['created_at'] ?? '';
-                        $repliesCount = (int)($topic['replies_count'] ?? 0);
-                        $isPinned = !empty($topic['is_pinned']);
-                    ?>
-                    <a href="/painel-externo/comunidade/topico?id=<?= $topicId ?>&slug=<?= urlencode($communitySlug) ?>" 
-                       style="display: block; padding: 14px; border: 1px solid var(--border); border-radius: 10px; background: rgba(255,255,255,0.02); text-decoration: none; transition: background 0.2s;"
-                       onmouseover="this.style.background='rgba(255,255,255,0.05)'" 
-                       onmouseout="this.style.background='rgba(255,255,255,0.02)'">
-                        <div style="display: flex; justify-content: space-between; align-items: start; gap: 12px;">
-                            <div style="flex: 1; min-width: 0;">
-                                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
-                                    <?php if ($isPinned): ?>
-                                        <span style="font-size: 12px;">📌</span>
-                                    <?php endif; ?>
-                                    <h3 style="font-size: 16px; font-weight: 600; color: var(--text-primary); margin: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
-                                        <?= htmlspecialchars($topicTitle, ENT_QUOTES, 'UTF-8') ?>
-                                    </h3>
-                                </div>
-                                <div style="font-size: 12px; color: var(--text-secondary);">
-                                    Por <?= htmlspecialchars($authorName, ENT_QUOTES, 'UTF-8') ?>
-                                    <?php if ($createdAt): ?>
-                                        • <?= htmlspecialchars($createdAt, ENT_QUOTES, 'UTF-8') ?>
-                                    <?php endif; ?>
-                                </div>
+<div class="card">
+    <h2 style="font-size: 20px; font-weight: 700; margin-bottom: 16px;">Tópicos da Comunidade</h2>
+    
+    <?php if (empty($topics)): ?>
+        <div style="text-align: center; padding: 40px;">
+            <div style="font-size: 48px; margin-bottom: 12px;">💬</div>
+            <p style="font-size: 14px; color: var(--text-secondary);">
+                Ainda não há tópicos nesta comunidade. Seja o primeiro a criar um!
+            </p>
+        </div>
+    <?php else: ?>
+        <div style="display: flex; flex-direction: column; gap: 12px;">
+            <?php foreach ($topics as $topic): ?>
+                <?php
+                    $topicTitle = trim((string)($topic['title'] ?? ''));
+                    $topicId = (int)($topic['id'] ?? 0);
+                    $authorName = trim((string)($topic['author_name'] ?? 'Anônimo'));
+                    $createdAt = $topic['created_at'] ?? '';
+                    $repliesCount = (int)($topic['replies_count'] ?? 0);
+                    $isPinned = !empty($topic['is_pinned']);
+                ?>
+                <a href="/painel-externo/comunidade/topico?id=<?= $topicId ?>&slug=<?= urlencode($communitySlug) ?>" 
+                   style="display: block; padding: 14px; border: 1px solid var(--border); border-radius: 10px; background: rgba(255,255,255,0.02); text-decoration: none; transition: background 0.2s;"
+                   onmouseover="this.style.background='rgba(255,255,255,0.05)'" 
+                   onmouseout="this.style.background='rgba(255,255,255,0.02)'">
+                    <div style="display: flex; justify-content: space-between; align-items: start; gap: 12px;">
+                        <div style="flex: 1; min-width: 0;">
+                            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+                                <?php if ($isPinned): ?>
+                                    <span style="font-size: 12px;">📌</span>
+                                <?php endif; ?>
+                                <h3 style="font-size: 16px; font-weight: 600; color: var(--text-primary); margin: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                                    <?= htmlspecialchars($topicTitle, ENT_QUOTES, 'UTF-8') ?>
+                                </h3>
                             </div>
-                            <div style="font-size: 12px; color: var(--text-secondary); white-space: nowrap;">
-                                💬 <?= $repliesCount ?> <?= $repliesCount === 1 ? 'resposta' : 'respostas' ?>
+                            <div style="font-size: 12px; color: var(--text-secondary);">
+                                Por <?= htmlspecialchars($authorName, ENT_QUOTES, 'UTF-8') ?>
+                                <?php if ($createdAt): ?>
+                                    • <?= htmlspecialchars($createdAt, ENT_QUOTES, 'UTF-8') ?>
+                                <?php endif; ?>
                             </div>
                         </div>
-                    </a>
-                <?php endforeach; ?>
-            </div>
-        <?php endif; ?>
-    </div>
-<?php endif; ?>
+                        <div style="font-size: 12px; color: var(--text-secondary); white-space: nowrap;">
+                            💬 <?= $repliesCount ?> <?= $repliesCount === 1 ? 'resposta' : 'respostas' ?>
+                        </div>
+                    </div>
+                </a>
+            <?php endforeach; ?>
+        </div>
+    <?php endif; ?>
+</div>

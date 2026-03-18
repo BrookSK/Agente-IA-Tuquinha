@@ -96,14 +96,24 @@ function esc_attr(string $s): string {
             border-radius: 10px;
             margin-bottom: 6px;
             font-size: 14px;
-            transition: background 0.2s;
+            transition: background 0.2s, color 0.2s;
             cursor: pointer;
         }
+        .nav-item svg {
+            flex-shrink: 0;
+            color: var(--text-secondary);
+            transition: color 0.2s;
+        }
         .nav-item:hover { background: rgba(255,255,255,0.05); }
+        .nav-item:hover svg {
+            color: var(--accent);
+        }
         .nav-item.active {
             background: linear-gradient(135deg, var(--accent), var(--accent2));
             color: var(--button-text);
-            font-weight: 700;
+        }
+        .nav-item.active svg {
+            color: var(--button-text);
         }
         .main-content {
             margin-left: 260px;
@@ -148,35 +158,53 @@ function esc_attr(string $s): string {
     <div class="container">
         <div class="sidebar">
             <div class="logo">
-                <div class="logo-img">
-                    <?php if ($logoUrl !== ''): ?>
-                        <img src="<?= esc_attr($logoUrl) ?>" alt="<?= esc_attr($companyName) ?>">
-                    <?php else: ?>
+                <?php if ($logoUrl !== ''): ?>
+                    <img src="<?= esc_attr($logoUrl) ?>" alt="<?= esc_attr($companyName) ?>" style="max-height: 50px; width: auto; max-width: 220px; object-fit: contain;">
+                <?php else: ?>
+                    <div class="logo-img">
                         <?= esc_attr(mb_strtoupper(mb_substr($companyName, 0, 1, 'UTF-8'), 'UTF-8')) ?>
-                    <?php endif; ?>
-                </div>
-                <div class="logo-text"><?= esc_attr($companyName) ?></div>
+                    </div>
+                    <div class="logo-text"><?= esc_attr($companyName) ?></div>
+                <?php endif; ?>
             </div>
             
             <nav>
                 <a href="/painel-externo" class="nav-item <?= strpos($_SERVER['REQUEST_URI'] ?? '', '/painel-externo') === 0 && strpos($_SERVER['REQUEST_URI'] ?? '', '/painel-externo/') === false ? 'active' : '' ?>">
-                    <span>🏠</span>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                        <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                    </svg>
                     <span>Início</span>
                 </a>
                 <a href="/painel-externo/cursos" class="nav-item <?= strpos($_SERVER['REQUEST_URI'] ?? '', '/painel-externo/cursos') !== false ? 'active' : '' ?>">
-                    <span>📚</span>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
+                        <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
+                    </svg>
                     <span>Cursos</span>
                 </a>
                 <a href="/painel-externo/meus-cursos" class="nav-item <?= strpos($_SERVER['REQUEST_URI'] ?? '', '/painel-externo/meus-cursos') !== false ? 'active' : '' ?>">
-                    <span>✅</span>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="9 11 12 14 22 4"></polyline>
+                        <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
+                    </svg>
                     <span>Meus Cursos</span>
                 </a>
                 <a href="/painel-externo/comunidade" class="nav-item <?= strpos($_SERVER['REQUEST_URI'] ?? '', '/painel-externo/comunidade') !== false ? 'active' : '' ?>">
-                    <span>👥</span>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="9" cy="7" r="4"></circle>
+                        <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                        <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                    </svg>
                     <span>Comunidade</span>
                 </a>
                 <a href="/logout" class="nav-item" style="margin-top: 20px; border-top: 1px solid var(--border); padding-top: 16px;">
-                    <span>🚪</span>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                        <polyline points="16 17 21 12 16 7"></polyline>
+                        <line x1="21" y1="12" x2="9" y2="12"></line>
+                    </svg>
                     <span>Sair</span>
                 </a>
             </nav>

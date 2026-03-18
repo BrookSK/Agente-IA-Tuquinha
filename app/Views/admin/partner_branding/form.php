@@ -60,6 +60,24 @@ $secondary = trim((string)($branding['secondary_color'] ?? ''));
             </div>
         </div>
 
+        <div style="display:flex; gap:12px; flex-wrap:wrap; margin-top:12px;">
+            <div style="flex:1 1 200px;">
+                <label style="font-size:13px; color:var(--text-primary); display:block; margin-bottom:4px;">Cor do Texto (HEX)</label>
+                <input type="text" name="text_color" value="<?= htmlspecialchars(trim((string)($branding['text_color'] ?? '')), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?>" placeholder="#ffffff" style="width:100%; padding:9px 10px; border-radius:10px; border:1px solid var(--border-subtle); background:var(--surface-subtle); color:var(--text-primary); font-size:13px;">
+            </div>
+            <div style="flex:1 1 200px;">
+                <label style="font-size:13px; color:var(--text-primary); display:block; margin-bottom:4px;">Cor do Texto dos Botões (HEX)</label>
+                <input type="text" name="button_text_color" value="<?= htmlspecialchars(trim((string)($branding['button_text_color'] ?? '')), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?>" placeholder="#ffffff" style="width:100%; padding:9px 10px; border-radius:10px; border:1px solid var(--border-subtle); background:var(--surface-subtle); color:var(--text-primary); font-size:13px;">
+            </div>
+        </div>
+
+        <div style="display:flex; gap:12px; flex-wrap:wrap; margin-top:12px;">
+            <div style="flex:1 1 200px;">
+                <label style="font-size:13px; color:var(--text-primary); display:block; margin-bottom:4px;">Cor dos Links (HEX)</label>
+                <input type="text" name="link_color" value="<?= htmlspecialchars(trim((string)($branding['link_color'] ?? '')), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?>" placeholder="#2d6ef6" style="width:100%; padding:9px 10px; border-radius:10px; border:1px solid var(--border-subtle); background:var(--surface-subtle); color:var(--text-primary); font-size:13px;">
+            </div>
+        </div>
+
         <div style="margin-top:12px; border-top:1px dashed var(--border-subtle); padding-top:12px;">
             <div style="font-size:13px; font-weight:700; margin-bottom:8px;">Logo</div>
 
@@ -78,7 +96,35 @@ $secondary = trim((string)($branding['secondary_color'] ?? ''));
             <div>
                 <label style="font-size:13px; color:var(--text-primary); display:block; margin-bottom:4px;">Upload da logo (arquivo)</label>
                 <input type="file" name="logo_upload" accept="image/*" style="width:100%; padding:10px; border-radius:12px; border:1px solid var(--border-subtle); background:var(--surface-subtle); color:var(--text-primary);">
-                <div style="font-size:11px; color:var(--text-secondary); margin-top:6px;">Enviado para o servidor de mídia externo (mesmo padrão das imagens de cursos).</div>
+                <div style="font-size:11px; color:var(--text-secondary); margin-top:6px;">Tamanho recomendado: 200x200px</div>
+            </div>
+        </div>
+
+        <div style="margin-top:12px; border-top:1px dashed var(--border-subtle); padding-top:12px;">
+            <div style="font-size:13px; font-weight:700; margin-bottom:8px;">Imagens Adicionais</div>
+            
+            <div style="margin-bottom:12px;">
+                <label style="font-size:13px; color:var(--text-primary); display:block; margin-bottom:4px;">Imagem do Header</label>
+                <input type="file" name="header_image_upload" accept="image/*" style="width:100%; padding:10px; border-radius:12px; border:1px solid var(--border-subtle); background:var(--surface-subtle); color:var(--text-primary);">
+                <div style="font-size:11px; color:var(--text-secondary); margin-top:6px;">Tamanho recomendado: 400x80px</div>
+            </div>
+
+            <div style="margin-bottom:12px;">
+                <label style="font-size:13px; color:var(--text-primary); display:block; margin-bottom:4px;">Imagem Hero (Destaque)</label>
+                <input type="file" name="hero_image_upload" accept="image/*" style="width:100%; padding:10px; border-radius:12px; border:1px solid var(--border-subtle); background:var(--surface-subtle); color:var(--text-primary);">
+                <div style="font-size:11px; color:var(--text-secondary); margin-top:6px;">Tamanho recomendado: 1200x600px</div>
+            </div>
+
+            <div style="margin-bottom:12px;">
+                <label style="font-size:13px; color:var(--text-primary); display:block; margin-bottom:4px;">Imagem do Footer</label>
+                <input type="file" name="footer_image_upload" accept="image/*" style="width:100%; padding:10px; border-radius:12px; border:1px solid var(--border-subtle); background:var(--surface-subtle); color:var(--text-primary);">
+                <div style="font-size:11px; color:var(--text-secondary); margin-top:6px;">Tamanho recomendado: 300x150px</div>
+            </div>
+
+            <div style="margin-bottom:12px;">
+                <label style="font-size:13px; color:var(--text-primary); display:block; margin-bottom:4px;">Imagem de Fundo</label>
+                <input type="file" name="background_image_upload" accept="image/*" style="width:100%; padding:10px; border-radius:12px; border:1px solid var(--border-subtle); background:var(--surface-subtle); color:var(--text-primary);">
+                <div style="font-size:11px; color:var(--text-secondary); margin-top:6px;">Tamanho recomendado: 1920x1080px</div>
             </div>
         </div>
 

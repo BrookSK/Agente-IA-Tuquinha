@@ -76,9 +76,16 @@ class AdminPartnerBrandingController extends Controller
         $companyName = trim((string)($_POST['company_name'] ?? ''));
         $primary = trim((string)($_POST['primary_color'] ?? ''));
         $secondary = trim((string)($_POST['secondary_color'] ?? ''));
+        $textColor = trim((string)($_POST['text_color'] ?? ''));
+        $buttonTextColor = trim((string)($_POST['button_text_color'] ?? ''));
+        $linkColor = trim((string)($_POST['link_color'] ?? ''));
 
         $existing = CoursePartnerBranding::findByUserId($userId);
         $logoUrl = $existing['logo_url'] ?? null;
+        $headerImageUrl = $existing['header_image_url'] ?? null;
+        $footerImageUrl = $existing['footer_image_url'] ?? null;
+        $heroImageUrl = $existing['hero_image_url'] ?? null;
+        $backgroundImageUrl = $existing['background_image_url'] ?? null;
 
         $removeLogo = !empty($_POST['remove_logo']);
         if ($removeLogo) {
@@ -100,11 +107,78 @@ class AdminPartnerBrandingController extends Controller
             }
         }
 
+        if (!empty($_FILES['header_image_upload']['tmp_name'])) {
+            $err = $_FILES['header_image_upload']['error'] ?? UPLOAD_ERR_NO_FILE;
+            if ($err === UPLOAD_ERR_OK) {
+                $tmp = (string)($_FILES['header_image_upload']['tmp_name'] ?? '');
+                $name = (string)($_FILES['header_image_upload']['name'] ?? '');
+                $mime = (string)($_FILES['header_image_upload']['type'] ?? '');
+                if ($tmp !== '' && is_file($tmp)) {
+                    $remoteUrl = MediaStorageService::uploadFile($tmp, $name, $mime);
+                    if ($remoteUrl !== null) {
+                        $headerImageUrl = $remoteUrl;
+                    }
+                }
+            }
+        }
+
+        if (!empty($_FILES['footer_image_upload']['tmp_name'])) {
+            $err = $_FILES['footer_image_upload']['error'] ?? UPLOAD_ERR_NO_FILE;
+            if ($err === UPLOAD_ERR_OK) {
+                $tmp = (string)($_FILES['footer_image_upload']['tmp_name'] ?? '');
+                $name = (string)($_FILES['footer_image_upload']['name'] ?? '');
+                $mime = (string)($_FILES['footer_image_upload']['type'] ?? '');
+                if ($tmp !== '' && is_file($tmp)) {
+                    $remoteUrl = MediaStorageService::uploadFile($tmp, $name, $mime);
+                    if ($remoteUrl !== null) {
+                        $footerImageUrl = $remoteUrl;
+                    }
+                }
+            }
+        }
+
+        if (!empty($_FILES['hero_image_upload']['tmp_name'])) {
+            $err = $_FILES['hero_image_upload']['error'] ?? UPLOAD_ERR_NO_FILE;
+            if ($err === UPLOAD_ERR_OK) {
+                $tmp = (string)($_FILES['hero_image_upload']['tmp_name'] ?? '');
+                $name = (string)($_FILES['hero_image_upload']['name'] ?? '');
+                $mime = (string)($_FILES['hero_image_upload']['type'] ?? '');
+                if ($tmp !== '' && is_file($tmp)) {
+                    $remoteUrl = MediaStorageService::uploadFile($tmp, $name, $mime);
+                    if ($remoteUrl !== null) {
+                        $heroImageUrl = $remoteUrl;
+                    }
+                }
+            }
+        }
+
+        if (!empty($_FILES['background_image_upload']['tmp_name'])) {
+            $err = $_FILES['background_image_upload']['error'] ?? UPLOAD_ERR_NO_FILE;
+            if ($err === UPLOAD_ERR_OK) {
+                $tmp = (string)($_FILES['background_image_upload']['tmp_name'] ?? '');
+                $name = (string)($_FILES['background_image_upload']['name'] ?? '');
+                $mime = (string)($_FILES['background_image_upload']['type'] ?? '');
+                if ($tmp !== '' && is_file($tmp)) {
+                    $remoteUrl = MediaStorageService::uploadFile($tmp, $name, $mime);
+                    if ($remoteUrl !== null) {
+                        $backgroundImageUrl = $remoteUrl;
+                    }
+                }
+            }
+        }
+
         CoursePartnerBranding::upsert($userId, [
             'company_name' => $companyName,
             'logo_url' => $logoUrl,
             'primary_color' => $primary,
             'secondary_color' => $secondary,
+            'text_color' => $textColor,
+            'button_text_color' => $buttonTextColor,
+            'link_color' => $linkColor,
+            'header_image_url' => $headerImageUrl,
+            'footer_image_url' => $footerImageUrl,
+            'hero_image_url' => $heroImageUrl,
+            'background_image_url' => $backgroundImageUrl,
         ]);
 
         $_SESSION['admin_partner_branding_success'] = 'Branding atualizado.';
