@@ -253,7 +253,7 @@ if ($externalToken !== '') {
             </div>
         </div>
 
-        <div id="communityAccessSection" style="<?= ($partnerEmail !== '' || !empty($partnerCommunities)) ? '' : 'display:none;' ?> margin-top:14px; padding:12px 14px; border-radius:12px; border:1px solid var(--border-subtle); background:var(--surface-subtle);">
+        <div style="margin-top:14px; padding:12px 14px; border-radius:12px; border:1px solid var(--border-subtle); background:var(--surface-subtle);">
             <div style="font-size:14px; font-weight:650; margin-bottom:6px;">Acesso a Comunidades</div>
             <div style="font-size:12px; color:var(--text-secondary); margin-bottom:12px;">Permita que alunos deste curso acessem comunidades específicas.</div>
             
@@ -277,7 +277,7 @@ if ($externalToken !== '') {
                             <?php if ($partnerEmail !== ''): ?>
                                 Nenhuma comunidade disponível. O parceiro precisa criar comunidades primeiro.
                             <?php else: ?>
-                                Preencha o e-mail do parceiro acima para carregar as comunidades disponíveis.
+                                Salve o curso primeiro com um e-mail de parceiro para poder vincular comunidades.
                             <?php endif; ?>
                         </div>
                     <?php endif; ?>
@@ -390,24 +390,6 @@ document.addEventListener('DOMContentLoaded', function () {
         allowCommunityCheckbox.addEventListener('change', function () {
             communitySelection.style.display = this.checked ? 'block' : 'none';
         });
-    }
-
-    var partnerEmailInput = document.querySelector('input[name="partner_email"]');
-    var communityAccessSection = document.getElementById('communityAccessSection');
-    
-    if (partnerEmailInput && communityAccessSection) {
-        function checkPartnerEmail() {
-            var email = partnerEmailInput.value.trim();
-            if (email !== '') {
-                communityAccessSection.style.display = 'block';
-            } else {
-                communityAccessSection.style.display = 'none';
-            }
-        }
-        
-        partnerEmailInput.addEventListener('input', checkPartnerEmail);
-        partnerEmailInput.addEventListener('blur', checkPartnerEmail);
-        checkPartnerEmail();
     }
 
     var fileInput = document.querySelector('input[name="image_upload"]');
