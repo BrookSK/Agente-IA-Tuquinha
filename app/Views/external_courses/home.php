@@ -28,6 +28,7 @@ $logoUrl = isset($branding) && is_array($branding) && !empty($branding['logo_url
     --accent2: <?= htmlspecialchars($branding['secondary_color'] ?? '#00c8ff', ENT_QUOTES, 'UTF-8') ?>;
     --gold: #f5c842; --text: #e8eaf2; --muted: #6b7289; --radius: 18px;
     --glow: 0 0 60px rgba(45,110,246,.25);
+    --paragraph-color: <?= htmlspecialchars($branding['paragraph_color'] ?? '#6b7289', ENT_QUOTES, 'UTF-8') ?>;
   }
   html { scroll-behavior: smooth; }
   body {
@@ -114,7 +115,10 @@ $logoUrl = isset($branding) && is_array($branding) && !empty($branding['logo_url
     background-clip: text;
   }
   .hero-sub {
-    font-size: 1rem; color: var(--muted); line-height: 1.7; max-width: 420px;
+    font-size: 1rem; color: var(--paragraph-color); line-height: 1.7; max-width: 420px;
+  }
+  p {
+    color: var(--paragraph-color);
   }
   .hero-cta { display: flex; gap: 12px; flex-wrap: wrap; }
   .btn-lg {
@@ -144,7 +148,7 @@ $logoUrl = isset($branding) && is_array($branding) && !empty($branding['logo_url
     background: var(--card); border: 1px solid var(--border); border-radius: 24px;
     padding: 44px 40px; width: 100%; max-width: 420px;
     box-shadow: 0 24px 80px rgba(0,0,0,.4), 0 0 0 1px rgba(255,255,255,.03);
-    position: relative; overflow: hidden;
+    position: relative;
   }
   .login-card::before {
     content: ''; position: absolute; inset: -2px;
