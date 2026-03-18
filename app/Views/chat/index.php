@@ -19,11 +19,14 @@ function render_markdown_safe(string $text): string {
     // Normaliza isso antes de escapar HTML para evitar que "\\n" apareça na UI.
     $text = str_replace(["\\r\\n", "\\n", "\\r"], "\n", $text);
 
+    $text = str_replace(["\r\n", "\r"], "\n", $text);
+
     // Escapa HTML primeiro
     $escaped = htmlspecialchars($text, ENT_QUOTES, 'UTF-8');
 
-    // ### Título -> <strong>...</strong>
-    $escaped = preg_replace('/^#{3,6}\s*(.+)$/m', '<strong>$1</strong>', $escaped);
+    $escaped = preg_replace('/^#\s+(.+)$/m', '<h2>$1</h2>', $escaped);
+    $escaped = preg_replace('/^##\s+(.+)$/m', '<h3>$1</h3>', $escaped);
+    $escaped = preg_replace('/^#{3,6}\s+(.+)$/m', '<h4>$1</h4>', $escaped);
 
     // **negrito** -> <strong>negrito</strong>
     $escaped = preg_replace('/\*\*(.+?)\*\*/s', '<strong>$1</strong>', $escaped);
@@ -32,9 +35,6 @@ function render_markdown_safe(string $text): string {
 
     // "- texto" no começo da linha vira bullet visual
     $escaped = preg_replace('/^\-\s+/m', '• ', $escaped);
-
-    // Agrupa blocos separados por linha em branco em parágrafos
-    $escaped = str_replace(["\r\n", "\r"], "\n", $escaped);
 
     // Linha separadora estilo ChatGPT: converte '---' em um token que vira <hr>
     $escaped = preg_replace('/^\s*---+\s*$/m', '[[HR]]', $escaped);
@@ -109,6 +109,95 @@ function render_markdown_safe(string $text): string {
         }
         if ($b === '[[HR]]') {
             $out .= '<hr class="tuq-chat-hr">';
+            continue;
+        }
+
+        $lines = preg_split("/\n/", $b);
+        $line0 = isset($lines[0]) ? trim((string)$lines[0]) : '';
+        $line1 = isset($lines[1]) ? trim((string)$lines[1]) : '';
+        $isTable = false;
+        if ($line0 !== '' && $line1 !== '' && (strpos($line0, '|') !== false)) {
+            $sep = preg_replace('/\s+/', '', $line1);
+            if ($sep !== '' && preg_match('/^\|?\:?-+\:?(\|\:?-+\:?)+' . '\|?$/', $sep)) {
+                $isTable = true;
+            }
+        }
+
+        if ($isTable) {
+            $parseRow = function (string $row): array {
+                $row = trim($row);
+                if ($row === '') return [];
+                $row = preg_replace('/^\|/', '', $row);
+                $row = preg_replace('/\|$/', '', $row);
+                $cells = explode('|', (string)$row);
+                $outCells = [];
+                foreach ($cells as $c) {
+                    $outCells[] = trim((string)$c);
+                }
+                return $outCells;
+            };
+
+            $header = $parseRow((string)$lines[0]);
+            $rows = [];
+            for ($i = 2; $i < count($lines); $i++) {
+                $r = $parseRow((string)$lines[$i]);
+                if (!empty($r)) {
+                    $rows[] = $r;
+                }
+            }
+
+            $maxCols = count($header);
+            foreach ($rows as $r) {
+                $maxCols = max($maxCols, count($r));
+            }
+
+            $normalizeCols = function (array $r) use ($maxCols): array {
+                $r2 = $r;
+                while (count($r2) < $maxCols) {
+                    $r2[] = '';
+                }
+                if (count($r2) > $maxCols) {
+                    $r2 = array_slice($r2, 0, $maxCols);
+                }
+                return $r2;
+            };
+            $header = $normalizeCols($header);
+            $rows = array_map($normalizeCols, $rows);
+
+            $mdTable = $b;
+            $mdAttr = htmlspecialchars($mdTable, ENT_QUOTES, 'UTF-8');
+
+            $out .= '<div class="tuq-md-table-wrap">'
+                . '<div class="tuq-md-table-head">'
+                . '<div class="tuq-md-table-title">Tabela</div>'
+                . '<button type="button" class="tuq-copy-table-btn copy-table-btn" data-table-md="' . $mdAttr . '">' 
+                . '<span style="opacity:0.9;">⧉</span><span>Copiar tabela</span>'
+                . '</button>'
+                . '</div>'
+                . '<table>';
+
+            if (!empty($header)) {
+                $out .= '<thead><tr>';
+                foreach ($header as $h) {
+                    $out .= '<th>' . $h . '</th>';
+                }
+                $out .= '</tr></thead>';
+            }
+
+            $out .= '<tbody>';
+            foreach ($rows as $r) {
+                $out .= '<tr>';
+                foreach ($r as $c) {
+                    $out .= '<td>' . $c . '</td>';
+                }
+                $out .= '</tr>';
+            }
+            $out .= '</tbody></table></div>';
+            continue;
+        }
+
+        if (preg_match('/^<h[2-4]>.*<\/h[2-4]>$/s', $b)) {
+            $out .= $b;
             continue;
         }
         $b = nl2br($b);
@@ -498,7 +587,6 @@ if (!empty($currentPlan) && is_array($currentPlan)) {
                 </form>
             </div>
         </div>
-        </div>
     <?php endif; ?>
     <?php if (!empty($projectContext) && !empty($projectContext['project']) && !empty($conversationId)): ?>
         <?php
@@ -601,11 +689,11 @@ if (!empty($currentPlan) && is_array($currentPlan)) {
 
             .chat-persona-stage {
                 position: relative;
-                margin-top: 8px;
-                padding: 16px 40px 18px 40px;
-                min-height: 420px;
+                margin-top: 0;
+                padding: 10px 40px 10px 40px;
+                min-height: 320px;
                 display: flex;
-                align-items: center;
+                align-items: flex-start;
                 justify-content: center;
                 overflow-x: hidden;
                 overflow-y: visible;
@@ -614,40 +702,40 @@ if (!empty($currentPlan) && is_array($currentPlan)) {
             #chat-persona-carousel {
                 position: relative;
                 width: 100%;
-                height: 400px;
+                height: 300px;
                 display: flex;
-                align-items: center;
+                align-items: flex-start;
                 justify-content: center;
                 pointer-events: none;
             }
             #chat-persona-carousel .chat-persona-card {
                 position: absolute;
                 left: 50%;
-                top: 50%;
-                transform: translate(-50%, -50%) scale(0.96);
+                top: 0;
+                transform: translate(-50%, 0) scale(0.96);
                 pointer-events: auto;
             }
             #chat-persona-carousel .chat-persona-card.is-center {
                 opacity: 1;
-                transform: translate(-50%, -50%) scale(1.08);
+                transform: translate(-50%, 0) scale(1.08);
                 filter: none;
                 z-index: 3;
             }
             #chat-persona-carousel .chat-persona-card.is-left {
                 opacity: 0.38;
-                transform: translate(calc(-50% - 260px), -50%) scale(0.9);
+                transform: translate(calc(-50% - 260px), 0) scale(0.9);
                 filter: grayscale(1);
                 z-index: 2;
             }
             #chat-persona-carousel .chat-persona-card.is-right {
                 opacity: 0.38;
-                transform: translate(calc(-50% + 260px), -50%) scale(0.9);
+                transform: translate(calc(-50% + 260px), 0) scale(0.9);
                 filter: grayscale(1);
                 z-index: 2;
             }
             #chat-persona-carousel .chat-persona-card.is-hidden {
                 opacity: 0;
-                transform: translate(-50%, -50%) scale(0.85);
+                transform: translate(-50%, 0) scale(0.85);
                 pointer-events: none;
                 z-index: 1;
             }
@@ -655,7 +743,7 @@ if (!empty($currentPlan) && is_array($currentPlan)) {
             @media (max-width: 640px) {
                 .chat-persona-stage {
                     padding: 8px 10px 10px 10px;
-                    min-height: 410px;
+                    min-height: 300px;
                 }
                 .chat-persona-nav-btn {
                     width: 60px;
@@ -665,19 +753,19 @@ if (!empty($currentPlan) && is_array($currentPlan)) {
                 }
                 #chat-persona-carousel .chat-persona-card.is-left {
                     opacity: 0.22;
-                    transform: translate(calc(-50% - 170px), -50%) scale(0.86);
+                    transform: translate(calc(-50% - 170px), 0) scale(0.86);
                 }
                 #chat-persona-carousel .chat-persona-card.is-right {
                     opacity: 0.22;
-                    transform: translate(calc(-50% + 170px), -50%) scale(0.86);
+                    transform: translate(calc(-50% + 170px), 0) scale(0.86);
                 }
                 #chat-persona-carousel .chat-persona-card.is-center {
-                    transform: translate(-50%, -50%) scale(1.03);
+                    transform: translate(-50%, 0) scale(1.03);
                 }
             }
         </style>
 
-        <div style="margin-top:10px; margin-bottom:10px;">
+        <div style="margin-top:0; margin-bottom:10px;">
             <div style="margin-bottom:8px; font-size:12px; color:#b0b0b0;">Escolha a personalidade do Tuquinha (preview):</div>
             <div class="chat-persona-stage">
                 <button type="button" id="chat-persona-prev" class="chat-persona-nav-btn" style="left:0;" aria-label="Anterior">‹</button>
