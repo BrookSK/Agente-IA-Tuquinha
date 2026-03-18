@@ -9,6 +9,7 @@ $primary = '';
 $secondary = '';
 $textColor = '';
 $buttonTextColor = '';
+$linkColor = '';
 $headerImageUrl = '';
 $footerImageUrl = '';
 $heroImageUrl = '';
@@ -22,6 +23,7 @@ if (isset($branding) && is_array($branding)) {
     $secondary = trim((string)($branding['secondary_color'] ?? ''));
     $textColor = trim((string)($branding['text_color'] ?? ''));
     $buttonTextColor = trim((string)($branding['button_text_color'] ?? ''));
+    $linkColor = trim((string)($branding['link_color'] ?? ''));
     $headerImageUrl = trim((string)($branding['header_image_url'] ?? ''));
     $footerImageUrl = trim((string)($branding['footer_image_url'] ?? ''));
     $heroImageUrl = trim((string)($branding['hero_image_url'] ?? ''));
@@ -58,6 +60,7 @@ function esc_attr(string $s): string {
             --accent: <?= $primary !== '' ? esc_attr($primary) : '#6366f1' ?>;
             --accent2: <?= $secondary !== '' ? esc_attr($secondary) : '#8b5cf6' ?>;
             --button-text: <?= $buttonTextColor !== '' ? esc_attr($buttonTextColor) : '#ffffff' ?>;
+            --link-color: <?= $linkColor !== '' ? esc_attr($linkColor) : '#6366f1' ?>;
             --success: #10b981;
             --error: #ef4444;
             --warning: #f59e0b;
@@ -174,6 +177,15 @@ function esc_attr(string $s): string {
         
         .header-nav a:hover {
             color: var(--text-primary);
+        }
+        
+        a:not(.btn):not(.header-brand):not(.nav-item) {
+            color: var(--link-color);
+            transition: opacity 0.2s;
+        }
+        
+        a:not(.btn):not(.header-brand):not(.nav-item):hover {
+            opacity: 0.8;
         }
         
         /* Main Content */

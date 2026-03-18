@@ -29,6 +29,7 @@ class CoursePartnerBranding
                 secondary_color = :secondary_color,
                 text_color = :text_color,
                 button_text_color = :button_text_color,
+                link_color = :link_color,
                 header_image_url = :header_image_url,
                 footer_image_url = :footer_image_url,
                 hero_image_url = :hero_image_url,
@@ -44,6 +45,7 @@ class CoursePartnerBranding
                 'secondary_color' => ($data['secondary_color'] ?? '') !== '' ? (string)$data['secondary_color'] : null,
                 'text_color' => ($data['text_color'] ?? '') !== '' ? (string)$data['text_color'] : null,
                 'button_text_color' => ($data['button_text_color'] ?? '') !== '' ? (string)$data['button_text_color'] : null,
+                'link_color' => ($data['link_color'] ?? '') !== '' ? (string)$data['link_color'] : null,
                 'header_image_url' => ($data['header_image_url'] ?? '') !== '' ? (string)$data['header_image_url'] : null,
                 'footer_image_url' => ($data['footer_image_url'] ?? '') !== '' ? (string)$data['footer_image_url'] : null,
                 'hero_image_url' => ($data['hero_image_url'] ?? '') !== '' ? (string)$data['hero_image_url'] : null,
@@ -52,8 +54,8 @@ class CoursePartnerBranding
             return;
         }
 
-        $stmt = $pdo->prepare('INSERT INTO course_partner_branding (user_id, company_name, logo_url, primary_color, secondary_color, text_color, button_text_color, header_image_url, footer_image_url, hero_image_url, background_image_url)
-            VALUES (:uid, :company_name, :logo_url, :primary_color, :secondary_color, :text_color, :button_text_color, :header_image_url, :footer_image_url, :hero_image_url, :background_image_url)');
+        $stmt = $pdo->prepare('INSERT INTO course_partner_branding (user_id, company_name, logo_url, primary_color, secondary_color, text_color, button_text_color, link_color, header_image_url, footer_image_url, hero_image_url, background_image_url)
+            VALUES (:uid, :company_name, :logo_url, :primary_color, :secondary_color, :text_color, :button_text_color, :link_color, :header_image_url, :footer_image_url, :hero_image_url, :background_image_url)');
         $stmt->execute([
             'uid' => $userId,
             'company_name' => ($data['company_name'] ?? '') !== '' ? (string)$data['company_name'] : null,
@@ -62,6 +64,7 @@ class CoursePartnerBranding
             'secondary_color' => ($data['secondary_color'] ?? '') !== '' ? (string)$data['secondary_color'] : null,
             'text_color' => ($data['text_color'] ?? '') !== '' ? (string)$data['text_color'] : null,
             'button_text_color' => ($data['button_text_color'] ?? '') !== '' ? (string)$data['button_text_color'] : null,
+            'link_color' => ($data['link_color'] ?? '') !== '' ? (string)$data['link_color'] : null,
             'header_image_url' => ($data['header_image_url'] ?? '') !== '' ? (string)$data['header_image_url'] : null,
             'footer_image_url' => ($data['footer_image_url'] ?? '') !== '' ? (string)$data['footer_image_url'] : null,
             'hero_image_url' => ($data['hero_image_url'] ?? '') !== '' ? (string)$data['hero_image_url'] : null,

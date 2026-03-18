@@ -78,6 +78,7 @@ class AdminPartnerBrandingController extends Controller
         $secondary = trim((string)($_POST['secondary_color'] ?? ''));
         $textColor = trim((string)($_POST['text_color'] ?? ''));
         $buttonTextColor = trim((string)($_POST['button_text_color'] ?? ''));
+        $linkColor = trim((string)($_POST['link_color'] ?? ''));
 
         $existing = CoursePartnerBranding::findByUserId($userId);
         $logoUrl = $existing['logo_url'] ?? null;
@@ -173,6 +174,7 @@ class AdminPartnerBrandingController extends Controller
             'secondary_color' => $secondary,
             'text_color' => $textColor,
             'button_text_color' => $buttonTextColor,
+            'link_color' => $linkColor,
             'header_image_url' => $headerImageUrl,
             'footer_image_url' => $footerImageUrl,
             'hero_image_url' => $heroImageUrl,
