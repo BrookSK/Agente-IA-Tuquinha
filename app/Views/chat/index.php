@@ -119,22 +119,38 @@ function render_markdown_safe(string $text): string {
 ?>
 <style>
 .tuq-chat-md { line-height: 1.65; }
-.tuq-chat-md p { margin: 0 0 0.9em 0; }
+.tuq-chat-md p { margin: 0 0 1.05em 0; }
 .tuq-chat-md p:last-child { margin-bottom: 0; }
 .tuq-chat-md ul, .tuq-chat-md ol { margin: 0 0 0.9em 1.2em; padding: 0; }
 .tuq-chat-md li { margin: 0.15em 0; }
 .tuq-chat-md .tuq-chat-hr { border: none; border-top: 1px solid var(--border-subtle); margin: 14px 0; opacity: 0.8; }
 .tuq-chat-md h2, .tuq-chat-md h3, .tuq-chat-md h4 {
-    margin: 0.2em 0 0.65em 0;
+    margin: 0.35em 0 0.7em 0;
     line-height: 1.25;
     font-weight: 800;
     letter-spacing: -0.01em;
 }
-.tuq-chat-md h2 { font-size: 18px; }
-.tuq-chat-md h3 { font-size: 16px; }
+.tuq-chat-md h2 { font-size: 20px; }
+.tuq-chat-md h3 { font-size: 17px; }
 .tuq-chat-md h4 { font-size: 14px; opacity: 0.95; }
 .tuq-chat-md strong { font-weight: 800; }
-.tuq-chat-md .tuq-md-table-wrap { overflow-x: auto; margin: 0 0 0.95em 0; }
+.tuq-chat-md .tuq-md-table-wrap { overflow-x: auto; margin: 0 0 1.05em 0; }
+.tuq-chat-md .tuq-md-table-head { display:flex; align-items:center; justify-content:space-between; gap:10px; margin: 0 0 8px 0; }
+.tuq-chat-md .tuq-md-table-title { font-size:12px; font-weight:800; color: var(--text-secondary); }
+.tuq-chat-md .tuq-copy-table-btn {
+    border: 1px solid var(--border-subtle);
+    background: rgba(255,255,255,0.06);
+    color: var(--text-primary);
+    border-radius: 10px;
+    padding: 6px 10px;
+    cursor: pointer;
+    font-size: 12px;
+    line-height: 1;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+.tuq-chat-md .tuq-copy-table-btn:hover { border-color: rgba(229,57,53,0.55); box-shadow: 0 0 0 2px rgba(229,57,53,0.12); }
 .tuq-chat-md table { width: 100%; border-collapse: separate; border-spacing: 0; min-width: 520px; }
 .tuq-chat-md th, .tuq-chat-md td {
     border: 1px solid var(--border-subtle);
@@ -315,6 +331,21 @@ $conversationProjectIdValue = isset($conversationProjectId) ? (int)$conversation
 $conversationIsFavoriteValue = !empty($conversationIsFavorite);
 $userProjectsList = is_array($userProjects ?? null) ? $userProjects : [];
 
+$hasUserMessageInChat = false;
+if (!empty($chatHistory) && is_array($chatHistory)) {
+    foreach ($chatHistory as $m) {
+        if (!is_array($m)) { continue; }
+        $role = (string)($m['role'] ?? '');
+        if ($role === 'user') {
+            $content = trim((string)($m['content'] ?? ''));
+            if ($content !== '') {
+                $hasUserMessageInChat = true;
+                break;
+            }
+        }
+    }
+}
+
 $planAllowsProjectsAccess = !empty($_SESSION['is_admin']);
 if (!$planAllowsProjectsAccess && !empty($currentPlan) && is_array($currentPlan)) {
     $planAllowsProjectsAccess = !empty($currentPlan['allow_projects_access']);
@@ -488,7 +519,19 @@ if (!empty($currentPlan) && is_array($currentPlan)) {
         </div>
     <?php endif; ?>
 
-    <?php if (!empty($_SESSION['user_id']) && !empty($conversationId) && !empty($personaOptions) && is_array($personaOptions) && $isFreePlan && empty(($_SESSION['free_persona_confirmed'][(int)$conversationId] ?? null))): ?>
+    <?php
+        $isLoggedIn = !empty($_SESSION['user_id']);
+        $shouldShowPersonaShowcase = false;
+        if (!empty($conversationId) && !empty($personaOptions) && is_array($personaOptions) && $isFreePlan) {
+            if ($isLoggedIn) {
+                $shouldShowPersonaShowcase = empty(($_SESSION['free_persona_confirmed'][(int)$conversationId] ?? null));
+            } else {
+                // Sem login: exibe como vitrine, mas some quando o usuário começar o chat (primeira mensagem)
+                $shouldShowPersonaShowcase = !$hasUserMessageInChat;
+            }
+        }
+    ?>
+    <?php if (!empty($shouldShowPersonaShowcase)): ?>
         <style>
             .chat-persona-card {
                 width: 300px;
@@ -1372,6 +1415,50 @@ if (!empty($currentPlan) && is_array($currentPlan)) {
         }
     });
 
+    // Copiar apenas a tabela (Markdown)
+    document.addEventListener('click', (e) => {
+        const btn = e.target && e.target.classList && e.target.classList.contains('copy-table-btn')
+            ? e.target
+            : (e.target && e.target.closest ? e.target.closest('.copy-table-btn') : null);
+        if (!btn) return;
+
+        const md = btn.getAttribute('data-table-md') || '';
+        if (!md) return;
+
+        const doFeedback = () => {
+            const original = btn.dataset.originalLabel || btn.textContent;
+            btn.dataset.originalLabel = original;
+            btn.textContent = 'Copiado';
+            btn.style.color = '#ffffff';
+            setTimeout(() => {
+                btn.innerHTML = '<span style="opacity:0.9;">⧉</span><span>Copiar tabela</span>';
+                btn.style.color = 'var(--text-primary)';
+            }, 1500);
+        };
+
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(md).then(doFeedback).catch(() => {
+                alert('Não consegui copiar a tabela. Tente novamente.');
+            });
+        } else {
+            const ta = document.createElement('textarea');
+            ta.value = md;
+            ta.style.position = 'fixed';
+            ta.style.left = '-9999px';
+            document.body.appendChild(ta);
+            ta.focus();
+            ta.select();
+            try {
+                const ok = document.execCommand('copy');
+                if (ok) doFeedback();
+                else alert('Não consegui copiar a tabela. Tente novamente.');
+            } catch (err) {
+                alert('Não consegui copiar a tabela. Tente novamente.');
+            }
+            document.body.removeChild(ta);
+        }
+    });
+
     const fileInput = document.getElementById('file-input');
     const fileList = document.getElementById('file-list');
     if (fileInput && fileList) {
@@ -1773,7 +1860,43 @@ if (!empty($currentPlan) && is_array($currentPlan)) {
                 headers = Array.isArray(headers) ? headers : [];
                 rows = Array.isArray(rows) ? rows : [];
                 if (!headers.length) return null;
-                let html = '<div class="tuq-md-table-wrap"><table><thead><tr>';
+
+                const unescapeHtml = (s) => (s || '').toString()
+                    .replace(/&quot;/g, '"')
+                    .replace(/&#039;/g, "'")
+                    .replace(/&lt;/g, '<')
+                    .replace(/&gt;/g, '>')
+                    .replace(/&amp;/g, '&');
+
+                // Constrói Markdown para o botão copiar (copia só a tabela)
+                const mdEscape = (v) => {
+                    v = unescapeHtml(v);
+                    // evita quebrar tabela markdown
+                    v = v.replace(/\|/g, '\\|');
+                    v = v.replace(/\r\n|\r|\n/g, ' ');
+                    return v.trim();
+                };
+                const mdLines = [];
+                mdLines.push('| ' + headers.map(mdEscape).join(' | ') + ' |');
+                mdLines.push('| ' + headers.map(() => '---').join(' | ') + ' |');
+                rows.forEach((r) => {
+                    const line = [];
+                    for (let ci = 0; ci < headers.length; ci++) {
+                        line.push(mdEscape((r && r[ci]) ? r[ci] : ''));
+                    }
+                    mdLines.push('| ' + line.join(' | ') + ' |');
+                });
+                const mdTable = mdLines.join('\n');
+                const mdAttr = escapeHtml(mdTable);
+
+                let html = '<div class="tuq-md-table-wrap">'
+                    + '<div class="tuq-md-table-head">'
+                    + '<div class="tuq-md-table-title">Tabela</div>'
+                    + '<button type="button" class="tuq-copy-table-btn copy-table-btn" data-table-md="' + mdAttr + '">' 
+                    + '<span style="opacity:0.9;">⧉</span><span>Copiar tabela</span>'
+                    + '</button>'
+                    + '</div>'
+                    + '<table><thead><tr>';
                 headers.forEach((h) => { html += '<th>' + h + '</th>'; });
                 html += '</tr></thead><tbody>';
                 rows.forEach((r) => {

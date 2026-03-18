@@ -821,7 +821,8 @@ class TuquinhaEngine
         // Regras fixas de formatação: garantem legibilidade mesmo se o admin alterar o prompt
         $formatAppendix = "\n\nFORMATAÇÃO (OBRIGATÓRIA)\n" .
             "- Sempre use quebras de linha e linhas em branco para separar blocos.\n" .
-            "- Quando fizer sentido, organize em seções com títulos usando '##' e '###' (ex: ## Resumo rápido, ### Contexto, ### Resposta pronta, ### Próximos passos).\n" .
+            "- Quando fizer sentido, organize em seções com títulos usando '##' e '###'.\n" .
+            "  Preferência: comece cada título com 1 emoji curto para guiar o olho (ex: ## 📌 Resumo rápido, ### ✅ Próximos passos, ### 💡 Dicas).\n" .
             "- Use listas com '-' para itens e listas numeradas para passo a passo.\n" .
             "- Quando for útil, use um divisor com uma linha contendo apenas: ---\n" .
             "- Quando fizer sentido, use tabelas em Markdown no estilo GitHub:\n" .
