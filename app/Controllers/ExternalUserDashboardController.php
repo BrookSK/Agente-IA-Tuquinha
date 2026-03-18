@@ -6,6 +6,9 @@ use App\Core\Controller;
 use App\Models\User;
 use App\Models\Course;
 use App\Models\CourseEnrollment;
+use App\Models\CourseModule;
+use App\Models\CourseLesson;
+use App\Models\CourseLessonProgress;
 use App\Models\CoursePartnerBranding;
 use App\Models\CourseAllowedCommunity;
 
@@ -145,12 +148,28 @@ class ExternalUserDashboardController extends Controller
             }
         }
 
+        $modules = [];
+        if ($hasAccess) {
+            $allModules = CourseModule::allByCourse($courseId);
+            foreach ($allModules as $module) {
+                $lessons = CourseLesson::allByModule((int)$module['id']);
+                $lessonsWithProgress = [];
+                foreach ($lessons as $lesson) {
+                    $lesson['is_completed'] = CourseLessonProgress::isCompleted((int)$user['id'], (int)$lesson['id']);
+                    $lessonsWithProgress[] = $lesson;
+                }
+                $module['lessons'] = $lessonsWithProgress;
+                $modules[] = $module;
+            }
+        }
+
         $this->view('external_dashboard/view_course', [
             'pageTitle' => $course['title'] ?? 'Curso',
             'user' => $user,
             'branding' => $branding,
             'course' => $course,
             'hasAccess' => $hasAccess,
+            'modules' => $modules,
             'layout' => 'external_user_dashboard',
         ]);
     }

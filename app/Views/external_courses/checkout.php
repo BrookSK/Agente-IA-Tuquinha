@@ -16,6 +16,14 @@ $price = number_format(max($priceCents, 0) / 100, 2, ',', '.');
     <div class="error"><?= htmlspecialchars($error, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?></div>
 <?php endif; ?>
 
+<div style="padding: 14px; background: rgba(255,204,128,0.1); border: 1px solid #ffcc80; border-radius: 12px; margin-bottom: 20px;">
+    <div style="font-size: 14px; font-weight: 600; color: #ffcc80; margin-bottom: 8px;">👤 Já tem uma conta?</div>
+    <p style="font-size: 13px; color: var(--text-secondary); margin: 0 0 12px 0;">Se você já possui uma conta, faça login para continuar a compra.</p>
+    <a href="/login" class="btn-outline" style="display: inline-block; padding: 8px 16px; border-radius: 999px; border: 1px solid var(--border); color: var(--text-primary); font-size: 13px; font-weight: 600; text-decoration: none;">
+        Fazer login
+    </a>
+</div>
+
 <style>
     .billing-grid { display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:10px; }
     @media (max-width: 720px) { .billing-grid { grid-template-columns:1fr; } }

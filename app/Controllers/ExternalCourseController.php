@@ -137,6 +137,7 @@ class ExternalCourseController extends Controller
             'branding' => $branding,
             'token' => $token,
             'layout' => 'external_course',
+            'courseImage' => $course['image'] ?? null,
         ]);
     }
 

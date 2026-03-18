@@ -142,6 +142,11 @@ class AuthController extends Controller
         $redirectPlan = $_SESSION['pending_plan_slug'] ?? null;
         unset($_SESSION['pending_course_id'], $_SESSION['pending_plan_slug']);
 
+        if (!empty($user['is_external_course_user'])) {
+            header('Location: /painel-externo');
+            exit;
+        }
+
         if ($redirectCourseId) {
             header('Location: /cursos/comprar?course_id=' . (int)$redirectCourseId);
         } elseif ($redirectPlan) {
@@ -634,6 +639,11 @@ HTML;
         $redirectCourseId = $_SESSION['pending_course_id'] ?? null;
         $redirectPlan = $_SESSION['pending_plan_slug'] ?? null;
         unset($_SESSION['pending_course_id'], $_SESSION['pending_plan_slug']);
+
+        if (!empty($user['is_external_course_user'])) {
+            header('Location: /painel-externo');
+            exit;
+        }
 
         if ($redirectCourseId) {
             header('Location: /cursos/comprar?course_id=' . (int)$redirectCourseId);
