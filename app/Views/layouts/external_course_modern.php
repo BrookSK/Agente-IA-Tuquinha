@@ -74,7 +74,7 @@ function esc_attr(string $s): string {
         
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-            background: var(--bg-main);
+            background: linear-gradient(135deg, #0a0a0f 0%, #14141f 50%, #1a1a2e 100%);
             color: var(--text-primary);
             line-height: 1.6;
             min-height: 100vh;
@@ -281,7 +281,7 @@ function esc_attr(string $s): string {
             padding: 0.875rem 1.75rem;
             border-radius: 12px;
             background: linear-gradient(135deg, var(--accent), var(--accent2));
-            color: var(--button-text);
+            color: var(--button-text) !important;
             font-weight: 700;
             font-size: 1rem;
             border: none;
@@ -293,6 +293,7 @@ function esc_attr(string $s): string {
         .btn:hover {
             transform: translateY(-1px);
             box-shadow: 0 8px 16px rgba(99, 102, 241, 0.3);
+            color: var(--button-text) !important;
         }
         
         .btn-outline {

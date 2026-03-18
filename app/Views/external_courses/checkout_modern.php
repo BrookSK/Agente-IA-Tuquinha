@@ -36,8 +36,12 @@ $companyName = isset($branding) && is_array($branding) ? trim((string)($branding
 
     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-bottom: 2rem;">
         <div class="card" style="background: rgba(99, 102, 241, 0.05); border-color: var(--accent);">
-            <div style="font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--accent); font-weight: 700; margin-bottom: 0.5rem;">
-                💡 Segurança
+            <div style="font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--accent); font-weight: 700; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                </svg>
+                Segurança
             </div>
             <p style="font-size: 0.95rem; color: var(--text-secondary);">
                 Use uma senha forte e não compartilhe suas credenciais
@@ -45,8 +49,11 @@ $companyName = isset($branding) && is_array($branding) ? trim((string)($branding
         </div>
         
         <div class="card" style="background: rgba(99, 102, 241, 0.05); border-color: var(--accent);">
-            <div style="font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--accent); font-weight: 700; margin-bottom: 0.5rem;">
-                ⚡ Acesso Rápido
+            <div style="font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--accent); font-weight: 700; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+                </svg>
+                Acesso Rápido
             </div>
             <p style="font-size: 0.95rem; color: var(--text-secondary);">
                 <?php if ($priceCents > 0): ?>
@@ -63,8 +70,15 @@ $companyName = isset($branding) && is_array($branding) ? trim((string)($branding
             <input type="hidden" name="token" value="<?= htmlspecialchars($token, ENT_QUOTES, 'UTF-8') ?>">
 
             <div style="grid-column: 1 / -1;">
-                <h2 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 1rem; color: var(--accent);">
-                    📋 Informações da Conta
+                <h2 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 1rem; color: var(--accent); display: flex; align-items: center; gap: 0.5rem;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                        <polyline points="14 2 14 8 20 8"></polyline>
+                        <line x1="16" y1="13" x2="8" y2="13"></line>
+                        <line x1="16" y1="17" x2="8" y2="17"></line>
+                        <polyline points="10 9 9 9 8 9"></polyline>
+                    </svg>
+                    Informações da Conta
                 </h2>
             </div>
 
@@ -90,8 +104,12 @@ $companyName = isset($branding) && is_array($branding) ? trim((string)($branding
             </div>
 
             <div style="grid-column: 1 / -1; margin-top: 1rem;">
-                <h2 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 1rem; color: var(--accent);">
-                    👤 Dados Pessoais
+                <h2 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 1rem; color: var(--accent); display: flex; align-items: center; gap: 0.5rem;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="12" cy="7" r="4"></circle>
+                    </svg>
+                    Dados Pessoais
                 </h2>
             </div>
 
@@ -106,8 +124,12 @@ $companyName = isset($branding) && is_array($branding) ? trim((string)($branding
             </div>
 
             <div style="grid-column: 1 / -1; margin-top: 1rem;">
-                <h2 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 1rem; color: var(--accent);">
-                    📍 Endereço
+                <h2 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 1rem; color: var(--accent); display: flex; align-items: center; gap: 0.5rem;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                        <circle cx="12" cy="10" r="3"></circle>
+                    </svg>
+                    Endereço
                 </h2>
             </div>
 
@@ -148,8 +170,12 @@ $companyName = isset($branding) && is_array($branding) ? trim((string)($branding
 
             <?php if ($priceCents > 0): ?>
                 <div style="grid-column: 1 / -1; margin-top: 1rem;">
-                    <h2 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 1rem; color: var(--accent);">
-                        💳 Forma de Pagamento
+                    <h2 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 1rem; color: var(--accent); display: flex; align-items: center; gap: 0.5rem;">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
+                            <line x1="1" y1="10" x2="23" y2="10"></line>
+                        </svg>
+                        Forma de Pagamento
                     </h2>
                 </div>
 
@@ -157,7 +183,10 @@ $companyName = isset($branding) && is_array($branding) ? trim((string)($branding
                     <label class="card" style="cursor: pointer; padding: 1.25rem; transition: all 0.2s;">
                         <input type="radio" name="billing_type" value="PIX" checked style="display: none;">
                         <div style="text-align: center;">
-                            <div style="font-size: 2rem; margin-bottom: 0.5rem;">📱</div>
+                            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin: 0 auto 0.5rem;">
+                                <rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect>
+                                <line x1="12" y1="18" x2="12.01" y2="18"></line>
+                            </svg>
                             <div style="font-weight: 700; margin-bottom: 0.25rem;">PIX</div>
                             <div style="font-size: 0.85rem; color: var(--text-secondary);">Aprovação rápida</div>
                         </div>
@@ -166,7 +195,12 @@ $companyName = isset($branding) && is_array($branding) ? trim((string)($branding
                     <label class="card" style="cursor: pointer; padding: 1.25rem; transition: all 0.2s;">
                         <input type="radio" name="billing_type" value="BOLETO" style="display: none;">
                         <div style="text-align: center;">
-                            <div style="font-size: 2rem; margin-bottom: 0.5rem;">🧾</div>
+                            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin: 0 auto 0.5rem;">
+                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                <polyline points="14 2 14 8 20 8"></polyline>
+                                <line x1="16" y1="13" x2="8" y2="13"></line>
+                                <line x1="16" y1="17" x2="8" y2="17"></line>
+                            </svg>
                             <div style="font-weight: 700; margin-bottom: 0.25rem;">Boleto</div>
                             <div style="font-size: 0.85rem; color: var(--text-secondary);">Até 3 dias úteis</div>
                         </div>
@@ -175,7 +209,10 @@ $companyName = isset($branding) && is_array($branding) ? trim((string)($branding
                     <label class="card" style="cursor: pointer; padding: 1.25rem; transition: all 0.2s;">
                         <input type="radio" name="billing_type" value="CREDIT_CARD" style="display: none;">
                         <div style="text-align: center;">
-                            <div style="font-size: 2rem; margin-bottom: 0.5rem;">💳</div>
+                            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin: 0 auto 0.5rem;">
+                                <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
+                                <line x1="1" y1="10" x2="23" y2="10"></line>
+                            </svg>
                             <div style="font-weight: 700; margin-bottom: 0.25rem;">Cartão</div>
                             <div style="font-size: 0.85rem; color: var(--text-secondary);">Crédito</div>
                         </div>
@@ -184,11 +221,19 @@ $companyName = isset($branding) && is_array($branding) ? trim((string)($branding
             <?php endif; ?>
 
             <div style="grid-column: 1 / -1; display: flex; gap: 1rem; margin-top: 2rem;">
-                <button type="submit" class="btn" style="flex: 1; font-size: 1.125rem; padding: 1rem;">
+                <button type="submit" class="btn" style="flex: 1; font-size: 1.125rem; padding: 1rem; display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;">
                     <?php if ($priceCents > 0): ?>
-                        💰 Finalizar Compra - R$ <?= $price ?>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="12" y1="1" x2="12" y2="23"></line>
+                            <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                        </svg>
+                        Finalizar Compra - R$ <?= $price ?>
                     <?php else: ?>
-                        🚀 Criar Conta Gratuita
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <polyline points="12 6 12 12 16 14"></polyline>
+                        </svg>
+                        Criar Conta Gratuita
                     <?php endif; ?>
                 </button>
                 <a href="/curso-externo?token=<?= urlencode($token) ?>" class="btn-outline" style="padding: 1rem 2rem; display: inline-flex; align-items: center;">
