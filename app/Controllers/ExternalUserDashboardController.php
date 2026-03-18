@@ -393,4 +393,110 @@ class ExternalUserDashboardController extends Controller
             'layout' => 'external_user_dashboard',
         ]);
     }
+
+    public function viewTopic(): void
+    {
+        $user = $this->requireLogin();
+        $branding = $this->getBrandingForUser($user);
+
+        $topicId = isset($_GET['id']) ? (int)$_GET['id'] : 0;
+        $slug = isset($_GET['slug']) ? trim((string)$_GET['slug']) : '';
+
+        if ($topicId <= 0) {
+            header('Location: /painel-externo/comunidade');
+            exit;
+        }
+
+        $topic = \App\Models\CommunityTopic::findById($topicId);
+        if (!$topic) {
+            header('Location: /painel-externo/comunidade');
+            exit;
+        }
+
+        $community = \App\Models\Community::findById((int)$topic['community_id']);
+        if (!$community || empty($community['is_active'])) {
+            header('Location: /painel-externo/comunidade');
+            exit;
+        }
+
+        // Verify user has access to this community
+        $allowedCommunities = CourseAllowedCommunity::allowedCommunitiesByUser((int)$user['id']);
+        $hasAccess = false;
+        foreach ($allowedCommunities as $allowed) {
+            if ((int)$allowed['id'] === (int)$community['id']) {
+                $hasAccess = true;
+                break;
+            }
+        }
+
+        if (!$hasAccess) {
+            header('Location: /painel-externo/comunidade');
+            exit;
+        }
+
+        $communityId = (int)$community['id'];
+        $isMember = \App\Models\CommunityMember::isMember($communityId, (int)$user['id']);
+
+        // Auto-join if not member
+        if (!$isMember) {
+            \App\Models\CommunityMember::join($communityId, (int)$user['id'], 'member');
+            $isMember = true;
+        }
+
+        $posts = \App\Models\CommunityTopicPost::allByTopicWithUser($topicId);
+
+        $this->view('external_dashboard/view_topic', [
+            'pageTitle' => $topic['title'] ?? 'Tópico',
+            'user' => $user,
+            'branding' => $branding,
+            'community' => $community,
+            'topic' => $topic,
+            'posts' => $posts,
+            'isMember' => $isMember,
+            'layout' => 'external_user_dashboard',
+        ]);
+    }
+
+    public function replyTopic(): void
+    {
+        $user = $this->requireLogin();
+        $partnerId = User::getExternalCoursePartnerId((int)$user['id']);
+
+        $topicId = isset($_POST['topic_id']) ? (int)$_POST['topic_id'] : 0;
+        $body = trim((string)($_POST['body'] ?? ''));
+
+        if ($topicId <= 0 || $body === '') {
+            header('Location: /painel-externo/comunidade');
+            exit;
+        }
+
+        $topic = \App\Models\CommunityTopic::findById($topicId);
+        if (!$topic) {
+            header('Location: /painel-externo/comunidade');
+            exit;
+        }
+
+        $community = \App\Models\Community::findById((int)$topic['community_id']);
+        if (!$community) {
+            header('Location: /painel-externo/comunidade');
+            exit;
+        }
+
+        $communityId = (int)$community['id'];
+        $isMember = \App\Models\CommunityMember::isMember($communityId, (int)$user['id']);
+
+        if (!$isMember) {
+            header('Location: /painel-externo/comunidade/topico?id=' . $topicId . '&slug=' . urlencode($community['slug'] ?? ''));
+            exit;
+        }
+
+        \App\Models\CommunityTopicPost::create([
+            'topic_id' => $topicId,
+            'user_id' => (int)$user['id'],
+            'body' => $body,
+        ]);
+
+        header('Location: /painel-externo/comunidade/topico?id=' . $topicId . '&slug=' . urlencode($community['slug'] ?? ''));
+        exit;
+    }
 }
