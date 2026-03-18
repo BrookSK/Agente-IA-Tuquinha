@@ -253,8 +253,10 @@ if ($externalToken !== '') {
             </div>
         </div>
 
-        <div id="communityAccessSection" style="display:none; margin-top:14px; padding:12px 14px; border-radius:12px; border:1px solid var(--border-subtle); background:var(--surface-subtle);">
+        <div id="communityAccessSection" style="<?= ($partnerEmail !== '' || !empty($partnerCommunities)) ? '' : 'display:none;' ?> margin-top:14px; padding:12px 14px; border-radius:12px; border:1px solid var(--border-subtle); background:var(--surface-subtle);">
             <div style="font-size:14px; font-weight:650; margin-bottom:6px;">Acesso a Comunidades</div>
+            <div style="font-size:12px; color:var(--text-secondary); margin-bottom:12px;">Permita que alunos deste curso acessem comunidades específicas.</div>
+            
             <label style="display:flex; align-items:center; gap:6px; font-size:13px; margin-bottom:10px;">
                 <input type="checkbox" name="allow_community_access" value="1" <?= !empty($course['allow_community_access']) ? 'checked' : '' ?> id="allowCommunityCheckbox">
                 <span>Permitir acesso a comunidades?</span>
@@ -271,7 +273,13 @@ if ($externalToken !== '') {
                             </label>
                         <?php endforeach; ?>
                     <?php else: ?>
-                        <div style="font-size:12px; color:var(--text-secondary); font-style:italic;">Nenhuma comunidade disponível. O parceiro precisa criar comunidades primeiro.</div>
+                        <div id="noCommunities" style="font-size:12px; color:var(--text-secondary); font-style:italic;">
+                            <?php if ($partnerEmail !== ''): ?>
+                                Nenhuma comunidade disponível. O parceiro precisa criar comunidades primeiro.
+                            <?php else: ?>
+                                Preencha o e-mail do parceiro acima para carregar as comunidades disponíveis.
+                            <?php endif; ?>
+                        </div>
                     <?php endif; ?>
                 </div>
             </div>
