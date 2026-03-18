@@ -283,7 +283,7 @@ $logoUrl = isset($branding) && is_array($branding) && !empty($branding['logo_url
     margin-bottom: 8px; line-height: 1.3;
   }
   .course-desc {
-    font-size: .83rem; color: var(--muted); line-height: 1.6; margin-bottom: 20px;
+    font-size: .83rem; color: var(--paragraph-color); line-height: 1.6; margin-bottom: 20px;
   }
   .course-foot {
     display: flex; align-items: center; justify-content: space-between;
