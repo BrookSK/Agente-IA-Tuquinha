@@ -393,12 +393,14 @@ function render_markdown_safe(string $text): string {
  }
 
  .tuq-has-showcase #chat-window {
-     flex: 0 0 auto !important;
-     overflow: visible !important;
+     flex: 1 1 auto !important;
+     overflow: hidden !important;
+     visibility: hidden !important;
  }
 
- .tuq-has-showcase #chat-window {
-     display: none !important;
+ .tuq-has-showcase {
+     height: calc(100vh - 56px - 80px);
+     overflow: hidden;
  }
 </style>
 <?php
