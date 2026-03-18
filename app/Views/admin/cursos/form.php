@@ -207,9 +207,9 @@ if ($externalToken !== '') {
             </div>
         </div>
 
-        <?php if ($partnerEmail !== ''): ?>
         <div style="margin-top:14px; padding:12px 14px; border-radius:12px; border:1px solid var(--border-subtle); background:var(--surface-subtle);">
             <div style="font-size:14px; font-weight:650; margin-bottom:10px;">Personalização Visual (Branding)</div>
+            <div style="font-size:12px; color:var(--text-secondary); margin-bottom:12px;">Configure as cores e logo que aparecerão nos cursos deste parceiro.</div>
             
             <div style="display:flex; gap:12px; flex-wrap:wrap; margin-bottom:10px;">
                 <div style="flex:1 1 240px;">
@@ -252,10 +252,8 @@ if ($externalToken !== '') {
                 <div style="font-size:11px; color:#777; margin-top:4px;">Será enviado para o servidor de mídia externo.</div>
             </div>
         </div>
-        <?php endif; ?>
 
-        <?php if ($partnerEmail !== '' && !empty($partnerCommunities)): ?>
-        <div style="margin-top:14px; padding:12px 14px; border-radius:12px; border:1px solid var(--border-subtle); background:var(--surface-subtle);">
+        <div id="communityAccessSection" style="display:none; margin-top:14px; padding:12px 14px; border-radius:12px; border:1px solid var(--border-subtle); background:var(--surface-subtle);">
             <div style="font-size:14px; font-weight:650; margin-bottom:6px;">Acesso a Comunidades</div>
             <label style="display:flex; align-items:center; gap:6px; font-size:13px; margin-bottom:10px;">
                 <input type="checkbox" name="allow_community_access" value="1" <?= !empty($course['allow_community_access']) ? 'checked' : '' ?> id="allowCommunityCheckbox">
@@ -264,15 +262,21 @@ if ($externalToken !== '') {
             
             <div id="communitySelection" style="<?= empty($course['allow_community_access']) ? 'display:none;' : '' ?> margin-left:20px; padding:10px; border-radius:8px; background:var(--surface-card); border:1px solid var(--border-subtle);">
                 <div style="font-size:12px; color:var(--text-secondary); margin-bottom:8px;">Selecione as comunidades que os alunos deste curso poderão acessar:</div>
-                <?php foreach ($partnerCommunities as $comm): ?>
-                    <label style="display:flex; align-items:center; gap:6px; font-size:13px; margin-bottom:6px; cursor:pointer;">
-                        <input type="checkbox" name="community_ids[]" value="<?= (int)$comm['id'] ?>" <?= in_array((int)$comm['id'], $selectedCommunityIds) ? 'checked' : '' ?>>
-                        <span><?= htmlspecialchars($comm['name'] ?? '', ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?></span>
-                    </label>
-                <?php endforeach; ?>
+                <div id="communityList">
+                    <?php if (!empty($partnerCommunities)): ?>
+                        <?php foreach ($partnerCommunities as $comm): ?>
+                            <label style="display:flex; align-items:center; gap:6px; font-size:13px; margin-bottom:6px; cursor:pointer;">
+                                <input type="checkbox" name="community_ids[]" value="<?= (int)$comm['id'] ?>" <?= in_array((int)$comm['id'], $selectedCommunityIds) ? 'checked' : '' ?>>
+                                <span><?= htmlspecialchars($comm['name'] ?? '', ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?></span>
+                            </label>
+                        <?php endforeach; ?>
+                    <?php else: ?>
+                        <div style="font-size:12px; color:var(--text-secondary); font-style:italic;">Nenhuma comunidade disponível. O parceiro precisa criar comunidades primeiro.</div>
+                    <?php endif; ?>
+                </div>
             </div>
         </div>
-        <?php endif; ?>
+
 
         <div style="display:flex; flex-direction:column; gap:6px; font-size:13px; color:var(--text-secondary); margin-top:14px;">
             <div style="display:flex; flex-wrap:wrap; gap:10px; align-items:center;">
@@ -378,6 +382,24 @@ document.addEventListener('DOMContentLoaded', function () {
         allowCommunityCheckbox.addEventListener('change', function () {
             communitySelection.style.display = this.checked ? 'block' : 'none';
         });
+    }
+
+    var partnerEmailInput = document.querySelector('input[name="partner_email"]');
+    var communityAccessSection = document.getElementById('communityAccessSection');
+    
+    if (partnerEmailInput && communityAccessSection) {
+        function checkPartnerEmail() {
+            var email = partnerEmailInput.value.trim();
+            if (email !== '') {
+                communityAccessSection.style.display = 'block';
+            } else {
+                communityAccessSection.style.display = 'none';
+            }
+        }
+        
+        partnerEmailInput.addEventListener('input', checkPartnerEmail);
+        partnerEmailInput.addEventListener('blur', checkPartnerEmail);
+        checkPartnerEmail();
     }
 
     var fileInput = document.querySelector('input[name="image_upload"]');
