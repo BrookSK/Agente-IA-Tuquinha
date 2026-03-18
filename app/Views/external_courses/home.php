@@ -145,35 +145,30 @@ $logoUrl = isset($branding) && is_array($branding) && !empty($branding['logo_url
     justify-content: center; animation: fadeUp .8s .15s ease both;
   }
   .login-card {
-    background: var(--card); border: 1px solid transparent; border-radius: 24px;
+    background: var(--card); border: 1px solid var(--border); border-radius: 24px;
     padding: 44px 40px; width: 100%; max-width: 420px;
     box-shadow: 0 24px 80px rgba(0,0,0,.4), 0 0 0 1px rgba(255,255,255,.03);
-    position: relative;
-    background-clip: padding-box;
+    position: relative; overflow: hidden;
   }
   .login-card::before {
-    content: ''; position: absolute; inset: 0;
-    border-radius: 24px; padding: 1px;
-    background: linear-gradient(90deg, 
-      transparent 0%, 
-      transparent 25%, 
-      var(--accent) 50%, 
-      var(--accent2) 55%,
-      transparent 60%,
-      transparent 100%
+    content: ''; position: absolute; inset: -1px; border-radius: 24px;
+    background: conic-gradient(
+      from 0deg,
+      transparent 0deg,
+      transparent 350deg,
+      var(--accent) 355deg,
+      var(--accent2) 360deg
     );
-    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-    -webkit-mask-composite: xor;
-    mask-composite: exclude;
-    animation: border-travel 3s linear infinite;
-    pointer-events: none;
+    animation: border-spin 4s linear infinite;
+    z-index: -1;
   }
-  @keyframes border-travel {
-    0% { background-position: 0% 0%; }
-    25% { background-position: 100% 0%; }
-    50% { background-position: 100% 100%; }
-    75% { background-position: 0% 100%; }
-    100% { background-position: 0% 0%; }
+  .login-card::after {
+    content: ''; position: absolute; inset: 1px; border-radius: 23px;
+    background: var(--card); z-index: -1;
+  }
+  @keyframes border-spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
   }
   .card-head { text-align: center; margin-bottom: 32px; }
   .card-head h2 {
@@ -228,10 +223,10 @@ $logoUrl = isset($branding) && is_array($branding) && !empty($branding['logo_url
   .form-footer a:hover { opacity: .7; }
   .btn-submit {
     width: 100%; padding: 14px;
-    background: linear-gradient(135deg, var(--accent) 0%, #1a5eff 100%);
+    background: linear-gradient(135deg, var(--accent) 0%, var(--accent2) 100%);
     border: none; border-radius: 13px; cursor: pointer;
-    font-family: 'Syne', sans-serif; font-weight: 700; font-size: 1rem;
-    color: #fff; letter-spacing: .3px;
+    font-family: 'Syne', sans-serif; font-weight: 700; font-size: .95rem;
+    color: #fff;
     box-shadow: 0 6px 22px rgba(45,110,246,.4);
     transition: all .25s; position: relative; overflow: hidden;
   }
