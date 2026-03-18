@@ -424,6 +424,15 @@ function render_markdown_safe(string $text): string {
  html.tuq-body-lock {
      scrollbar-width: none;
  }
+
+ body.tuq-body-lock .main-content {
+     overflow: hidden !important;
+ }
+
+ body.tuq-body-lock .main-content::-webkit-scrollbar {
+     width: 0 !important;
+     height: 0 !important;
+ }
 </style>
 <?php
 $convSettings = $conversationSettings ?? null;
@@ -504,6 +513,14 @@ if (!empty($conversationId) && !empty($personaOptions) && is_array($personaOptio
             try {
                 document.body.classList.add('tuq-body-lock');
                 document.documentElement.classList.add('tuq-body-lock');
+
+                var mc = document.querySelector('.main-content');
+                if (mc) {
+                    if (!mc.dataset.prevOverflowY) {
+                        mc.dataset.prevOverflowY = (mc.style.overflowY || '');
+                    }
+                    mc.style.overflowY = 'hidden';
+                }
             } catch (e) {}
         });
     </script>
@@ -2481,6 +2498,11 @@ if (!empty($conversationId) && !empty($personaOptions) && is_array($personaOptio
                     try {
                         document.body.classList.remove('tuq-body-lock');
                         document.documentElement.classList.remove('tuq-body-lock');
+
+                        var mc = document.querySelector('.main-content');
+                        if (mc) {
+                            mc.style.overflowY = (mc.dataset.prevOverflowY || '');
+                        }
                     } catch (e) {}
                 }
             } catch (e) {}
