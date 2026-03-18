@@ -8,12 +8,15 @@ use App\Models\CourseEnrollment;
 use App\Models\CourseLesson;
 use App\Models\CourseLive;
 use App\Models\CourseLiveParticipant;
-use App\Models\CoursePartner;
-use App\Models\CoursePartnerCommission;
 use App\Models\CourseModule;
 use App\Models\CourseModuleExam;
 use App\Models\CourseExamQuestion;
 use App\Models\CourseExamOption;
+use App\Models\CoursePartner;
+use App\Models\CoursePartnerCommission;
+use App\Models\CoursePartnerBranding;
+use App\Models\CourseAllowedCommunity;
+use App\Models\Community;
 use App\Models\User;
 use App\Models\Setting;
 use App\Services\MailService;
@@ -240,11 +243,21 @@ class AdminCourseController extends Controller
             'allow_community_access' => $allowCommunityAccess,
         ];
 
-        if ($id > 0) {
-            Course::update($id, $data);
-            $courseId = $id;
-        } else {
-            $courseId = Course::create($data);
+        try {
+            if ($id > 0) {
+                Course::update($id, $data);
+                $courseId = $id;
+            } else {
+                $courseId = Course::create($data);
+            }
+        } catch (\PDOException $e) {
+            if (strpos($e->getMessage(), 'Duplicate entry') !== false && strpos($e->getMessage(), 'slug') !== false) {
+                $_SESSION['admin_course_error'] = 'Já existe um curso com este slug. Por favor, escolha outro slug único.';
+                $target = $id > 0 ? '/admin/cursos/editar?id=' . $id : '/admin/cursos/novo';
+                header('Location: ' . $target);
+                exit;
+            }
+            throw $e;
         }
 
         if ($isExternal) {
