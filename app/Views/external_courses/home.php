@@ -151,19 +151,21 @@ $logoUrl = isset($branding) && is_array($branding) && !empty($branding['logo_url
     position: relative; overflow: hidden;
   }
   .login-card::before {
-    content: ''; position: absolute; inset: -1px; border-radius: 24px;
+    content: ''; position: absolute; inset: -2px; border-radius: 24px;
     background: conic-gradient(
       from 0deg,
       transparent 0deg,
-      transparent 350deg,
-      var(--accent) 355deg,
-      var(--accent2) 360deg
+      transparent 340deg,
+      var(--accent) 350deg,
+      var(--accent2) 360deg,
+      transparent 360deg
     );
     animation: border-spin 4s linear infinite;
     z-index: -1;
+    filter: blur(0.5px);
   }
   .login-card::after {
-    content: ''; position: absolute; inset: 1px; border-radius: 23px;
+    content: ''; position: absolute; inset: 2px; border-radius: 22px;
     background: var(--card); z-index: -1;
   }
   @keyframes border-spin {
