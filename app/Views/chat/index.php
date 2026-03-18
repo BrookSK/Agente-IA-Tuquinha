@@ -902,6 +902,7 @@ if (!empty($currentPlan) && is_array($currentPlan)) {
             selectIndex(currentIndex);
         });
         </script>
+        </div>
     <?php endif; ?>
 
     <?php if (!empty($conversationId) && $canUseConversationSettings): ?>
