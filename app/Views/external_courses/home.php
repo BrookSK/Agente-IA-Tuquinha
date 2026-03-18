@@ -10,7 +10,7 @@ $priceCents = isset($course['price_cents']) ? (int)$course['price_cents'] : 0;
 $price = number_format(max($priceCents, 0) / 100, 2, ',', '.');
 $imagePath = trim((string)($course['image_path'] ?? ''));
 $companyName = isset($branding) && is_array($branding) ? trim((string)($branding['company_name'] ?? '')) : '';
-$logoUrl = isset($branding) && is_array($branding) ? trim((string)($branding['logo_url'] ?? '')) : '';
+$logoUrl = isset($branding) && is_array($branding) && !empty($branding['logo_url']) ? trim((string)$branding['logo_url']) : '';
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">

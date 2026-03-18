@@ -408,14 +408,14 @@ function esc_attr(string $s): string {
         <header class="site-header">
             <div class="header-content">
                 <a href="<?= isset($token) ? '/curso-externo?token=' . urlencode($token) : '/' ?>" class="header-brand">
-                    <div class="header-logo">
-                        <?php if ($logoUrl !== ''): ?>
-                            <img src="<?= esc_attr($logoUrl) ?>" alt="<?= esc_attr($companyName) ?>">
-                        <?php else: ?>
+                    <?php if ($logoUrl !== ''): ?>
+                        <img src="<?= esc_attr($logoUrl) ?>" alt="<?= esc_attr($companyName) ?>" style="height: 50px; width: auto; max-width: 250px; object-fit: contain;">
+                    <?php else: ?>
+                        <div class="header-logo">
                             <?= esc_attr(mb_strtoupper(mb_substr($companyName, 0, 1, 'UTF-8'), 'UTF-8')) ?>
-                        <?php endif; ?>
-                    </div>
-                    <span class="header-title"><?= esc_attr($companyName) ?></span>
+                        </div>
+                        <span class="header-title"><?= esc_attr($companyName) ?></span>
+                    <?php endif; ?>
                 </a>
                 
                 <?php if ($headerImageUrl !== ''): ?>
@@ -439,27 +439,13 @@ function esc_attr(string $s): string {
         </main>
         
         <footer class="site-footer">
-            <div class="footer-content">
+            <div class="footer-content" style="text-align: center;">
                 <div class="footer-section">
                     <h3><?= esc_attr($companyName) ?></h3>
                     <p>Plataforma profissional de cursos online.</p>
                     <?php if ($footerImageUrl !== ''): ?>
                         <img src="<?= esc_attr($footerImageUrl) ?>" alt="Footer" class="footer-image">
                     <?php endif; ?>
-                </div>
-                
-                <div class="footer-section">
-                    <h3>Links Rápidos</h3>
-                    <a href="<?= isset($token) ? '/curso-externo?token=' . urlencode($token) : '/' ?>">Início</a>
-                    <a href="/painel-externo">Meus Cursos</a>
-                    <a href="/painel-externo/comunidade">Comunidade</a>
-                </div>
-                
-                <div class="footer-section">
-                    <h3>Suporte</h3>
-                    <a href="#">Central de Ajuda</a>
-                    <a href="#">Contato</a>
-                    <a href="#">Termos de Uso</a>
                 </div>
             </div>
             
