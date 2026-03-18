@@ -824,7 +824,11 @@ class TuquinhaEngine
             "- Quando fizer sentido, organize em seções com títulos usando '##' e '###' (ex: ## Resumo rápido, ### Contexto, ### Resposta pronta, ### Próximos passos).\n" .
             "- Use listas com '-' para itens e listas numeradas para passo a passo.\n" .
             "- Quando for útil, use um divisor com uma linha contendo apenas: ---\n" .
-            "- Quando fizer sentido, use tabelas em Markdown (com '|' e cabeçalho) para facilitar leitura e cópia.\n" .
+            "- Quando fizer sentido, use tabelas em Markdown no estilo GitHub:\n" .
+            "  | Coluna | Coluna |\n" .
+            "  | --- | --- |\n" .
+            "  | Valor | Valor |\n" .
+            "  (nunca use tabelas ASCII com bordas tipo '+---+' ou caracteres de caixa).\n" .
             "- Separe claramente: (1) entendimento/contexto, (2) entrega/resposta pronta, (3) próximos passos/pergunta final.\n" .
             "- Evite parágrafos longos: prefira 1–3 frases por parágrafo.\n" .
             "- Pode usar emojis de forma moderada para guiar o olho (ex: ✅ ⚠️ 💡 🎯), sem poluir.\n";

@@ -488,7 +488,7 @@ if (!empty($currentPlan) && is_array($currentPlan)) {
         </div>
     <?php endif; ?>
 
-    <?php if (!empty($conversationId) && !empty($personaOptions) && is_array($personaOptions) && $isFreePlan && empty(($_SESSION['free_persona_confirmed'][(int)$conversationId] ?? null))): ?>
+    <?php if (!empty($_SESSION['user_id']) && !empty($conversationId) && !empty($personaOptions) && is_array($personaOptions) && $isFreePlan && empty(($_SESSION['free_persona_confirmed'][(int)$conversationId] ?? null))): ?>
         <style>
             .chat-persona-card {
                 width: 300px;
@@ -1753,25 +1753,33 @@ if (!empty($currentPlan) && is_array($currentPlan)) {
                 return /^:?-{3,}:?(\s+:?-{3,}:?)*$/g.test(cleaned.replace(/\s+/g, ' '));
             };
 
-            const renderTableBlock = (b) => {
-                const lines = (b || '').split(/\n/g).map((l) => (l || '').trim()).filter(Boolean);
-                if (lines.length < 2) return null;
-                if (lines[0].indexOf('|') === -1) return null;
-                if (!isTableSeparatorLine(lines[1])) return null;
-                const headers = splitTableLine(lines[0]);
+            const isAsciiBorderLine = (line) => {
+                const s = (line || '').toString().trim();
+                if (!s) return false;
+                // +----+-----+ ou +====+====+
+                if (s[0] !== '+') return false;
+                return /^\+[\-=+]+\+$/.test(s.replace(/\s+/g, ''));
+            };
+
+            const parseAsciiRow = (line) => {
+                const s = (line || '').toString();
+                if (s.indexOf('|') === -1) return null;
+                const trimmed = s.trim();
+                if (!trimmed.startsWith('|') || !trimmed.endsWith('|')) return null;
+                return splitTableLine(trimmed);
+            };
+
+            const renderTableFromParts = (headers, rows) => {
+                headers = Array.isArray(headers) ? headers : [];
+                rows = Array.isArray(rows) ? rows : [];
                 if (!headers.length) return null;
-                const rows = [];
-                for (let i = 2; i < lines.length; i++) {
-                    if (lines[i].indexOf('|') === -1) continue;
-                    rows.push(splitTableLine(lines[i]));
-                }
                 let html = '<div class="tuq-md-table-wrap"><table><thead><tr>';
                 headers.forEach((h) => { html += '<th>' + h + '</th>'; });
                 html += '</tr></thead><tbody>';
                 rows.forEach((r) => {
                     html += '<tr>';
                     for (let ci = 0; ci < headers.length; ci++) {
-                        html += '<td>' + (r[ci] || '') + '</td>';
+                        html += '<td>' + ((r && r[ci]) ? r[ci] : '') + '</td>';
                     }
                     html += '</tr>';
                 });
@@ -1779,23 +1787,87 @@ if (!empty($currentPlan) && is_array($currentPlan)) {
                 return html;
             };
 
-            const html = blocks.map((b) => {
-                if (b === '[[HR]]') {
-                    return '<hr class="tuq-chat-hr">';
+            const renderBlockWithTables = (b) => {
+                const linesRaw = (b || '').split(/\n/g);
+                const lines = linesRaw.map((l) => (l || '').replace(/\s+$/g, ''));
+                let outHtml = '';
+
+                const flushText = (buf) => {
+                    const txt = (buf || []).join('\n').trim();
+                    if (!txt) return;
+                    if (txt === '[[HR]]') {
+                        outHtml += '<hr class="tuq-chat-hr">';
+                        return;
+                    }
+                    if (txt.startsWith('<h2>') || txt.startsWith('<h3>') || txt.startsWith('<h4>')) {
+                        outHtml += txt;
+                        return;
+                    }
+                    outHtml += '<p>' + txt.replace(/\n/g, '<br>') + '</p>';
+                };
+
+                let buf = [];
+                let i = 0;
+                while (i < lines.length) {
+                    const l = (lines[i] || '').trim();
+
+                    // Markdown table: header + separator
+                    if (l.indexOf('|') !== -1 && i + 1 < lines.length && isTableSeparatorLine(lines[i + 1])) {
+                        flushText(buf);
+                        buf = [];
+
+                        const headers = splitTableLine(lines[i]);
+                        const rows = [];
+                        i += 2;
+                        while (i < lines.length) {
+                            const rl = (lines[i] || '').trim();
+                            if (!rl) break;
+                            if (rl.indexOf('|') === -1) break;
+                            rows.push(splitTableLine(rl));
+                            i++;
+                        }
+                        const tableHtml = renderTableFromParts(headers, rows);
+                        if (tableHtml) outHtml += tableHtml;
+                        continue;
+                    }
+
+                    // ASCII bordered table: +---+ then |...| then +---+
+                    if (isAsciiBorderLine(l) && i + 1 < lines.length) {
+                        const maybeHeader = parseAsciiRow(lines[i + 1]);
+                        if (maybeHeader && i + 2 < lines.length && isAsciiBorderLine(lines[i + 2])) {
+                            flushText(buf);
+                            buf = [];
+
+                            const headers = maybeHeader;
+                            const rows = [];
+                            i = i + 3;
+                            while (i < lines.length) {
+                                const cur = (lines[i] || '').trim();
+                                if (!cur) break;
+                                if (isAsciiBorderLine(cur)) {
+                                    i++;
+                                    continue;
+                                }
+                                const row = parseAsciiRow(lines[i]);
+                                if (!row) break;
+                                rows.push(row);
+                                i++;
+                            }
+                            const tableHtml = renderTableFromParts(headers, rows);
+                            if (tableHtml) outHtml += tableHtml;
+                            continue;
+                        }
+                    }
+
+                    buf.push(lines[i]);
+                    i++;
                 }
 
-                const tbl = renderTableBlock(b);
-                if (tbl) {
-                    return tbl;
-                }
+                flushText(buf);
+                return outHtml;
+            };
 
-                // Se o bloco já é um heading, não embrulha em <p>
-                if (b.startsWith('<h2>') || b.startsWith('<h3>') || b.startsWith('<h4>')) {
-                    return b;
-                }
-
-                return '<p>' + b.replace(/\n/g, '<br>') + '</p>';
-            }).join('');
+            const html = blocks.map((b) => renderBlockWithTables(b)).join('');
             return '<div class="tuq-chat-md">' + html + '</div>';
         };
 
