@@ -350,14 +350,14 @@ $logoUrl = isset($branding) && is_array($branding) ? trim((string)($branding['lo
 
 <nav>
   <a class="nav-brand" href="/curso-externo?token=<?= urlencode($token) ?>">
-    <div class="brand-icon">
-      <?php if ($logoUrl): ?>
-        <img src="<?= htmlspecialchars($logoUrl, ENT_QUOTES, 'UTF-8') ?>" alt="Logo">
-      <?php else: ?>
+    <?php if ($logoUrl): ?>
+      <img src="<?= htmlspecialchars($logoUrl, ENT_QUOTES, 'UTF-8') ?>" alt="Logo" style="height: 40px; width: auto; max-width: 200px; object-fit: contain;">
+    <?php else: ?>
+      <div class="brand-icon">
         <?= htmlspecialchars(strtoupper(substr($companyName ?: 'OC', 0, 2)), ENT_QUOTES, 'UTF-8') ?>
-      <?php endif; ?>
-    </div>
-    <?= htmlspecialchars($companyName ?: 'Curso Online', ENT_QUOTES, 'UTF-8') ?>
+      </div>
+      <?= htmlspecialchars($companyName ?: 'Curso Online', ENT_QUOTES, 'UTF-8') ?>
+    <?php endif; ?>
   </a>
   <div class="nav-actions">
     <?php if (!empty($_SESSION['user_id'])): ?>

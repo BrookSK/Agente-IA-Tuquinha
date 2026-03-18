@@ -33,6 +33,58 @@ $createdAt = $topic['created_at'] ?? '';
     <div style="font-size: 15px; line-height: 1.6; color: var(--text-primary); white-space: pre-line;">
         <?= nl2br(htmlspecialchars($topicBody, ENT_QUOTES, 'UTF-8')) ?>
     </div>
+    
+    <?php
+    $topicMediaUrl = trim((string)($topic['media_url'] ?? ''));
+    $topicMediaKind = trim((string)($topic['media_kind'] ?? ''));
+    $topicMediaMime = trim((string)($topic['media_mime'] ?? ''));
+    ?>
+    <?php if ($topicMediaUrl !== ''): ?>
+        <div style="margin-top: 16px;">
+            <?php if ($topicMediaKind === 'image'): ?>
+                <img src="<?= htmlspecialchars($topicMediaUrl, ENT_QUOTES, 'UTF-8') ?>" alt="" style="max-width: 100%; border-radius: 12px; border: 1px solid var(--border); display: block;">
+            <?php elseif ($topicMediaKind === 'video'): ?>
+                <video controls style="width: 100%; max-width: 100%; border-radius: 12px; border: 1px solid var(--border); display: block;">
+                    <source src="<?= htmlspecialchars($topicMediaUrl, ENT_QUOTES, 'UTF-8') ?>" type="<?= htmlspecialchars($topicMediaMime !== '' ? $topicMediaMime : 'video/mp4', ENT_QUOTES, 'UTF-8') ?>">
+                </video>
+            <?php else: ?>
+                <a href="<?= htmlspecialchars($topicMediaUrl, ENT_QUOTES, 'UTF-8') ?>" target="_blank" rel="noopener noreferrer" style="color: var(--accent); text-decoration: none;">Ver arquivo anexado</a>
+            <?php endif; ?>
+        </div>
+    <?php endif; ?>
+    
+    <?php if (!empty($topic['poll_question'])): ?>
+        <div style="margin-top: 20px; padding: 16px; background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 12px;">
+            <h3 style="font-size: 16px; font-weight: 700; margin-bottom: 12px; color: var(--text-primary);">
+                📊 <?= htmlspecialchars($topic['poll_question'], ENT_QUOTES, 'UTF-8') ?>
+            </h3>
+            <?php
+            $pollOptions = !empty($topic['poll_options']) ? json_decode($topic['poll_options'], true) : [];
+            $pollVotes = !empty($topic['poll_votes']) ? json_decode($topic['poll_votes'], true) : [];
+            $totalVotes = array_sum($pollVotes);
+            ?>
+            <?php if (!empty($pollOptions) && is_array($pollOptions)): ?>
+                <div style="display: flex; flex-direction: column; gap: 10px;">
+                    <?php foreach ($pollOptions as $idx => $option): ?>
+                        <?php
+                        $votes = isset($pollVotes[$idx]) ? (int)$pollVotes[$idx] : 0;
+                        $percentage = $totalVotes > 0 ? round(($votes / $totalVotes) * 100, 1) : 0;
+                        ?>
+                        <div style="position: relative; padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; background: rgba(255,255,255,0.02); overflow: hidden;">
+                            <div style="position: absolute; left: 0; top: 0; bottom: 0; width: <?= $percentage ?>%; background: linear-gradient(90deg, var(--accent), transparent); opacity: 0.2; transition: width 0.3s;"></div>
+                            <div style="position: relative; display: flex; justify-content: space-between; align-items: center;">
+                                <span style="font-size: 14px; color: var(--text-primary);"><?= htmlspecialchars($option, ENT_QUOTES, 'UTF-8') ?></span>
+                                <span style="font-size: 13px; color: var(--text-secondary); font-weight: 600;"><?= $percentage ?>% (<?= $votes ?>)</span>
+                            </div>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
+                <div style="margin-top: 10px; font-size: 12px; color: var(--text-secondary); text-align: right;">
+                    Total de votos: <?= $totalVotes ?>
+                </div>
+            <?php endif; ?>
+        </div>
+    <?php endif; ?>
 </div>
 
 <div class="card">
@@ -69,6 +121,24 @@ $createdAt = $topic['created_at'] ?? '';
                     <div style="font-size: 14px; line-height: 1.6; color: var(--text-primary); white-space: pre-line;">
                         <?= nl2br(htmlspecialchars($postBody, ENT_QUOTES, 'UTF-8')) ?>
                     </div>
+                    <?php
+                    $postMediaUrl = trim((string)($post['media_url'] ?? ''));
+                    $postMediaKind = trim((string)($post['media_kind'] ?? ''));
+                    $postMediaMime = trim((string)($post['media_mime'] ?? ''));
+                    ?>
+                    <?php if ($postMediaUrl !== ''): ?>
+                        <div style="margin-top: 12px;">
+                            <?php if ($postMediaKind === 'image'): ?>
+                                <img src="<?= htmlspecialchars($postMediaUrl, ENT_QUOTES, 'UTF-8') ?>" alt="" style="max-width: 100%; border-radius: 10px; border: 1px solid var(--border); display: block;">
+                            <?php elseif ($postMediaKind === 'video'): ?>
+                                <video controls style="width: 100%; max-width: 100%; border-radius: 10px; border: 1px solid var(--border); display: block;">
+                                    <source src="<?= htmlspecialchars($postMediaUrl, ENT_QUOTES, 'UTF-8') ?>" type="<?= htmlspecialchars($postMediaMime !== '' ? $postMediaMime : 'video/mp4', ENT_QUOTES, 'UTF-8') ?>">
+                                </video>
+                            <?php else: ?>
+                                <a href="<?= htmlspecialchars($postMediaUrl, ENT_QUOTES, 'UTF-8') ?>" target="_blank" rel="noopener noreferrer" style="color: var(--accent); text-decoration: none;">Ver arquivo anexado</a>
+                            <?php endif; ?>
+                        </div>
+                    <?php endif; ?>
                 </div>
             <?php endforeach; ?>
         </div>
