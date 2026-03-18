@@ -28,6 +28,7 @@ $logoUrl = isset($branding) && is_array($branding) && !empty($branding['logo_url
     --accent2: <?= htmlspecialchars($branding['secondary_color'] ?? '#00c8ff', ENT_QUOTES, 'UTF-8') ?>;
     --gold: #f5c842; --text: #e8eaf2; --muted: #6b7289; --radius: 18px;
     --glow: 0 0 60px rgba(45,110,246,.25);
+    --paragraph-color: <?= htmlspecialchars($branding['paragraph_color'] ?? '#6b7289', ENT_QUOTES, 'UTF-8') ?>;
   }
   html { scroll-behavior: smooth; }
   body {
@@ -114,7 +115,10 @@ $logoUrl = isset($branding) && is_array($branding) && !empty($branding['logo_url
     background-clip: text;
   }
   .hero-sub {
-    font-size: 1rem; color: var(--muted); line-height: 1.7; max-width: 420px;
+    font-size: 1rem; color: var(--paragraph-color); line-height: 1.7; max-width: 420px;
+  }
+  p {
+    color: var(--paragraph-color);
   }
   .hero-cta { display: flex; gap: 12px; flex-wrap: wrap; }
   .btn-lg {
@@ -147,9 +151,26 @@ $logoUrl = isset($branding) && is_array($branding) && !empty($branding['logo_url
     position: relative; overflow: hidden;
   }
   .login-card::before {
-    content: ''; position: absolute; top: 0; left: 50%; transform: translateX(-50%);
-    width: 200px; height: 1px;
-    background: linear-gradient(90deg, transparent, var(--accent), var(--accent2), transparent);
+    content: ''; position: absolute; inset: -2px; border-radius: 24px;
+    background: conic-gradient(
+      from 0deg,
+      transparent 0deg,
+      transparent 340deg,
+      var(--accent) 350deg,
+      var(--accent2) 360deg,
+      transparent 360deg
+    );
+    animation: border-spin 4s linear infinite;
+    z-index: -1;
+    filter: blur(0.5px);
+  }
+  .login-card::after {
+    content: ''; position: absolute; inset: 2px; border-radius: 22px;
+    background: var(--card); z-index: -1;
+  }
+  @keyframes border-spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
   }
   .card-head { text-align: center; margin-bottom: 32px; }
   .card-head h2 {
@@ -204,10 +225,10 @@ $logoUrl = isset($branding) && is_array($branding) && !empty($branding['logo_url
   .form-footer a:hover { opacity: .7; }
   .btn-submit {
     width: 100%; padding: 14px;
-    background: linear-gradient(135deg, var(--accent) 0%, #1a5eff 100%);
+    background: linear-gradient(135deg, var(--accent) 0%, var(--accent2) 100%);
     border: none; border-radius: 13px; cursor: pointer;
-    font-family: 'Syne', sans-serif; font-weight: 700; font-size: 1rem;
-    color: #fff; letter-spacing: .3px;
+    font-family: 'Syne', sans-serif; font-weight: 700; font-size: .95rem;
+    color: #fff;
     box-shadow: 0 6px 22px rgba(45,110,246,.4);
     transition: all .25s; position: relative; overflow: hidden;
   }
@@ -264,7 +285,7 @@ $logoUrl = isset($branding) && is_array($branding) && !empty($branding['logo_url
     margin-bottom: 8px; line-height: 1.3;
   }
   .course-desc {
-    font-size: .83rem; color: var(--muted); line-height: 1.6; margin-bottom: 20px;
+    font-size: .83rem; color: var(--paragraph-color); line-height: 1.6; margin-bottom: 20px;
   }
   .course-foot {
     display: flex; align-items: center; justify-content: space-between;
@@ -414,7 +435,8 @@ $logoUrl = isset($branding) && is_array($branding) && !empty($branding['logo_url
         </div>
 
         <div id="panel-login" class="panel active">
-          <form action="/curso-externo/login?token=<?= urlencode($token) ?>" method="post">
+          <form action="/curso-externo/login" method="post">
+            <input type="hidden" name="token" value="<?= htmlspecialchars($token, ENT_QUOTES, 'UTF-8') ?>">
             <div class="form-group">
               <label>E-mail</label>
               <div class="input-wrap">
@@ -437,7 +459,8 @@ $logoUrl = isset($branding) && is_array($branding) && !empty($branding['logo_url
         </div>
 
         <div id="panel-register" class="panel">
-          <form action="/curso-externo/checkout?token=<?= urlencode($token) ?>" method="post">
+          <form action="/curso-externo/checkout" method="post">
+            <input type="hidden" name="token" value="<?= htmlspecialchars($token, ENT_QUOTES, 'UTF-8') ?>">
             <div class="form-row">
               <div class="form-group">
                 <label>Nome</label>

@@ -55,7 +55,7 @@ $companyName = isset($branding) && is_array($branding) ? trim((string)($branding
             <p style="color: var(--text-secondary); font-size: 0.95rem; margin-bottom: 1rem;">
                 Ainda não tem uma conta?
             </p>
-            <a href="/curso-externo/checkout?token=<?= urlencode($token) ?>" class="btn-outline" style="display: inline-block; padding: 0.75rem 1.5rem;">
+            <a href="/curso-externo/checkout?token=<?= urlencode($token) ?>" class="btn" style="display: inline-block; padding: 0.75rem 1.5rem;">
                 Criar Conta Agora
             </a>
         </div>
