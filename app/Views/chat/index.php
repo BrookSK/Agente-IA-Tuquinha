@@ -462,6 +462,10 @@ function render_markdown_safe(string $text): string {
      height: 100% !important;
  }
 
+ .tuq-has-showcase form[action="/chat/send"] {
+     margin-bottom: 10px !important;
+ }
+
  body.tuq-body-lock {
      overflow: hidden !important;
  }
