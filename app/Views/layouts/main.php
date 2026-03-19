@@ -769,13 +769,9 @@ if (!empty($_SESSION['user_id'])) {
             </div>
             <?php
                 $hasUser = !empty($_SESSION['user_id']);
-                $defaultPersonaId = $_SESSION['default_persona_id'] ?? null;
-                // Convidados vão direto para um chat novo padrão; seleção de personalidade só é usada para usuários logados
+                // Convidados e plano free: vão direto para um chat novo padrão (vitrine/preview aparece no chat).
+                // Assinantes/admin com personalidades liberadas: passam pela tela de personalidades.
                 $newChatHref = '/chat?new=1';
-                if ($hasUser && empty($defaultPersonaId)) {
-                    // Usuário logado sem personalidade padrão definida pode passar pela tela de personalidades
-                    $newChatHref = '/personalidades';
-                }
 
                 $isAdmin = !empty($_SESSION['is_admin']);
                 $canSeeHistory = $hasUser;
@@ -788,6 +784,13 @@ if (!empty($_SESSION['user_id'])) {
                     $canUseCaderno = true;
                     $canUseKanban = true;
                     $canUseNews = true;
+
+                    try {
+                        if (class_exists('App\\Models\\Personality') && \App\Models\Personality::hasAnyUsableForUsers()) {
+                            $newChatHref = '/personalidades';
+                        }
+                    } catch (\Throwable $e) {
+                    }
                 } elseif ($hasUser) {
                     $canUseNews = true;
 
@@ -802,6 +805,15 @@ if (!empty($_SESSION['user_id'])) {
                                 $canUseProjects = !empty($plan['allow_projects_access']);
                                 $canUseCaderno = !empty($plan['allow_pages']);
                                 $canUseKanban = !empty($plan['allow_kanban']);
+
+                                if (!empty($plan['allow_personalities'])) {
+                                    try {
+                                        if (class_exists('App\\Models\\Personality') && \App\Models\Personality::hasAnyUsableForUsers()) {
+                                            $newChatHref = '/personalidades';
+                                        }
+                                    } catch (\Throwable $e) {
+                                    }
+                                }
                             }
                         }
                     }
