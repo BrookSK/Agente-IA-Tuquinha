@@ -454,6 +454,10 @@ function render_markdown_safe(string $text): string {
      overflow: hidden !important;
  }
 
+ .tuq-has-showcase form[action="/chat/send"] {
+     margin-top: auto !important;
+ }
+
  .tuq-has-showcase #chat-persona-carousel {
      height: 100% !important;
  }
