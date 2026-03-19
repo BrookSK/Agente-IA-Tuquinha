@@ -14,7 +14,7 @@ $accentColor = !empty($branding['accent_color']) ? $branding['accent_color'] : '
 ?>
 <style>
     .friends-page-container {
-        max-width: 860px;
+        max-width: 100%;
         margin: 0 auto;
         padding: 48px 24px;
     }
@@ -172,7 +172,7 @@ $accentColor = !empty($branding['accent_color']) ? $branding['accent_color'] : '
     
     .friends-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
         gap: 14px;
         padding: 20px 28px 28px;
     }
