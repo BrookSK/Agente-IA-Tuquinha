@@ -228,87 +228,249 @@ $createdAt = $topic['created_at'] ?? '';
 <script src="/app/Views/external_dashboard/view_topic_autocomplete.js"></script>
 
 <script>
-// User mention autocomplete (@username)
+// Unified @ mention autocomplete (users and lessons)
 (function() {
     const textarea = document.getElementById('replyTextarea');
     if (!textarea) return;
 
     const communityId = <?= (int)($community['id'] ?? 0) ?>;
+    let mentionStart = -1;
+    let selectedIndex = 0;
+    let currentMode = 'menu'; // 'menu', 'users', 'courses'
     let users = [];
-    let userMentionStart = -1;
-    let selectedUserIndex = 0;
+    let courses = [];
 
-    // Create dropdown for user mentions
-    const userDropdown = document.createElement('div');
-    userDropdown.id = 'userMentionDropdown';
-    userDropdown.style.cssText = 'display: none; position: absolute; background: #111118; border: 1px solid #272727; border-radius: 8px; max-height: 200px; overflow-y: auto; z-index: 1001; box-shadow: 0 4px 12px rgba(0,0,0,0.5); min-width: 200px;';
-    textarea.parentElement.appendChild(userDropdown);
+    // Create single unified dropdown
+    const dropdown = document.createElement('div');
+    dropdown.id = 'unifiedMentionDropdown';
+    dropdown.style.cssText = 'display: none; position: absolute; background: #111118; border: 1px solid #272727; border-radius: 8px; max-height: 250px; overflow-y: auto; z-index: 2000; box-shadow: 0 4px 12px rgba(0,0,0,0.5); min-width: 250px;';
+    textarea.parentElement.appendChild(dropdown);
 
     async function searchUsers(query) {
         try {
             const response = await fetch(`/api/comunidades/membros/buscar?community_id=${communityId}&q=${encodeURIComponent(query)}`);
             if (response.ok) {
                 users = await response.json();
-                showUserDropdown(users);
             }
         } catch (e) {
             console.error('Error searching users:', e);
         }
     }
 
-    function showUserDropdown(filteredUsers) {
-        if (filteredUsers.length === 0) {
-            userDropdown.style.display = 'none';
+    async function fetchCourses() {
+        try {
+            const response = await fetch('/api/courses/enrolled');
+            if (response.ok) {
+                courses = await response.json();
+            }
+        } catch (e) {
+            console.error('Error fetching courses:', e);
+        }
+    }
+
+    function showMainMenu() {
+        currentMode = 'menu';
+        selectedIndex = 0;
+        
+        dropdown.innerHTML = `
+            <div style="padding: 6px 12px; font-size: 11px; color: #b0b0b0; border-bottom: 1px solid #272727;">
+                Mencionar:
+            </div>
+            <div class="mention-option" data-type="users" data-index="0" 
+                 style="padding: 10px 12px; cursor: pointer; font-size: 13px; color: #f5f5f5; background: #1a1a24; display: flex; align-items: center; gap: 8px;">
+                <span style="font-size: 16px;">👤</span>
+                <div>
+                    <div style="font-weight: 600;">Usuários</div>
+                    <div style="font-size: 11px; color: #b0b0b0;">Mencionar membros da comunidade</div>
+                </div>
+            </div>
+            <div class="mention-option" data-type="courses" data-index="1" 
+                 style="padding: 10px 12px; cursor: pointer; font-size: 13px; color: #f5f5f5; display: flex; align-items: center; gap: 8px;">
+                <span style="font-size: 16px;">📚</span>
+                <div>
+                    <div style="font-weight: 600;">Aulas</div>
+                    <div style="font-size: 11px; color: #b0b0b0;">Mencionar aulas dos cursos</div>
+                </div>
+            </div>
+        `;
+
+        const rect = textarea.getBoundingClientRect();
+        dropdown.style.top = (rect.height + 4) + 'px';
+        dropdown.style.left = '0px';
+        dropdown.style.display = 'block';
+
+        attachMenuHandlers();
+    }
+
+    function showUsersList() {
+        currentMode = 'users';
+        selectedIndex = 0;
+        
+        if (users.length === 0) {
+            dropdown.innerHTML = '<div style="padding: 12px; font-size: 12px; color: #b0b0b0;">Nenhum usuário encontrado</div>';
             return;
         }
 
-        selectedUserIndex = 0;
-        userDropdown.innerHTML = filteredUsers.map((user, idx) => 
-            `<div class="user-mention-item" data-user-id="${user.id}" data-user-name="${user.name}" data-index="${idx}" 
-                  style="padding: 8px 12px; cursor: pointer; font-size: 13px; color: #f5f5f5; ${idx === 0 ? 'background: #1a1a24;' : ''}">
-                ${user.name}
-            </div>`
-        ).join('');
+        dropdown.innerHTML = `
+            <div style="padding: 6px 12px; font-size: 11px; color: #b0b0b0; border-bottom: 1px solid #272727; display: flex; justify-content: space-between;">
+                <span>Selecione o usuário:</span>
+                <button onclick="event.stopPropagation(); this.closest('#unifiedMentionDropdown').style.display='none';" 
+                        style="background: none; border: none; color: #ff6f60; cursor: pointer; font-size: 11px;">← Voltar</button>
+            </div>
+            ${users.map((user, idx) => 
+                `<div class="user-item" data-user-id="${user.id}" data-user-name="${user.name}" data-index="${idx}" 
+                      style="padding: 8px 12px; cursor: pointer; font-size: 13px; color: #f5f5f5; ${idx === 0 ? 'background: #1a1a24;' : ''}">
+                    👤 ${user.name}
+                </div>`
+            ).join('')}
+        `;
 
-        const rect = textarea.getBoundingClientRect();
-        userDropdown.style.top = (rect.height + 4) + 'px';
-        userDropdown.style.left = '0px';
-        userDropdown.style.display = 'block';
-
-        attachUserHandlers(filteredUsers);
+        attachUserHandlers();
     }
 
-    function attachUserHandlers(filteredUsers) {
-        userDropdown.querySelectorAll('.user-mention-item').forEach((item, idx) => {
+    function attachMenuHandlers() {
+        dropdown.querySelectorAll('.mention-option').forEach((item, idx) => {
             item.addEventListener('mouseenter', () => {
-                selectedUserIndex = idx;
-                updateUserSelection();
+                selectedIndex = idx;
+                updateSelection();
+            });
+            item.addEventListener('click', async () => {
+                const type = item.getAttribute('data-type');
+                if (type === 'users') {
+                    await searchUsers('');
+                    showUsersList();
+                } else if (type === 'courses') {
+                    await fetchCourses();
+                    showCoursesList();
+                }
+            });
+        });
+    }
+
+    function attachUserHandlers() {
+        dropdown.querySelectorAll('.user-item').forEach((item, idx) => {
+            item.addEventListener('mouseenter', () => {
+                selectedIndex = idx;
+                updateSelection();
             });
             item.addEventListener('click', () => {
-                insertUserMention(filteredUsers[idx]);
+                const userName = item.getAttribute('data-user-name');
+                insertMention(`@${userName}`);
             });
         });
     }
 
-    function updateUserSelection() {
-        const items = userDropdown.querySelectorAll('.user-mention-item');
-        items.forEach((item, idx) => {
-            item.style.background = idx === selectedUserIndex ? '#1a1a24' : 'transparent';
+    function showCoursesList() {
+        currentMode = 'courses';
+        selectedIndex = 0;
+        
+        if (courses.length === 0) {
+            dropdown.innerHTML = '<div style="padding: 12px; font-size: 12px; color: #b0b0b0;">Nenhum curso encontrado</div>';
+            return;
+        }
+
+        dropdown.innerHTML = `
+            <div style="padding: 6px 12px; font-size: 11px; color: #b0b0b0; border-bottom: 1px solid #272727; display: flex; justify-content: space-between;">
+                <span>Selecione o curso:</span>
+                <button onclick="event.stopPropagation(); this.closest('#unifiedMentionDropdown').style.display='none';" 
+                        style="background: none; border: none; color: #ff6f60; cursor: pointer; font-size: 11px;">← Voltar</button>
+            </div>
+            ${courses.map((course, idx) => 
+                `<div class="course-item" data-course-id="${course.id}" data-index="${idx}" 
+                      style="padding: 8px 12px; cursor: pointer; font-size: 13px; color: #f5f5f5; ${idx === 0 ? 'background: #1a1a24;' : ''}">
+                    📚 ${course.title}
+                </div>`
+            ).join('')}
+        `;
+
+        attachCourseHandlers();
+    }
+
+    function attachCourseHandlers() {
+        dropdown.querySelectorAll('.course-item').forEach((item, idx) => {
+            item.addEventListener('mouseenter', () => {
+                selectedIndex = idx;
+                updateSelection();
+            });
+            item.addEventListener('click', async () => {
+                const courseId = item.getAttribute('data-course-id');
+                await showLessonsForCourse(courseId);
+            });
         });
     }
 
-    function insertUserMention(user) {
+    async function showLessonsForCourse(courseId) {
+        try {
+            const response = await fetch(`/api/courses/${courseId}/lessons`);
+            if (response.ok) {
+                const lessons = await response.json();
+                showLessonsList(lessons);
+            }
+        } catch (e) {
+            console.error('Error fetching lessons:', e);
+        }
+    }
+
+    function showLessonsList(lessons) {
+        currentMode = 'lessons';
+        selectedIndex = 0;
+        
+        if (lessons.length === 0) {
+            dropdown.innerHTML = '<div style="padding: 12px; font-size: 12px; color: #b0b0b0;">Nenhuma aula encontrada</div>';
+            return;
+        }
+
+        dropdown.innerHTML = `
+            <div style="padding: 6px 12px; font-size: 11px; color: #b0b0b0; border-bottom: 1px solid #272727; display: flex; justify-content: space-between;">
+                <span>Selecione a aula:</span>
+                <button onclick="event.stopPropagation(); this.closest('#unifiedMentionDropdown').style.display='none';" 
+                        style="background: none; border: none; color: #ff6f60; cursor: pointer; font-size: 11px;">← Voltar</button>
+            </div>
+            ${lessons.map((lesson, idx) => 
+                `<div class="lesson-item" data-lesson='${JSON.stringify(lesson)}' data-index="${idx}" 
+                      style="padding: 8px 12px; cursor: pointer; font-size: 13px; color: #f5f5f5; ${idx === 0 ? 'background: #1a1a24;' : ''}">
+                    📖 ${lesson.title}
+                </div>`
+            ).join('')}
+        `;
+
+        attachLessonHandlers();
+    }
+
+    function attachLessonHandlers() {
+        dropdown.querySelectorAll('.lesson-item').forEach((item, idx) => {
+            item.addEventListener('mouseenter', () => {
+                selectedIndex = idx;
+                updateSelection();
+            });
+            item.addEventListener('click', () => {
+                const lesson = JSON.parse(item.getAttribute('data-lesson'));
+                insertMention(`@${lesson.title}`);
+            });
+        });
+    }
+
+    function updateSelection() {
+        const selector = currentMode === 'menu' ? '.mention-option' : 
+                        currentMode === 'users' ? '.user-item' :
+                        currentMode === 'courses' ? '.course-item' : '.lesson-item';
+        const items = dropdown.querySelectorAll(selector);
+        items.forEach((item, idx) => {
+            item.style.background = idx === selectedIndex ? '#1a1a24' : 'transparent';
+        });
+    }
+
+    function insertMention(mention) {
         const text = textarea.value;
-        const beforeMention = text.substring(0, userMentionStart);
+        const beforeMention = text.substring(0, mentionStart);
         const afterCaret = text.substring(textarea.selectionStart);
-        const mention = `@${user.name}`;
         
         textarea.value = beforeMention + mention + ' ' + afterCaret;
         textarea.setSelectionRange(beforeMention.length + mention.length + 1, beforeMention.length + mention.length + 1);
         textarea.focus();
         
-        userDropdown.style.display = 'none';
-        userMentionStart = -1;
+        dropdown.style.display = 'none';
+        mentionStart = -1;
     }
 
     function getCurrentWord() {
@@ -324,46 +486,45 @@ $createdAt = $topic['created_at'] ?? '';
     textarea.addEventListener('input', function() {
         const { start, word } = getCurrentWord();
         
-        // Check for user mention (@username)
-        if (word.startsWith('@') && !word.includes('Aula')) {
-            userMentionStart = start;
-            const query = word.substring(1); // Can be empty string
-            searchUsers(query);
+        if (word === '@') {
+            mentionStart = start;
+            showMainMenu();
         } else {
-            userDropdown.style.display = 'none';
-            userMentionStart = -1;
+            dropdown.style.display = 'none';
+            mentionStart = -1;
         }
     });
 
     textarea.addEventListener('keydown', function(e) {
-        if (userDropdown.style.display === 'none') return;
+        if (dropdown.style.display === 'none') return;
 
-        const items = userDropdown.querySelectorAll('.user-mention-item');
+        const selector = currentMode === 'menu' ? '.mention-option' : 
+                        currentMode === 'users' ? '.user-item' :
+                        currentMode === 'courses' ? '.course-item' : '.lesson-item';
+        const items = dropdown.querySelectorAll(selector);
         if (items.length === 0) return;
 
         if (e.key === 'ArrowDown') {
             e.preventDefault();
-            selectedUserIndex = (selectedUserIndex + 1) % items.length;
-            updateUserSelection();
+            selectedIndex = (selectedIndex + 1) % items.length;
+            updateSelection();
         } else if (e.key === 'ArrowUp') {
             e.preventDefault();
-            selectedUserIndex = (selectedUserIndex - 1 + items.length) % items.length;
-            updateUserSelection();
+            selectedIndex = (selectedIndex - 1 + items.length) % items.length;
+            updateSelection();
         } else if (e.key === 'Enter' && !e.shiftKey) {
             e.preventDefault();
-            const userName = items[selectedUserIndex].getAttribute('data-user-name');
-            const userId = items[selectedUserIndex].getAttribute('data-user-id');
-            insertUserMention({ id: userId, name: userName });
+            items[selectedIndex].click();
         } else if (e.key === 'Escape') {
-            userDropdown.style.display = 'none';
-            userMentionStart = -1;
+            dropdown.style.display = 'none';
+            mentionStart = -1;
         }
     });
 
     document.addEventListener('click', function(e) {
-        if (!textarea.contains(e.target) && !userDropdown.contains(e.target)) {
-            userDropdown.style.display = 'none';
-            userMentionStart = -1;
+        if (!textarea.contains(e.target) && !dropdown.contains(e.target)) {
+            dropdown.style.display = 'none';
+            mentionStart = -1;
         }
     });
 })();
