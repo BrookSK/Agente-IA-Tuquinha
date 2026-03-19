@@ -23,6 +23,18 @@ if ($companyName === '') {
     $companyName = 'Meu Painel';
 }
 
+// Buscar contagem de notificações não lidas
+$unreadNotifications = 0;
+if (isset($user) && is_array($user) && isset($user['id'])) {
+    require_once __DIR__ . '/../../Models/UserNotification.php';
+    try {
+        $unreadNotifications = UserNotification::countUnread((int)$user['id']);
+    } catch (Exception $e) {
+        // Silenciosamente ignora erro se tabela ainda não existe
+        $unreadNotifications = 0;
+    }
+}
+
 function esc_attr(string $s): string {
     return htmlspecialchars($s, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
 }
@@ -214,6 +226,17 @@ function esc_attr(string $s): string {
             .card { padding: 14px; margin-bottom: 16px; }
             .btn { padding: 9px 14px; font-size: 12px; }
         }
+        
+        /* Fix dropdown/select option text visibility */
+        select {
+            color: var(--text-primary) !important;
+            background: var(--bg-main) !important;
+        }
+        
+        select option {
+            background: var(--bg-card) !important;
+            color: var(--text-primary) !important;
+        }
     </style>
 </head>
 <body>
@@ -231,6 +254,16 @@ function esc_attr(string $s): string {
             </div>
             
             <nav>
+                <a href="/painel-externo/notificacoes" class="nav-item <?= strpos($_SERVER['REQUEST_URI'] ?? '', '/painel-externo/notificacoes') !== false ? 'active' : '' ?>" style="position:relative;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                        <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                    </svg>
+                    <span>Notificações</span>
+                    <?php if ($unreadNotifications > 0): ?>
+                        <span style="position:absolute; top:50%; right:12px; transform:translateY(-50%); width:12px; height:12px; background:#ef4444; border-radius:50%; border:2px solid var(--bg-card);"></span>
+                    <?php endif; ?>
+                </a>
                 <a href="/painel-externo" class="nav-item <?= strpos($_SERVER['REQUEST_URI'] ?? '', '/painel-externo') === 0 && strpos($_SERVER['REQUEST_URI'] ?? '', '/painel-externo/') === false ? 'active' : '' ?>">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
@@ -261,6 +294,13 @@ function esc_attr(string $s): string {
                     </svg>
                     <span>Comunidade</span>
                 </a>
+                <a href="/painel-externo/perfil?user_id=<?= (int)($user['id'] ?? 0) ?>" class="nav-item <?= strpos($_SERVER['REQUEST_URI'] ?? '', '/painel-externo/perfil?user_id=') !== false && strpos($_SERVER['REQUEST_URI'] ?? '', 'user_id=' . ((int)($user['id'] ?? 0))) !== false ? 'active' : '' ?>">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="12" cy="7" r="4"></circle>
+                    </svg>
+                    <span>Meu Perfil</span>
+                </a>
                 <a href="/painel-externo/perfil/editar" class="nav-item <?= strpos($_SERVER['REQUEST_URI'] ?? '', '/painel-externo/perfil/editar') !== false ? 'active' : '' ?>">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
@@ -268,7 +308,7 @@ function esc_attr(string $s): string {
                     </svg>
                     <span>Editar Perfil</span>
                 </a>
-                <a href="/painel-externo/amigos" class="nav-item <?= strpos($_SERVER['REQUEST_URI'] ?? '', '/painel-externo/amigos') !== false || strpos($_SERVER['REQUEST_URI'] ?? '', '/painel-externo/perfil') !== false || strpos($_SERVER['REQUEST_URI'] ?? '', '/painel-externo/chat') !== false ? 'active' : '' ?>">
+                <a href="/painel-externo/amigos" class="nav-item <?= (strpos($_SERVER['REQUEST_URI'] ?? '', '/painel-externo/amigos') !== false || strpos($_SERVER['REQUEST_URI'] ?? '', '/painel-externo/chat') !== false || (strpos($_SERVER['REQUEST_URI'] ?? '', '/painel-externo/perfil?user_id=') !== false && strpos($_SERVER['REQUEST_URI'] ?? '', 'user_id=' . ((int)($user['id'] ?? 0))) === false)) && strpos($_SERVER['REQUEST_URI'] ?? '', '/painel-externo/perfil/editar') === false ? 'active' : '' ?>">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
                         <circle cx="9" cy="7" r="4"></circle>

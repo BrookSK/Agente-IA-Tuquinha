@@ -7,7 +7,7 @@ use PDO;
 
 class CommunityPostLike
 {
-    public static function toggle(int $postId, int $userId): void
+    public static function toggle(int $postId, int $userId): bool
     {
         $pdo = Database::getConnection();
         $stmt = $pdo->prepare('SELECT id FROM community_post_likes WHERE post_id = :post_id AND user_id = :user_id LIMIT 1');
@@ -17,9 +17,11 @@ class CommunityPostLike
         if ($row) {
             $del = $pdo->prepare('DELETE FROM community_post_likes WHERE id = :id');
             $del->execute(['id' => (int)$row['id']]);
+            return false; // Unlike
         } else {
             $ins = $pdo->prepare('INSERT INTO community_post_likes (post_id, user_id) VALUES (:post_id, :user_id)');
             $ins->execute(['post_id' => $postId, 'user_id' => $userId]);
+            return true; // Liked
         }
     }
 

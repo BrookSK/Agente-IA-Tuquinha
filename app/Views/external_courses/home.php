@@ -621,10 +621,6 @@ $logoUrl = isset($branding) && is_array($branding) && !empty($branding['logo_url
       <?= $priceCents > 0 ? 'Comprar Agora - R$ ' . $price : 'Começar Gratuitamente' ?> →
     </a>
   </div>
-
-  <footer>
-    <span>Resenha 2.0 - Uma empresa Nuvem Labs</span>
-  </footer>
 </div>
 
 <script>

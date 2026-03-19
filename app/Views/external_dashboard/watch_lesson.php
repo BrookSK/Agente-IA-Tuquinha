@@ -120,6 +120,7 @@ $canCommentLesson = $user && $isEnrolled;
                             controls
                             controlsList="nodownload noplaybackrate noremoteplayback"
                             disablePictureInPicture
+                            oncontextmenu="return false;"
                             style="position:absolute; top:0; left:0; width:100%; height:100%; background:#000;">
                         </video>
                     </div>

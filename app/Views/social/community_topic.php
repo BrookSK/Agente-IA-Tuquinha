@@ -74,7 +74,7 @@ $slug = (string)($community['slug'] ?? '');
                 <?php if ($topicMediaKind === 'image'): ?>
                     <img src="<?= htmlspecialchars($topicMediaUrl, ENT_QUOTES, 'UTF-8') ?>" alt="" style="max-width:100%; border-radius:12px; border:1px solid #272727; display:block;">
                 <?php elseif ($topicMediaKind === 'video'): ?>
-                    <video controls style="width:100%; max-width:100%; border-radius:12px; border:1px solid #272727; display:block;">
+                    <video controls controlsList="nodownload" oncontextmenu="return false;" style="width:100%; max-width:100%; border-radius:12px; border:1px solid #272727; display:block;">
                         <source src="<?= htmlspecialchars($topicMediaUrl, ENT_QUOTES, 'UTF-8') ?>" type="<?= htmlspecialchars($topicMediaMime !== '' ? $topicMediaMime : 'video/mp4', ENT_QUOTES, 'UTF-8') ?>">
                     </video>
                 <?php else: ?>
@@ -189,7 +189,7 @@ $slug = (string)($community['slug'] ?? '');
                                 <?php if ($postMediaKind === 'image'): ?>
                                     <img src="<?= htmlspecialchars($postMediaUrl, ENT_QUOTES, 'UTF-8') ?>" alt="" style="max-width:100%; border-radius:12px; border:1px solid #272727; display:block;">
                                 <?php elseif ($postMediaKind === 'video'): ?>
-                                    <video controls style="width:100%; max-width:100%; border-radius:12px; border:1px solid #272727; display:block;">
+                                    <video controls controlsList="nodownload" oncontextmenu="return false;" style="width:100%; max-width:100%; border-radius:12px; border:1px solid #272727; display:block;">
                                         <source src="<?= htmlspecialchars($postMediaUrl, ENT_QUOTES, 'UTF-8') ?>" type="<?= htmlspecialchars($postMediaMime !== '' ? $postMediaMime : 'video/mp4', ENT_QUOTES, 'UTF-8') ?>">
                                     </video>
                                 <?php else: ?>

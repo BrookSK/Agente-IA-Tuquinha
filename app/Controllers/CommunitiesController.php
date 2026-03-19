@@ -967,10 +967,12 @@ class CommunitiesController extends Controller
         $parentPostId = isset($_POST['parent_post_id']) ? (int)$_POST['parent_post_id'] : null;
         
         // Validate parent post if provided
+        $parentPost = null;
         if ($parentPostId !== null && $parentPostId > 0) {
             $parentPost = CommunityTopicPost::findById($parentPostId);
             if (!$parentPost || (int)$parentPost['topic_id'] !== $topicId) {
                 $parentPostId = null; // Invalid parent, ignore it
+                $parentPost = null;
             }
         }
 
@@ -983,6 +985,24 @@ class CommunitiesController extends Controller
             'media_mime' => $mediaMime,
             'media_kind' => $mediaKind,
         ]);
+
+        // Create notification for reply to parent post
+        if ($parentPost && isset($parentPost['user_id'])) {
+            $parentAuthorId = (int)$parentPost['user_id'];
+            
+            // Don't notify if replying to own post
+            if ($parentAuthorId !== $userId) {
+                require_once __DIR__ . '/../Models/UserNotification.php';
+                $link = '/painel-externo/comunidade/topico?id=' . $topicId . '#post-' . $postId;
+                \UserNotification::createReplyNotification(
+                    $parentAuthorId,
+                    $userId,
+                    'community_post',
+                    $postId,
+                    $link
+                );
+            }
+        }
 
         // Parse and store lesson mentions
         self::parseLessonMentionsStatic($body, $topicId, $postId, $userId);
@@ -1020,6 +1040,13 @@ class CommunitiesController extends Controller
             $user = $stmt->fetch(\PDO::FETCH_ASSOC);
             
             if ($user) {
+                $mentionedUserId = (int)$user['id'];
+                
+                // Don't notify if user mentions themselves
+                if ($mentionedUserId === $userId) {
+                    continue;
+                }
+                
                 // Store mention
                 $insertStmt = $pdo->prepare('
                     INSERT INTO community_user_mentions (topic_id, post_id, mentioned_user_id, mentioned_by_user_id)
@@ -1028,9 +1055,23 @@ class CommunitiesController extends Controller
                 $insertStmt->execute([
                     'topic_id' => $topicId,
                     'post_id' => $postId,
-                    'mentioned_user_id' => (int)$user['id'],
+                    'mentioned_user_id' => $mentionedUserId,
                     'mentioned_by_user_id' => $userId
                 ]);
+                
+                // Create notification for the mentioned user
+                require_once __DIR__ . '/../Models/UserNotification.php';
+                $link = '/painel-externo/comunidade/topico?id=' . $topicId;
+                if ($postId) {
+                    $link .= '#post-' . $postId;
+                }
+                \UserNotification::createMentionNotification(
+                    $mentionedUserId,
+                    $userId,
+                    'community_post',
+                    $postId ?? $topicId,
+                    $link
+                );
             }
         }
     }
@@ -1973,8 +2014,25 @@ class CommunitiesController extends Controller
 
             // Toggle like
             error_log("Toggling like");
-            CommunityPostLike::toggle($postId, $userId);
+            $wasLiked = CommunityPostLike::toggle($postId, $userId);
             error_log("Like toggled");
+            
+            // Create notification if liked (not unliked) and not own post
+            if ($wasLiked) {
+                $postAuthorId = (int)($post['user_id'] ?? 0);
+                if ($postAuthorId > 0 && $postAuthorId !== $userId) {
+                    require_once __DIR__ . '/../Models/UserNotification.php';
+                    $topicId = (int)($post['topic_id'] ?? 0);
+                    $link = '/painel-externo/comunidade/topico?id=' . $topicId . '#post-' . $postId;
+                    \UserNotification::createLikeNotification(
+                        $postAuthorId,
+                        $userId,
+                        'community_post',
+                        $postId,
+                        $link
+                    );
+                }
+            }
 
             // Get updated counts
             error_log("Getting like counts");

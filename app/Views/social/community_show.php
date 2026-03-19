@@ -384,37 +384,45 @@ $canModerate = !empty($canModerate);
             <?php if (empty($topics)): ?>
                 <p style="font-size:13px; color:var(--text-secondary);">Nenhum tópico criado ainda. Comece o primeiro!</p>
             <?php else: ?>
-                <div style="display:flex; flex-direction:column; gap:6px;">
+                <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(280px, 1fr)); gap:16px;">
                     <?php foreach ($topics as $t): ?>
                         <?php
-                        $topicMediaUrl = trim((string)($t['media_url'] ?? ''));
-                        $topicAttachmentsCount = $topicMediaUrl !== '' ? 1 : 0;
-                        $topicAttachmentsLabel = $topicAttachmentsCount === 1 ? '1 anexo' : ($topicAttachmentsCount . ' anexos');
+                        $topicCoverUrl = trim((string)($t['cover_image_url'] ?? ''));
+                        $topicTitle = htmlspecialchars((string)($t['title'] ?? 'Tópico'), ENT_QUOTES, 'UTF-8');
+                        $topicId = (int)($t['id'] ?? 0);
+                        $topicAuthor = htmlspecialchars((string)($t['user_name'] ?? 'Usuário'), ENT_QUOTES, 'UTF-8');
                         ?>
-                        <a href="/comunidades/topicos/ver?topic_id=<?= (int)($t['id'] ?? 0) ?>" style="text-decoration:none;">
-                            <div style="background:var(--surface-subtle); border-radius:12px; border:1px solid var(--border-subtle); padding:8px 10px;">
-                                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:3px;">
-                                    <div style="font-size:13px; font-weight:600; color:var(--text-primary);">
-                                        <?= htmlspecialchars((string)($t['title'] ?? 'Tópico'), ENT_QUOTES, 'UTF-8') ?>
-                                    </div>
-                                    <div style="text-align:right;">
-                                        <?php if (!empty($t['created_at'])): ?>
-                                            <div style="font-size:11px; color:var(--text-secondary);">
-                                                <?= htmlspecialchars(date('d/m/Y H:i', strtotime((string)$t['created_at'])), ENT_QUOTES, 'UTF-8') ?>
-                                            </div>
-                                        <?php endif; ?>
-                                        <?php if ($topicAttachmentsCount > 0): ?>
-                                            <div style="margin-top:2px; font-size:10px; color:var(--text-secondary); opacity:0.9;">
-                                                <?= htmlspecialchars($topicAttachmentsLabel, ENT_QUOTES, 'UTF-8') ?>
-                                            </div>
-                                        <?php endif; ?>
-                                    </div>
+                        <?php if ($topicCoverUrl !== ''): ?>
+                            <!-- Modern card layout for topics with cover -->
+                            <div style="background:var(--surface-card); border-radius:16px; border:1px solid var(--border-subtle); overflow:hidden; transition:transform 0.2s, box-shadow 0.2s;">
+                                <div style="width:100%; aspect-ratio:16/9; overflow:hidden; background:#000;">
+                                    <img src="<?= htmlspecialchars($topicCoverUrl, ENT_QUOTES, 'UTF-8') ?>" alt="" style="width:100%; height:100%; object-fit:cover;">
                                 </div>
-                                <div style="font-size:11px; color:#b0b0b0;">
-                                    por <?= htmlspecialchars((string)($t['user_name'] ?? 'Usuário'), ENT_QUOTES, 'UTF-8') ?>
+                                <div style="padding:16px;">
+                                    <h3 style="font-size:15px; font-weight:700; color:var(--text-primary); margin:0 0 4px 0; line-height:1.3;">
+                                        <?= $topicTitle ?>
+                                    </h3>
+                                    <p style="font-size:12px; color:var(--text-secondary); margin:0 0 12px 0;">
+                                        por <?= $topicAuthor ?>
+                                    </p>
+                                    <a href="/comunidades/topicos/ver?topic_id=<?= $topicId ?>" style="display:block; width:100%; padding:10px; background:linear-gradient(135deg, #ff6f60 0%, #e53935 100%); border:none; border-radius:10px; color:#fff; font-size:14px; font-weight:600; text-align:center; text-decoration:none; cursor:pointer; transition:transform 0.2s;">
+                                        Ver tópico
+                                    </a>
                                 </div>
                             </div>
-                        </a>
+                        <?php else: ?>
+                            <!-- Simple list layout for topics without cover -->
+                            <a href="/comunidades/topicos/ver?topic_id=<?= $topicId ?>" style="text-decoration:none;">
+                                <div style="background:var(--surface-subtle); border-radius:12px; border:1px solid var(--border-subtle); padding:12px; transition:transform 0.2s;">
+                                    <div style="font-size:14px; font-weight:600; color:var(--text-primary); margin-bottom:6px;">
+                                        <?= $topicTitle ?>
+                                    </div>
+                                    <div style="font-size:11px; color:var(--text-secondary);">
+                                        por <?= $topicAuthor ?>
+                                    </div>
+                                </div>
+                            </a>
+                        <?php endif; ?>
                     <?php endforeach; ?>
                 </div>
             <?php endif; ?>
@@ -459,19 +467,3 @@ $canModerate = !empty($canModerate);
         </aside>
     </div>
 </div>
-
-<script>
-    (function(){
-        var btn = document.getElementById('toggleCreateTopicBtn');
-        var form = document.getElementById('createTopicForm');
-        if (!btn || !form) return;
-        btn.addEventListener('click', function(){
-            var isOpen = form.style.display !== 'none';
-            form.style.display = isOpen ? 'none' : 'flex';
-            if (!isOpen) {
-                var titleInput = form.querySelector('input[name="title"]');
-                if (titleInput) titleInput.focus();
-            }
-        });
-    })();
-</script>

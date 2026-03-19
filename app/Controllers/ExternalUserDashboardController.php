@@ -536,10 +536,45 @@ class ExternalUserDashboardController extends Controller
         $parentPostId = isset($_POST['parent_post_id']) ? (int)$_POST['parent_post_id'] : null;
         
         // Validate parent post if provided
+        $parentPost = null;
         if ($parentPostId !== null && $parentPostId > 0) {
             $parentPost = \App\Models\CommunityTopicPost::findById($parentPostId);
             if (!$parentPost || (int)$parentPost['topic_id'] !== $topicId) {
                 $parentPostId = null;
+                $parentPost = null;
+            }
+        }
+
+        // Handle media upload
+        $mediaUrl = null;
+        $mediaMime = null;
+        $mediaKind = null;
+        
+        if (!empty($_FILES['media']) && is_array($_FILES['media'])) {
+            $uploadError = (int)($_FILES['media']['error'] ?? UPLOAD_ERR_NO_FILE);
+            if ($uploadError === UPLOAD_ERR_OK) {
+                $tmp = (string)($_FILES['media']['tmp_name'] ?? '');
+                $originalName = (string)($_FILES['media']['name'] ?? '');
+                $mime = (string)($_FILES['media']['type'] ?? '');
+                $size = (int)($_FILES['media']['size'] ?? 0);
+                
+                if ($tmp !== '' && is_uploaded_file($tmp) && $size <= (20 * 1024 * 1024)) {
+                    $kind = 'file';
+                    $mimeLower = strtolower($mime);
+                    if (str_starts_with($mimeLower, 'image/')) {
+                        $kind = 'image';
+                    } elseif (str_starts_with($mimeLower, 'video/')) {
+                        $kind = 'video';
+                    }
+                    
+                    require_once __DIR__ . '/../Services/MediaStorageService.php';
+                    $url = \App\Services\MediaStorageService::uploadFile($tmp, $originalName, $mime);
+                    if ($url !== null) {
+                        $mediaUrl = $url;
+                        $mediaMime = $mime !== '' ? $mime : null;
+                        $mediaKind = $kind;
+                    }
+                }
             }
         }
 
@@ -548,7 +583,29 @@ class ExternalUserDashboardController extends Controller
             'parent_post_id' => $parentPostId,
             'user_id' => (int)$user['id'],
             'body' => $body,
+            'media_url' => $mediaUrl,
+            'media_mime' => $mediaMime,
+            'media_kind' => $mediaKind,
         ]);
+
+        // Create notification for reply to parent post
+        if ($parentPost && isset($parentPost['user_id'])) {
+            $parentAuthorId = (int)$parentPost['user_id'];
+            $currentUserId = (int)$user['id'];
+            
+            // Don't notify if replying to own post
+            if ($parentAuthorId !== $currentUserId) {
+                require_once __DIR__ . '/../Models/UserNotification.php';
+                $link = '/painel-externo/comunidade/topico?id=' . $topicId . '#post-' . $postId;
+                \UserNotification::createReplyNotification(
+                    $parentAuthorId,
+                    $currentUserId,
+                    'community_post',
+                    $postId,
+                    $link
+                );
+            }
+        }
 
         // Parse and store lesson mentions
         \App\Controllers\CommunitiesController::parseLessonMentionsStatic($body, $topicId, $postId, (int)$user['id']);
@@ -556,7 +613,7 @@ class ExternalUserDashboardController extends Controller
         // Parse and store user mentions
         \App\Controllers\CommunitiesController::parseUserMentionsStatic($body, $topicId, $postId, (int)$user['id']);
 
-        header('Location: /painel-externo/comunidade/topico?id=' . $topicId . '&slug=' . urlencode($community['slug'] ?? ''));
+        header('Location: /painel-externo/comunidade/topico?id=' . $topicId . '&slug=' . urlencode($community['slug'] ?? '') . '#post-' . $postId);
         exit;
     }
 
@@ -629,10 +686,15 @@ class ExternalUserDashboardController extends Controller
 
         $isFavoriteFriend = false;
         if ($friendship && ($friendship['status'] ?? '') === 'accepted') {
-            $pairUserId = (int)($friendship['user_id'] ?? 0);
-            if ($pairUserId === $currentId) {
+            $friendshipUserId = (int)($friendship['user_id'] ?? 0);
+            $friendshipFriendId = (int)($friendship['friend_user_id'] ?? 0);
+            
+            // Check which position the current user is in the normalized pair
+            if ($friendshipUserId === $currentId) {
+                // Current user is user_id (user1)
                 $isFavoriteFriend = !empty($friendship['is_favorite_user1']);
-            } else {
+            } elseif ($friendshipFriendId === $currentId) {
+                // Current user is friend_user_id (user2)
                 $isFavoriteFriend = !empty($friendship['is_favorite_user2']);
             }
         }
@@ -733,7 +795,7 @@ class ExternalUserDashboardController extends Controller
 
         if ($toUserId <= 0 || $body === '' || strlen($body) > 4000) {
             $_SESSION['social_error'] = 'Dados inválidos para o scrap.';
-            header('Location: /painel-externo/perfil?user_id=' . $toUserId);
+            header('Location: /painel-externo/perfil?user_id=' . $toUserId . '#scraps');
             exit;
         }
 
@@ -744,7 +806,7 @@ class ExternalUserDashboardController extends Controller
         ]);
 
         $_SESSION['social_success'] = 'Scrap enviado.';
-        header('Location: /painel-externo/perfil?user_id=' . $toUserId);
+        header('Location: /painel-externo/perfil?user_id=' . $toUserId . '#scraps');
         exit;
     }
 
@@ -1220,6 +1282,59 @@ class ExternalUserDashboardController extends Controller
 
         header('Content-Type: application/json');
         echo json_encode(['ok' => true, 'signals' => $signals]);
+        exit;
+    }
+
+    // ==================== NOTIFICATIONS ====================
+
+    public function notifications(): void
+    {
+        $currentUser = $this->requireLogin();
+        $branding = $this->getBrandingForUser($currentUser);
+        $userId = (int)$currentUser['id'];
+
+        require_once __DIR__ . '/../Models/UserNotification.php';
+        $notifications = \UserNotification::findByUserId($userId);
+
+        $this->view('external_dashboard/notifications', [
+            'pageTitle' => 'Notificações',
+            'user' => $currentUser,
+            'branding' => $branding,
+            'notifications' => $notifications,
+            'layout' => 'external_user_dashboard',
+        ]);
+    }
+
+    public function markNotificationAsRead(): void
+    {
+        $currentUser = $this->requireLogin();
+        $userId = (int)$currentUser['id'];
+        $notificationId = isset($_POST['notification_id']) ? (int)$_POST['notification_id'] : 0;
+
+        if ($notificationId <= 0) {
+            header('Content-Type: application/json');
+            echo json_encode(['ok' => false]);
+            exit;
+        }
+
+        require_once __DIR__ . '/../Models/UserNotification.php';
+        \UserNotification::markAsRead($notificationId);
+
+        header('Content-Type: application/json');
+        echo json_encode(['ok' => true]);
+        exit;
+    }
+
+    public function markAllNotificationsAsRead(): void
+    {
+        $currentUser = $this->requireLogin();
+        $userId = (int)$currentUser['id'];
+
+        require_once __DIR__ . '/../Models/UserNotification.php';
+        \UserNotification::markAllAsRead($userId);
+
+        $_SESSION['social_success'] = 'Todas as notificações foram marcadas como lidas.';
+        header('Location: /painel-externo/notificacoes');
         exit;
     }
 }

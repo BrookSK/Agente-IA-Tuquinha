@@ -44,7 +44,7 @@ $createdAt = $topic['created_at'] ?? '';
             <?php if ($topicMediaKind === 'image'): ?>
                 <img src="<?= htmlspecialchars($topicMediaUrl, ENT_QUOTES, 'UTF-8') ?>" alt="" style="max-width: 100%; border-radius: 12px; border: 1px solid var(--border); display: block;">
             <?php elseif ($topicMediaKind === 'video'): ?>
-                <video controls style="width: 100%; max-width: 100%; border-radius: 12px; border: 1px solid var(--border); display: block;">
+                <video controls controlsList="nodownload" oncontextmenu="return false;" style="width: 100%; max-width: 100%; border-radius: 12px; border: 1px solid var(--border); display: block;">
                     <source src="<?= htmlspecialchars($topicMediaUrl, ENT_QUOTES, 'UTF-8') ?>" type="<?= htmlspecialchars($topicMediaMime !== '' ? $topicMediaMime : 'video/mp4', ENT_QUOTES, 'UTF-8') ?>">
                 </video>
             <?php else: ?>
@@ -121,7 +121,7 @@ $createdAt = $topic['created_at'] ?? '';
                         }
                     }
                 ?>
-                <div style="padding: 14px; border: 1px solid var(--border); border-radius: 10px; background: rgba(255,255,255,0.02); <?= $parentPostId ? 'margin-left: 40px; border-left: 3px solid var(--accent);' : '' ?>">
+                <div id="post-<?= (int)($post['id'] ?? 0) ?>" style="padding: 14px; border: 1px solid var(--border); border-radius: 10px; background: rgba(255,255,255,0.02); <?= $parentPostId ? 'margin-left: 40px; border-left: 3px solid var(--accent);' : '' ?>">
                     <?php if ($parentPostId && $parentAuthor): ?>
                         <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 8px; padding: 6px 10px; background: rgba(255,255,255,0.03); border-radius: 6px;">
                             ↳ Respondendo a <strong style="color: var(--accent);"><?= htmlspecialchars($parentAuthor, ENT_QUOTES, 'UTF-8') ?></strong>
@@ -161,7 +161,7 @@ $createdAt = $topic['created_at'] ?? '';
                             <?php if ($postMediaKind === 'image'): ?>
                                 <img src="<?= htmlspecialchars($postMediaUrl, ENT_QUOTES, 'UTF-8') ?>" alt="" style="max-width: 100%; border-radius: 10px; border: 1px solid var(--border); display: block;">
                             <?php elseif ($postMediaKind === 'video'): ?>
-                                <video controls style="width: 100%; max-width: 100%; border-radius: 10px; border: 1px solid var(--border); display: block;">
+                                <video controls controlsList="nodownload" oncontextmenu="return false;" style="width: 100%; max-width: 100%; border-radius: 10px; border: 1px solid var(--border); display: block;">
                                     <source src="<?= htmlspecialchars($postMediaUrl, ENT_QUOTES, 'UTF-8') ?>" type="<?= htmlspecialchars($postMediaMime !== '' ? $postMediaMime : 'video/mp4', ENT_QUOTES, 'UTF-8') ?>">
                                 </video>
                             <?php else: ?>
@@ -214,7 +214,7 @@ $createdAt = $topic['created_at'] ?? '';
                 <div id="mediaPreview" style="display: none; margin-top: 12px; padding: 12px; background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 8px; position: relative;">
                     <button type="button" onclick="clearMedia()" style="position: absolute; top: 8px; right: 8px; background: rgba(0,0,0,0.6); border: none; color: white; width: 24px; height: 24px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 16px;">×</button>
                     <img id="imagePreview" style="max-width: 100%; max-height: 200px; border-radius: 6px; display: none;">
-                    <video id="videoPreview" controls style="max-width: 100%; max-height: 200px; border-radius: 6px; display: none;"></video>
+                    <video id="videoPreview" controls controlsList="nodownload" oncontextmenu="return false;" style="max-width: 100%; max-height: 200px; border-radius: 6px; display: none;"></video>
                     <div id="fileInfo" style="font-size: 13px; color: var(--text-secondary);"></div>
                 </div>
                 
@@ -647,4 +647,23 @@ function clearMedia() {
     document.getElementById('imagePreview').src = '';
     document.getElementById('videoPreview').src = '';
 }
+
+// Scroll to post if hash is present in URL (from notifications)
+window.addEventListener('load', function() {
+    if (window.location.hash) {
+        const hash = window.location.hash;
+        const element = document.querySelector(hash);
+        if (element) {
+            setTimeout(function() {
+                element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                // Add highlight effect
+                element.style.transition = 'all 0.3s';
+                element.style.boxShadow = '0 0 0 3px rgba(239, 68, 68, 0.3)';
+                setTimeout(function() {
+                    element.style.boxShadow = '';
+                }, 2000);
+            }, 300);
+        }
+    }
+});
 </script>

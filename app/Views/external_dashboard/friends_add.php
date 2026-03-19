@@ -22,56 +22,49 @@ $accentColor = !empty($branding['accent_color']) ? $branding['accent_color'] : '
         border: 1px solid rgba(<?= hexdec(substr($accentColor, 1, 2)) ?>, <?= hexdec(substr($accentColor, 3, 2)) ?>, <?= hexdec(substr($accentColor, 5, 2)) ?>, 0.3);
     }
 </style>
-<div class="container-fluid" style="padding: 24px; max-width: 100%; margin: 0 auto;">
-    <div class="row">
-        <div class="col-12">
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <h1 style="font-size: 28px; font-weight: 700; color: var(--text-primary);">Adicionar Amigo</h1>
-                <a href="/painel-externo/amigos" class="btn btn-outline-secondary" style="border: 1px solid var(--border-subtle); color: var(--text-primary); padding: 8px 16px; border-radius: 8px; text-decoration: none;">
-                    ← Voltar para Amigos
-                </a>
-            </div>
+
+<!-- Header -->
+<div style="margin-bottom: 32px;">
+    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+        <h1 style="font-size: 32px; font-weight: 800; color: var(--text-primary); margin: 0;">Adicionar Amigo</h1>
+        <a href="/painel-externo/amigos" style="display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; background: linear-gradient(135deg, <?= $primaryColor ?>, <?= $secondaryColor ?>); color: #fff; border-radius: 8px; text-decoration: none; font-size: 14px; font-weight: 600;">
+            ← Voltar para Amigos
+        </a>
+    </div>
+</div>
+
+<!-- Search Section -->
+<div style="max-width: 800px;">
+    <div style="background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; padding: 32px; margin-bottom: 24px;">
+        <h2 style="font-size: 20px; font-weight: 700; color: var(--text-primary); margin: 0 0 8px 0;">Buscar Usuários</h2>
+        <p style="font-size: 14px; color: var(--text-secondary); margin: 0 0 24px 0;">
+            Pesquise por <strong>nickname</strong> (ex: <code style="background: var(--bg-main); border: 1px solid var(--border); padding: 2px 8px; border-radius: 6px; font-size: 13px;">@joao_silva</code>) ou por <strong>e-mail</strong>.
+        </p>
+
+        <div style="margin-bottom: 16px;">
+            <input
+                id="friendSearchInput"
+                type="text"
+                placeholder="Digite @nickname ou email e pressione Enter"
+                style="width: 100%; background: var(--bg-main); border: 1px solid var(--border); color: var(--text-primary); padding: 14px 18px; border-radius: 10px; font-size: 15px; outline: none;"
+                autocomplete="off"
+            />
+            <div id="friendSearchHint" style="font-size: 13px; color: var(--text-secondary); margin-top: 8px;">💡 Dica: você também pode só digitar que ele vai buscar automaticamente.</div>
         </div>
+
+        <div id="friendSearchStatus" style="display:none; margin-top:16px; font-size:14px;"></div>
+        <div id="friendSearchResults" style="display:flex; flex-direction:column; gap:12px; margin-top:20px;"></div>
     </div>
 
-    <div class="row">
-        <div class="col-lg-8 col-12">
-            <div class="card" style="background: var(--surface-card); border: 1px solid var(--border-subtle); border-radius: 12px; padding: 24px;">
-                <div style="margin-bottom: 20px;">
-                    <h2 style="font-size: 18px; font-weight: 600; color: var(--text-primary); margin-bottom: 8px;">Buscar Usuários</h2>
-                    <p style="font-size: 14px; color: var(--text-secondary); margin-bottom: 16px;">
-                        Pesquise por <strong>nickname</strong> (ex: <code style="background: var(--surface-subtle); border: 1px solid var(--border-subtle); padding: 2px 8px; border-radius: 6px; font-size: 13px;">@joao_silva</code>) ou por <strong>e-mail</strong>.
-                    </p>
-                </div>
-
-                <div class="mb-3">
-                    <input
-                        id="friendSearchInput"
-                        type="text"
-                        placeholder="Digite @nickname ou email e pressione Enter"
-                        class="form-control form-control-lg"
-                        style="background: var(--surface-subtle); border: 1px solid var(--border-subtle); color: var(--text-primary); padding: 14px 18px; border-radius: 10px; font-size: 15px;"
-                        autocomplete="off"
-                    />
-                    <div id="friendSearchHint" style="font-size: 13px; color: var(--text-secondary); margin-top: 8px;">💡 Dica: você também pode só digitar que ele vai buscar automaticamente.</div>
-                </div>
-
-                <div id="friendSearchStatus" style="display:none; margin-top:16px; font-size:14px;"></div>
-                <div id="friendSearchResults" style="display:flex; flex-direction:column; gap:12px; margin-top:20px;"></div>
-            </div>
-        </div>
-
-        <div class="col-lg-4 col-12">
-            <div class="card" style="background: var(--surface-card); border: 1px solid var(--border-subtle); border-radius: 12px; padding: 20px;">
-                <h3 style="font-size: 16px; font-weight: 600; color: var(--text-primary); margin-bottom: 12px;">Como funciona?</h3>
-                <ul style="font-size: 14px; color: var(--text-secondary); line-height: 1.6; padding-left: 20px;">
-                    <li style="margin-bottom: 8px;">Digite o nickname ou e-mail do usuário</li>
-                    <li style="margin-bottom: 8px;">Aguarde os resultados aparecerem</li>
-                    <li style="margin-bottom: 8px;">Clique em "Enviar solicitação" para adicionar</li>
-                    <li>Aguarde a pessoa aceitar seu pedido</li>
-                </ul>
-            </div>
-        </div>
+    <!-- Instructions -->
+    <div style="background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; padding: 24px;">
+        <h3 style="font-size: 18px; font-weight: 700; color: var(--text-primary); margin: 0 0 16px 0;">Como funciona?</h3>
+        <ul style="font-size: 14px; color: var(--text-secondary); line-height: 1.8; padding-left: 20px; margin: 0;">
+            <li style="margin-bottom: 8px;">Digite o nickname ou e-mail do usuário</li>
+            <li style="margin-bottom: 8px;">Aguarde os resultados aparecerem</li>
+            <li style="margin-bottom: 8px;">Clique em "Enviar solicitação" para adicionar</li>
+            <li>Aguarde a pessoa aceitar seu pedido</li>
+        </ul>
     </div>
 </div>
 
@@ -227,8 +220,8 @@ $accentColor = !empty($branding['accent_color']) ? $branding['accent_color'] : '
 
             var div = document.createElement('div');
             div.className = 'card';
-            div.style.background = 'var(--surface-subtle)';
-            div.style.border = '1px solid var(--border-subtle)';
+            div.style.background = 'var(--bg-main)';
+            div.style.border = '1px solid var(--border)';
             div.style.borderRadius = '12px';
             div.style.padding = '16px';
             div.style.display = 'flex';

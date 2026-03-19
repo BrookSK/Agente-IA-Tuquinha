@@ -200,7 +200,7 @@ foreach ($media as $m) {
                     <?php elseif ($t === 'video'): ?>
                         <?php if ($url !== ''): ?>
                             <?php if ($mime !== '' && str_starts_with($mime, 'video/')): ?>
-                                <video controls style="width:100%; border-radius:16px; border:1px solid var(--border-subtle); background:#000;">
+                                <video controls controlsList="nodownload" oncontextmenu="return false;" style="width:100%; border-radius:16px; border:1px solid var(--border-subtle); background:#000;">
                                     <source src="<?= htmlspecialchars($url, ENT_QUOTES, 'UTF-8') ?>" type="<?= htmlspecialchars($mime, ENT_QUOTES, 'UTF-8') ?>">
                                 </video>
                             <?php else: ?>
