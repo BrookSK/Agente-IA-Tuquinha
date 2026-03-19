@@ -27,9 +27,28 @@ $accentColor = !empty($branding['accent_color']) ? $branding['accent_color'] : '
         opacity: 0.9;
         color: #fff;
     }
+    .form-section {
+        padding: 16px 0;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    .form-section:last-child {
+        border-bottom: none;
+    }
+    .edit-profile-form .form-control,
+    .edit-profile-form .form-select {
+        background: var(--surface-subtle) !important;
+        border: 1px solid rgba(255, 255, 255, 0.1) !important;
+        color: var(--text-primary) !important;
+        padding: 10px 14px !important;
+    }
+    .edit-profile-form .form-control:focus,
+    .edit-profile-form .form-select:focus {
+        border-color: <?= $primaryColor ?> !important;
+        box-shadow: 0 0 0 0.2rem rgba(<?= hexdec(substr($primaryColor, 1, 2)) ?>, <?= hexdec(substr($primaryColor, 3, 2)) ?>, <?= hexdec(substr($primaryColor, 5, 2)) ?>, 0.25) !important;
+    }
 </style>
 
-<div class="container-fluid" style="padding: 24px; max-width: 100%; margin: 0 auto;">
+<div class="container-fluid" style="padding: 24px; max-width: 1400px; margin: 0 auto;">
     <div class="row">
         <div class="col-12">
             <div class="d-flex justify-content-between align-items-center mb-4">
@@ -51,11 +70,11 @@ $accentColor = !empty($branding['accent_color']) ? $branding['accent_color'] : '
                 </div>
             <?php endif; ?>
 
-            <div class="card" style="background: var(--surface-card); border: 1px solid var(--border-subtle); border-radius: 12px; padding: 24px;">
-                <form action="/painel-externo/perfil/salvar" method="post" enctype="multipart/form-data" style="display:flex; flex-direction:column; gap:16px;">
+            <div class="card" style="background: var(--surface-card); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px; padding: 24px;">
+                <form action="/painel-externo/perfil/salvar" method="post" enctype="multipart/form-data" class="edit-profile-form">
                     
                     <!-- Avatar -->
-                    <div>
+                    <div class="form-section">
                         <label style="display:block; font-size:14px; font-weight:600; color:var(--text-primary); margin-bottom:8px;">Foto de Perfil</label>
                         <div style="display:flex; align-items:center; gap:16px;">
                             <div style="width:80px; height:80px; border-radius:50%; overflow:hidden; background:radial-gradient(circle at 30% 20%, #fff 0, #ff8a65 25%, #e53935 65%, #050509 100%); display:flex; align-items:center; justify-content:center; font-size:32px; font-weight:700; color:#050509;">
@@ -73,21 +92,21 @@ $accentColor = !empty($branding['accent_color']) ? $branding['accent_color'] : '
                     </div>
 
                     <!-- Cover -->
-                    <div>
+                    <div class="form-section">
                         <label style="display:block; font-size:14px; font-weight:600; color:var(--text-primary); margin-bottom:8px;">Capa do Perfil</label>
                         <input type="file" name="cover_file" accept="image/*" class="form-control" style="background: var(--surface-subtle); border: 1px solid var(--border-subtle); color: var(--text-primary);">
                         <div style="font-size:12px; color:var(--text-secondary); margin-top:4px;">Recomendado: imagem larga • Até 4 MB</div>
                     </div>
 
                     <!-- Nickname -->
-                    <div>
+                    <div class="form-section">
                         <label for="nickname" style="display:block; font-size:14px; font-weight:600; color:var(--text-primary); margin-bottom:8px;">Nickname</label>
                         <input id="nickname" name="nickname" type="text" value="<?= htmlspecialchars((string)($user['nickname'] ?? ''), ENT_QUOTES, 'UTF-8') ?>" placeholder="ex: joao_silva" class="form-control" style="background: var(--surface-subtle); border: 1px solid var(--border-subtle); color: var(--text-primary); padding: 10px 14px;">
                         <div style="font-size:12px; color:var(--text-secondary); margin-top:4px;">Apenas letras minúsculas, números, _ e -</div>
                     </div>
 
                     <!-- About Me -->
-                    <div>
+                    <div class="form-section">
                         <label for="about_me" style="display:block; font-size:14px; font-weight:600; color:var(--text-primary); margin-bottom:8px;">Sobre Mim</label>
                         <textarea id="about_me" name="about_me" rows="4" class="form-control" style="background: var(--surface-subtle); border: 1px solid var(--border-subtle); color: var(--text-primary); padding: 10px 14px; resize: vertical;"><?= htmlspecialchars((string)($profile['about_me'] ?? ''), ENT_QUOTES, 'UTF-8') ?></textarea>
                     </div>

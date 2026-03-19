@@ -60,7 +60,7 @@ $accentColor = !empty($branding['accent_color']) ? $branding['accent_color'] : '
 
     <div class="row mb-4">
         <div class="col-12">
-            <div class="card" style="background: var(--surface-card); border: 1px solid var(--border-subtle); border-radius: 12px; padding: 20px;">
+            <div class="card" style="background: var(--surface-card); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px; padding: 20px;">
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <h2 style="font-size: 20px; font-weight: 600; color: var(--text-primary); margin: 0;">Lista de Amigos</h2>
                     <div class="d-flex align-items-center gap-3">
@@ -74,7 +74,7 @@ $accentColor = !empty($branding['accent_color']) ? $branding['accent_color'] : '
                 <form action="/painel-externo/amigos" method="get" class="mb-3">
                     <div class="row g-2">
                         <div class="col-md-6">
-                            <input type="text" name="q" value="<?= htmlspecialchars($q, ENT_QUOTES, 'UTF-8') ?>" placeholder="Pesquisar amigo..." class="form-control" style="background: var(--surface-subtle); border: 1px solid var(--border-subtle); color: var(--text-primary); padding: 10px 14px; border-radius: 8px;">
+                            <input type="text" name="q" value="<?= htmlspecialchars($q, ENT_QUOTES, 'UTF-8') ?>" placeholder="Pesquisar amigo..." class="form-control" style="background: var(--surface-subtle); border: 1px solid rgba(255, 255, 255, 0.1); color: var(--text-primary); padding: 10px 14px; border-radius: 8px;">
                         </div>
                         <div class="col-md-3">
                             <div class="form-check" style="padding: 10px 14px;">
@@ -109,7 +109,7 @@ $accentColor = !empty($branding['accent_color']) ? $branding['accent_color'] : '
                             $isFavorite = !empty($f['is_favorite']);
                             ?>
                             <div class="col-md-3 col-sm-6">
-                                <div class="card h-100" style="background: var(--surface-subtle); border: 1px solid var(--border-subtle); border-radius: 12px; padding: 16px;">
+                                <div class="card h-100" style="background: var(--surface-subtle); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px; padding: 16px;">
                                     <div class="text-center mb-3">
                                         <a href="/painel-externo/perfil?user_id=<?= $friendId ?>" style="text-decoration: none;">
                                             <div style="width: 80px; height: 80px; border-radius: 50%; background: radial-gradient(circle at 30% 20%, #fff 0, #ff8a65 25%, #e53935 65%, #050509 100%); display: flex; align-items: center; justify-content: center; font-size: 32px; font-weight: 700; color: #050509; margin: 0 auto;">
@@ -156,7 +156,7 @@ $accentColor = !empty($branding['accent_color']) ? $branding['accent_color'] : '
 
     <div class="row">
         <div class="col-12">
-            <div class="card" style="background: var(--surface-card); border: 1px solid var(--border-subtle); border-radius: 12px; padding: 20px;">
+            <div class="card" style="background: var(--surface-card); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px; padding: 20px;">
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <h2 style="font-size: 20px; font-weight: 600; color: var(--text-primary); margin: 0;">Pedidos Pendentes</h2>
                     <span style="font-size: 14px; color: var(--text-secondary);"><?= (int)$pendingCount ?> pendente(s)</span>
@@ -174,7 +174,7 @@ $accentColor = !empty($branding['accent_color']) ? $branding['accent_color'] : '
                             $initial = mb_strtoupper(mb_substr($otherName, 0, 1, 'UTF-8'), 'UTF-8');
                             $avatarPath = isset($p['other_avatar_path']) ? trim((string)$p['other_avatar_path']) : '';
                             ?>
-                            <div class="card" style="background: var(--surface-subtle); border: 1px solid var(--border-subtle); border-radius: 12px; padding: 16px;">
+                            <div class="card" style="background: var(--surface-subtle); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px; padding: 16px;">
                                 <div class="d-flex align-items-center justify-content-between gap-3">
                                     <div class="d-flex align-items-center gap-3">
                                         <div style="width: 50px; height: 50px; border-radius: 50%; background: radial-gradient(circle at 30% 20%, #fff 0, #ff8a65 25%, #e53935 65%, #050509 100%); display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 700; color: #050509; flex-shrink: 0;">
