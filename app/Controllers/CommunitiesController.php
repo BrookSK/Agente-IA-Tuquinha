@@ -1830,8 +1830,11 @@ class CommunitiesController extends Controller
 
     public static function renderLessonMentions(string $text): string
     {
-        // Convert @LessonTitle to clickable links
-        return preg_replace_callback('/@([^@\s]+(?:\s+[^@\s]+)*)/', function($matches) {
+        // First escape the entire text for safety
+        $escapedText = htmlspecialchars($text, ENT_QUOTES, 'UTF-8');
+        
+        // Then convert @LessonTitle to clickable links
+        return preg_replace_callback('/@([^@\s&]+(?:\s+[^@\s&]+)*)/', function($matches) {
             $lessonTitle = trim($matches[1]);
             
             $pdo = \App\Core\Database::getConnection();
@@ -1847,10 +1850,10 @@ class CommunitiesController extends Controller
             
             if ($lesson) {
                 $lessonUrl = '/painel-externo/aula?lesson_id=' . (int)$lesson['id'];
-                return '<a href="' . htmlspecialchars($lessonUrl, ENT_QUOTES, 'UTF-8') . '" style="color: #007bff; text-decoration: underline; font-weight: 500;" title="Ir para a aula">@' . htmlspecialchars($lessonTitle, ENT_QUOTES, 'UTF-8') . '</a>';
+                return '<a href="' . htmlspecialchars($lessonUrl, ENT_QUOTES, 'UTF-8') . '" style="color: #007bff; text-decoration: underline; font-weight: 500;" title="Ir para a aula">@' . $lessonTitle . '</a>';
             }
             
             return $matches[0];
-        }, $text);
+        }, $escapedText);
     }
 }

@@ -66,7 +66,7 @@ $slug = (string)($community['slug'] ?? '');
         </h1>
         <?php if (!empty($topic['body'])): ?>
             <div style="font-size:13px; color:#f5f5f5; margin-top:4px;">
-                <?= nl2br(\App\Controllers\CommunitiesController::renderLessonMentions(htmlspecialchars((string)$topic['body'], ENT_QUOTES, 'UTF-8'))) ?>
+                <?= nl2br(\App\Controllers\CommunitiesController::renderLessonMentions((string)$topic['body'])) ?>
             </div>
         <?php endif; ?>
         <?php if ($topicMediaUrl !== ''): ?>
@@ -160,7 +160,7 @@ $slug = (string)($community['slug'] ?? '');
                             <?php endif; ?>
                         </div>
                         <div style="font-size:13px; color:#f5f5f5;">
-                            <?= nl2br(\App\Controllers\CommunitiesController::renderLessonMentions(htmlspecialchars((string)($p['body'] ?? ''), ENT_QUOTES, 'UTF-8'))) ?>
+                            <?= nl2br(\App\Controllers\CommunitiesController::renderLessonMentions((string)($p['body'] ?? ''))) ?>
                         </div>
                         <?php if ($postMediaUrl !== ''): ?>
                             <div style="margin-top:6px;">

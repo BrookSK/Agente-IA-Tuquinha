@@ -31,7 +31,7 @@ $createdAt = $topic['created_at'] ?? '';
 
 <div class="card" style="margin-bottom: 20px;">
     <div style="font-size: 15px; line-height: 1.6; color: var(--text-primary); white-space: pre-line;">
-        <?= nl2br(\App\Controllers\CommunitiesController::renderLessonMentions(htmlspecialchars($topicBody, ENT_QUOTES, 'UTF-8'))) ?>
+        <?= nl2br(\App\Controllers\CommunitiesController::renderLessonMentions($topicBody)) ?>
     </div>
     
     <?php
@@ -119,7 +119,7 @@ $createdAt = $topic['created_at'] ?? '';
                         <?php endif; ?>
                     </div>
                     <div style="font-size: 14px; line-height: 1.6; color: var(--text-primary); white-space: pre-line;">
-                        <?= nl2br(\App\Controllers\CommunitiesController::renderLessonMentions(htmlspecialchars($postBody, ENT_QUOTES, 'UTF-8'))) ?>
+                        <?= nl2br(\App\Controllers\CommunitiesController::renderLessonMentions($postBody)) ?>
                     </div>
                     <?php
                     $postMediaUrl = trim((string)($post['media_url'] ?? ''));
