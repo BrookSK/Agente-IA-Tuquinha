@@ -250,7 +250,7 @@ function esc_attr(string $s): string {
                     </svg>
                     <span>Notificações</span>
                     <?php if ($unreadNotifications > 0): ?>
-                        <span style="position:absolute; top:8px; right:8px; width:8px; height:8px; background:#ef4444; border-radius:50%; border:2px solid var(--bg-card);"></span>
+                        <span style="position:absolute; top:50%; right:12px; transform:translateY(-50%); width:12px; height:12px; background:#ef4444; border-radius:50%; border:2px solid var(--bg-card);"></span>
                     <?php endif; ?>
                 </a>
                 <a href="/painel-externo" class="nav-item <?= strpos($_SERVER['REQUEST_URI'] ?? '', '/painel-externo') === 0 && strpos($_SERVER['REQUEST_URI'] ?? '', '/painel-externo/') === false ? 'active' : '' ?>">

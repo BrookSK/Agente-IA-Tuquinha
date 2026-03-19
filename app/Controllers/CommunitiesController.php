@@ -993,7 +993,7 @@ class CommunitiesController extends Controller
             // Don't notify if replying to own post
             if ($parentAuthorId !== $userId) {
                 require_once __DIR__ . '/../Models/UserNotification.php';
-                $link = '/comunidades/topicos/ver?topic_id=' . $topicId . '#post-' . $postId;
+                $link = '/painel-externo/comunidade/topico?id=' . $topicId . '#post-' . $postId;
                 \UserNotification::createReplyNotification(
                     $parentAuthorId,
                     $userId,
@@ -2023,7 +2023,7 @@ class CommunitiesController extends Controller
                 if ($postAuthorId > 0 && $postAuthorId !== $userId) {
                     require_once __DIR__ . '/../Models/UserNotification.php';
                     $topicId = (int)($post['topic_id'] ?? 0);
-                    $link = '/comunidades/topicos/ver?topic_id=' . $topicId . '#post-' . $postId;
+                    $link = '/painel-externo/comunidade/topico?id=' . $topicId . '#post-' . $postId;
                     \UserNotification::createLikeNotification(
                         $postAuthorId,
                         $userId,
