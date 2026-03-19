@@ -1,5 +1,7 @@
 <?php
 
+use App\Core\Database;
+
 class UserNotification
 {
     /**
@@ -7,7 +9,7 @@ class UserNotification
      */
     public static function create(array $data): int
     {
-        global $pdo;
+        $pdo = Database::getConnection();
         
         $sql = "INSERT INTO user_notifications (
             user_id, type, related_type, related_id, actor_user_id, 
@@ -37,7 +39,7 @@ class UserNotification
      */
     public static function findByUserId(int $userId, int $limit = 50): array
     {
-        global $pdo;
+        $pdo = Database::getConnection();
         
         $sql = "SELECT n.*, 
                 u.name as actor_name, 
@@ -63,7 +65,7 @@ class UserNotification
      */
     public static function countUnread(int $userId): int
     {
-        global $pdo;
+        $pdo = Database::getConnection();
         
         $sql = "SELECT COUNT(*) FROM user_notifications 
                 WHERE user_id = :user_id AND is_read = 0";
@@ -79,7 +81,7 @@ class UserNotification
      */
     public static function markAsRead(int $notificationId): bool
     {
-        global $pdo;
+        $pdo = Database::getConnection();
         
         $sql = "UPDATE user_notifications 
                 SET is_read = 1, read_at = NOW() 
@@ -94,7 +96,7 @@ class UserNotification
      */
     public static function markAllAsRead(int $userId): bool
     {
-        global $pdo;
+        $pdo = Database::getConnection();
         
         $sql = "UPDATE user_notifications 
                 SET is_read = 1, read_at = NOW() 
@@ -114,7 +116,7 @@ class UserNotification
         int $commentId,
         string $link
     ): int {
-        global $pdo;
+        $pdo = Database::getConnection();
         
         // Busca nome do ator
         $stmt = $pdo->prepare("SELECT preferred_name, name FROM users WHERE id = :id");
@@ -144,7 +146,7 @@ class UserNotification
         int $replyId,
         string $link
     ): int {
-        global $pdo;
+        $pdo = Database::getConnection();
         
         // Busca nome do respondente
         $stmt = $pdo->prepare("SELECT preferred_name, name FROM users WHERE id = :id");
