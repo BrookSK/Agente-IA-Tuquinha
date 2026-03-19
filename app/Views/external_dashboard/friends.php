@@ -40,10 +40,9 @@ $accentColor = !empty($branding['accent_color']) ? $branding['accent_color'] : '
         border: 1px solid rgba(<?= hexdec(substr($accentColor, 1, 2)) ?>, <?= hexdec(substr($accentColor, 3, 2)) ?>, <?= hexdec(substr($accentColor, 5, 2)) ?>, 0.3);
     }
 </style>
-<div class="container-fluid" style="padding: 24px; max-width: 100%; margin: 0 auto;">
-    <div class="row">
-        <div class="col-12">
-            <h1 class="mb-3" style="font-size: 28px; font-weight: 700; color: var(--text-primary);">Meus Amigos</h1>
+<div class="container-fluid" style="padding: 0; margin: 0; width: 100%;">
+    <div style="max-width: 1200px; margin: 0 auto; padding: 20px 24px;">
+        <h1 class="mb-4" style="font-size: 32px; font-weight: 700; color: var(--text-primary);">Meus Amigos</h1>
             
             <?php if (!empty($error)): ?>
                 <div class="alert alert-danger" style="background: rgba(220, 53, 69, 0.1); border: 1px solid rgba(220, 53, 69, 0.3); color: #dc3545; padding: 12px 16px; border-radius: 8px; margin-bottom: 16px;">
@@ -152,10 +151,8 @@ $accentColor = !empty($branding['accent_color']) ? $branding['accent_color'] : '
                 <?php endif; ?>
             </div>
         </div>
-    </div>
 
-    <div class="row">
-        <div class="col-12">
+        <div>
             <div class="card" style="background: var(--surface-card); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px; padding: 20px;">
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <h2 style="font-size: 20px; font-weight: 600; color: var(--text-primary); margin: 0;">Pedidos Pendentes</h2>

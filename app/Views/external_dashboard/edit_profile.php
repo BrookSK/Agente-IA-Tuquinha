@@ -48,29 +48,28 @@ $accentColor = !empty($branding['accent_color']) ? $branding['accent_color'] : '
     }
 </style>
 
-<div class="container-fluid" style="padding: 24px; max-width: 1400px; margin: 0 auto;">
-    <div class="row">
-        <div class="col-12">
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <h1 style="font-size: 28px; font-weight: 700; color: var(--text-primary); margin: 0;">Editar Meu Perfil</h1>
+<div class="container-fluid" style="padding: 0; margin: 0; width: 100%;">
+    <div style="max-width: 900px; margin: 0 auto; padding: 20px 24px;">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 style="font-size: 32px; font-weight: 700; color: var(--text-primary); margin: 0;">Editar Meu Perfil</h1>
                 <a href="/painel-externo/perfil?user_id=<?= $userId ?>" class="btn btn-outline-secondary" style="padding: 8px 16px; border-radius: 8px; text-decoration: none;">
                     ← Voltar ao Perfil
                 </a>
+        </div>
+
+        <?php if (!empty($success)): ?>
+            <div class="alert alert-success" style="background: rgba(76, 175, 80, 0.1); border: 1px solid rgba(76, 175, 80, 0.3); color: #4caf50; padding: 14px 18px; border-radius: 10px; margin-bottom: 20px;">
+                <?= htmlspecialchars($success, ENT_QUOTES, 'UTF-8') ?>
             </div>
+        <?php endif; ?>
 
-            <?php if (!empty($success)): ?>
-                <div class="alert alert-success" style="background: rgba(76, 175, 80, 0.1); border: 1px solid rgba(76, 175, 80, 0.3); color: #4caf50; padding: 12px 16px; border-radius: 8px; margin-bottom: 16px;">
-                    <?= htmlspecialchars($success, ENT_QUOTES, 'UTF-8') ?>
-                </div>
-            <?php endif; ?>
+        <?php if (!empty($error)): ?>
+            <div class="alert alert-danger" style="background: rgba(220, 53, 69, 0.1); border: 1px solid rgba(220, 53, 69, 0.3); color: #dc3545; padding: 14px 18px; border-radius: 10px; margin-bottom: 20px;">
+                <?= htmlspecialchars($error, ENT_QUOTES, 'UTF-8') ?>
+            </div>
+        <?php endif; ?>
 
-            <?php if (!empty($error)): ?>
-                <div class="alert alert-danger" style="background: rgba(220, 53, 69, 0.1); border: 1px solid rgba(220, 53, 69, 0.3); color: #dc3545; padding: 12px 16px; border-radius: 8px; margin-bottom: 16px;">
-                    <?= htmlspecialchars($error, ENT_QUOTES, 'UTF-8') ?>
-                </div>
-            <?php endif; ?>
-
-            <div class="card" style="background: var(--surface-card); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px; padding: 24px;">
+        <div class="card" style="background: var(--surface-card); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px; padding: 28px;">
                 <form action="/painel-externo/perfil/salvar" method="post" enctype="multipart/form-data" class="edit-profile-form">
                     
                     <!-- Avatar -->
@@ -179,6 +178,5 @@ $accentColor = !empty($branding['accent_color']) ? $branding['accent_color'] : '
                     </div>
                 </form>
             </div>
-        </div>
     </div>
 </div>
