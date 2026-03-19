@@ -40,38 +40,16 @@ $accentColor = !empty($branding['accent_color']) ? $branding['accent_color'] : '
 
 ?>
 <style>
-    .profile-cover {
-        height: 220px;
-        background: linear-gradient(135deg, #1a1916 0%, #2d2a25 40%, #3a3530 100%);
-        position: relative;
-        overflow: hidden;
-    }
-    .profile-cover::after {
-        content: '';
-        position: absolute;
-        inset: 0;
-        background: radial-gradient(ellipse at 30% 60%, rgba(<?= hexdec(substr($primaryColor, 1, 2)) ?>, <?= hexdec(substr($primaryColor, 3, 2)) ?>, <?= hexdec(substr($primaryColor, 5, 2)) ?>, .18) 0%, transparent 70%),
-                    radial-gradient(ellipse at 80% 20%, rgba(<?= hexdec(substr($secondaryColor, 1, 2)) ?>, <?= hexdec(substr($secondaryColor, 3, 2)) ?>, <?= hexdec(substr($secondaryColor, 5, 2)) ?>, .12) 0%, transparent 60%);
-    }
-    .profile-cover::before {
-        content: '';
-        position: absolute;
-        inset: 0;
-        background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.04'/%3E%3C/svg%3E");
-        opacity: .4;
-    }
-    
     .profile-page-wrap {
         max-width: 1100px;
         margin: 0 auto;
-        padding: 0 24px 80px;
+        padding: 32px 24px 80px;
     }
     
     .profile-hero {
         display: flex;
         align-items: flex-end;
         gap: 20px;
-        margin-top: -56px;
         margin-bottom: 32px;
         position: relative;
         z-index: 2;
@@ -212,13 +190,6 @@ $accentColor = !empty($branding['accent_color']) ? $branding['accent_color'] : '
         .profile-page-wrap { padding: 0 14px 60px; }
     }
 </style>
-
-<!-- COVER -->
-<div class="profile-cover">
-    <?php if ($coverPath !== ''): ?>
-        <img src="<?= htmlspecialchars($coverPath, ENT_QUOTES, 'UTF-8') ?>" alt="Capa" style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover; z-index:1;"/>
-    <?php endif; ?>
-</div>
 
 <div class="profile-page-wrap">
     <!-- HERO -->

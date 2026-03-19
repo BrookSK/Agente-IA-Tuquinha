@@ -185,13 +185,13 @@ if (!empty($messages)) {
 
         <div class="call-pane-body" style="display:flex; flex-direction:column; gap:8px;">
             <div class="tuquinha-video-box" style="background:#000; border-radius:12px; height:200px; overflow:hidden; position:relative; border:1px solid #272727;">
-                <video id="tuquinhaLocalVideo" autoplay playsinline muted style="width:100%; height:100%; object-fit:cover; display:none;"></video>
+                <video id="tuquinhaLocalVideo" autoplay playsinline muted oncontextmenu="return false;" style="width:100%; height:100%; object-fit:cover; display:none;"></video>
                 <div id="tuquinha-local-video" style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; color:#b0b0b0; font-size:12px;">
                     Sua câmera aparecerá aqui quando a chamada for iniciada.
                 </div>
             </div>
             <div class="tuquinha-video-box" style="background:#000; border-radius:12px; height:200px; overflow:hidden; position:relative; border:1px solid #272727;">
-                <video id="tuquinhaRemoteVideo" autoplay playsinline style="width:100%; height:100%; object-fit:cover; display:none;"></video>
+                <video id="tuquinhaRemoteVideo" autoplay playsinline oncontextmenu="return false;" style="width:100%; height:100%; object-fit:cover; display:none;"></video>
                 <div id="tuquinha-remote-badges" style="position:absolute; left:8px; top:8px; display:none; gap:6px; align-items:center; z-index:5;">
                     <span id="badge-remote-mic" style="display:none; font-size:11px; padding:3px 8px; border-radius:999px; background:rgba(0,0,0,0.55); border:1px solid #272727; color:#ffbaba;">Áudio mutado</span>
                     <span id="badge-remote-cam" style="display:none; font-size:11px; padding:3px 8px; border-radius:999px; background:rgba(0,0,0,0.55); border:1px solid #272727; color:#ffbaba;">Câmera desligada</span>

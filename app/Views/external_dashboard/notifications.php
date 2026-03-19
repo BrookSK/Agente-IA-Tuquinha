@@ -144,14 +144,13 @@ $accentColor = !empty($branding['accent_color']) ? $branding['accent_color'] : '
 </style>
 
 <div class="notifications-container">
-    <div class="notifications-header">
-        <h1>Notificações</h1>
-        <?php if (!empty($notifications)): ?>
+    <?php if (!empty($notifications)): ?>
+        <div class="notifications-header">
             <form action="/painel-externo/notificacoes/marcar-todas-lidas" method="post" style="margin: 0;">
                 <button type="submit" class="mark-all-read-btn">Marcar todas como lidas</button>
             </form>
-        <?php endif; ?>
-    </div>
+        </div>
+    <?php endif; ?>
 
     <?php if (empty($notifications)): ?>
         <div class="empty-state">

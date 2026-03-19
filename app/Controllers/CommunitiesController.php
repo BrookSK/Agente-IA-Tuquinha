@@ -1020,6 +1020,13 @@ class CommunitiesController extends Controller
             $user = $stmt->fetch(\PDO::FETCH_ASSOC);
             
             if ($user) {
+                $mentionedUserId = (int)$user['id'];
+                
+                // Don't notify if user mentions themselves
+                if ($mentionedUserId === $userId) {
+                    continue;
+                }
+                
                 // Store mention
                 $insertStmt = $pdo->prepare('
                     INSERT INTO community_user_mentions (topic_id, post_id, mentioned_user_id, mentioned_by_user_id)
@@ -1028,9 +1035,23 @@ class CommunitiesController extends Controller
                 $insertStmt->execute([
                     'topic_id' => $topicId,
                     'post_id' => $postId,
-                    'mentioned_user_id' => (int)$user['id'],
+                    'mentioned_user_id' => $mentionedUserId,
                     'mentioned_by_user_id' => $userId
                 ]);
+                
+                // Create notification for the mentioned user
+                require_once __DIR__ . '/../Models/UserNotification.php';
+                $link = '/painel-externo/comunidade/topico?id=' . $topicId;
+                if ($postId) {
+                    $link .= '#post-' . $postId;
+                }
+                \UserNotification::createMentionNotification(
+                    $mentionedUserId,
+                    $userId,
+                    'community_post',
+                    $postId ?? $topicId,
+                    $link
+                );
             }
         }
     }

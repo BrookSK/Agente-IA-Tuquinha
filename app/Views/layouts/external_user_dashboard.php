@@ -243,6 +243,16 @@ function esc_attr(string $s): string {
             </div>
             
             <nav>
+                <a href="/painel-externo/notificacoes" class="nav-item <?= strpos($_SERVER['REQUEST_URI'] ?? '', '/painel-externo/notificacoes') !== false ? 'active' : '' ?>" style="position:relative;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                        <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                    </svg>
+                    <span>Notificações</span>
+                    <?php if ($unreadNotifications > 0): ?>
+                        <span style="position:absolute; top:8px; right:8px; width:8px; height:8px; background:#ef4444; border-radius:50%; border:2px solid var(--bg-card);"></span>
+                    <?php endif; ?>
+                </a>
                 <a href="/painel-externo" class="nav-item <?= strpos($_SERVER['REQUEST_URI'] ?? '', '/painel-externo') === 0 && strpos($_SERVER['REQUEST_URI'] ?? '', '/painel-externo/') === false ? 'active' : '' ?>">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
@@ -272,18 +282,6 @@ function esc_attr(string $s): string {
                         <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
                     </svg>
                     <span>Comunidade</span>
-                </a>
-                <a href="/painel-externo/notificacoes" class="nav-item <?= strpos($_SERVER['REQUEST_URI'] ?? '', '/painel-externo/notificacoes') !== false ? 'active' : '' ?>" style="position:relative;">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
-                        <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
-                    </svg>
-                    <span>Notificações</span>
-                    <?php if ($unreadNotifications > 0): ?>
-                        <span style="position:absolute; top:6px; right:6px; background:linear-gradient(135deg, var(--accent), var(--accent2)); color:var(--button-text); font-size:10px; font-weight:700; border-radius:999px; padding:2px 5px; min-width:18px; text-align:center; line-height:1.2;">
-                            <?= $unreadNotifications > 99 ? '99+' : $unreadNotifications ?>
-                        </span>
-                    <?php endif; ?>
                 </a>
                 <a href="/painel-externo/perfil/editar" class="nav-item <?= strpos($_SERVER['REQUEST_URI'] ?? '', '/painel-externo/perfil/editar') !== false ? 'active' : '' ?>">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">

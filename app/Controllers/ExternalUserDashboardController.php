@@ -536,10 +536,12 @@ class ExternalUserDashboardController extends Controller
         $parentPostId = isset($_POST['parent_post_id']) ? (int)$_POST['parent_post_id'] : null;
         
         // Validate parent post if provided
+        $parentPost = null;
         if ($parentPostId !== null && $parentPostId > 0) {
             $parentPost = \App\Models\CommunityTopicPost::findById($parentPostId);
             if (!$parentPost || (int)$parentPost['topic_id'] !== $topicId) {
                 $parentPostId = null;
+                $parentPost = null;
             }
         }
 
@@ -549,6 +551,25 @@ class ExternalUserDashboardController extends Controller
             'user_id' => (int)$user['id'],
             'body' => $body,
         ]);
+
+        // Create notification for reply to parent post
+        if ($parentPost && isset($parentPost['user_id'])) {
+            $parentAuthorId = (int)$parentPost['user_id'];
+            $currentUserId = (int)$user['id'];
+            
+            // Don't notify if replying to own post
+            if ($parentAuthorId !== $currentUserId) {
+                require_once __DIR__ . '/../Models/UserNotification.php';
+                $link = '/painel-externo/comunidade/topico?id=' . $topicId . '#post-' . $postId;
+                \UserNotification::createReplyNotification(
+                    $parentAuthorId,
+                    $currentUserId,
+                    'community_post',
+                    $postId,
+                    $link
+                );
+            }
+        }
 
         // Parse and store lesson mentions
         \App\Controllers\CommunitiesController::parseLessonMentionsStatic($body, $topicId, $postId, (int)$user['id']);
