@@ -9,6 +9,7 @@ use App\Models\CommunityCategory;
 use App\Models\CommunityMember;
 use App\Models\CommunityTopic;
 use App\Models\CommunityTopicPost;
+use App\Models\CommunityPostLike;
 use App\Models\CommunityPoll;
 use App\Models\CommunityPollVote;
 use App\Models\CommunityInvite;
