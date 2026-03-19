@@ -562,6 +562,32 @@ class ExternalUserDashboardController extends Controller
 
     // ==================== SOCIAL FEATURES - PROFILE ====================
     
+    public function editProfile(): void
+    {
+        $currentUser = $this->requireLogin();
+        $branding = $this->getBrandingForUser($currentUser);
+        $userId = (int)$currentUser['id'];
+
+        $profile = UserSocialProfile::findByUserId($userId);
+        if (!$profile) {
+            $profile = [];
+        }
+
+        $success = $_SESSION['social_success'] ?? null;
+        $error = $_SESSION['social_error'] ?? null;
+        unset($_SESSION['social_success'], $_SESSION['social_error']);
+
+        $this->view('external_dashboard/edit_profile', [
+            'pageTitle' => 'Editar Perfil',
+            'user' => $currentUser,
+            'branding' => $branding,
+            'profile' => $profile,
+            'success' => $success,
+            'error' => $error,
+            'layout' => 'external_user_dashboard',
+        ]);
+    }
+
     public function showProfile(): void
     {
         $currentUser = $this->requireLogin();
@@ -1089,14 +1115,23 @@ class ExternalUserDashboardController extends Controller
             exit;
         }
 
-        SocialMessage::create([
+        $messageId = SocialMessage::create([
             'conversation_id' => $conversationId,
-            'from_user_id' => $currentId,
+            'sender_user_id' => $currentId,
             'body' => $body,
         ]);
 
+        SocialConversation::touchWithMessage($conversationId, $messageId);
+
         header('Content-Type: application/json');
-        echo json_encode(['ok' => true]);
+        echo json_encode([
+            'ok' => true,
+            'message' => [
+                'id' => $messageId,
+                'body' => $body,
+                'created_at' => date('Y-m-d H:i:s'),
+            ]
+        ]);
         exit;
     }
 

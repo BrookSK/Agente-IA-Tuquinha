@@ -162,6 +162,7 @@ $router->post('/painel-externo/comunidade/topico/responder', 'ExternalUserDashbo
 
 // External Dashboard - Social Features
 $router->get('/painel-externo/perfil', 'ExternalUserDashboardController@showProfile');
+$router->get('/painel-externo/perfil/editar', 'ExternalUserDashboardController@editProfile');
 $router->post('/painel-externo/perfil/salvar', 'ExternalUserDashboardController@saveProfile');
 $router->post('/painel-externo/perfil/scrap', 'ExternalUserDashboardController@postScrap');
 $router->post('/painel-externo/perfil/scrap/editar', 'ExternalUserDashboardController@editScrap');
