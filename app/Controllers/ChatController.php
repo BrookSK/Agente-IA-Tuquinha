@@ -19,6 +19,7 @@ use App\Models\ProjectFile;
 use App\Models\ProjectFileVersion;
 use App\Models\Project;
 use App\Models\ProjectMemoryItem;
+use App\Models\ChatJob;
 
 class ChatController extends Controller
 {
@@ -572,6 +573,8 @@ class ChatController extends Controller
         // remove qualquer espaço/branco no início das linhas
         $rawInput = preg_replace('/^\s+/mu', '', $rawInput);
         $message = trim($rawInput);
+
+        $asyncJobId = null;
 
         $isAjax = !empty($_SERVER['HTTP_X_REQUESTED_WITH'])
             && strtolower((string)$_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest';
@@ -1189,6 +1192,55 @@ class ChatController extends Controller
             }
 
             $history = Message::allByConversation($conversation->id);
+
+            // Fluxo assíncrono (AJAX): responde rápido com job_id e continua o processamento após finalizar a resposta.
+            // Isso evita 504 em prompts grandes sob Nginx/Apache/Cloudflare.
+            if ($isAjax) {
+                try {
+                    $asyncJobId = ChatJob::create([
+                        'session_id' => $sessionId,
+                        'conversation_id' => (int)$conversation->id,
+                        'user_message_id' => (int)$userMessageId,
+                        'status' => 'pending',
+                    ]);
+                } catch (\Throwable $e) {
+                    $asyncJobId = null;
+                }
+
+                if ($asyncJobId) {
+                    header('Content-Type: application/json; charset=utf-8');
+
+                    $nowLabel = date('d/m/Y H:i');
+                    $responseMessages = [];
+                    $responseMessages[] = [
+                        'role' => 'user',
+                        'content' => $message,
+                        'created_label' => $nowLabel,
+                    ];
+                    if (!empty($attachmentMeta)) {
+                        $responseMessages[] = [
+                            'role' => 'attachment_summary',
+                            'content' => $attachmentsMessage,
+                            'attachments' => $attachmentMeta,
+                        ];
+                    }
+
+                    echo json_encode([
+                        'success' => true,
+                        'queued' => true,
+                        'job_id' => (int)$asyncJobId,
+                        'messages' => $responseMessages,
+                        'total_tokens_used' => 0,
+                    ]);
+
+                    if (function_exists('fastcgi_finish_request')) {
+                        @fastcgi_finish_request();
+                    } else {
+                        @ob_flush();
+                        @flush();
+                    }
+                }
+            }
 
             $projectContextFilesUsed = [];
             $projectContextMessage = null;
@@ -1843,14 +1895,28 @@ class ChatController extends Controller
                 }
             }
 
-            $result = $engine->generateResponseWithContext(
-                $historyForEngine,
-                $_SESSION['chat_model'] ?? null,
-                $userData,
-                $conversationSettings,
-                $personaData,
-                !empty($persistentFileInputs) ? $persistentFileInputs : null
-            );
+            try {
+                if ($asyncJobId) {
+                    ChatJob::markRunning((int)$asyncJobId);
+                }
+
+                $result = $engine->generateResponseWithContext(
+                    $historyForEngine,
+                    $_SESSION['chat_model'] ?? null,
+                    $userData,
+                    $conversationSettings,
+                    $personaData,
+                    !empty($persistentFileInputs) ? $persistentFileInputs : null
+                );
+            } catch (\Throwable $e) {
+                if ($asyncJobId) {
+                    ChatJob::markError((int)$asyncJobId, 'engine_exception=' . (string)$e->getMessage());
+                }
+                if ($isAjax && $asyncJobId) {
+                    exit;
+                }
+                throw $e;
+            }
 
             $assistantReply = is_array($result) ? (string)($result['content'] ?? '') : (string)$result;
             $totalTokensUsed = is_array($result) ? (int)($result['total_tokens'] ?? 0) : 0;
@@ -1860,7 +1926,11 @@ class ChatController extends Controller
             $assistantReply = preg_replace('/^\s+/mu', '', $assistantReply);
             $assistantReply = trim($assistantReply);
 
-            Message::create($conversation->id, 'assistant', $assistantReply, $totalTokensUsed > 0 ? $totalTokensUsed : null);
+            $assistantMessageId = Message::create($conversation->id, 'assistant', $assistantReply, $totalTokensUsed > 0 ? $totalTokensUsed : null);
+
+            if ($asyncJobId) {
+                ChatJob::markDone((int)$asyncJobId, (int)$assistantMessageId, $totalTokensUsed > 0 ? $totalTokensUsed : null);
+            }
 
             // Debita tokens do usuário logado, se houver contador de uso disponível
             if ($userId > 0 && $totalTokensUsed > 0) {
@@ -1871,6 +1941,9 @@ class ChatController extends Controller
             }
 
             if ($isAjax) {
+                if ($asyncJobId) {
+                    exit;
+                }
                 header('Content-Type: application/json; charset=utf-8');
 
                 $nowLabel = date('d/m/Y H:i');
@@ -1917,6 +1990,74 @@ class ChatController extends Controller
 
         header('Location: /chat');
         exit;
+    }
+
+    public function job(): void
+    {
+        $sessionId = session_id();
+        $jobId = isset($_GET['id']) ? (int)$_GET['id'] : 0;
+
+        header('Content-Type: application/json; charset=utf-8');
+
+        if ($jobId <= 0) {
+            echo json_encode(['success' => false, 'error' => 'Job inválido.']);
+            return;
+        }
+
+        $job = ChatJob::findByIdAndSession($jobId, $sessionId);
+        if (!$job) {
+            echo json_encode(['success' => false, 'error' => 'Job não encontrado.']);
+            return;
+        }
+
+        $status = (string)($job['status'] ?? 'pending');
+        if ($status === 'done') {
+            $assistantMessageId = (int)($job['assistant_message_id'] ?? 0);
+            $msg = Message::findById($assistantMessageId);
+            if (!$msg) {
+                echo json_encode(['success' => false, 'error' => 'Resposta não encontrada.']);
+                return;
+            }
+
+            $createdAt = (string)($msg['created_at'] ?? '');
+            $createdLabel = '';
+            if ($createdAt !== '') {
+                $ts = strtotime($createdAt);
+                if ($ts !== false) {
+                    $createdLabel = date('d/m/Y H:i', $ts);
+                }
+            }
+
+            echo json_encode([
+                'success' => true,
+                'status' => 'done',
+                'message' => [
+                    'role' => 'assistant',
+                    'content' => (string)($msg['content'] ?? ''),
+                    'tokens_used' => (int)($job['tokens_used'] ?? ($msg['tokens_used'] ?? 0)),
+                    'created_label' => $createdLabel,
+                ],
+            ]);
+            return;
+        }
+
+        if ($status === 'error') {
+            $err = (string)($job['error_text'] ?? '');
+            if ($err === '') {
+                $err = 'Não consegui gerar a resposta agora. Tente novamente.';
+            }
+            echo json_encode([
+                'success' => false,
+                'status' => 'error',
+                'error' => $err,
+            ]);
+            return;
+        }
+
+        echo json_encode([
+            'success' => true,
+            'status' => $status,
+        ]);
     }
 
     public function sendAudio(): void

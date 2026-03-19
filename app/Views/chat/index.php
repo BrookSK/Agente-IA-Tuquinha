@@ -2803,6 +2803,7 @@ if (!empty($conversationId) && !empty($personaOptions) && is_array($personaOptio
             }
 
             let lastStatus = 0;
+            let deferFinalize = false;
 
             fetch('/chat/send', {
                 method: 'POST',
@@ -2821,6 +2822,86 @@ if (!empty($conversationId) && !empty($personaOptions) && is_array($personaOptio
                         const err = data && data.error ? data.error : 'Não foi possível enviar a mensagem. Tente novamente.';
                         const debug = 'status=' + String(lastStatus || 0) + '; payload=' + JSON.stringify(data || {});
                         showErrorReportBox(err, debug);
+                        return;
+                    }
+
+                    const pollJob = (jobId) => {
+                        const startedAt = Date.now();
+                        const tick = () => {
+                            // hard limit: 5 minutos
+                            if (Date.now() - startedAt > 5 * 60 * 1000) {
+                                const debug = 'job_timeout=1; job_id=' + String(jobId);
+                                showErrorReportBox('A resposta está demorando mais do que o esperado. Tente novamente.', debug);
+                                finalizeSendUi();
+                                return;
+                            }
+
+                            fetch('/chat/job?id=' + encodeURIComponent(String(jobId)), {
+                                method: 'GET',
+                                headers: {
+                                    'X-Requested-With': 'XMLHttpRequest',
+                                },
+                            })
+                                .then((r) => r.json().catch(() => null))
+                                .then((j) => {
+                                    if (!j) {
+                                        setTimeout(tick, 1000);
+                                        return;
+                                    }
+
+                                    if (j.status === 'done' && j.message) {
+                                        if (typeof j.message.tokens_used === 'number') {
+                                            lastTokensUsed = j.message.tokens_used;
+                                        } else {
+                                            lastTokensUsed = 0;
+                                        }
+                                        appendMessageToDom('assistant', j.message.content, j.message);
+                                        finalizeSendUi();
+                                        return;
+                                    }
+
+                                    if (j.status === 'error') {
+                                        const err = j.error ? j.error : 'Não consegui gerar a resposta agora. Tente novamente.';
+                                        const debug = 'job_error=1; job_id=' + String(jobId) + '; payload=' + JSON.stringify(j || {});
+                                        showErrorReportBox(err, debug);
+                                        finalizeSendUi();
+                                        return;
+                                    }
+
+                                    // pending/running
+                                    setTimeout(tick, 900);
+                                })
+                                .catch(() => {
+                                    setTimeout(tick, 1200);
+                                });
+                        };
+                        tick();
+                    };
+
+                    const finalizeSendUi = () => {
+                        if (activeTypingEl && activeTypingEl.parentNode) {
+                            activeTypingEl.parentNode.removeChild(activeTypingEl);
+                        } else {
+                            const el = chatWindow ? chatWindow.querySelector('[data-typing-indicator="1"]') : null;
+                            if (el && el.parentNode) {
+                                el.parentNode.removeChild(el);
+                            }
+                        }
+                        isSending = false;
+                        activeAbortController = null;
+                        activeTypingEl = null;
+                        messageInput.disabled = false;
+                        if (submitButton) {
+                            const sendLabel = document.getElementById('send-label');
+                            if (sendLabel && sendLabel.dataset.original) {
+                                sendLabel.textContent = sendLabel.dataset.original;
+                            }
+                        }
+                    };
+
+                    if (data.queued && data.job_id) {
+                        deferFinalize = true;
+                        pollJob(data.job_id);
                         return;
                     }
 
@@ -2870,6 +2951,9 @@ if (!empty($conversationId) && !empty($personaOptions) && is_array($personaOptio
                     showErrorReportBox('Erro ao enviar mensagem. Verifique sua conexão e tente novamente.', debug);
                 })
                 .finally(() => {
+                    if (deferFinalize) {
+                        return;
+                    }
                     if (activeTypingEl && activeTypingEl.parentNode) {
                         activeTypingEl.parentNode.removeChild(activeTypingEl);
                     } else {

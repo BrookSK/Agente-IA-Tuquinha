@@ -21,6 +21,18 @@ class Message
         return (int)$pdo->lastInsertId();
     }
 
+    public static function findById(int $id): ?array
+    {
+        if ($id <= 0) {
+            return null;
+        }
+        $pdo = Database::getConnection();
+        $stmt = $pdo->prepare('SELECT id, conversation_id, role, content, tokens_used, created_at FROM messages WHERE id = :id LIMIT 1');
+        $stmt->execute(['id' => $id]);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        return is_array($row) ? $row : null;
+    }
+
     public static function allByConversation(int $conversationId): array
     {
         $pdo = Database::getConnection();
