@@ -545,11 +545,47 @@ class ExternalUserDashboardController extends Controller
             }
         }
 
+        // Handle media upload
+        $mediaUrl = null;
+        $mediaMime = null;
+        $mediaKind = null;
+        
+        if (!empty($_FILES['media']) && is_array($_FILES['media'])) {
+            $uploadError = (int)($_FILES['media']['error'] ?? UPLOAD_ERR_NO_FILE);
+            if ($uploadError === UPLOAD_ERR_OK) {
+                $tmp = (string)($_FILES['media']['tmp_name'] ?? '');
+                $originalName = (string)($_FILES['media']['name'] ?? '');
+                $mime = (string)($_FILES['media']['type'] ?? '');
+                $size = (int)($_FILES['media']['size'] ?? 0);
+                
+                if ($tmp !== '' && is_uploaded_file($tmp) && $size <= (20 * 1024 * 1024)) {
+                    $kind = 'file';
+                    $mimeLower = strtolower($mime);
+                    if (str_starts_with($mimeLower, 'image/')) {
+                        $kind = 'image';
+                    } elseif (str_starts_with($mimeLower, 'video/')) {
+                        $kind = 'video';
+                    }
+                    
+                    require_once __DIR__ . '/../Services/MediaStorageService.php';
+                    $url = \App\Services\MediaStorageService::uploadFile($tmp, $originalName, $mime);
+                    if ($url !== null) {
+                        $mediaUrl = $url;
+                        $mediaMime = $mime !== '' ? $mime : null;
+                        $mediaKind = $kind;
+                    }
+                }
+            }
+        }
+
         $postId = \App\Models\CommunityTopicPost::create([
             'topic_id' => $topicId,
             'parent_post_id' => $parentPostId,
             'user_id' => (int)$user['id'],
             'body' => $body,
+            'media_url' => $mediaUrl,
+            'media_mime' => $mediaMime,
+            'media_kind' => $mediaKind,
         ]);
 
         // Create notification for reply to parent post
