@@ -25,6 +25,27 @@ class Router
         $method = strtoupper($method);
 
         $action = $this->routes[$method][$path] ?? null;
+        $params = [];
+
+        // If exact match not found, try pattern matching for dynamic routes
+        if (!$action && isset($this->routes[$method])) {
+            foreach ($this->routes[$method] as $pattern => $routeAction) {
+                // Convert {param} to regex capture group
+                $regex = preg_replace('/\{([a-zA-Z0-9_]+)\}/', '([^/]+)', $pattern);
+                $regex = '#^' . $regex . '$#';
+                
+                if (preg_match($regex, $path, $matches)) {
+                    $action = $routeAction;
+                    // Extract parameter names from pattern
+                    preg_match_all('/\{([a-zA-Z0-9_]+)\}/', $pattern, $paramNames);
+                    // Map parameter values
+                    for ($i = 0; $i < count($paramNames[1]); $i++) {
+                        $params[$paramNames[1][$i]] = $matches[$i + 1];
+                    }
+                    break;
+                }
+            }
+        }
 
         if (!$action) {
             http_response_code(404);
@@ -53,6 +74,11 @@ class Router
             http_response_code(500);
             echo 'Método não encontrado';
             return;
+        }
+
+        // Store route params in $_GET for controller access
+        foreach ($params as $key => $value) {
+            $_GET[$key] = $value;
         }
 
         $controller->{$methodName}();

@@ -1786,14 +1786,22 @@ class CommunitiesController extends Controller
                 continue;
             }
             
-            // Find lesson by title that user has access to
+            // Find lesson by title that user has access to (via enrollment OR purchase)
             $stmt = $pdo->prepare('
                 SELECT cl.id, cl.course_id
                 FROM course_lessons cl
-                INNER JOIN course_enrollments ce ON ce.course_id = cl.course_id
-                WHERE ce.user_id = :user_id
-                AND cl.title = :title
+                WHERE cl.title = :title
                 AND cl.is_published = 1
+                AND (
+                    EXISTS (
+                        SELECT 1 FROM course_enrollments ce 
+                        WHERE ce.course_id = cl.course_id AND ce.user_id = :user_id
+                    )
+                    OR EXISTS (
+                        SELECT 1 FROM course_purchases cp 
+                        WHERE cp.course_id = cl.course_id AND cp.user_id = :user_id AND cp.status = "paid"
+                    )
+                )
                 LIMIT 1
             ');
             $stmt->execute([
