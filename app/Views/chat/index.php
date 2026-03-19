@@ -393,7 +393,7 @@ function render_markdown_safe(string $text): string {
  }
 
  .main-content {
-     flex: 1 1 auto;
+     flex: 1 1 auto !important;
      overflow-y: hidden !important;
      display: flex;
      flex-direction: column;
@@ -405,9 +405,11 @@ function render_markdown_safe(string $text): string {
  }
 
  .main {
-     height: 100vh;
-     min-height: 0;
-     overflow: hidden;
+     display: flex !important;
+     flex-direction: column !important;
+     height: 100vh !important;
+     min-height: 0 !important;
+     overflow: hidden !important;
  }
 
  .main-content::-webkit-scrollbar {
@@ -435,6 +437,8 @@ function render_markdown_safe(string $text): string {
  }
 
  .tuq-has-showcase #chat-persona-showcase {
+     display: flex;
+     flex-direction: column;
      flex: 1 1 auto;
      min-height: 0;
      overflow: hidden;
@@ -452,10 +456,6 @@ function render_markdown_safe(string $text): string {
      flex: 1 1 auto;
      min-height: 0 !important;
      overflow: hidden !important;
- }
-
- .tuq-has-showcase form[action="/chat/send"] {
-     margin-top: auto !important;
  }
 
  .tuq-has-showcase #chat-persona-carousel {
@@ -634,17 +634,9 @@ if (!empty($conversationId) && !empty($personaOptions) && is_array($personaOptio
                         if (!el.dataset.prevOverflow) {
                             el.dataset.prevOverflow = (el.style.overflow || '');
                         }
-                        if (!el.dataset.prevHeight) {
-                            el.dataset.prevHeight = (el.style.height || '');
-                        }
-                        if (!el.dataset.prevMaxHeight) {
-                            el.dataset.prevMaxHeight = (el.style.maxHeight || '');
-                        }
                         el.style.setProperty('overflow-y', 'hidden', 'important');
                         el.style.setProperty('overflow', 'hidden', 'important');
                         el.style.setProperty('scrollbar-width', 'none', 'important');
-                        el.style.setProperty('height', '100%', 'important');
-                        el.style.setProperty('max-height', '100%', 'important');
                         try { el.scrollTop = 0; } catch (e) {}
                     });
                 } catch (e) {}
@@ -2680,8 +2672,6 @@ if (!empty($conversationId) && !empty($personaOptions) && is_array($personaOptio
                             el.style.setProperty('overflow-y', (el.dataset.prevOverflowY || ''), '');
                             el.style.setProperty('overflow', (el.dataset.prevOverflow || ''), '');
                             el.style.setProperty('scrollbar-width', '', '');
-                            el.style.setProperty('height', (el.dataset.prevHeight || ''), '');
-                            el.style.setProperty('max-height', (el.dataset.prevMaxHeight || ''), '');
                         });
 
                         try {
