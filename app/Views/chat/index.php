@@ -392,10 +392,30 @@ function render_markdown_safe(string $text): string {
      padding:6px 10px 0 10px;
  }
 
+ .main-content {
+     overflow-y: hidden !important;
+     display: flex;
+     flex-direction: column;
+     min-height: 0;
+     padding: 0 !important;
+     box-sizing: border-box;
+     -ms-overflow-style: none;
+     scrollbar-width: none;
+ }
+
+ .main {
+     height: 100vh;
+     min-height: 0;
+     overflow: hidden;
+ }
+
+ .main-content::-webkit-scrollbar {
+     width: 0;
+     height: 0;
+ }
+
  .tuq-has-showcase #chat-window {
-     flex: 1 1 auto !important;
-     overflow: hidden !important;
-     visibility: hidden !important;
+     display: none !important;
  }
 
  .tuq-has-showcase #chat-window::-webkit-scrollbar {
@@ -408,8 +428,33 @@ function render_markdown_safe(string $text): string {
  }
 
  .tuq-has-showcase {
-     height: calc(100vh - 56px - 80px);
+     height: 100%;
+     min-height: 0;
      overflow: hidden;
+ }
+
+ .tuq-has-showcase #chat-persona-showcase {
+     flex: 1 1 auto;
+     min-height: 0;
+     overflow: hidden;
+ }
+
+ .tuq-has-showcase #chat-persona-showcase > div {
+     display: flex;
+     flex-direction: column;
+     flex: 1 1 auto;
+     min-height: 0;
+     margin-bottom: 0 !important;
+ }
+
+ .tuq-has-showcase .chat-persona-stage {
+     flex: 1 1 auto;
+     min-height: 0 !important;
+     overflow: hidden !important;
+ }
+
+ .tuq-has-showcase #chat-persona-carousel {
+     height: 100% !important;
  }
 
  body.tuq-body-lock {
@@ -628,7 +673,7 @@ if (!empty($conversationId) && !empty($personaOptions) && is_array($personaOptio
         })();
     </script>
 <?php endif; ?>
-<div id="tuq-chat-root" class="<?= !empty($shouldShowPersonaShowcase) ? 'tuq-has-showcase' : '' ?>" style="max-width: 900px; width: 100%; margin: 0 auto; padding: 0 8px; display: flex; flex-direction: column; min-height: calc(100vh - 56px - 80px); box-sizing: border-box;">
+<div id="tuq-chat-root" class="<?= !empty($shouldShowPersonaShowcase) ? 'tuq-has-showcase' : '' ?>" style="max-width: 900px; width: 100%; margin: 0 auto; padding: 0 8px; display: flex; flex-direction: column; flex: 1 1 auto; min-height: 0; box-sizing: border-box;">
     <?php if (!empty($conversationId)): ?>
         <div class="tuqChatTopbar">
             <div class="tuqChatTitleWrap">
@@ -2028,9 +2073,9 @@ if (!empty($conversationId) && !empty($personaOptions) && is_array($personaOptio
 
             let out = escapeHtml(text || '');
             // ##/###/#### títulos -> headings
-            out = out.replace(/^####\s*(.+)$/gm, '<h4>$1</h4>');
-            out = out.replace(/^###\s*(.+)$/gm, '<h3>$1</h3>');
-            out = out.replace(/^##\s*(.+)$/gm, '<h2>$1</h2>');
+            out = out.replace(/^#\s+(.+)$/gm, '<h2>$1</h2>');
+            out = out.replace(/^##\s+(.+)$/gm, '<h3>$1</h3>');
+            out = out.replace(/^#{3,6}\s+(.+)$/gm, '<h4>$1</h4>');
             // **negrito** -> <strong>
             out = out.replace(/\*\*([\s\S]+?)\*\*/g, '<strong>$1</strong>');
             out = out.replace(/(^|[^*])\*([^*\n][^*]*?)\*(?!\*)/g, '$1<em>$2</em>');
