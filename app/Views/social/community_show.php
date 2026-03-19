@@ -459,19 +459,3 @@ $canModerate = !empty($canModerate);
         </aside>
     </div>
 </div>
-
-<script>
-    (function(){
-        var btn = document.getElementById('toggleCreateTopicBtn');
-        var form = document.getElementById('createTopicForm');
-        if (!btn || !form) return;
-        btn.addEventListener('click', function(){
-            var isOpen = form.style.display !== 'none';
-            form.style.display = isOpen ? 'none' : 'flex';
-            if (!isOpen) {
-                var titleInput = form.querySelector('input[name="title"]');
-                if (titleInput) titleInput.focus();
-            }
-        });
-    })();
-</script>
