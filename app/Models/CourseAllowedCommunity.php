@@ -108,12 +108,23 @@ class CourseAllowedCommunity
         }
 
         $pdo = Database::getConnection();
-        $stmt = $pdo->prepare('SELECT DISTINCT c.*
+        $stmt = $pdo->prepare('SELECT DISTINCT 
+                c.*,
+                (SELECT COUNT(*) FROM community_topics ct WHERE ct.community_id = c.id) as topics_count,
+                (SELECT COUNT(*) FROM community_members cm WHERE cm.community_id = c.id AND cm.left_at IS NULL) as members_count
             FROM communities c
             JOIN course_allowed_communities cac ON cac.community_id = c.id
-            JOIN course_enrollments ce ON ce.course_id = cac.course_id
-            WHERE ce.user_id = :user_id
-              AND c.is_active = 1
+            WHERE c.is_active = 1
+            AND (
+                EXISTS (
+                    SELECT 1 FROM course_enrollments ce 
+                    WHERE ce.course_id = cac.course_id AND ce.user_id = :user_id
+                )
+                OR EXISTS (
+                    SELECT 1 FROM course_purchases cp 
+                    WHERE cp.course_id = cac.course_id AND cp.user_id = :user_id AND cp.status = "paid"
+                )
+            )
             ORDER BY c.name ASC');
         $stmt->execute(['user_id' => $userId]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
