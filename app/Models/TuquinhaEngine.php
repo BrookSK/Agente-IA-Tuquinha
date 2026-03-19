@@ -12,6 +12,11 @@ class TuquinhaEngine
     private const BUILD_ID = '2025-12-30-b';
     private const CLAUDE_DEFAULT_FALLBACK_MODEL = 'claude-3-5-sonnet-latest';
     private const CLAUDE_SAFE_FALLBACK_MODEL = 'claude-3-haiku-20240307';
+    private const PROVIDER_CONNECT_TIMEOUT_SECONDS = 10;
+    private const OPENAI_CHAT_TIMEOUT_SECONDS = 90;
+    private const OPENAI_RESPONSES_TIMEOUT_SECONDS = 120;
+    private const ANTHROPIC_TIMEOUT_SECONDS = 90;
+    private const PROVIDER_RETRY_MAX_ATTEMPTS = 3;
 
     private string $systemPrompt;
     private ?string $lastProviderError;
@@ -147,32 +152,55 @@ class TuquinhaEngine
             'messages' => $payloadMessages,
         ]);
 
-        $ch = curl_init('https://api.openai.com/v1/chat/completions');
-        curl_setopt_array($ch, [
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_POST => true,
-            CURLOPT_HTTPHEADER => [
-                'Content-Type: application/json',
-                'Authorization: Bearer ' . $configuredApiKey,
-            ],
-            CURLOPT_POSTFIELDS => $body,
-            CURLOPT_TIMEOUT => 30,
-        ]);
+        $result = false;
+        $httpCode = 0;
+        $lastCurlErr = '';
+        for ($attempt = 1; $attempt <= self::PROVIDER_RETRY_MAX_ATTEMPTS; $attempt++) {
+            $ch = curl_init('https://api.openai.com/v1/chat/completions');
+            curl_setopt_array($ch, [
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_POST => true,
+                CURLOPT_HTTPHEADER => [
+                    'Content-Type: application/json',
+                    'Authorization: Bearer ' . $configuredApiKey,
+                ],
+                CURLOPT_POSTFIELDS => $body,
+                CURLOPT_CONNECTTIMEOUT => self::PROVIDER_CONNECT_TIMEOUT_SECONDS,
+                CURLOPT_TIMEOUT => self::OPENAI_CHAT_TIMEOUT_SECONDS,
+            ]);
 
-        $result = curl_exec($ch);
+            $result = curl_exec($ch);
+            if ($result === false) {
+                $errno = curl_errno($ch);
+                $lastCurlErr = (string)curl_error($ch);
+                curl_close($ch);
+
+                if ($attempt < self::PROVIDER_RETRY_MAX_ATTEMPTS && in_array($errno, [28, 52, 56], true)) {
+                    usleep($attempt === 1 ? 300000 : ($attempt === 2 ? 900000 : 1500000));
+                    continue;
+                }
+                break;
+            }
+
+            $httpCode = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            curl_close($ch);
+
+            if ($attempt < self::PROVIDER_RETRY_MAX_ATTEMPTS && ($httpCode === 429 || $httpCode === 408 || ($httpCode >= 500 && $httpCode <= 599))) {
+                usleep($attempt === 1 ? 300000 : ($attempt === 2 ? 900000 : 1500000));
+                continue;
+            }
+
+            break;
+        }
 
         if ($result === false) {
-            $this->lastProviderError = 'openai_chat_completions_curl_error=' . (string)curl_error($ch);
+            $this->lastProviderError = 'openai_chat_completions_curl_error=' . $lastCurlErr;
             error_log('[TuquinhaEngine] OpenAI /v1/chat/completions failed: ' . (string)$this->lastProviderError);
-            curl_close($ch);
             return [
                 'content' => $this->fallbackResponse($messages),
                 'total_tokens' => 0,
             ];
         }
-
-        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        curl_close($ch);
 
         if ($httpCode < 200 || $httpCode >= 300) {
             $this->lastProviderError = 'openai_chat_completions_http=' . (string)$httpCode . '; body=' . (string)$result;
@@ -303,32 +331,53 @@ class TuquinhaEngine
                 'temperature' => 0.7,
             ]);
 
-            $ch = curl_init('https://api.anthropic.com/v1/messages');
-            curl_setopt_array($ch, [
-                CURLOPT_RETURNTRANSFER => true,
-                CURLOPT_POST => true,
-                CURLOPT_HTTPHEADER => [
-                    'Content-Type: application/json',
-                    'x-api-key: ' . $apiKey,
-                    'anthropic-version: 2023-06-01',
-                ],
-                CURLOPT_POSTFIELDS => $body,
-                CURLOPT_TIMEOUT => 30,
-            ]);
+            $result = false;
+            $httpCode = 0;
+            $lastCurlErr = '';
+            for ($try = 1; $try <= self::PROVIDER_RETRY_MAX_ATTEMPTS; $try++) {
+                $ch = curl_init('https://api.anthropic.com/v1/messages');
+                curl_setopt_array($ch, [
+                    CURLOPT_RETURNTRANSFER => true,
+                    CURLOPT_POST => true,
+                    CURLOPT_HTTPHEADER => [
+                        'Content-Type: application/json',
+                        'x-api-key: ' . $apiKey,
+                        'anthropic-version: 2023-06-01',
+                    ],
+                    CURLOPT_POSTFIELDS => $body,
+                    CURLOPT_CONNECTTIMEOUT => self::PROVIDER_CONNECT_TIMEOUT_SECONDS,
+                    CURLOPT_TIMEOUT => self::ANTHROPIC_TIMEOUT_SECONDS,
+                ]);
 
-            $result = curl_exec($ch);
-            if ($result === false) {
-                $this->lastProviderError = 'anthropic_messages_curl_error=' . (string)curl_error($ch);
-                error_log('[TuquinhaEngine] Anthropic /v1/messages failed: ' . (string)$this->lastProviderError);
+                $result = curl_exec($ch);
+                if ($result === false) {
+                    $errno = curl_errno($ch);
+                    $lastCurlErr = (string)curl_error($ch);
+                    curl_close($ch);
+                    if ($try < self::PROVIDER_RETRY_MAX_ATTEMPTS && in_array($errno, [28, 52, 56], true)) {
+                        usleep($try === 1 ? 300000 : ($try === 2 ? 900000 : 1500000));
+                        continue;
+                    }
+                    break;
+                }
+
+                $httpCode = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
                 curl_close($ch);
+                if ($try < self::PROVIDER_RETRY_MAX_ATTEMPTS && ($httpCode === 429 || $httpCode === 408 || ($httpCode >= 500 && $httpCode <= 599))) {
+                    usleep($try === 1 ? 300000 : ($try === 2 ? 900000 : 1500000));
+                    continue;
+                }
+                break;
+            }
+
+            if ($result === false) {
+                $this->lastProviderError = 'anthropic_messages_curl_error=' . $lastCurlErr;
+                error_log('[TuquinhaEngine] Anthropic /v1/messages failed: ' . (string)$this->lastProviderError);
                 return [
                     'content' => $this->fallbackResponse($messages),
                     'total_tokens' => 0,
                 ];
             }
-
-            $httpCode = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
-            curl_close($ch);
 
             if ($httpCode >= 200 && $httpCode < 300) {
                 break;
@@ -573,31 +622,52 @@ class TuquinhaEngine
             'input' => $input,
         ]);
 
-        $ch = curl_init('https://api.openai.com/v1/responses');
-        curl_setopt_array($ch, [
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_POST => true,
-            CURLOPT_HTTPHEADER => [
-                'Content-Type: application/json',
-                'Authorization: Bearer ' . $apiKey,
-            ],
-            CURLOPT_POSTFIELDS => $body,
-            CURLOPT_TIMEOUT => 60,
-        ]);
+        $result = false;
+        $httpCode = 0;
+        $lastCurlErr = '';
+        for ($attempt = 1; $attempt <= self::PROVIDER_RETRY_MAX_ATTEMPTS; $attempt++) {
+            $ch = curl_init('https://api.openai.com/v1/responses');
+            curl_setopt_array($ch, [
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_POST => true,
+                CURLOPT_HTTPHEADER => [
+                    'Content-Type: application/json',
+                    'Authorization: Bearer ' . $apiKey,
+                ],
+                CURLOPT_POSTFIELDS => $body,
+                CURLOPT_CONNECTTIMEOUT => self::PROVIDER_CONNECT_TIMEOUT_SECONDS,
+                CURLOPT_TIMEOUT => self::OPENAI_RESPONSES_TIMEOUT_SECONDS,
+            ]);
 
-        $result = curl_exec($ch);
-        if ($result === false) {
-            $this->lastProviderError = 'openai_responses_curl_error=' . (string)curl_error($ch);
-            error_log('[TuquinhaEngine] OpenAI /v1/responses curl error: ' . (string)$this->lastProviderError);
+            $result = curl_exec($ch);
+            if ($result === false) {
+                $errno = curl_errno($ch);
+                $lastCurlErr = (string)curl_error($ch);
+                curl_close($ch);
+                if ($attempt < self::PROVIDER_RETRY_MAX_ATTEMPTS && in_array($errno, [28, 52, 56], true)) {
+                    usleep($attempt === 1 ? 300000 : ($attempt === 2 ? 900000 : 1500000));
+                    continue;
+                }
+                break;
+            }
+
+            $httpCode = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
             curl_close($ch);
+            if ($attempt < self::PROVIDER_RETRY_MAX_ATTEMPTS && ($httpCode === 429 || $httpCode === 408 || ($httpCode >= 500 && $httpCode <= 599))) {
+                usleep($attempt === 1 ? 300000 : ($attempt === 2 ? 900000 : 1500000));
+                continue;
+            }
+            break;
+        }
+
+        if ($result === false) {
+            $this->lastProviderError = 'openai_responses_curl_error=' . $lastCurlErr;
+            error_log('[TuquinhaEngine] OpenAI /v1/responses curl error: ' . (string)$this->lastProviderError);
             return [
                 'content' => $this->fallbackResponse($messages),
                 'total_tokens' => 0,
             ];
         }
-
-        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        curl_close($ch);
 
         if ($httpCode < 200 || $httpCode >= 300) {
             $snippet = substr((string)$result, 0, 800);
