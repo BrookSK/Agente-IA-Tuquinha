@@ -1937,34 +1937,48 @@ class CommunitiesController extends Controller
     public function togglePostLike(): void
     {
         header('Content-Type: application/json');
+        error_log("togglePostLike called");
         
         try {
+            error_log("Attempting to get user");
             $user = $this->requireLogin();
             $userId = (int)$user['id'];
+            error_log("User ID: " . $userId);
 
             $postId = isset($_POST['post_id']) ? (int)$_POST['post_id'] : 0;
+            error_log("Post ID: " . $postId);
             
             if ($postId <= 0) {
+                error_log("Invalid post ID");
                 echo json_encode(['success' => false, 'error' => 'Post inválido']);
                 exit;
             }
 
             // Verify post exists
+            error_log("Finding post by ID");
             $post = CommunityTopicPost::findById($postId);
             if (!$post) {
+                error_log("Post not found");
                 echo json_encode(['success' => false, 'error' => 'Post não encontrado']);
                 exit;
             }
+            error_log("Post found");
 
             // Toggle like
+            error_log("Toggling like");
             CommunityPostLike::toggle($postId, $userId);
+            error_log("Like toggled");
 
             // Get updated counts
+            error_log("Getting like counts");
             $likesCount = CommunityPostLike::likesCountByPostIds([$postId]);
             $count = $likesCount[$postId] ?? 0;
+            error_log("Like count: " . $count);
 
+            error_log("Getting liked by user");
             $likedByUser = CommunityPostLike::likedPostIdsByUser($userId, [$postId]);
             $isLiked = isset($likedByUser[$postId]);
+            error_log("Is liked: " . ($isLiked ? 'yes' : 'no'));
 
             echo json_encode([
                 'success' => true,
@@ -1972,10 +1986,14 @@ class CommunitiesController extends Controller
                 'is_liked' => $isLiked
             ]);
         } catch (\Exception $e) {
+            error_log("Exception in togglePostLike: " . $e->getMessage());
+            error_log("Stack trace: " . $e->getTraceAsString());
             echo json_encode([
                 'success' => false,
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => explode("\n", $e->getTraceAsString())
             ]);
         }
         exit;
