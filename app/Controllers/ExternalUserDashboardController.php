@@ -59,7 +59,7 @@ class ExternalUserDashboardController extends Controller
         $userId = (int)$user['id'];
 
         // Get enrolled courses count
-        $enrolledCourses = CourseEnrollment::findByUserId($userId);
+        $enrolledCourses = CourseEnrollment::allByUser($userId);
         $enrolledCoursesCount = count($enrolledCourses);
 
         // Calculate average progress
@@ -1048,7 +1048,7 @@ class ExternalUserDashboardController extends Controller
             exit;
         }
 
-        $conversation = SocialConversation::findOrCreateBetween($currentId, $otherUserId);
+        $conversation = SocialConversation::findOrCreateForUsers($currentId, $otherUserId);
         $messages = SocialMessage::allByConversation((int)$conversation['id'], 50);
 
         $this->view('external_dashboard/chat', [

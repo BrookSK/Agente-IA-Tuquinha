@@ -1,29 +1,78 @@
 <?php
 
+// Branding colors
+$primaryColor = !empty($branding['primary_color']) ? $branding['primary_color'] : '#e53935';
+$secondaryColor = !empty($branding['secondary_color']) ? $branding['secondary_color'] : '#ff6f60';
+$accentColor = !empty($branding['accent_color']) ? $branding['accent_color'] : '#4caf50';
+
 ?>
-<div style="max-width: 980px; margin: 0 auto; display:flex; flex-direction:column; gap:14px;">
-    <section style="background:#111118; border-radius:16px; border:1px solid #272727; padding:12px 14px;">
-        <div style="display:flex; justify-content:space-between; align-items:center; gap:10px; margin-bottom:10px;">
-            <h1 style="font-size:18px;">Adicionar amigo</h1>
-            <a href="/painel-externo/amigos" style="font-size:12px; color:#b0b0b0; text-decoration:none;">Voltar</a>
+<style>
+    .friends-add-btn-primary {
+        background: linear-gradient(135deg, <?= $primaryColor ?>, <?= $secondaryColor ?>);
+        border: none;
+        color: #fff;
+    }
+    .friends-add-btn-primary:hover {
+        opacity: 0.9;
+        color: #fff;
+    }
+    .friends-add-badge-sent {
+        background: rgba(<?= hexdec(substr($accentColor, 1, 2)) ?>, <?= hexdec(substr($accentColor, 3, 2)) ?>, <?= hexdec(substr($accentColor, 5, 2)) ?>, 0.1);
+        color: <?= $accentColor ?>;
+        border: 1px solid rgba(<?= hexdec(substr($accentColor, 1, 2)) ?>, <?= hexdec(substr($accentColor, 3, 2)) ?>, <?= hexdec(substr($accentColor, 5, 2)) ?>, 0.3);
+    }
+</style>
+<div class="container-fluid" style="padding: 24px; max-width: 100%; margin: 0 auto;">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 style="font-size: 28px; font-weight: 700; color: var(--text-primary);">Adicionar Amigo</h1>
+                <a href="/painel-externo/amigos" class="btn btn-outline-secondary" style="border: 1px solid var(--border-subtle); color: var(--text-primary); padding: 8px 16px; border-radius: 8px; text-decoration: none;">
+                    ← Voltar para Amigos
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8 col-12">
+            <div class="card" style="background: var(--surface-card); border: 1px solid var(--border-subtle); border-radius: 12px; padding: 24px;">
+                <div style="margin-bottom: 20px;">
+                    <h2 style="font-size: 18px; font-weight: 600; color: var(--text-primary); margin-bottom: 8px;">Buscar Usuários</h2>
+                    <p style="font-size: 14px; color: var(--text-secondary); margin-bottom: 16px;">
+                        Pesquise por <strong>nickname</strong> (ex: <code style="background: var(--surface-subtle); border: 1px solid var(--border-subtle); padding: 2px 8px; border-radius: 6px; font-size: 13px;">@joao_silva</code>) ou por <strong>e-mail</strong>.
+                    </p>
+                </div>
+
+                <div class="mb-3">
+                    <input
+                        id="friendSearchInput"
+                        type="text"
+                        placeholder="Digite @nickname ou email e pressione Enter"
+                        class="form-control form-control-lg"
+                        style="background: var(--surface-subtle); border: 1px solid var(--border-subtle); color: var(--text-primary); padding: 14px 18px; border-radius: 10px; font-size: 15px;"
+                        autocomplete="off"
+                    />
+                    <div id="friendSearchHint" style="font-size: 13px; color: var(--text-secondary); margin-top: 8px;">💡 Dica: você também pode só digitar que ele vai buscar automaticamente.</div>
+                </div>
+
+                <div id="friendSearchStatus" style="display:none; margin-top:16px; font-size:14px;"></div>
+                <div id="friendSearchResults" style="display:flex; flex-direction:column; gap:12px; margin-top:20px;"></div>
+            </div>
         </div>
 
-        <div style="font-size:12px; color:#b0b0b0; margin-bottom:8px;">
-            Pesquise por <strong>nickname</strong> (ex: <code style="background:#050509; border:1px solid #272727; padding:2px 6px; border-radius:8px;">@joao_silva</code>) ou por <strong>e-mail</strong>.
+        <div class="col-lg-4 col-12">
+            <div class="card" style="background: var(--surface-card); border: 1px solid var(--border-subtle); border-radius: 12px; padding: 20px;">
+                <h3 style="font-size: 16px; font-weight: 600; color: var(--text-primary); margin-bottom: 12px;">Como funciona?</h3>
+                <ul style="font-size: 14px; color: var(--text-secondary); line-height: 1.6; padding-left: 20px;">
+                    <li style="margin-bottom: 8px;">Digite o nickname ou e-mail do usuário</li>
+                    <li style="margin-bottom: 8px;">Aguarde os resultados aparecerem</li>
+                    <li style="margin-bottom: 8px;">Clique em "Enviar solicitação" para adicionar</li>
+                    <li>Aguarde a pessoa aceitar seu pedido</li>
+                </ul>
+            </div>
         </div>
-
-        <input
-            id="friendSearchInput"
-            type="text"
-            placeholder="Digite @nickname ou email e pressione Enter"
-            style="width:100%; padding:10px 12px; border-radius:12px; border:1px solid #272727; background:#050509; color:#f5f5f5; font-size:13px; outline:none;"
-            autocomplete="off"
-        />
-        <div id="friendSearchHint" style="font-size:11px; color:#8d8d8d; margin-top:6px;">Dica: você também pode só digitar que ele vai buscar automaticamente.</div>
-
-        <div id="friendSearchStatus" style="display:none; margin-top:10px; font-size:12px;"></div>
-        <div id="friendSearchResults" style="display:flex; flex-direction:column; gap:8px; margin-top:10px;"></div>
-    </section>
+    </div>
 </div>
 
 <script>
@@ -55,31 +104,31 @@
 
         if (mode === 'sent') {
             var sent = document.createElement('span');
-            sent.textContent = 'Enviado';
+            sent.textContent = '✓ Enviado';
+            sent.className = 'badge friends-add-badge-sent';
             sent.style.display = 'inline-block';
-            sent.style.fontSize = '12px';
-            sent.style.fontWeight = '700';
-            sent.style.color = '#ffb74d';
-            sent.style.padding = '7px 10px';
-            sent.style.borderRadius = '999px';
-            sent.style.border = '1px solid #272727';
-            sent.style.background = '#0b0b10';
+            sent.style.fontSize = '13px';
+            sent.style.fontWeight = '600';
+            sent.style.padding = '8px 14px';
+            sent.style.borderRadius = '8px';
 
             var cancelBtn = document.createElement('button');
             cancelBtn.type = 'button';
             cancelBtn.textContent = 'Cancelar';
-            cancelBtn.style.border = '1px solid #a33';
-            cancelBtn.style.borderRadius = '999px';
-            cancelBtn.style.padding = '7px 10px';
-            cancelBtn.style.background = '#311';
-            cancelBtn.style.color = '#ffbaba';
-            cancelBtn.style.fontWeight = '700';
+            cancelBtn.className = 'btn btn-outline-danger btn-sm';
+            cancelBtn.style.border = '1px solid rgba(220, 53, 69, 0.3)';
+            cancelBtn.style.borderRadius = '8px';
+            cancelBtn.style.padding = '8px 14px';
+            cancelBtn.style.background = 'transparent';
+            cancelBtn.style.color = '#dc3545';
+            cancelBtn.style.fontWeight = '600';
+            cancelBtn.style.fontSize = '13px';
             cancelBtn.style.cursor = 'pointer';
             cancelBtn.addEventListener('click', function(){ cancelRequest(userId, rightEl, cancelBtn); });
 
             rightEl.style.display = 'flex';
             rightEl.style.alignItems = 'center';
-            rightEl.style.gap = '6px';
+            rightEl.style.gap = '10px';
             rightEl.appendChild(sent);
             rightEl.appendChild(cancelBtn);
             return;
@@ -88,13 +137,13 @@
         var btn = document.createElement('button');
         btn.type = 'button';
         btn.textContent = 'Enviar solicitação';
-        btn.style.border = 'none';
-        btn.style.borderRadius = '999px';
-        btn.style.padding = '7px 10px';
-        btn.style.background = 'linear-gradient(135deg,#e53935,#ff6f60)';
-        btn.style.color = '#050509';
-        btn.style.fontWeight = '700';
+        btn.className = 'btn friends-add-btn-primary';
+        btn.style.borderRadius = '8px';
+        btn.style.padding = '10px 20px';
+        btn.style.fontWeight = '600';
+        btn.style.fontSize = '14px';
         btn.style.cursor = 'pointer';
+        btn.style.whiteSpace = 'nowrap';
         btn.addEventListener('click', function(){ sendRequest(userId, rightEl, btn); });
         rightEl.appendChild(btn);
     }
@@ -168,7 +217,7 @@
     function render(items){
         results.innerHTML = '';
         if (!items || !items.length) {
-            results.innerHTML = '<div style="font-size:12px; color:#b0b0b0;">Nenhum usuário encontrado.</div>';
+            results.innerHTML = '<div class="text-center py-4" style="font-size:14px; color:var(--text-secondary);">Nenhum usuário encontrado.</div>';
             return;
         }
         items.forEach(function(u){
@@ -177,22 +226,25 @@
             var email = (u.email || '').trim();
 
             var div = document.createElement('div');
-            div.style.background = '#050509';
-            div.style.border = '1px solid #272727';
+            div.className = 'card';
+            div.style.background = 'var(--surface-subtle)';
+            div.style.border = '1px solid var(--border-subtle)';
             div.style.borderRadius = '12px';
-            div.style.padding = '10px 12px';
+            div.style.padding = '16px';
             div.style.display = 'flex';
             div.style.justifyContent = 'space-between';
             div.style.alignItems = 'center';
-            div.style.gap = '10px';
+            div.style.gap = '16px';
 
             var left = document.createElement('div');
             left.style.minWidth = '0';
-            left.innerHTML = '<div style="font-size:13px; color:#f5f5f5; font-weight:650;">' + escapeHtml(name) + '</div>'
-                + (nick ? '<div style="font-size:11px; color:#b0b0b0;">@' + escapeHtml(nick) + '</div>' : '')
-                + (email ? '<div style="font-size:11px; color:#8d8d8d;">' + escapeHtml(email) + '</div>' : '');
+            left.style.flex = '1';
+            left.innerHTML = '<div style="font-size:16px; color:var(--text-primary); font-weight:600; margin-bottom:4px;">' + escapeHtml(name) + '</div>'
+                + (nick ? '<div style="font-size:13px; color:var(--text-secondary);">@' + escapeHtml(nick) + '</div>' : '')
+                + (email ? '<div style="font-size:13px; color:var(--text-secondary);">' + escapeHtml(email) + '</div>' : '');
 
             var right = document.createElement('div');
+            right.style.flexShrink = '0';
             setRightMode(right, 'send', u.id);
 
             div.appendChild(left);

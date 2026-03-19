@@ -213,42 +213,171 @@ $canModerate = !empty($canModerate);
             </div>
 
             <?php if ($isMember): ?>
-                <form id="createTopicForm" action="/comunidades/topicos/novo" method="post" enctype="multipart/form-data" style="margin-bottom:10px; display:none; flex-direction:column; gap:6px;">
-                    <input type="hidden" name="community_id" value="<?= (int)($community['id'] ?? 0) ?>">
-                    <input type="text" name="title" placeholder="Título do tópico" style="width:100%; padding:6px 8px; border-radius:8px; border:1px solid var(--border-subtle); background:var(--input-bg); color:var(--text-primary); font-size:13px;">
-                    <textarea name="body" rows="3" placeholder="Mensagem inicial do tópico (opcional)" style="width:100%; padding:6px 8px; border-radius:8px; border:1px solid var(--border-subtle); background:var(--input-bg); color:var(--text-primary); font-size:13px; resize:vertical;"></textarea>
-                    <div style="display:flex; flex-wrap:wrap; gap:10px; align-items:center; justify-content:space-between;">
-                        <div style="display:flex; flex-direction:column; gap:6px;">
-                            <input id="communityTopicMediaInput" type="file" name="media" accept="image/*,video/*" style="display:none;">
-                            <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
-                                <label for="communityTopicMediaInput" style="display:inline-flex; align-items:center; gap:8px; padding:6px 10px; border-radius:999px; border:1px solid var(--border-subtle); background:var(--surface-subtle); color:var(--text-primary); font-size:12px; cursor:pointer; user-select:none;">
-                                    <span style="width:18px; height:18px; border-radius:6px; display:inline-flex; align-items:center; justify-content:center; background:rgba(255,111,96,0.12); border:1px solid rgba(255,111,96,0.28);">
-                                        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#ff6f60" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                            <path d="M21 15V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v8" />
-                                            <path d="M3 17l4-4 4 4 4-4 6 6" />
-                                            <path d="M14 10a2 2 0 1 1-4 0 2 2 0 0 1 4 0z" />
-                                        </svg>
-                                    </span>
-                                    <span>Anexar mídia</span>
-                                </label>
-                                <span id="communityTopicMediaName" style="font-size:12px; color:var(--text-secondary);">Nenhum arquivo selecionado</span>
-                            </div>
-                            <div style="font-size:11px; color:var(--text-secondary);">Imagem/vídeo/arquivo (opcional) · Até 20 MB.</div>
+                <div id="createTopicForm" style="margin-bottom:16px; display:none;">
+                    <div style="background:var(--surface-card); border-radius:12px; border:1px solid var(--border-subtle); padding:20px;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+                            <h3 style="font-size:18px; font-weight:700; color:var(--text-primary); margin:0;">Criar Novo Tópico</h3>
+                            <button type="button" id="closeCreateTopicBtn" style="border:none; background:transparent; color:var(--text-secondary); font-size:24px; cursor:pointer; padding:0; line-height:1;">×</button>
                         </div>
-                        <button type="submit" style="align-self:flex-end; border:none; border-radius:999px; padding:5px 10px; background:var(--surface-subtle); border:1px solid var(--border-subtle); color:var(--text-primary); font-size:12px; cursor:pointer;">Criar tópico</button>
+                        
+                        <form action="/comunidades/topicos/novo" method="post" enctype="multipart/form-data" style="display:flex; flex-direction:column; gap:16px;">
+                            <input type="hidden" name="community_id" value="<?= (int)($community['id'] ?? 0) ?>">
+                            
+                            <!-- Título -->
+                            <div>
+                                <label for="topicTitle" style="display:block; font-size:13px; font-weight:600; color:var(--text-primary); margin-bottom:6px;">
+                                    Título do Tópico <span style="color:#ff6f60;">*</span>
+                                </label>
+                                <input 
+                                    id="topicTitle" 
+                                    type="text" 
+                                    name="title" 
+                                    placeholder="Ex: Dúvida sobre a aula 5, Compartilhando meu projeto..." 
+                                    required
+                                    style="width:100%; padding:10px 14px; border-radius:8px; border:1px solid var(--border-subtle); background:var(--input-bg); color:var(--text-primary); font-size:14px;"
+                                >
+                            </div>
+
+                            <!-- Foto de Capa -->
+                            <div>
+                                <label style="display:block; font-size:13px; font-weight:600; color:var(--text-primary); margin-bottom:6px;">
+                                    Foto de Capa (opcional)
+                                </label>
+                                <input id="topicCoverInput" type="file" name="cover_image" accept="image/*" style="display:none;">
+                                <div id="topicCoverPreview" style="width:100%; aspect-ratio:21/9; border-radius:10px; border:2px dashed var(--border-subtle); background:var(--surface-subtle); display:flex; align-items:center; justify-content:center; cursor:pointer; overflow:hidden; position:relative;" onclick="document.getElementById('topicCoverInput').click();">
+                                    <div id="topicCoverPlaceholder" style="text-align:center; color:var(--text-secondary);">
+                                        <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin:0 auto 8px;">
+                                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                                            <circle cx="8.5" cy="8.5" r="1.5"/>
+                                            <polyline points="21 15 16 10 5 21"/>
+                                        </svg>
+                                        <div style="font-size:13px; font-weight:600;">Clique para adicionar uma capa</div>
+                                        <div style="font-size:11px; margin-top:4px;">Recomendado: 1200x500px • JPG, PNG • Até 5MB</div>
+                                    </div>
+                                    <img id="topicCoverImage" src="" alt="" style="display:none; width:100%; height:100%; object-fit:cover;">
+                                    <button type="button" id="removeCoverBtn" style="display:none; position:absolute; top:10px; right:10px; background:rgba(0,0,0,0.7); border:none; color:#fff; width:32px; height:32px; border-radius:50%; cursor:pointer; font-size:20px; line-height:1;">×</button>
+                                </div>
+                            </div>
+
+                            <!-- Mensagem -->
+                            <div>
+                                <label for="topicBody" style="display:block; font-size:13px; font-weight:600; color:var(--text-primary); margin-bottom:6px;">
+                                    Mensagem Inicial (opcional)
+                                </label>
+                                <textarea 
+                                    id="topicBody" 
+                                    name="body" 
+                                    rows="4" 
+                                    placeholder="Descreva seu tópico, faça sua pergunta ou compartilhe seus pensamentos..."
+                                    style="width:100%; padding:10px 14px; border-radius:8px; border:1px solid var(--border-subtle); background:var(--input-bg); color:var(--text-primary); font-size:14px; resize:vertical; line-height:1.5;"
+                                ></textarea>
+                            </div>
+
+                            <!-- Anexo de Mídia -->
+                            <div>
+                                <label style="display:block; font-size:13px; font-weight:600; color:var(--text-primary); margin-bottom:6px;">
+                                    Anexar Arquivo (opcional)
+                                </label>
+                                <input id="communityTopicMediaInput" type="file" name="media" accept="image/*,video/*,application/pdf,.doc,.docx" style="display:none;">
+                                <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+                                    <label for="communityTopicMediaInput" style="display:inline-flex; align-items:center; gap:8px; padding:8px 14px; border-radius:8px; border:1px solid var(--border-subtle); background:var(--surface-subtle); color:var(--text-primary); font-size:13px; cursor:pointer; user-select:none; transition:all 0.2s;">
+                                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/>
+                                        </svg>
+                                        <span>Escolher Arquivo</span>
+                                    </label>
+                                    <span id="communityTopicMediaName" style="font-size:12px; color:var(--text-secondary); flex:1;">Nenhum arquivo selecionado</span>
+                                </div>
+                                <div style="font-size:11px; color:var(--text-secondary); margin-top:6px;">
+                                    📎 Imagens, vídeos, PDFs ou documentos • Até 20 MB
+                                </div>
+                            </div>
+
+                            <!-- Botões -->
+                            <div style="display:flex; gap:10px; justify-content:flex-end; padding-top:8px; border-top:1px solid var(--border-subtle);">
+                                <button type="button" id="cancelCreateTopicBtn" style="padding:10px 20px; border-radius:8px; border:1px solid var(--border-subtle); background:transparent; color:var(--text-primary); font-size:14px; font-weight:600; cursor:pointer;">
+                                    Cancelar
+                                </button>
+                                <button type="submit" style="padding:10px 24px; border-radius:8px; border:none; background:linear-gradient(135deg,#e53935,#ff6f60); color:#fff; font-size:14px; font-weight:600; cursor:pointer;">
+                                    Publicar Tópico
+                                </button>
+                            </div>
+                        </form>
                     </div>
-                </form>
+                </div>
             <?php endif; ?>
 
             <script>
                 (function(){
-                    var input = document.getElementById('communityTopicMediaInput');
-                    var nameEl = document.getElementById('communityTopicMediaName');
-                    if (!input || !nameEl) return;
-                    input.addEventListener('change', function(){
-                        var f = input.files && input.files[0] ? input.files[0] : null;
-                        nameEl.textContent = f ? f.name : 'Nenhum arquivo selecionado';
-                    });
+                    // Toggle create topic form
+                    var toggleBtn = document.getElementById('toggleCreateTopicBtn');
+                    var closeBtn = document.getElementById('closeCreateTopicBtn');
+                    var cancelBtn = document.getElementById('cancelCreateTopicBtn');
+                    var form = document.getElementById('createTopicForm');
+                    
+                    if (toggleBtn && form) {
+                        toggleBtn.addEventListener('click', function(){
+                            form.style.display = form.style.display === 'none' ? 'block' : 'none';
+                            if (form.style.display === 'block') {
+                                var titleInput = document.getElementById('topicTitle');
+                                if (titleInput) titleInput.focus();
+                            }
+                        });
+                    }
+                    
+                    if (closeBtn && form) {
+                        closeBtn.addEventListener('click', function(){
+                            form.style.display = 'none';
+                        });
+                    }
+                    
+                    if (cancelBtn && form) {
+                        cancelBtn.addEventListener('click', function(){
+                            form.style.display = 'none';
+                        });
+                    }
+
+                    // Handle media attachment
+                    var mediaInput = document.getElementById('communityTopicMediaInput');
+                    var mediaNameEl = document.getElementById('communityTopicMediaName');
+                    if (mediaInput && mediaNameEl) {
+                        mediaInput.addEventListener('change', function(){
+                            var f = mediaInput.files && mediaInput.files[0] ? mediaInput.files[0] : null;
+                            mediaNameEl.textContent = f ? f.name : 'Nenhum arquivo selecionado';
+                        });
+                    }
+
+                    // Handle cover image preview
+                    var coverInput = document.getElementById('topicCoverInput');
+                    var coverPreview = document.getElementById('topicCoverPreview');
+                    var coverPlaceholder = document.getElementById('topicCoverPlaceholder');
+                    var coverImage = document.getElementById('topicCoverImage');
+                    var removeCoverBtn = document.getElementById('removeCoverBtn');
+
+                    if (coverInput && coverPreview && coverPlaceholder && coverImage && removeCoverBtn) {
+                        coverInput.addEventListener('change', function(){
+                            var file = coverInput.files && coverInput.files[0] ? coverInput.files[0] : null;
+                            if (file && file.type.startsWith('image/')) {
+                                var reader = new FileReader();
+                                reader.onload = function(e){
+                                    coverImage.src = e.target.result;
+                                    coverImage.style.display = 'block';
+                                    coverPlaceholder.style.display = 'none';
+                                    removeCoverBtn.style.display = 'block';
+                                };
+                                reader.readAsDataURL(file);
+                            }
+                        });
+
+                        removeCoverBtn.addEventListener('click', function(e){
+                            e.stopPropagation();
+                            coverInput.value = '';
+                            coverImage.src = '';
+                            coverImage.style.display = 'none';
+                            coverPlaceholder.style.display = 'block';
+                            removeCoverBtn.style.display = 'none';
+                        });
+                    }
                 })();
             </script>
 

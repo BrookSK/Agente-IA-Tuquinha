@@ -793,6 +793,10 @@ class CommunitiesController extends Controller
             exit;
         }
 
+        // Handle cover image upload
+        [$coverImageUrl, $coverImageMime, $coverImageKind] = $this->handleTopicMediaUpload('cover_image');
+        
+        // Handle media attachment upload
         [$mediaUrl, $mediaMime, $mediaKind] = $this->handleTopicMediaUpload('media');
         if (!empty($_FILES['media']) && is_array($_FILES['media'])) {
             $uploadError = (int)($_FILES['media']['error'] ?? UPLOAD_ERR_NO_FILE);
@@ -808,6 +812,8 @@ class CommunitiesController extends Controller
             'user_id' => $userId,
             'title' => $title,
             'body' => $body,
+            'cover_image_url' => $coverImageUrl,
+            'cover_image_mime' => $coverImageMime,
             'media_url' => $mediaUrl,
             'media_mime' => $mediaMime,
             'media_kind' => $mediaKind,

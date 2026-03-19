@@ -29,11 +29,37 @@ if (is_array($friendship)) {
 
 $isFavoriteFriend = !empty($isFavoriteFriend);
 
+$profileId = (int)($profile['id'] ?? 0);
 $currentId = (int)($user['id'] ?? 0);
-$profileId = (int)($profileUser['id'] ?? 0);
+$isOwnProfile = $profileId === $currentId;
+
+// Branding colors
+$primaryColor = !empty($branding['primary_color']) ? $branding['primary_color'] : '#e53935';
+$secondaryColor = !empty($branding['secondary_color']) ? $branding['secondary_color'] : '#ff6f60';
+$accentColor = !empty($branding['accent_color']) ? $branding['accent_color'] : '#4caf50';
 
 ?>
 <style>
+    .profile-btn-primary {
+        background: linear-gradient(135deg, <?= $primaryColor ?>, <?= $secondaryColor ?>);
+        border: none;
+        color: #fff;
+    }
+    .profile-btn-primary:hover {
+        opacity: 0.9;
+    }
+    .profile-btn-success {
+        background: linear-gradient(135deg, <?= $accentColor ?>, #8bc34a);
+        border: none;
+        color: #fff;
+    }
+    .profile-btn-success:hover {
+        opacity: 0.9;
+    }
+    .profile-link-primary {
+        color: <?= $primaryColor ?>;
+    }
+    
     #socialProfileMain {
         min-width: 0;
     }
@@ -62,7 +88,8 @@ $profileId = (int)($profileUser['id'] ?? 0);
     }
 </style>
 
-<div style="max-width: 980px; margin: 0 auto 14px;">
+<div class="container-fluid" style="padding: 24px; max-width: 100%; margin: 0 auto;">
+<div style="margin-bottom: 14px;">
     <div style="position:relative; height:220px; border-radius:18px; overflow:hidden; border:1px solid var(--border-subtle); background:var(--surface-card);">
         <?php if ($coverPath !== ''): ?>
             <img src="<?= htmlspecialchars($coverPath, ENT_QUOTES, 'UTF-8') ?>" alt="Capa do perfil" style="width:100%; height:100%; object-fit:cover; display:block;">
@@ -77,8 +104,9 @@ $profileId = (int)($profileUser['id'] ?? 0);
         <?php endif; ?>
     </div>
 </div>
+</div>
 
-<div id="socialProfileLayout" style="max-width: 980px; margin: 0 auto; display: flex; gap: 18px; align-items: flex-start; flex-wrap: wrap;">
+<div id="socialProfileLayout" style="margin: 0 auto; display: flex; gap: 18px; align-items: flex-start; flex-wrap: wrap;">
     <aside id="socialProfileAside" style="flex: 0 0 260px; background:var(--surface-card); border-radius:18px; border:1px solid var(--border-subtle); padding:14px; max-width:100%;">
         <div style="display:flex; flex-direction:column; align-items:center; gap:8px; margin-bottom:10px;">
             <div style="width:96px; height:96px; border-radius:50%; overflow:hidden; background:radial-gradient(circle at 30% 20%, #fff 0, #ff8a65 25%, #e53935 65%, #050509 100%); display:flex; align-items:center; justify-content:center; font-size:40px; font-weight:700; color:#050509;">
@@ -165,8 +193,8 @@ $profileId = (int)($profileUser['id'] ?? 0);
                             <?= $isFavoriteFriend ? '★ Remover dos favoritos' : '☆ Favoritar amigo' ?>
                         </button>
                     </form>
-                    <a href="/painel-externo/chat?user_id=<?= (int)$profileId ?>" style="display:block; text-align:center; font-size:12px; color:#050509; text-decoration:none; margin-top:4px;">
-                        <span style="display:inline-block; padding:6px 12px; border-radius:999px; background:linear-gradient(135deg,#e53935,#ff6f60); font-weight:600;">Abrir chat privado</span>
+                    <a href="/painel-externo/chat?user_id=<?= (int)$profileId ?>" style="display:block; text-align:center; font-size:12px; color:#fff; text-decoration:none; margin-top:4px;">
+                        <span class="profile-btn-primary" style="display:inline-block; padding:6px 12px; border-radius:999px; font-weight:600;">Abrir chat privado</span>
                     </a>
                 <?php elseif ($friendStatus === 'pending' && $requestedById === $currentId): ?>
                     <div style="font-size:12px; color:#ffb74d; background:var(--surface-subtle); border-radius:10px; border:1px solid var(--border-subtle); padding:6px 8px; text-align:center;">
@@ -183,20 +211,20 @@ $profileId = (int)($profileUser['id'] ?? 0);
                         <div style="font-size:12px; color:var(--text-secondary); text-align:center;">Esta pessoa quer ser sua amiga.</div>
                         <input type="hidden" name="user_id" value="<?= (int)$profileId ?>">
                         <div style="display:flex; gap:6px;">
-                            <button type="submit" name="decision" value="accepted" style="flex:1; border:none; border-radius:999px; padding:6px 10px; font-size:12px; font-weight:600; cursor:pointer; background:linear-gradient(135deg,#4caf50,#8bc34a); color:#050509;">Aceitar</button>
+                            <button type="submit" name="decision" value="accepted" class="profile-btn-success" style="flex:1; border-radius:999px; padding:6px 10px; font-size:12px; font-weight:600; cursor:pointer;">Aceitar</button>
                             <button type="submit" name="decision" value="rejected" style="flex:1; border:none; border-radius:999px; padding:6px 10px; font-size:12px; cursor:pointer; background:var(--surface-subtle); border:1px solid var(--border-subtle); color:var(--text-secondary);">Recusar</button>
                         </div>
                     </form>
                 <?php else: ?>
                     <form action="/painel-externo/amigos/solicitar" method="post">
                         <input type="hidden" name="user_id" value="<?= (int)$profileId ?>">
-                        <button type="submit" style="width:100%; border:none; border-radius:999px; padding:7px 10px; font-size:13px; font-weight:600; cursor:pointer; background:linear-gradient(135deg,#e53935,#ff6f60); color:#050509; margin-bottom:4px;">
+                        <button type="submit" class="profile-btn-primary" style="width:100%; border-radius:999px; padding:7px 10px; font-size:13px; font-weight:600; cursor:pointer; margin-bottom:4px;">
                             Adicionar como amigo
                         </button>
                     </form>
                 <?php endif; ?>
 
-                <a href="#scraps" style="display:block; text-align:center; font-size:12px; color:#ff6f60; text-decoration:none;">Ir para os scraps</a>
+                <a href="#scraps" class="profile-link-primary" style="display:block; text-align:center; font-size:12px; text-decoration:none;">Ir para os scraps</a>
             </div>
         <?php else: ?>
             <div style="font-size:12px; color:var(--text-secondary); margin-bottom:8px; text-align:center;">
@@ -250,19 +278,17 @@ $profileId = (int)($profileUser['id'] ?? 0);
                 <?php endif; ?>
             </a>
 
-            <a href="/painel-externo/perfil?user_id=<?= (int)$profileId ?>#portfolio" style="display:block; text-align:center; font-size:12px; color:#050509; text-decoration:none; margin-top:8px;">
-                <span style="display:inline-block; width:100%; padding:8px 12px; border-radius:999px; background:linear-gradient(135deg,#e53935,#ff6f60); font-weight:650;">Ver portfólio</span>
+            <a href="/painel-externo/perfil?user_id=<?= (int)$profileId ?>#portfolio" style="display:block; text-align:center; font-size:12px; color:#fff; text-decoration:none; margin-top:8px;">
+                <span class="profile-btn-primary" style="display:inline-block; width:100%; padding:8px 12px; border-radius:999px; font-weight:650;">Ver portfólio</span>
             </a>
         </section>
 
         <div style="display:flex; flex-direction:column; gap:6px; margin-top:8px;">
             <?php if ($isOwnProfile): ?>
-                <button type="button" id="openSocialProfileEditBtn" style="
-                    width:100%; border:none; border-radius:999px; padding:7px 12px;
-                    font-size:12px; font-weight:650; cursor:pointer;
-                    background:var(--surface-subtle); border:1px solid var(--border-subtle);
-                    color:var(--text-primary);
-                ">Editar perfil</button>
+                <button type="button" id="openSocialProfileEditBtn" class="profile-btn-primary" style="
+                    width:100%; border-radius:999px; padding:10px 12px;
+                    font-size:14px; font-weight:650; cursor:pointer;
+                ">✏️ Editar Meu Perfil</button>
             <?php endif; ?>
             <div style="font-size:11px; color:var(--text-secondary); text-align:center;">
                 <?= (int)($profile['visits_count'] ?? 0) ?> visita(s) neste perfil.
@@ -430,7 +456,11 @@ $profileId = (int)($profileUser['id'] ?? 0);
         </section>
 
         <?php if ($isOwnProfile): ?>
-            <section id="socialProfileEditSection" style="display:none; background:var(--surface-card); border-radius:16px; border:1px solid var(--border-subtle); padding:12px 14px;">
+            <section id="socialProfileEditSection" style="display:none; background:var(--surface-card); border-radius:16px; border:1px solid var(--border-subtle); padding:16px 18px; margin-bottom: 16px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                    <h2 style="font-size: 20px; font-weight: 700; color: var(--text-primary); margin: 0;">Editar Meu Perfil</h2>
+                    <button type="button" id="closeSocialProfileEditBtn" style="border: none; background: transparent; color: var(--text-secondary); font-size: 24px; cursor: pointer; padding: 0; line-height: 1;">×</button>
+                </div>
                 <form action="/painel-externo/perfil/salvar" method="post" enctype="multipart/form-data" style="display:flex; flex-direction:column; gap:10px; font-size:13px; color:var(--text-primary);">
                     <div style="display:flex; flex-wrap:wrap; gap:10px; align-items:center;">
                         <div style="width:72px; height:72px; border-radius:50%; overflow:hidden; background:radial-gradient(circle at 30% 20%, #fff 0, #ff8a65 25%, #e53935 65%, #050509 100%); display:flex; align-items:center; justify-content:center; font-size:28px; font-weight:700; color:#050509;">
@@ -615,7 +645,7 @@ $profileId = (int)($profileUser['id'] ?? 0);
                     </div>
 
                     <div style="display:flex; justify-content:flex-end;">
-                        <button type="submit" style="border:none; border-radius:999px; padding:6px 12px; background:linear-gradient(135deg,#e53935,#ff6f60); color:#050509; font-size:12px; font-weight:600; cursor:pointer;">Salvar perfil</button>
+                        <button type="submit" class="profile-btn-primary" style="border-radius:999px; padding:6px 12px; font-size:12px; font-weight:600; cursor:pointer;">Salvar perfil</button>
                     </div>
                 </form>
             </section>
@@ -625,6 +655,7 @@ $profileId = (int)($profileUser['id'] ?? 0);
         (function () {
             var btn = document.getElementById('openSocialProfileEditBtn');
             var btnCover = document.getElementById('openSocialProfileEditBtnCover');
+            var closeBtn = document.getElementById('closeSocialProfileEditBtn');
             var section = document.getElementById('socialProfileEditSection');
             if (!section) return;
 
@@ -637,6 +668,10 @@ $profileId = (int)($profileUser['id'] ?? 0);
                 }
             }
 
+            function closeEdit() {
+                section.style.display = 'none';
+            }
+
             if (btn) {
                 btn.addEventListener('click', function () {
                     openEdit();
@@ -646,6 +681,12 @@ $profileId = (int)($profileUser['id'] ?? 0);
             if (btnCover) {
                 btnCover.addEventListener('click', function () {
                     openEdit();
+                });
+            }
+
+            if (closeBtn) {
+                closeBtn.addEventListener('click', function () {
+                    closeEdit();
                 });
             }
 
@@ -665,7 +706,7 @@ $profileId = (int)($profileUser['id'] ?? 0);
                 <form action="/painel-externo/perfil/scrap" method="post" style="margin-bottom:10px; display:flex; flex-direction:column; gap:6px;">
                     <input type="hidden" name="to_user_id" value="<?= (int)$profileId ?>">
                     <textarea name="body" rows="3" placeholder="Escreva um scrap carinhoso, uma dúvida ou um oi nostálgico..." style="width:100%; padding:8px 10px; border-radius:10px; border:1px solid var(--border-subtle); background:var(--surface-subtle); color:var(--text-primary); font-size:13px; resize:vertical;"></textarea>
-                    <button type="submit" style="align-self:flex-end; border:none; border-radius:999px; padding:6px 12px; background:linear-gradient(135deg,#e53935,#ff6f60); color:#050509; font-weight:600; font-size:12px; cursor:pointer;">Enviar scrap</button>
+                    <button type="submit" class="profile-btn-primary" style="align-self:flex-end; border-radius:999px; padding:6px 12px; font-weight:600; font-size:12px; cursor:pointer;">Enviar scrap</button>
                 </form>
             <?php endif; ?>
 
@@ -719,7 +760,7 @@ $profileId = (int)($profileUser['id'] ?? 0);
                                     <textarea name="body" rows="3" style="width:100%; padding:8px 10px; border-radius:10px; border:1px solid var(--border-subtle); background:var(--surface-card); color:var(--text-primary); font-size:13px; resize:vertical;" maxlength="4000"><?= htmlspecialchars((string)($s['body'] ?? ''), ENT_QUOTES, 'UTF-8') ?></textarea>
                                     <div style="display:flex; gap:8px; justify-content:flex-end; flex-wrap:wrap;">
                                         <a href="/painel-externo/perfil?user_id=<?= (int)$profileId ?>#scraps" style="text-decoration:none; display:inline-block; border-radius:999px; padding:6px 12px; border:1px solid var(--border-subtle); background:var(--surface-card); color:var(--text-primary); font-size:12px;">Cancelar</a>
-                                        <button type="submit" style="border:none; border-radius:999px; padding:6px 12px; background:linear-gradient(135deg,#4caf50,#8bc34a); color:#050509; font-weight:650; font-size:12px; cursor:pointer;">Salvar</button>
+                                        <button type="submit" class="profile-btn-success" style="border-radius:999px; padding:6px 12px; font-weight:650; font-size:12px; cursor:pointer;">Salvar</button>
                                     </div>
                                 </form>
                             <?php else: ?>
@@ -844,7 +885,7 @@ $profileId = (int)($profileUser['id'] ?? 0);
                             </div>
                             <form action="/painel-externo/perfil/depoimento/decidir" method="post" style="display:flex; gap:6px;">
                                 <input type="hidden" name="testimonial_id" value="<?= (int)($t['id'] ?? 0) ?>">
-                                <button type="submit" name="decision" value="accepted" style="flex:1; border:none; border-radius:999px; padding:4px 8px; background:linear-gradient(135deg,#4caf50,#8bc34a); color:#050509; font-size:11px; cursor:pointer;">Aceitar</button>
+                                <button type="submit" name="decision" value="accepted" class="profile-btn-success" style="flex:1; border-radius:999px; padding:4px 8px; font-size:11px; cursor:pointer;">Aceitar</button>
                                 <button type="submit" name="decision" value="rejected" style="flex:1; border:none; border-radius:999px; padding:4px 8px; background:#311; color:#ffbaba; border:1px solid #a33; font-size:11px; cursor:pointer;">Recusar</button>
                             </form>
                         </div>
