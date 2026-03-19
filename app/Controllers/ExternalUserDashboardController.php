@@ -1047,7 +1047,7 @@ class ExternalUserDashboardController extends Controller
         }
 
         $conversation = SocialConversation::findOrCreateForUsers($currentId, $otherUserId);
-        $messages = SocialMessage::allByConversation((int)$conversation['id'], 50);
+        $messages = SocialMessage::allForConversation((int)$conversation['id'], 50);
 
         $this->view('external_dashboard/chat', [
             'pageTitle' => 'Chat - ' . ($otherUser['name'] ?? 'Conversa'),
