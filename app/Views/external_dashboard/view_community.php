@@ -15,20 +15,6 @@ $coverImage = trim((string)($community['cover_image_path'] ?? ''));
     </div>
 <?php endif; ?>
 
-<div class="header">
-    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
-        <a href="/painel-externo/comunidade" style="color: var(--text-secondary); text-decoration: none; font-size: 14px;">
-            ← Voltar para comunidades
-        </a>
-    </div>
-    
-    <h1><?= htmlspecialchars($communityName, ENT_QUOTES, 'UTF-8') ?></h1>
-    
-    <?php if ($communityDescription !== ''): ?>
-        <p style="margin-top: 8px;"><?= htmlspecialchars($communityDescription, ENT_QUOTES, 'UTF-8') ?></p>
-    <?php endif; ?>
-</div>
-
 <div class="card">
     <h2 style="font-size: 20px; font-weight: 700; margin-bottom: 16px;">Tópicos da Comunidade</h2>
     
