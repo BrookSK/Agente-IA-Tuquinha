@@ -31,7 +31,7 @@ $createdAt = $topic['created_at'] ?? '';
 
 <div class="card" style="margin-bottom: 20px;">
     <div style="font-size: 15px; line-height: 1.6; color: var(--text-primary); white-space: pre-line;">
-        <?= nl2br(htmlspecialchars($topicBody, ENT_QUOTES, 'UTF-8')) ?>
+        <?= nl2br(\App\Controllers\CommunitiesController::renderLessonMentions(htmlspecialchars($topicBody, ENT_QUOTES, 'UTF-8'))) ?>
     </div>
     
     <?php
@@ -119,7 +119,7 @@ $createdAt = $topic['created_at'] ?? '';
                         <?php endif; ?>
                     </div>
                     <div style="font-size: 14px; line-height: 1.6; color: var(--text-primary); white-space: pre-line;">
-                        <?= nl2br(htmlspecialchars($postBody, ENT_QUOTES, 'UTF-8')) ?>
+                        <?= nl2br(\App\Controllers\CommunitiesController::renderLessonMentions(htmlspecialchars($postBody, ENT_QUOTES, 'UTF-8'))) ?>
                     </div>
                     <?php
                     $postMediaUrl = trim((string)($post['media_url'] ?? ''));
@@ -149,8 +149,11 @@ $createdAt = $topic['created_at'] ?? '';
             <h3 style="font-size: 16px; font-weight: 700; margin-bottom: 12px;">Responder</h3>
             <form action="/painel-externo/comunidade/topico/responder" method="post">
                 <input type="hidden" name="topic_id" value="<?= $topicId ?>">
-                <textarea name="body" rows="4" required placeholder="Escreva sua resposta..." 
-                          style="width: 100%; padding: 12px; background: rgba(255,255,255,0.05); border: 1px solid var(--border); border-radius: 10px; color: var(--text-primary); font-size: 14px; resize: vertical;"></textarea>
+                <div style="position: relative;">
+                    <textarea id="replyTextarea" name="body" rows="4" required placeholder="Escreva sua resposta... (use @ para mencionar uma aula)" 
+                              style="width: 100%; padding: 12px; background: rgba(255,255,255,0.05); border: 1px solid var(--border); border-radius: 10px; color: var(--text-primary); font-size: 14px; resize: vertical;"></textarea>
+                    <div id="lessonMentionDropdown" style="display: none; position: absolute; background: #111118; border: 1px solid #272727; border-radius: 8px; max-height: 200px; overflow-y: auto; z-index: 1000; box-shadow: 0 4px 12px rgba(0,0,0,0.5); min-width: 250px;"></div>
+                </div>
                 <div style="margin-top: 12px; display: flex; justify-content: flex-end;">
                     <button type="submit" class="btn" style="padding: 10px 24px;">
                         Enviar Resposta
@@ -166,3 +169,5 @@ $createdAt = $topic['created_at'] ?? '';
         </div>
     <?php endif; ?>
 </div>
+
+<script src="/app/Views/external_dashboard/view_topic_autocomplete.js"></script>
