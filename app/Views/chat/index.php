@@ -462,7 +462,7 @@ function render_markdown_safe(string $text): string {
      height: 100% !important;
  }
 
- .tuq-has-showcase form[action="/chat/send"] {
+ #tuq-chat-root form[action="/chat/send"] {
      margin-bottom: 10px !important;
  }
 
