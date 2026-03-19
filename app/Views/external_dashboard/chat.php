@@ -5,6 +5,7 @@
 /** @var array $conversation */
 /** @var array $messages */
 /** @var bool $canStartVideoCall */
+/** @var array $branding */
 
 $currentId = (int)($user['id'] ?? 0);
 $currentName = trim((string)($user['preferred_name'] ?? ''));
@@ -21,6 +22,11 @@ if (!empty($messages)) {
     $initialLastMessageId = (int)($last['id'] ?? 0);
     reset($messages);
 }
+
+// Branding colors
+$primaryColor = !empty($branding['primary_color']) ? $branding['primary_color'] : '#e53935';
+$secondaryColor = !empty($branding['secondary_color']) ? $branding['secondary_color'] : '#ff6f60';
+$accentColor = !empty($branding['accent_color']) ? $branding['accent_color'] : '#4caf50';
 
 ?>
 <style>
@@ -172,7 +178,7 @@ if (!empty($messages)) {
                 Para usar, contrate um plano que inclua chat de vídeo.
             </div>
             <div style="display:flex; gap:8px; margin-top:12px; justify-content:flex-end; flex-wrap:wrap;">
-                <a href="/painel-externo/amigos" style="text-decoration:none; border:none; border-radius:999px; padding:7px 12px; font-size:12px; font-weight:650; cursor:pointer; background:linear-gradient(135deg,#e53935,#ff6f60); color:#050509;">Voltar para Amigos</a>
+                <a href="/painel-externo/amigos" style="text-decoration:none; border:none; border-radius:999px; padding:7px 12px; font-size:12px; font-weight:650; cursor:pointer; background:linear-gradient(135deg,<?= $primaryColor ?>,<?= $secondaryColor ?>); color:#fff;">Voltar para Amigos</a>
                 <button type="button" id="videoPlanModalClose" style="border:1px solid #272727; border-radius:999px; padding:7px 12px; font-size:12px; cursor:pointer; background:#0b0b10; color:#f5f5f5;">Fechar</button>
             </div>
         </div>
@@ -204,7 +210,7 @@ if (!empty($messages)) {
                 </div>
             </div>
             <div class="call-pane-actions" style="display:flex; gap:8px; margin-top:4px; justify-content:center; flex-wrap:wrap;">
-                <button type="button" id="btn-start-call" style="border:none; border-radius:999px; padding:6px 12px; font-size:12px; font-weight:600; cursor:pointer; background:linear-gradient(135deg,#4caf50,#8bc34a); color:#050509;">
+                <button type="button" id="btn-start-call" style="border:none; border-radius:999px; padding:6px 12px; font-size:12px; font-weight:600; cursor:pointer; background:linear-gradient(135deg,<?= $accentColor ?>,#8bc34a); color:#fff;">
                     Iniciar chamada de vídeo
                 </button>
                 <button type="button" id="btn-toggle-mic" style="border:none; border-radius:999px; padding:6px 12px; font-size:12px; cursor:pointer; background:#1c1c24; color:#f5f5f5; border:1px solid #272727;">
@@ -256,8 +262,8 @@ if (!empty($messages)) {
                     ?>
                     <div data-message-id="<?= (int)($msg['id'] ?? 0) ?>" style="display:flex; justify-content:<?= $isOwn ? 'flex-end' : 'flex-start' ?>;">
                         <div style="max-width:78%; padding:6px 8px; border-radius:10px; font-size:12px; line-height:1.4;
-                            background:<?= $isOwn ? 'linear-gradient(135deg,#e53935,#ff6f60)' : '#1c1c24' ?>;
-                            color:<?= $isOwn ? '#050509' : '#f5f5f5' ?>;
+                            background:<?= $isOwn ? 'linear-gradient(135deg,' . $primaryColor . ',' . $secondaryColor . ')' : '#1c1c24' ?>;
+                            color:<?= $isOwn ? '#fff' : '#f5f5f5' ?>;
                             border:1px solid #272727;">
                             <?php if (!$isOwn): ?>
                                 <div style="font-size:11px; font-weight:600; margin-bottom:2px; color:#ffab91;">
@@ -279,7 +285,7 @@ if (!empty($messages)) {
         <form action="/painel-externo/chat/enviar" method="post" style="margin-top:8px; display:flex; gap:6px; align-items:flex-end;" id="social-chat-form">
             <input type="hidden" name="conversation_id" value="<?= $conversationId ?>">
             <textarea name="body" rows="2" style="flex:1; resize:vertical; min-height:40px; max-height:120px; padding:6px 8px; border-radius:10px; border:1px solid #272727; background:#050509; color:#f5f5f5; font-size:13px;"></textarea>
-            <button type="submit" style="border:none; border-radius:999px; padding:8px 14px; background:linear-gradient(135deg,#e53935,#ff6f60); color:#050509; font-size:13px; font-weight:600; cursor:pointer; white-space:nowrap;">
+            <button type="submit" style="border:none; border-radius:999px; padding:8px 14px; background:linear-gradient(135deg,<?= $primaryColor ?>,<?= $secondaryColor ?>); color:#fff; font-size:13px; font-weight:600; cursor:pointer; white-space:nowrap;">
                 Enviar
             </button>
         </form>
@@ -1157,8 +1163,8 @@ if (!empty($messages)) {
         bubble.style.borderRadius = '10px';
         bubble.style.fontSize = '12px';
         bubble.style.lineHeight = '1.4';
-        bubble.style.background = 'linear-gradient(135deg,#e53935,#ff6f60)';
-        bubble.style.color = '#050509';
+        bubble.style.background = 'linear-gradient(135deg,<?= $primaryColor ?>,<?= $secondaryColor ?>)';
+        bubble.style.color = '#fff';
 
         var bodyDiv = document.createElement('div');
         bodyDiv.innerText = body;
@@ -1207,8 +1213,8 @@ if (!empty($messages)) {
         bubble.style.borderRadius = '10px';
         bubble.style.fontSize = '12px';
         bubble.style.lineHeight = '1.4';
-        bubble.style.background = 'linear-gradient(135deg,#e53935,#ff6f60)';
-        bubble.style.color = '#050509';
+        bubble.style.background = 'linear-gradient(135deg,<?= $primaryColor ?>,<?= $secondaryColor ?>)';
+        bubble.style.color = '#fff';
         bubble.style.opacity = '0.75';
 
         var bodyDiv = document.createElement('div');
