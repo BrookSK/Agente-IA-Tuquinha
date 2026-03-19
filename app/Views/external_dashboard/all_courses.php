@@ -2,6 +2,9 @@
 /** @var array $courses */
 ?>
 <div class="header">
+    <div style="margin-bottom: 8px; font-size: 14px; color: var(--text-secondary);">
+        Bem-vindo, <strong style="color: var(--text-primary);"><?= htmlspecialchars($user['name'] ?? 'Usuário', ENT_QUOTES, 'UTF-8') ?></strong>
+    </div>
     <h1>Cursos Disponíveis</h1>
     <p>Todos os cursos que você pode acessar</p>
 </div>

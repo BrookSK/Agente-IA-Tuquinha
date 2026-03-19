@@ -201,15 +201,31 @@ $createdAt = $topic['created_at'] ?? '';
                 Respondendo a <strong id="replyingToName"></strong>
                 <button onclick="cancelReply()" style="background: none; border: none; color: var(--accent); cursor: pointer; margin-left: 8px; font-size: 12px;">✕ Cancelar</button>
             </div>
-            <form id="mainReplyForm" action="/painel-externo/comunidade/topico/responder" method="post">
+            <form id="mainReplyForm" action="/painel-externo/comunidade/topico/responder" method="post" enctype="multipart/form-data">
                 <input type="hidden" name="topic_id" value="<?= $topicId ?>">
                 <input type="hidden" id="parentPostId" name="parent_post_id" value="">
                 <div style="position: relative;">
-                    <textarea id="replyTextarea" name="body" rows="4" required placeholder="Escreva sua resposta... (use @ para mencionar uma aula)" 
+                    <textarea id="replyTextarea" name="body" rows="4" required placeholder="Escreva sua resposta... (use @ para mencionar)" 
                               style="width: 100%; padding: 12px; background: rgba(255,255,255,0.05); border: 1px solid var(--border); border-radius: 10px; color: var(--text-primary); font-size: 14px; resize: vertical;"></textarea>
                     <div id="lessonMentionDropdown" style="display: none; position: absolute; background: #111118; border: 1px solid #272727; border-radius: 8px; max-height: 200px; overflow-y: auto; z-index: 1000; box-shadow: 0 4px 12px rgba(0,0,0,0.5); min-width: 250px;"></div>
                 </div>
-                <div style="margin-top: 12px; display: flex; justify-content: flex-end;">
+                
+                <input type="file" id="mediaInput" name="media" accept="image/*,video/*" style="display: none;">
+                <div id="mediaPreview" style="display: none; margin-top: 12px; padding: 12px; background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 8px; position: relative;">
+                    <button type="button" onclick="clearMedia()" style="position: absolute; top: 8px; right: 8px; background: rgba(0,0,0,0.6); border: none; color: white; width: 24px; height: 24px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 16px;">×</button>
+                    <img id="imagePreview" style="max-width: 100%; max-height: 200px; border-radius: 6px; display: none;">
+                    <video id="videoPreview" controls style="max-width: 100%; max-height: 200px; border-radius: 6px; display: none;"></video>
+                    <div id="fileInfo" style="font-size: 13px; color: var(--text-secondary);"></div>
+                </div>
+                
+                <div style="margin-top: 12px; display: flex; justify-content: space-between; align-items: center;">
+                    <button type="button" onclick="document.getElementById('mediaInput').click()" 
+                            style="background: none; border: 1px solid var(--border); border-radius: 6px; padding: 8px 14px; cursor: pointer; display: flex; align-items: center; gap: 6px; color: var(--text-secondary); transition: all 0.2s; font-size: 13px;">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path>
+                        </svg>
+                        Anexar Imagem/Vídeo
+                    </button>
                     <button type="submit" class="btn" style="padding: 10px 24px;">
                         Enviar Resposta
                     </button>
@@ -589,5 +605,46 @@ function cancelReply() {
     
     replyingTo.style.display = 'none';
     parentPostId.value = '';
+}
+
+// Media upload preview
+document.getElementById('mediaInput').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    const preview = document.getElementById('mediaPreview');
+    const imagePreview = document.getElementById('imagePreview');
+    const videoPreview = document.getElementById('videoPreview');
+    const fileInfo = document.getElementById('fileInfo');
+    
+    preview.style.display = 'block';
+    imagePreview.style.display = 'none';
+    videoPreview.style.display = 'none';
+    
+    const fileSize = (file.size / 1024 / 1024).toFixed(2);
+    fileInfo.textContent = `${file.name} (${fileSize} MB)`;
+    
+    if (file.type.startsWith('image/')) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            imagePreview.src = e.target.result;
+            imagePreview.style.display = 'block';
+        };
+        reader.readAsDataURL(file);
+    } else if (file.type.startsWith('video/')) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            videoPreview.src = e.target.result;
+            videoPreview.style.display = 'block';
+        };
+        reader.readAsDataURL(file);
+    }
+});
+
+function clearMedia() {
+    document.getElementById('mediaInput').value = '';
+    document.getElementById('mediaPreview').style.display = 'none';
+    document.getElementById('imagePreview').src = '';
+    document.getElementById('videoPreview').src = '';
 }
 </script>

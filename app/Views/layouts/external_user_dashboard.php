@@ -243,7 +243,7 @@ function esc_attr(string $s): string {
                         <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
                         <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
                     </svg>
-                    <span>Cursos</span>
+                    <span>Catálogo de Cursos</span>
                 </a>
                 <a href="/painel-externo/meus-cursos" class="nav-item <?= strpos($_SERVER['REQUEST_URI'] ?? '', '/painel-externo/meus-cursos') !== false ? 'active' : '' ?>">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">

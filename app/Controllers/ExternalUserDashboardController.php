@@ -47,11 +47,36 @@ class ExternalUserDashboardController extends Controller
     {
         $user = $this->requireLogin();
         $branding = $this->getBrandingForUser($user);
+        $userId = (int)$user['id'];
+
+        // Get enrolled courses count
+        $enrolledCourses = CourseEnrollment::findByUserId($userId);
+        $enrolledCoursesCount = count($enrolledCourses);
+
+        // Calculate average progress
+        $totalProgress = 0;
+        $coursesWithProgress = 0;
+        foreach ($enrolledCourses as $enrollment) {
+            $courseId = (int)$enrollment['course_id'];
+            $progress = CourseLessonProgress::getCourseProgress($userId, $courseId);
+            if ($progress > 0) {
+                $totalProgress += $progress;
+                $coursesWithProgress++;
+            }
+        }
+        $averageProgress = $coursesWithProgress > 0 ? round($totalProgress / $coursesWithProgress) : 0;
+
+        // Get communities count
+        $communities = CourseAllowedCommunity::allowedCommunitiesByUser($userId);
+        $communitiesCount = count($communities);
 
         $this->view('external_dashboard/index', [
             'pageTitle' => 'Meu Painel',
             'user' => $user,
             'branding' => $branding,
+            'enrolledCoursesCount' => $enrolledCoursesCount,
+            'averageProgress' => $averageProgress,
+            'communitiesCount' => $communitiesCount,
             'layout' => 'external_user_dashboard',
         ]);
     }
