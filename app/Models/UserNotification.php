@@ -165,4 +165,34 @@ class UserNotification
             'link' => $link,
         ]);
     }
+    
+    /**
+     * Cria notificação de curtida em post
+     */
+    public static function createLikeNotification(
+        int $postAuthorId,
+        int $likerUserId,
+        string $postType,
+        int $postId,
+        string $link
+    ): int {
+        $pdo = Database::getConnection();
+        
+        // Busca nome de quem curtiu
+        $stmt = $pdo->prepare("SELECT preferred_name, name FROM users WHERE id = :id");
+        $stmt->execute([':id' => $likerUserId]);
+        $liker = $stmt->fetch(PDO::FETCH_ASSOC);
+        $likerName = $liker['preferred_name'] ?? $liker['name'] ?? 'Alguém';
+        
+        return self::create([
+            'user_id' => $postAuthorId,
+            'type' => 'like',
+            'related_type' => $postType,
+            'related_id' => $postId,
+            'actor_user_id' => $likerUserId,
+            'title' => 'Curtida no seu post',
+            'message' => "{$likerName} curtiu seu post",
+            'link' => $link,
+        ]);
+    }
 }
