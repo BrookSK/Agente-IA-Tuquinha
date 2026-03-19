@@ -501,11 +501,28 @@ class ExternalUserDashboardController extends Controller
             exit;
         }
 
-        \App\Models\CommunityTopicPost::create([
+        $parentPostId = isset($_POST['parent_post_id']) ? (int)$_POST['parent_post_id'] : null;
+        
+        // Validate parent post if provided
+        if ($parentPostId !== null && $parentPostId > 0) {
+            $parentPost = \App\Models\CommunityTopicPost::findById($parentPostId);
+            if (!$parentPost || (int)$parentPost['topic_id'] !== $topicId) {
+                $parentPostId = null;
+            }
+        }
+
+        $postId = \App\Models\CommunityTopicPost::create([
             'topic_id' => $topicId,
+            'parent_post_id' => $parentPostId,
             'user_id' => (int)$user['id'],
             'body' => $body,
         ]);
+
+        // Parse and store lesson mentions
+        \App\Controllers\CommunitiesController::parseLessonMentionsStatic($body, $topicId, $postId, (int)$user['id']);
+        
+        // Parse and store user mentions
+        \App\Controllers\CommunitiesController::parseUserMentionsStatic($body, $topicId, $postId, (int)$user['id']);
 
         header('Location: /painel-externo/comunidade/topico?id=' . $topicId . '&slug=' . urlencode($community['slug'] ?? ''));
         exit;

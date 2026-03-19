@@ -978,17 +978,17 @@ class CommunitiesController extends Controller
         ]);
 
         // Parse and store lesson mentions
-        $this->parseLessonMentions($body, $topicId, $postId, $userId);
+        self::parseLessonMentionsStatic($body, $topicId, $postId, $userId);
         
         // Parse and store user mentions
-        $this->parseUserMentions($body, $topicId, $postId, $userId);
+        self::parseUserMentionsStatic($body, $topicId, $postId, $userId);
 
         $_SESSION['communities_success'] = 'Resposta enviada.';
         header('Location: /comunidades/topicos/ver?topic_id=' . $topicId);
         exit;
     }
 
-    private function parseUserMentions(string $text, int $topicId, ?int $postId, int $userId): void
+    public static function parseUserMentionsStatic(string $text, int $topicId, ?int $postId, int $userId): void
     {
         // Match @Username patterns (but not @Aula which is for lessons)
         if (!preg_match_all('/@([^@\s]+(?:\s+[^@\s]+)*)/', $text, $matches)) {
@@ -1830,7 +1830,7 @@ class CommunitiesController extends Controller
         exit;
     }
 
-    private function parseLessonMentions(string $body, int $topicId, ?int $commentId, int $userId): void
+    public static function parseLessonMentionsStatic(string $body, int $topicId, ?int $commentId, int $userId): void
     {
         // Extract lesson mentions from text (format: @LessonTitle)
         preg_match_all('/@([^@\s]+(?:\s+[^@\s]+)*)/', $body, $matches);

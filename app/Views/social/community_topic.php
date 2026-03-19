@@ -156,7 +156,7 @@ $slug = (string)($community['slug'] ?? '');
                             }
                         }
                     ?>
-                    <div style="background:#050509; border-radius:12px; border:1px solid #272727; padding:8px 10px; <?= $parentPostId ? 'margin-left:20px; border-left:3px solid #ff6f60;' : '' ?>">
+                    <div style="background:#050509; border-radius:12px; border:1px solid #272727; padding:8px 10px; <?= $parentPostId ? 'margin-left:40px; border-left:3px solid #ff6f60;' : '' ?>">
                         <?php if ($parentPostId && $parentAuthor): ?>
                             <div style="font-size:11px; color:#b0b0b0; margin-bottom:4px; padding:4px 8px; background:#1a1a24; border-radius:4px;">
                                 ↳ Respondendo a <strong style="color:#ff6f60;"><?= htmlspecialchars($parentAuthor, ENT_QUOTES, 'UTF-8') ?></strong>
@@ -633,14 +633,11 @@ $slug = (string)($community['slug'] ?? '');
         textarea.addEventListener('input', function() {
             const { start, word } = getCurrentWord();
             
-            // Check for user mention (@username) - but not lesson mention
-            if (word.startsWith('@') && word.length > 1 && !word.includes('Aula')) {
+            // Check for user mention (@username)
+            if (word.startsWith('@') && !word.includes('Aula')) {
                 userMentionStart = start;
-                const query = word.substring(1);
+                const query = word.substring(1); // Can be empty string
                 searchUsers(query);
-            } else if (word === '@') {
-                // Don't show user dropdown for bare @, let lesson autocomplete handle it
-                userDropdown.style.display = 'none';
             } else {
                 userDropdown.style.display = 'none';
                 userMentionStart = -1;

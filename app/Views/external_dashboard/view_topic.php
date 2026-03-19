@@ -119,7 +119,7 @@ $createdAt = $topic['created_at'] ?? '';
                         }
                     }
                 ?>
-                <div style="padding: 14px; border: 1px solid var(--border); border-radius: 10px; background: rgba(255,255,255,0.02); <?= $parentPostId ? 'margin-left: 24px; border-left: 3px solid var(--accent);' : '' ?>">
+                <div style="padding: 14px; border: 1px solid var(--border); border-radius: 10px; background: rgba(255,255,255,0.02); <?= $parentPostId ? 'margin-left: 40px; border-left: 3px solid var(--accent);' : '' ?>">
                     <?php if ($parentPostId && $parentAuthor): ?>
                         <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 8px; padding: 6px 10px; background: rgba(255,255,255,0.03); border-radius: 6px;">
                             ↳ Respondendo a <strong style="color: var(--accent);"><?= htmlspecialchars($parentAuthor, ENT_QUOTES, 'UTF-8') ?></strong>
@@ -311,14 +311,11 @@ $createdAt = $topic['created_at'] ?? '';
     textarea.addEventListener('input', function() {
         const { start, word } = getCurrentWord();
         
-        // Check for user mention (@username) - but not lesson mention
-        if (word.startsWith('@') && word.length > 1 && !word.includes('Aula')) {
+        // Check for user mention (@username)
+        if (word.startsWith('@') && !word.includes('Aula')) {
             userMentionStart = start;
-            const query = word.substring(1);
+            const query = word.substring(1); // Can be empty string
             searchUsers(query);
-        } else if (word === '@') {
-            // Don't show user dropdown for bare @, let lesson autocomplete handle it
-            userDropdown.style.display = 'none';
         } else {
             userDropdown.style.display = 'none';
             userMentionStart = -1;
