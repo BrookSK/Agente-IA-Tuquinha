@@ -393,6 +393,7 @@ function render_markdown_safe(string $text): string {
  }
 
  .main-content {
+     flex: 1 1 auto;
      overflow-y: hidden !important;
      display: flex;
      flex-direction: column;
