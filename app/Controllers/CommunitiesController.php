@@ -1839,7 +1839,7 @@ class CommunitiesController extends Controller
             
             $pdo = \App\Core\Database::getConnection();
             $stmt = $pdo->prepare('
-                SELECT cl.id, cl.course_id
+                SELECT cl.id, cl.course_id, cl.title
                 FROM course_lessons cl
                 WHERE cl.title = :title
                 AND cl.is_published = 1
@@ -1852,6 +1852,9 @@ class CommunitiesController extends Controller
                 $lessonUrl = '/painel-externo/aula?lesson_id=' . (int)$lesson['id'];
                 return '<a href="' . htmlspecialchars($lessonUrl, ENT_QUOTES, 'UTF-8') . '" style="color: #007bff; text-decoration: underline; font-weight: 500;" title="Ir para a aula">@' . $lessonTitle . '</a>';
             }
+            
+            // Debug: log what we searched for
+            error_log("Lesson mention not found: '" . $lessonTitle . "'");
             
             return $matches[0];
         }, $escapedText);
