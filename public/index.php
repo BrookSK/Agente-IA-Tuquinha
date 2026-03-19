@@ -305,6 +305,8 @@ $router->post('/comunidades/sair', 'CommunitiesController@leave');
 $router->post('/comunidades/topicos/novo', 'CommunitiesController@createTopic');
 $router->get('/comunidades/topicos/ver', 'CommunitiesController@showTopic');
 $router->post('/comunidades/topicos/responder', 'CommunitiesController@replyTopic');
+$router->post('/comunidades/topicos/post/curtir', 'CommunitiesController@togglePostLike');
+$router->get('/api/comunidades/membros/buscar', 'CommunitiesController@searchMembers');
 $router->get('/comunidades/membros', 'CommunitiesController@members');
 $router->get('/comunidades/enquetes', 'CommunitiesController@polls');
 $router->post('/comunidades/enquetes/criar', 'CommunitiesController@createPoll');

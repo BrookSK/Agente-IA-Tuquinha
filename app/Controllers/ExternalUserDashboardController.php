@@ -449,6 +449,11 @@ class ExternalUserDashboardController extends Controller
 
         $posts = \App\Models\CommunityTopicPost::allByTopicWithUser($topicId);
 
+        // Get like counts and user liked status
+        $postIds = array_map(fn($p) => (int)$p['id'], $posts);
+        $likesCount = \App\Models\CommunityPostLike::likesCountByPostIds($postIds);
+        $likedByUser = \App\Models\CommunityPostLike::likedPostIdsByUser((int)$user['id'], $postIds);
+
         $this->view('external_dashboard/view_topic', [
             'pageTitle' => $topic['title'] ?? 'Tópico',
             'user' => $user,
@@ -457,6 +462,8 @@ class ExternalUserDashboardController extends Controller
             'topic' => $topic,
             'posts' => $posts,
             'isMember' => $isMember,
+            'likesCount' => $likesCount,
+            'likedByUser' => $likedByUser,
             'layout' => 'external_user_dashboard',
         ]);
     }

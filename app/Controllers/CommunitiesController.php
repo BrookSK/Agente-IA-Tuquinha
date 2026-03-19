@@ -856,6 +856,11 @@ class CommunitiesController extends Controller
         $isMember = CommunityMember::isMember($communityId, $userId);
         $posts = CommunityTopicPost::allByTopicWithUser($topicId);
 
+        // Get like counts and user liked status
+        $postIds = array_map(fn($p) => (int)$p['id'], $posts);
+        $likesCount = CommunityPostLike::likesCountByPostIds($postIds);
+        $likedByUser = CommunityPostLike::likedPostIdsByUser($userId, $postIds);
+
         $success = $_SESSION['communities_success'] ?? null;
         $error = $_SESSION['communities_error'] ?? null;
         unset($_SESSION['communities_success'], $_SESSION['communities_error']);
@@ -867,6 +872,8 @@ class CommunitiesController extends Controller
             'topic' => $topic,
             'posts' => $posts,
             'isMember' => $isMember,
+            'likesCount' => $likesCount,
+            'likedByUser' => $likedByUser,
             'success' => $success,
             'error' => $error,
         ]);
@@ -950,8 +957,19 @@ class CommunitiesController extends Controller
             }
         }
 
+        $parentPostId = isset($_POST['parent_post_id']) ? (int)$_POST['parent_post_id'] : null;
+        
+        // Validate parent post if provided
+        if ($parentPostId !== null && $parentPostId > 0) {
+            $parentPost = CommunityTopicPost::findById($parentPostId);
+            if (!$parentPost || (int)$parentPost['topic_id'] !== $topicId) {
+                $parentPostId = null; // Invalid parent, ignore it
+            }
+        }
+
         $postId = CommunityTopicPost::create([
             'topic_id' => $topicId,
+            'parent_post_id' => $parentPostId,
             'user_id' => $userId,
             'body' => $body,
             'media_url' => $mediaUrl,
@@ -961,10 +979,53 @@ class CommunitiesController extends Controller
 
         // Parse and store lesson mentions
         $this->parseLessonMentions($body, $topicId, $postId, $userId);
+        
+        // Parse and store user mentions
+        $this->parseUserMentions($body, $topicId, $postId, $userId);
 
         $_SESSION['communities_success'] = 'Resposta enviada.';
         header('Location: /comunidades/topicos/ver?topic_id=' . $topicId);
         exit;
+    }
+
+    private function parseUserMentions(string $text, int $topicId, ?int $postId, int $userId): void
+    {
+        // Match @Username patterns (but not @Aula which is for lessons)
+        if (!preg_match_all('/@([^@\s]+(?:\s+[^@\s]+)*)/', $text, $matches)) {
+            return;
+        }
+        
+        $pdo = \App\Core\Database::getConnection();
+        
+        foreach ($matches[1] as $userName) {
+            $userName = trim($userName);
+            if ($userName === '' || stripos($userName, 'Aula') !== false) {
+                continue;
+            }
+            
+            // Find user by name
+            $stmt = $pdo->prepare('
+                SELECT id FROM users
+                WHERE name = :name
+                LIMIT 1
+            ');
+            $stmt->execute(['name' => $userName]);
+            $user = $stmt->fetch(\PDO::FETCH_ASSOC);
+            
+            if ($user) {
+                // Store mention
+                $insertStmt = $pdo->prepare('
+                    INSERT INTO community_user_mentions (topic_id, post_id, mentioned_user_id, mentioned_by_user_id)
+                    VALUES (:topic_id, :post_id, :mentioned_user_id, :mentioned_by_user_id)
+                ');
+                $insertStmt->execute([
+                    'topic_id' => $topicId,
+                    'post_id' => $postId,
+                    'mentioned_user_id' => (int)$user['id'],
+                    'mentioned_by_user_id' => $userId
+                ]);
+            }
+        }
     }
 
     public function members(): void
@@ -1833,11 +1894,13 @@ class CommunitiesController extends Controller
         // First escape the entire text for safety
         $escapedText = htmlspecialchars($text, ENT_QUOTES, 'UTF-8');
         
-        // Then convert @LessonTitle to clickable links
+        // Then convert @mentions to clickable links (both lessons and users)
         return preg_replace_callback('/@([^@\s&]+(?:\s+[^@\s&]+)*)/', function($matches) {
-            $lessonTitle = trim($matches[1]);
+            $mentionText = trim($matches[1]);
             
             $pdo = \App\Core\Database::getConnection();
+            
+            // First try to find as lesson
             $stmt = $pdo->prepare('
                 SELECT cl.id, cl.course_id, cl.title
                 FROM course_lessons cl
@@ -1845,18 +1908,115 @@ class CommunitiesController extends Controller
                 AND cl.is_published = 1
                 LIMIT 1
             ');
-            $stmt->execute(['title' => $lessonTitle]);
+            $stmt->execute(['title' => $mentionText]);
             $lesson = $stmt->fetch(\PDO::FETCH_ASSOC);
             
             if ($lesson) {
                 $lessonUrl = '/painel-externo/aula?id=' . (int)$lesson['id'] . '&course_id=' . (int)$lesson['course_id'];
-                return '<a href="' . htmlspecialchars($lessonUrl, ENT_QUOTES, 'UTF-8') . '" style="color: #007bff; text-decoration: underline; font-weight: 500;" title="Ir para a aula">@' . $lessonTitle . '</a>';
+                return '<a href="' . htmlspecialchars($lessonUrl, ENT_QUOTES, 'UTF-8') . '" style="color: #007bff; text-decoration: underline; font-weight: 500;" title="Ir para a aula">@' . $mentionText . '</a>';
             }
             
-            // Debug: log what we searched for
-            error_log("Lesson mention not found: '" . $lessonTitle . "'");
+            // If not a lesson, try to find as user
+            $userStmt = $pdo->prepare('
+                SELECT id, name FROM users
+                WHERE name = :name
+                LIMIT 1
+            ');
+            $userStmt->execute(['name' => $mentionText]);
+            $user = $userStmt->fetch(\PDO::FETCH_ASSOC);
+            
+            if ($user) {
+                // For now, just highlight the mention (could link to profile later)
+                return '<span style="color: #28a745; font-weight: 600;" title="Usuário mencionado">@' . $mentionText . '</span>';
+            }
             
             return $matches[0];
         }, $escapedText);
+    }
+
+    public function togglePostLike(): void
+    {
+        $user = $this->requireLogin();
+        $userId = (int)$user['id'];
+
+        $postId = isset($_POST['post_id']) ? (int)$_POST['post_id'] : 0;
+        
+        if ($postId <= 0) {
+            header('Content-Type: application/json');
+            echo json_encode(['success' => false, 'error' => 'Post inválido']);
+            exit;
+        }
+
+        // Verify post exists
+        $post = CommunityTopicPost::findById($postId);
+        if (!$post) {
+            header('Content-Type: application/json');
+            echo json_encode(['success' => false, 'error' => 'Post não encontrado']);
+            exit;
+        }
+
+        // Toggle like
+        CommunityPostLike::toggle($postId, $userId);
+
+        // Get updated counts
+        $likesCount = CommunityPostLike::likesCountByPostIds([$postId]);
+        $count = $likesCount[$postId] ?? 0;
+
+        $likedByUser = CommunityPostLike::likedPostIdsByUser($userId, [$postId]);
+        $isLiked = isset($likedByUser[$postId]);
+
+        header('Content-Type: application/json');
+        echo json_encode([
+            'success' => true,
+            'likes_count' => $count,
+            'is_liked' => $isLiked
+        ]);
+        exit;
+    }
+
+    public function searchMembers(): void
+    {
+        header('Content-Type: application/json');
+        
+        $user = $this->requireLogin();
+        $userId = (int)$user['id'];
+
+        $communityId = isset($_GET['community_id']) ? (int)$_GET['community_id'] : 0;
+        $query = isset($_GET['q']) ? trim((string)$_GET['q']) : '';
+
+        if ($communityId <= 0) {
+            echo json_encode([]);
+            exit;
+        }
+
+        // Verify user is member of this community
+        if (!CommunityMember::isMember($communityId, $userId)) {
+            echo json_encode([]);
+            exit;
+        }
+
+        $pdo = \App\Core\Database::getConnection();
+        
+        // Search members by name
+        $stmt = $pdo->prepare('
+            SELECT DISTINCT u.id, u.name
+            FROM users u
+            INNER JOIN community_members cm ON cm.user_id = u.id
+            WHERE cm.community_id = :community_id
+            AND cm.left_at IS NULL
+            AND u.name LIKE :query
+            ORDER BY u.name ASC
+            LIMIT 10
+        ');
+        
+        $stmt->execute([
+            'community_id' => $communityId,
+            'query' => '%' . $query . '%'
+        ]);
+
+        $members = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+
+        echo json_encode($members);
+        exit;
     }
 }

@@ -10,10 +10,11 @@ class CommunityTopicPost
     public static function create(array $data): int
     {
         $pdo = Database::getConnection();
-        $stmt = $pdo->prepare('INSERT INTO community_topic_posts (topic_id, user_id, body, media_url, media_mime, media_kind)
-            VALUES (:topic_id, :user_id, :body, :media_url, :media_mime, :media_kind)');
+        $stmt = $pdo->prepare('INSERT INTO community_topic_posts (topic_id, parent_post_id, user_id, body, media_url, media_mime, media_kind)
+            VALUES (:topic_id, :parent_post_id, :user_id, :body, :media_url, :media_mime, :media_kind)');
         $stmt->execute([
             'topic_id' => (int)($data['topic_id'] ?? 0),
+            'parent_post_id' => isset($data['parent_post_id']) ? (int)$data['parent_post_id'] : null,
             'user_id' => (int)($data['user_id'] ?? 0),
             'body' => $data['body'] ?? '',
             'media_url' => $data['media_url'] ?? null,
@@ -38,5 +39,18 @@ class CommunityTopicPost
             ORDER BY p.created_at ASC, p.id ASC');
         $stmt->execute(['tid' => $topicId]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+    }
+
+    public static function findById(int $id): ?array
+    {
+        if ($id <= 0) {
+            return null;
+        }
+
+        $pdo = Database::getConnection();
+        $stmt = $pdo->prepare('SELECT * FROM community_topic_posts WHERE id = :id LIMIT 1');
+        $stmt->execute(['id' => $id]);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $row ?: null;
     }
 }
