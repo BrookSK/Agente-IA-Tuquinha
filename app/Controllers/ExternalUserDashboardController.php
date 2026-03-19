@@ -13,6 +13,15 @@ use App\Models\CoursePartnerBranding;
 use App\Models\CourseAllowedCommunity;
 use App\Models\CourseLessonComment;
 use App\Models\CoursePurchase;
+use App\Models\UserSocialProfile;
+use App\Models\UserScrap;
+use App\Models\UserTestimonial;
+use App\Models\UserFriend;
+use App\Models\CommunityMember;
+use App\Models\UserCourseBadge;
+use App\Models\SocialPortfolioItem;
+use App\Models\SocialConversation;
+use App\Models\SocialMessage;
 
 class ExternalUserDashboardController extends Controller
 {
@@ -550,6 +559,634 @@ class ExternalUserDashboardController extends Controller
         \App\Controllers\CommunitiesController::parseUserMentionsStatic($body, $topicId, $postId, (int)$user['id']);
 
         header('Location: /painel-externo/comunidade/topico?id=' . $topicId . '&slug=' . urlencode($community['slug'] ?? ''));
+        exit;
+    }
+
+    // ==================== SOCIAL FEATURES - PROFILE ====================
+    
+    public function showProfile(): void
+    {
+        $currentUser = $this->requireLogin();
+        $branding = $this->getBrandingForUser($currentUser);
+        $currentId = (int)$currentUser['id'];
+
+        $targetId = isset($_GET['user_id']) ? (int)$_GET['user_id'] : $currentId;
+        if ($targetId <= 0) {
+            $targetId = $currentId;
+        }
+
+        $profileUser = User::findById($targetId);
+        if (!$profileUser) {
+            header('Location: /painel-externo/comunidade');
+            exit;
+        }
+
+        $profile = UserSocialProfile::findByUserId($targetId);
+        if ($targetId !== $currentId) {
+            if (!$profile) {
+                UserSocialProfile::upsertForUser($targetId, []);
+                $profile = UserSocialProfile::findByUserId($targetId);
+            }
+            UserSocialProfile::incrementVisit($targetId);
+        }
+
+        $scraps = $targetId === $currentId
+            ? UserScrap::allForUser($targetId, 50)
+            : UserScrap::allVisibleForUser($targetId, 50);
+        $publicTestimonials = UserTestimonial::allPublicForUser($targetId);
+        $pendingTestimonials = $targetId === $currentId ? UserTestimonial::pendingForUser($currentId) : [];
+        $friends = UserFriend::friendsWithUsers($targetId);
+        $communities = CommunityMember::communitiesForUser($targetId);
+        $friendship = $targetId !== $currentId ? UserFriend::findFriendship($currentId, $targetId) : null;
+        $courseBadges = UserCourseBadge::allWithCoursesByUserId($targetId);
+
+        $published = SocialPortfolioItem::publishedForUser($targetId, 1);
+        $lastPublishedPortfolioItem = !empty($published) && is_array($published[0] ?? null) ? $published[0] : null;
+
+        $isFavoriteFriend = false;
+        if ($friendship && ($friendship['status'] ?? '') === 'accepted') {
+            $pairUserId = (int)($friendship['user_id'] ?? 0);
+            if ($pairUserId === $currentId) {
+                $isFavoriteFriend = !empty($friendship['is_favorite_user1']);
+            } else {
+                $isFavoriteFriend = !empty($friendship['is_favorite_user2']);
+            }
+        }
+
+        $success = $_SESSION['social_success'] ?? null;
+        $error = $_SESSION['social_error'] ?? null;
+        unset($_SESSION['social_success'], $_SESSION['social_error']);
+
+        $displayName = $profileUser['preferred_name'] ?? $profileUser['name'] ?? '';
+        $displayName = trim((string)$displayName);
+        if ($displayName === '') {
+            $displayName = 'Perfil';
+        }
+
+        $this->view('external_dashboard/profile', [
+            'pageTitle' => 'Perfil - ' . $displayName,
+            'user' => $currentUser,
+            'branding' => $branding,
+            'profileUser' => $profileUser,
+            'profile' => $profile,
+            'lastPublishedPortfolioItem' => $lastPublishedPortfolioItem,
+            'scraps' => $scraps,
+            'publicTestimonials' => $publicTestimonials,
+            'pendingTestimonials' => $pendingTestimonials,
+            'friends' => $friends,
+            'communities' => $communities,
+            'courseBadges' => $courseBadges,
+            'friendship' => $friendship,
+            'isFavoriteFriend' => $isFavoriteFriend,
+            'success' => $success,
+            'error' => $error,
+            'layout' => 'external_user_dashboard',
+        ]);
+    }
+
+    public function saveProfile(): void
+    {
+        $currentUser = $this->requireLogin();
+        $userId = (int)$currentUser['id'];
+
+        $aboutMe = trim((string)($_POST['about_me'] ?? ''));
+        $interests = trim((string)($_POST['interests'] ?? ''));
+        $website = trim((string)($_POST['website'] ?? ''));
+
+        if ($website !== '' && !preg_match('/^https?:\/\//i', $website)) {
+            $website = 'https://' . $website;
+        }
+
+        $existingProfile = UserSocialProfile::findByUserId($userId);
+        $avatarPath = $existingProfile['avatar_path'] ?? null;
+
+        if (!empty($_FILES['avatar_file']) && is_array($_FILES['avatar_file'])) {
+            $uploadError = (int)($_FILES['avatar_file']['error'] ?? UPLOAD_ERR_NO_FILE);
+            if ($uploadError !== UPLOAD_ERR_NO_FILE && $uploadError === UPLOAD_ERR_OK) {
+                $tmp = $_FILES['avatar_file']['tmp_name'] ?? '';
+                $originalName = (string)($_FILES['avatar_file']['name'] ?? 'avatar');
+                $type = (string)($_FILES['avatar_file']['type'] ?? '');
+                $size = (int)($_FILES['avatar_file']['size'] ?? 0);
+
+                if ($size > 0 && $size <= 2 * 1024 * 1024 && str_starts_with($type, 'image/')) {
+                    $publicDir = __DIR__ . '/../../public/uploads/avatars';
+                    if (!is_dir($publicDir)) {
+                        @mkdir($publicDir, 0775, true);
+                    }
+
+                    $ext = strtolower((string)pathinfo($originalName, PATHINFO_EXTENSION));
+                    if ($ext === '') $ext = 'png';
+
+                    $fileName = uniqid('avatar_', true) . '.' . $ext;
+                    $targetPath = $publicDir . '/' . $fileName;
+
+                    if (@move_uploaded_file($tmp, $targetPath)) {
+                        $avatarPath = '/public/uploads/avatars/' . $fileName;
+                    }
+                }
+            }
+        }
+
+        UserSocialProfile::upsertForUser($userId, [
+            'about_me' => $aboutMe !== '' ? $aboutMe : null,
+            'interests' => $interests !== '' ? $interests : null,
+            'website' => $website !== '' ? $website : null,
+            'avatar_path' => $avatarPath,
+        ]);
+
+        $_SESSION['social_success'] = 'Perfil atualizado com sucesso.';
+        header('Location: /painel-externo/perfil');
+        exit;
+    }
+
+    public function postScrap(): void
+    {
+        $currentUser = $this->requireLogin();
+        $fromUserId = (int)$currentUser['id'];
+
+        $toUserId = isset($_POST['to_user_id']) ? (int)$_POST['to_user_id'] : 0;
+        $body = trim((string)($_POST['body'] ?? ''));
+
+        if ($toUserId <= 0 || $body === '' || strlen($body) > 4000) {
+            $_SESSION['social_error'] = 'Dados inválidos para o scrap.';
+            header('Location: /painel-externo/perfil?user_id=' . $toUserId);
+            exit;
+        }
+
+        UserScrap::create([
+            'from_user_id' => $fromUserId,
+            'to_user_id' => $toUserId,
+            'body' => $body,
+        ]);
+
+        $_SESSION['social_success'] = 'Scrap enviado.';
+        header('Location: /painel-externo/perfil?user_id=' . $toUserId);
+        exit;
+    }
+
+    public function editScrap(): void
+    {
+        $currentUser = $this->requireLogin();
+        $currentId = (int)$currentUser['id'];
+
+        $scrapId = isset($_POST['scrap_id']) ? (int)$_POST['scrap_id'] : 0;
+        $body = trim((string)($_POST['body'] ?? ''));
+
+        $scrap = UserScrap::findById($scrapId);
+        if (!$scrap || (int)($scrap['from_user_id'] ?? 0) !== $currentId || $body === '') {
+            $_SESSION['social_error'] = 'Não foi possível editar o scrap.';
+            header('Location: /painel-externo/perfil');
+            exit;
+        }
+
+        UserScrap::updateBodyByAuthor($scrapId, $currentId, $body);
+        $_SESSION['social_success'] = 'Scrap atualizado.';
+        header('Location: /painel-externo/perfil?user_id=' . (int)($scrap['to_user_id'] ?? 0));
+        exit;
+    }
+
+    public function deleteScrap(): void
+    {
+        $currentUser = $this->requireLogin();
+        $currentId = (int)$currentUser['id'];
+
+        $scrapId = isset($_POST['scrap_id']) ? (int)$_POST['scrap_id'] : 0;
+        $scrap = UserScrap::findById($scrapId);
+        
+        if (!$scrap || (int)($scrap['from_user_id'] ?? 0) !== $currentId) {
+            $_SESSION['social_error'] = 'Não foi possível excluir o scrap.';
+            header('Location: /painel-externo/perfil');
+            exit;
+        }
+
+        UserScrap::softDeleteByAuthor($scrapId, $currentId);
+        $_SESSION['social_success'] = 'Scrap excluído.';
+        header('Location: /painel-externo/perfil?user_id=' . (int)($scrap['to_user_id'] ?? 0));
+        exit;
+    }
+
+    public function toggleScrapVisibility(): void
+    {
+        $currentUser = $this->requireLogin();
+        $currentId = (int)$currentUser['id'];
+
+        $scrapId = isset($_POST['scrap_id']) ? (int)$_POST['scrap_id'] : 0;
+        $action = trim((string)($_POST['action'] ?? ''));
+        $hide = $action === 'hide';
+
+        $scrap = UserScrap::findById($scrapId);
+        if (!$scrap || (int)($scrap['to_user_id'] ?? 0) !== $currentId) {
+            $_SESSION['social_error'] = 'Operação não permitida.';
+            header('Location: /painel-externo/perfil');
+            exit;
+        }
+
+        UserScrap::setHiddenByProfileOwner($scrapId, $currentId, $hide);
+        $_SESSION['social_success'] = $hide ? 'Scrap ocultado.' : 'Scrap visível novamente.';
+        header('Location: /painel-externo/perfil');
+        exit;
+    }
+
+    public function submitTestimonial(): void
+    {
+        $currentUser = $this->requireLogin();
+        $fromUserId = (int)$currentUser['id'];
+
+        $toUserId = isset($_POST['to_user_id']) ? (int)$_POST['to_user_id'] : 0;
+        $body = trim((string)($_POST['body'] ?? ''));
+        $isPublic = !empty($_POST['is_public']) ? 1 : 0;
+
+        if ($toUserId <= 0 || $toUserId === $fromUserId || $body === '' || strlen($body) > 4000) {
+            $_SESSION['social_error'] = 'Dados inválidos para o depoimento.';
+            header('Location: /painel-externo/perfil?user_id=' . $toUserId);
+            exit;
+        }
+
+        UserTestimonial::create([
+            'from_user_id' => $fromUserId,
+            'to_user_id' => $toUserId,
+            'body' => $body,
+            'is_public' => $isPublic,
+            'status' => 'pending',
+        ]);
+
+        $_SESSION['social_success'] = 'Depoimento enviado para aprovação.';
+        header('Location: /painel-externo/perfil?user_id=' . $toUserId);
+        exit;
+    }
+
+    public function decideTestimonial(): void
+    {
+        $currentUser = $this->requireLogin();
+        $toUserId = (int)$currentUser['id'];
+
+        $testimonialId = isset($_POST['testimonial_id']) ? (int)$_POST['testimonial_id'] : 0;
+        $decision = (string)($_POST['decision'] ?? '');
+
+        if ($testimonialId <= 0) {
+            $_SESSION['social_error'] = 'Depoimento inválido.';
+            header('Location: /painel-externo/perfil');
+            exit;
+        }
+
+        UserTestimonial::decide($testimonialId, $toUserId, $decision);
+        $_SESSION['social_success'] = 'Decisão registrada.';
+        header('Location: /painel-externo/perfil');
+        exit;
+    }
+
+    // ==================== SOCIAL FEATURES - FRIENDS ====================
+
+    private function wantsJson(): bool
+    {
+        $accept = (string)($_SERVER['HTTP_ACCEPT'] ?? '');
+        if ($accept !== '' && stripos($accept, 'application/json') !== false) {
+            return true;
+        }
+        $xrw = (string)($_SERVER['HTTP_X_REQUESTED_WITH'] ?? '');
+        return $xrw !== '' && strtolower($xrw) === 'xmlhttprequest';
+    }
+
+    public function friendsList(): void
+    {
+        $user = $this->requireLogin();
+        $branding = $this->getBrandingForUser($user);
+        $userId = (int)$user['id'];
+
+        $q = isset($_GET['q']) ? trim((string)$_GET['q']) : '';
+        $onlyFavorites = isset($_GET['fav']) && ($_GET['fav'] === '1' || strtolower($_GET['fav']) === 'true');
+
+        $friends = UserFriend::friendsWithUsers($userId, $q, $onlyFavorites);
+        $pending = UserFriend::pendingForUser($userId);
+
+        $success = $_SESSION['friends_success'] ?? null;
+        $error = $_SESSION['friends_error'] ?? null;
+        unset($_SESSION['friends_success'], $_SESSION['friends_error']);
+
+        $this->view('external_dashboard/friends', [
+            'pageTitle' => 'Amigos',
+            'user' => $user,
+            'branding' => $branding,
+            'friends' => $friends,
+            'pending' => $pending,
+            'success' => $success,
+            'error' => $error,
+            'q' => $q,
+            'onlyFavorites' => $onlyFavorites,
+            'layout' => 'external_user_dashboard',
+        ]);
+    }
+
+    public function friendsAdd(): void
+    {
+        $user = $this->requireLogin();
+        $branding = $this->getBrandingForUser($user);
+
+        $this->view('external_dashboard/friends_add', [
+            'pageTitle' => 'Adicionar Amigo',
+            'user' => $user,
+            'branding' => $branding,
+            'layout' => 'external_user_dashboard',
+        ]);
+    }
+
+    public function friendsSearch(): void
+    {
+        $user = $this->requireLogin();
+        $userId = (int)$user['id'];
+
+        $q = trim((string)($_GET['q'] ?? ''));
+        $q = ltrim($q, '@');
+
+        if ($q === '') {
+            header('Content-Type: application/json');
+            echo json_encode(['ok' => true, 'items' => []]);
+            return;
+        }
+
+        $items = User::searchForFriend($q, $userId, 10);
+        header('Content-Type: application/json');
+        echo json_encode(['ok' => true, 'items' => $items]);
+    }
+
+    public function friendRequest(): void
+    {
+        $user = $this->requireLogin();
+        $fromUserId = (int)$user['id'];
+
+        $otherUserId = isset($_POST['user_id']) ? (int)$_POST['user_id'] : 0;
+        if ($otherUserId <= 0 || $otherUserId === $fromUserId) {
+            if ($this->wantsJson()) {
+                header('Content-Type: application/json');
+                echo json_encode(['ok' => false, 'error' => 'Usuário inválido']);
+                return;
+            }
+            $_SESSION['friends_error'] = 'Usuário inválido.';
+            header('Location: /painel-externo/amigos');
+            exit;
+        }
+
+        UserFriend::request($fromUserId, $otherUserId);
+
+        if ($this->wantsJson()) {
+            header('Content-Type: application/json');
+            echo json_encode(['ok' => true]);
+            return;
+        }
+
+        $_SESSION['friends_success'] = 'Pedido de amizade enviado.';
+        header('Location: /painel-externo/perfil?user_id=' . $otherUserId);
+        exit;
+    }
+
+    public function friendCancelRequest(): void
+    {
+        $user = $this->requireLogin();
+        $fromUserId = (int)$user['id'];
+
+        $otherUserId = isset($_POST['user_id']) ? (int)$_POST['user_id'] : 0;
+        if ($otherUserId <= 0) {
+            $_SESSION['friends_error'] = 'Usuário inválido.';
+            header('Location: /painel-externo/amigos');
+            exit;
+        }
+
+        UserFriend::cancelRequest($fromUserId, $otherUserId);
+        $_SESSION['friends_success'] = 'Pedido cancelado.';
+        header('Location: /painel-externo/perfil?user_id=' . $otherUserId);
+        exit;
+    }
+
+    public function friendDecide(): void
+    {
+        $user = $this->requireLogin();
+        $currentUserId = (int)$user['id'];
+
+        $otherUserId = isset($_POST['user_id']) ? (int)$_POST['user_id'] : 0;
+        $decision = (string)($_POST['decision'] ?? '');
+
+        if ($otherUserId <= 0) {
+            $_SESSION['friends_error'] = 'Pedido inválido.';
+            header('Location: /painel-externo/amigos');
+            exit;
+        }
+
+        UserFriend::decide($currentUserId, $otherUserId, $decision);
+        $_SESSION['friends_success'] = 'Decisão registrada.';
+        header('Location: /painel-externo/amigos');
+        exit;
+    }
+
+    public function friendRemove(): void
+    {
+        $user = $this->requireLogin();
+        $currentUserId = (int)$user['id'];
+
+        $otherUserId = isset($_POST['user_id']) ? (int)$_POST['user_id'] : 0;
+        if ($otherUserId <= 0) {
+            $_SESSION['friends_error'] = 'Amigo inválido.';
+            header('Location: /painel-externo/amigos');
+            exit;
+        }
+
+        UserFriend::removeFriendship($currentUserId, $otherUserId);
+        $_SESSION['friends_success'] = 'Amizade removida.';
+        header('Location: /painel-externo/amigos');
+        exit;
+    }
+
+    public function friendFavorite(): void
+    {
+        $user = $this->requireLogin();
+        $currentUserId = (int)$user['id'];
+
+        $otherUserId = isset($_POST['user_id']) ? (int)$_POST['user_id'] : 0;
+        $isFavorite = !empty($_POST['is_favorite']);
+
+        if ($otherUserId <= 0) {
+            $_SESSION['friends_error'] = 'Amigo inválido.';
+            header('Location: /painel-externo/amigos');
+            exit;
+        }
+
+        UserFriend::setFavorite($currentUserId, $otherUserId, $isFavorite);
+
+        if ($this->wantsJson()) {
+            header('Content-Type: application/json');
+            echo json_encode(['ok' => true]);
+            return;
+        }
+
+        header('Location: /painel-externo/perfil?user_id=' . $otherUserId);
+        exit;
+    }
+
+    // ==================== SOCIAL FEATURES - CHAT ====================
+
+    public function openChat(): void
+    {
+        $currentUser = $this->requireLogin();
+        $branding = $this->getBrandingForUser($currentUser);
+        $currentId = (int)$currentUser['id'];
+
+        $otherUserId = isset($_GET['user_id']) ? (int)$_GET['user_id'] : 0;
+        if ($otherUserId <= 0 || $otherUserId === $currentId) {
+            header('Location: /painel-externo/amigos');
+            exit;
+        }
+
+        $otherUser = User::findById($otherUserId);
+        if (!$otherUser) {
+            header('Location: /painel-externo/amigos');
+            exit;
+        }
+
+        $friendship = UserFriend::findFriendship($currentId, $otherUserId);
+        if (!$friendship || ($friendship['status'] ?? '') !== 'accepted') {
+            $_SESSION['friends_error'] = 'Você precisa ser amigo para conversar.';
+            header('Location: /painel-externo/perfil?user_id=' . $otherUserId);
+            exit;
+        }
+
+        $conversation = SocialConversation::findOrCreateBetween($currentId, $otherUserId);
+        $messages = SocialMessage::allByConversation((int)$conversation['id'], 50);
+
+        $this->view('external_dashboard/chat', [
+            'pageTitle' => 'Chat - ' . ($otherUser['name'] ?? 'Conversa'),
+            'user' => $currentUser,
+            'branding' => $branding,
+            'otherUser' => $otherUser,
+            'conversation' => $conversation,
+            'messages' => $messages,
+            'layout' => 'external_user_dashboard',
+        ]);
+    }
+
+    public function sendMessage(): void
+    {
+        $currentUser = $this->requireLogin();
+        $currentId = (int)$currentUser['id'];
+
+        $conversationId = isset($_POST['conversation_id']) ? (int)$_POST['conversation_id'] : 0;
+        $body = trim((string)($_POST['body'] ?? ''));
+
+        if ($conversationId <= 0 || $body === '') {
+            header('Content-Type: application/json');
+            echo json_encode(['ok' => false, 'error' => 'Dados inválidos']);
+            exit;
+        }
+
+        $conversation = SocialConversation::findById($conversationId);
+        if (!$conversation) {
+            header('Content-Type: application/json');
+            echo json_encode(['ok' => false, 'error' => 'Conversa não encontrada']);
+            exit;
+        }
+
+        $user1 = (int)($conversation['user1_id'] ?? 0);
+        $user2 = (int)($conversation['user2_id'] ?? 0);
+        if ($currentId !== $user1 && $currentId !== $user2) {
+            header('Content-Type: application/json');
+            echo json_encode(['ok' => false, 'error' => 'Sem permissão']);
+            exit;
+        }
+
+        SocialMessage::create([
+            'conversation_id' => $conversationId,
+            'from_user_id' => $currentId,
+            'body' => $body,
+        ]);
+
+        header('Content-Type: application/json');
+        echo json_encode(['ok' => true]);
+        exit;
+    }
+
+    public function chatStream(): void
+    {
+        $currentUser = $this->requireLogin();
+        $currentId = (int)$currentUser['id'];
+
+        $conversationId = isset($_GET['conversation_id']) ? (int)$_GET['conversation_id'] : 0;
+        $lastId = isset($_GET['last_id']) ? (int)$_GET['last_id'] : 0;
+
+        if ($conversationId <= 0) {
+            http_response_code(400);
+            exit;
+        }
+
+        $conversation = SocialConversation::findById($conversationId);
+        if (!$conversation) {
+            http_response_code(404);
+            exit;
+        }
+
+        $user1 = (int)($conversation['user1_id'] ?? 0);
+        $user2 = (int)($conversation['user2_id'] ?? 0);
+        if ($currentId !== $user1 && $currentId !== $user2) {
+            http_response_code(403);
+            exit;
+        }
+
+        if (function_exists('session_write_close')) {
+            @session_write_close();
+        }
+
+        header('Content-Type: text/event-stream');
+        header('Cache-Control: no-cache');
+        header('Connection: keep-alive');
+
+        echo "event: ping\ndata: {}\n\n";
+        @flush();
+
+        $deadline = microtime(true) + 25.0;
+        while (microtime(true) < $deadline) {
+            $newMessages = SocialMessage::newSince($conversationId, $lastId);
+            if (!empty($newMessages)) {
+                echo "event: messages\n";
+                echo "data: " . json_encode($newMessages) . "\n\n";
+                @flush();
+                break;
+            }
+            usleep(500000);
+        }
+
+        exit;
+    }
+
+    // ==================== SOCIAL FEATURES - WEBRTC ====================
+
+    public function webrtcSend(): void
+    {
+        $currentUser = $this->requireLogin();
+        $fromUserId = (int)$currentUser['id'];
+
+        $toUserId = isset($_POST['to_user_id']) ? (int)$_POST['to_user_id'] : 0;
+        $signal = (string)($_POST['signal'] ?? '');
+
+        if ($toUserId <= 0 || $signal === '') {
+            header('Content-Type: application/json');
+            echo json_encode(['ok' => false]);
+            exit;
+        }
+
+        \App\Models\SocialWebRtcSignal::send($fromUserId, $toUserId, $signal);
+
+        header('Content-Type: application/json');
+        echo json_encode(['ok' => true]);
+        exit;
+    }
+
+    public function webrtcPoll(): void
+    {
+        $currentUser = $this->requireLogin();
+        $userId = (int)$currentUser['id'];
+
+        $lastId = isset($_GET['last_id']) ? (int)$_GET['last_id'] : 0;
+        $signals = \App\Models\SocialWebRtcSignal::pollForUser($userId, $lastId);
+
+        header('Content-Type: application/json');
+        echo json_encode(['ok' => true, 'signals' => $signals]);
         exit;
     }
 }

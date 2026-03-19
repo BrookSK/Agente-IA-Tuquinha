@@ -261,6 +261,15 @@ function esc_attr(string $s): string {
                     </svg>
                     <span>Comunidade</span>
                 </a>
+                <a href="/painel-externo/amigos" class="nav-item <?= strpos($_SERVER['REQUEST_URI'] ?? '', '/painel-externo/amigos') !== false || strpos($_SERVER['REQUEST_URI'] ?? '', '/painel-externo/perfil') !== false || strpos($_SERVER['REQUEST_URI'] ?? '', '/painel-externo/chat') !== false ? 'active' : '' ?>">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="9" cy="7" r="4"></circle>
+                        <path d="M22 21v-2a4 4 0 0 0-3-3.87"></path>
+                        <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                    </svg>
+                    <span>Amigos</span>
+                </a>
                 <a href="/logout" class="nav-item" style="margin-top: 20px; border-top: 1px solid var(--border); padding-top: 16px;">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>

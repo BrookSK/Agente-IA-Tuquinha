@@ -160,6 +160,32 @@ $router->get('/painel-externo/comunidade/ver', 'ExternalUserDashboardController@
 $router->get('/painel-externo/comunidade/topico', 'ExternalUserDashboardController@viewTopic');
 $router->post('/painel-externo/comunidade/topico/responder', 'ExternalUserDashboardController@replyTopic');
 
+// External Dashboard - Social Features
+$router->get('/painel-externo/perfil', 'ExternalUserDashboardController@showProfile');
+$router->post('/painel-externo/perfil/salvar', 'ExternalUserDashboardController@saveProfile');
+$router->post('/painel-externo/perfil/scrap', 'ExternalUserDashboardController@postScrap');
+$router->post('/painel-externo/perfil/scrap/editar', 'ExternalUserDashboardController@editScrap');
+$router->post('/painel-externo/perfil/scrap/excluir', 'ExternalUserDashboardController@deleteScrap');
+$router->post('/painel-externo/perfil/scrap/visibilidade', 'ExternalUserDashboardController@toggleScrapVisibility');
+$router->post('/painel-externo/perfil/depoimento', 'ExternalUserDashboardController@submitTestimonial');
+$router->post('/painel-externo/perfil/depoimento/decidir', 'ExternalUserDashboardController@decideTestimonial');
+
+$router->get('/painel-externo/amigos', 'ExternalUserDashboardController@friendsList');
+$router->get('/painel-externo/amigos/adicionar', 'ExternalUserDashboardController@friendsAdd');
+$router->get('/painel-externo/amigos/buscar', 'ExternalUserDashboardController@friendsSearch');
+$router->post('/painel-externo/amigos/solicitar', 'ExternalUserDashboardController@friendRequest');
+$router->post('/painel-externo/amigos/cancelar', 'ExternalUserDashboardController@friendCancelRequest');
+$router->post('/painel-externo/amigos/decidir', 'ExternalUserDashboardController@friendDecide');
+$router->post('/painel-externo/amigos/remover', 'ExternalUserDashboardController@friendRemove');
+$router->post('/painel-externo/amigos/favorito', 'ExternalUserDashboardController@friendFavorite');
+
+$router->get('/painel-externo/chat', 'ExternalUserDashboardController@openChat');
+$router->post('/painel-externo/chat/enviar', 'ExternalUserDashboardController@sendMessage');
+$router->get('/painel-externo/chat/stream', 'ExternalUserDashboardController@chatStream');
+
+$router->post('/painel-externo/webrtc/send', 'ExternalUserDashboardController@webrtcSend');
+$router->get('/painel-externo/webrtc/poll', 'ExternalUserDashboardController@webrtcPoll');
+
 $router->get('/cursos', 'CourseController@index');
 $router->get('/cursos/ver', 'CourseController@show');
 $router->post('/cursos/inscrever', 'CourseController@enroll');
