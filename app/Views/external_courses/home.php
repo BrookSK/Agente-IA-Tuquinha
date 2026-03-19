@@ -394,7 +394,7 @@ $logoUrl = isset($branding) && is_array($branding) && !empty($branding['logo_url
       opacity: 0;
       visibility: hidden;
       transition: transform 0.3s ease, opacity 0.3s ease, visibility 0.3s;
-      z-index: 999;
+      z-index: 1001;
     }
     .nav-actions.active {
       transform: translateY(0);
