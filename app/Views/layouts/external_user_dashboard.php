@@ -297,7 +297,7 @@ function esc_attr(string $s): string {
                     </svg>
                     <span>Editar Perfil</span>
                 </a>
-                <a href="/painel-externo/amigos" class="nav-item <?= (strpos($_SERVER['REQUEST_URI'] ?? '', '/painel-externo/amigos') !== false || strpos($_SERVER['REQUEST_URI'] ?? '', '/painel-externo/chat') !== false || (strpos($_SERVER['REQUEST_URI'] ?? '', '/painel-externo/perfil?user_id=') !== false)) && strpos($_SERVER['REQUEST_URI'] ?? '', '/painel-externo/perfil/editar') === false ? 'active' : '' ?>">
+                <a href="/painel-externo/amigos" class="nav-item <?= (strpos($_SERVER['REQUEST_URI'] ?? '', '/painel-externo/amigos') !== false || strpos($_SERVER['REQUEST_URI'] ?? '', '/painel-externo/chat') !== false || (strpos($_SERVER['REQUEST_URI'] ?? '', '/painel-externo/perfil?user_id=') !== false && strpos($_SERVER['REQUEST_URI'] ?? '', 'user_id=' . ((int)($user['id'] ?? 0))) === false)) && strpos($_SERVER['REQUEST_URI'] ?? '', '/painel-externo/perfil/editar') === false ? 'active' : '' ?>">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
                         <circle cx="9" cy="7" r="4"></circle>
