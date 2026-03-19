@@ -721,7 +721,7 @@ if (!empty($conversationId) && !empty($personaOptions) && is_array($personaOptio
     position: fixed;
     left: 50%;
     transform: translateX(-50%) translateY(10px);
-    bottom: 140px;
+    bottom: 120px;
     z-index: 9999;
     width: 34px;
     height: 34px;
