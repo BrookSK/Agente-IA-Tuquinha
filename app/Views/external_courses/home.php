@@ -52,7 +52,7 @@ $logoUrl = isset($branding) && is_array($branding) && !empty($branding['logo_url
     position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
     display: flex; align-items: center; justify-content: space-between;
     padding: 0 80px; height: 72px; background: rgba(8,9,13,.95);
-    backdrop-filter: blur(12px); border-bottom: 1px solid var(--border);
+    backdrop-filter: blur(12px);
   }
   .nav-brand {
     display: flex; align-items: center; gap: 12px;
@@ -361,12 +361,47 @@ $logoUrl = isset($branding) && is_array($branding) && !empty($branding['logo_url
     }
     footer { flex-direction: column; gap: 12px; text-align: center; padding: 24px 32px; }
   }
+  .mobile-menu-toggle {
+    display: none;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 8px;
+    color: var(--text);
+  }
+  .mobile-menu-toggle svg {
+    width: 24px;
+    height: 24px;
+  }
   @media (max-width: 640px) {
     body { overflow-x: hidden; }
-    nav { padding: 0 16px; height: auto; min-height: 60px; }
-    .nav-brand img { height: 32px !important; max-width: 140px !important; }
-    .nav-actions { gap: 8px; }
-    .nav-actions .btn { padding: 8px 14px; font-size: 0.85rem; }
+    nav { padding: 0 16px; height: 50px; min-height: 50px; }
+    .nav-brand img { height: 28px !important; max-width: 120px !important; }
+    .brand-icon { width: 28px; height: 28px; font-size: 0.7rem; }
+    .mobile-menu-toggle { display: block; }
+    .nav-actions {
+      position: fixed;
+      top: 50px;
+      left: 0;
+      right: 0;
+      background: rgba(8,9,13,.98);
+      backdrop-filter: blur(12px);
+      flex-direction: column;
+      padding: 16px;
+      gap: 12px;
+      border-bottom: 1px solid var(--border);
+      transform: translateY(-100%);
+      opacity: 0;
+      visibility: hidden;
+      transition: transform 0.3s ease, opacity 0.3s ease, visibility 0.3s;
+      z-index: 999;
+    }
+    .nav-actions.active {
+      transform: translateY(0);
+      opacity: 1;
+      visibility: visible;
+    }
+    .nav-actions .btn { padding: 12px 20px; font-size: 0.9rem; width: 100%; text-align: center; }
     .hero-left { padding: 60px 16px 24px; }
     .hero-title { font-size: 2rem !important; line-height: 1.15; letter-spacing: -0.5px; }
     .hero-sub { font-size: 0.9rem; line-height: 1.6; }
@@ -412,7 +447,14 @@ $logoUrl = isset($branding) && is_array($branding) && !empty($branding['logo_url
       <?= htmlspecialchars($companyName ?: 'Curso Online', ENT_QUOTES, 'UTF-8') ?>
     <?php endif; ?>
   </a>
-  <div class="nav-actions">
+  <button class="mobile-menu-toggle" onclick="toggleMobileMenu()" aria-label="Menu">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </button>
+  <div class="nav-actions" id="mobileMenu">
     <?php if (!empty($_SESSION['user_id'])): ?>
       <a href="/painel-externo" class="btn-primary">Acessar Painel</a>
     <?php endif; ?>
@@ -581,7 +623,7 @@ $logoUrl = isset($branding) && is_array($branding) && !empty($branding['logo_url
   </div>
 
   <footer>
-    <span>© 2025 <?= htmlspecialchars($companyName ?: 'Curso Online', ENT_QUOTES, 'UTF-8') ?>. Todos os direitos reservados.</span>
+    <span>Resenha 2.0 - Uma empresa Nuvem Labs</span>
   </footer>
 </div>
 
@@ -592,6 +634,20 @@ $logoUrl = isset($branding) && is_array($branding) && !empty($branding['logo_url
     document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
     document.getElementById('panel-' + tab).classList.add('active');
   }
+
+  function toggleMobileMenu() {
+    const menu = document.getElementById('mobileMenu');
+    menu.classList.toggle('active');
+  }
+
+  // Close mobile menu when clicking outside
+  document.addEventListener('click', function(event) {
+    const menu = document.getElementById('mobileMenu');
+    const toggle = document.querySelector('.mobile-menu-toggle');
+    if (menu && toggle && !menu.contains(event.target) && !toggle.contains(event.target)) {
+      menu.classList.remove('active');
+    }
+  });
 
   const observer = new IntersectionObserver((entries) => {
     entries.forEach(e => {

@@ -83,6 +83,7 @@ function esc_attr(string $s): string {
             min-height: 100vh;
             display: flex;
             flex-direction: column;
+            padding-top: 100px;
             <?php if ($backgroundImageUrl !== ''): ?>
             background-image: url('<?= esc_attr($backgroundImageUrl) ?>');
             background-size: cover;
@@ -497,7 +498,7 @@ function esc_attr(string $s): string {
             </div>
             
             <div class="footer-bottom">
-                © <?= date('Y') ?> <?= esc_attr($companyName) ?>. Todos os direitos reservados.
+                Resenha 2.0 - Uma empresa Nuvem Labs
             </div>
         </footer>
     </div>
