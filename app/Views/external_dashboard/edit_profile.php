@@ -40,6 +40,7 @@ $accentColor = !empty($branding['accent_color']) ? $branding['accent_color'] : '
         border: 1px solid rgba(255, 255, 255, 0.1) !important;
         color: var(--text-primary) !important;
         padding: 10px 14px !important;
+        width: 100% !important;
     }
     .edit-profile-form .form-control:focus,
     .edit-profile-form .form-select:focus {
@@ -49,7 +50,7 @@ $accentColor = !empty($branding['accent_color']) ? $branding['accent_color'] : '
 </style>
 
 <div class="container-fluid" style="padding: 0; margin: 0; width: 100%;">
-    <div style="max-width: 900px; margin: 0 auto; padding: 20px 24px;">
+    <div style="max-width: 1400px; margin: 0 auto; padding: 20px 24px;">
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h1 style="font-size: 32px; font-weight: 700; color: var(--text-primary); margin: 0;">Editar Meu Perfil</h1>
                 <a href="/painel-externo/perfil?user_id=<?= $userId ?>" class="btn btn-outline-secondary" style="padding: 8px 16px; border-radius: 8px; text-decoration: none;">
@@ -84,7 +85,7 @@ $accentColor = !empty($branding['accent_color']) ? $branding['accent_color'] : '
                                 <?php endif; ?>
                             </div>
                             <div style="flex:1;">
-                                <input type="file" name="avatar_file" accept="image/*" class="form-control" style="background: var(--surface-subtle); border: 1px solid var(--border-subtle); color: var(--text-primary);">
+                                <input type="file" name="avatar_file" accept="image/*" class="form-control">
                                 <div style="font-size:12px; color:var(--text-secondary); margin-top:4px;">JPG, PNG ou GIF • Até 2 MB</div>
                             </div>
                         </div>
@@ -93,27 +94,27 @@ $accentColor = !empty($branding['accent_color']) ? $branding['accent_color'] : '
                     <!-- Cover -->
                     <div class="form-section">
                         <label style="display:block; font-size:14px; font-weight:600; color:var(--text-primary); margin-bottom:8px;">Capa do Perfil</label>
-                        <input type="file" name="cover_file" accept="image/*" class="form-control" style="background: var(--surface-subtle); border: 1px solid var(--border-subtle); color: var(--text-primary);">
+                        <input type="file" name="cover_file" accept="image/*" class="form-control">
                         <div style="font-size:12px; color:var(--text-secondary); margin-top:4px;">Recomendado: imagem larga • Até 4 MB</div>
                     </div>
 
                     <!-- Nickname -->
                     <div class="form-section">
                         <label for="nickname" style="display:block; font-size:14px; font-weight:600; color:var(--text-primary); margin-bottom:8px;">Nickname</label>
-                        <input id="nickname" name="nickname" type="text" value="<?= htmlspecialchars((string)($user['nickname'] ?? ''), ENT_QUOTES, 'UTF-8') ?>" placeholder="ex: joao_silva" class="form-control" style="background: var(--surface-subtle); border: 1px solid var(--border-subtle); color: var(--text-primary); padding: 10px 14px;">
+                        <input id="nickname" name="nickname" type="text" value="<?= htmlspecialchars((string)($user['nickname'] ?? ''), ENT_QUOTES, 'UTF-8') ?>" placeholder="ex: joao_silva" class="form-control">
                         <div style="font-size:12px; color:var(--text-secondary); margin-top:4px;">Apenas letras minúsculas, números, _ e -</div>
                     </div>
 
                     <!-- About Me -->
                     <div class="form-section">
                         <label for="about_me" style="display:block; font-size:14px; font-weight:600; color:var(--text-primary); margin-bottom:8px;">Sobre Mim</label>
-                        <textarea id="about_me" name="about_me" rows="4" class="form-control" style="background: var(--surface-subtle); border: 1px solid var(--border-subtle); color: var(--text-primary); padding: 10px 14px; resize: vertical;"><?= htmlspecialchars((string)($profile['about_me'] ?? ''), ENT_QUOTES, 'UTF-8') ?></textarea>
+                        <textarea id="about_me" name="about_me" rows="4" class="form-control" style="resize: vertical;"><?= htmlspecialchars((string)($profile['about_me'] ?? ''), ENT_QUOTES, 'UTF-8') ?></textarea>
                     </div>
 
                     <div class="row">
                         <div class="col-md-6">
                             <label for="language" style="display:block; font-size:14px; font-weight:600; color:var(--text-primary); margin-bottom:8px;">Idioma</label>
-                            <select id="language" name="language" class="form-control" style="background: var(--surface-subtle); border: 1px solid var(--border-subtle); color: var(--text-primary); padding: 10px 14px;">
+                            <select id="language" name="language" class="form-control form-select">
                                 <?php $lang = (string)($profile['language'] ?? ''); ?>
                                 <option value="">Selecione</option>
                                 <option value="pt-BR" <?= $lang === 'pt-BR' ? 'selected' : '' ?>>Português (Brasil)</option>
@@ -123,48 +124,48 @@ $accentColor = !empty($branding['accent_color']) ? $branding['accent_color'] : '
                         </div>
                         <div class="col-md-6">
                             <label for="profile_category" style="display:block; font-size:14px; font-weight:600; color:var(--text-primary); margin-bottom:8px;">Categoria</label>
-                            <input id="profile_category" name="profile_category" type="text" value="<?= htmlspecialchars((string)($profile['profile_category'] ?? ''), ENT_QUOTES, 'UTF-8') ?>" placeholder="Ex: Designer, Empreendedor" class="form-control" style="background: var(--surface-subtle); border: 1px solid var(--border-subtle); color: var(--text-primary); padding: 10px 14px;">
+                            <input id="profile_category" name="profile_category" type="text" value="<?= htmlspecialchars((string)($profile['profile_category'] ?? ''), ENT_QUOTES, 'UTF-8') ?>" placeholder="Ex: Designer, Empreendedor" class="form-control">
                         </div>
                     </div>
 
                     <div class="row">
                         <div class="col-md-4">
                             <label for="age" style="display:block; font-size:14px; font-weight:600; color:var(--text-primary); margin-bottom:8px;">Idade</label>
-                            <input id="age" name="age" type="number" min="0" max="120" value="<?= isset($profile['age']) ? (int)$profile['age'] : '' ?>" class="form-control" style="background: var(--surface-subtle); border: 1px solid var(--border-subtle); color: var(--text-primary); padding: 10px 14px;">
+                            <input id="age" name="age" type="number" min="0" max="120" value="<?= isset($profile['age']) ? (int)$profile['age'] : '' ?>" class="form-control">
                         </div>
                         <div class="col-md-4">
                             <label for="birthday" style="display:block; font-size:14px; font-weight:600; color:var(--text-primary); margin-bottom:8px;">Aniversário</label>
-                            <input id="birthday" name="birthday" type="date" value="<?= htmlspecialchars((string)($profile['birthday'] ?? ''), ENT_QUOTES, 'UTF-8') ?>" class="form-control" style="background: var(--surface-subtle); border: 1px solid var(--border-subtle); color: var(--text-primary); padding: 10px 14px;">
+                            <input id="birthday" name="birthday" type="date" value="<?= htmlspecialchars((string)($profile['birthday'] ?? ''), ENT_QUOTES, 'UTF-8') ?>" class="form-control">
                         </div>
                         <div class="col-md-4">
                             <label for="relationship_status" style="display:block; font-size:14px; font-weight:600; color:var(--text-primary); margin-bottom:8px;">Relacionamento</label>
-                            <input id="relationship_status" name="relationship_status" type="text" value="<?= htmlspecialchars((string)($profile['relationship_status'] ?? ''), ENT_QUOTES, 'UTF-8') ?>" class="form-control" style="background: var(--surface-subtle); border: 1px solid var(--border-subtle); color: var(--text-primary); padding: 10px 14px;">
+                            <input id="relationship_status" name="relationship_status" type="text" value="<?= htmlspecialchars((string)($profile['relationship_status'] ?? ''), ENT_QUOTES, 'UTF-8') ?>" class="form-control">
                         </div>
                     </div>
 
                     <div class="row">
                         <div class="col-md-6">
                             <label for="hometown" style="display:block; font-size:14px; font-weight:600; color:var(--text-primary); margin-bottom:8px;">Cidade Natal</label>
-                            <input id="hometown" name="hometown" type="text" value="<?= htmlspecialchars((string)($profile['hometown'] ?? ''), ENT_QUOTES, 'UTF-8') ?>" class="form-control" style="background: var(--surface-subtle); border: 1px solid var(--border-subtle); color: var(--text-primary); padding: 10px 14px;">
+                            <input id="hometown" name="hometown" type="text" value="<?= htmlspecialchars((string)($profile['hometown'] ?? ''), ENT_QUOTES, 'UTF-8') ?>" class="form-control">
                         </div>
                         <div class="col-md-6">
                             <label for="location" style="display:block; font-size:14px; font-weight:600; color:var(--text-primary); margin-bottom:8px;">Onde Mora</label>
-                            <input id="location" name="location" type="text" value="<?= htmlspecialchars((string)($profile['location'] ?? ''), ENT_QUOTES, 'UTF-8') ?>" class="form-control" style="background: var(--surface-subtle); border: 1px solid var(--border-subtle); color: var(--text-primary); padding: 10px 14px;">
+                            <input id="location" name="location" type="text" value="<?= htmlspecialchars((string)($profile['location'] ?? ''), ENT_QUOTES, 'UTF-8') ?>" class="form-control">
                         </div>
                     </div>
 
                     <div class="row">
                         <div class="col-md-4">
                             <label for="website" style="display:block; font-size:14px; font-weight:600; color:var(--text-primary); margin-bottom:8px;">Site Pessoal</label>
-                            <input id="website" name="website" type="text" value="<?= htmlspecialchars((string)($profile['website'] ?? ''), ENT_QUOTES, 'UTF-8') ?>" placeholder="https://seusite.com" class="form-control" style="background: var(--surface-subtle); border: 1px solid var(--border-subtle); color: var(--text-primary); padding: 10px 14px;">
+                            <input id="website" name="website" type="text" value="<?= htmlspecialchars((string)($profile['website'] ?? ''), ENT_QUOTES, 'UTF-8') ?>" placeholder="https://seusite.com" class="form-control">
                         </div>
                         <div class="col-md-4">
                             <label for="instagram" style="display:block; font-size:14px; font-weight:600; color:var(--text-primary); margin-bottom:8px;">Instagram</label>
-                            <input id="instagram" name="instagram" type="text" value="<?= htmlspecialchars((string)($profile['instagram'] ?? ''), ENT_QUOTES, 'UTF-8') ?>" placeholder="@usuario" class="form-control" style="background: var(--surface-subtle); border: 1px solid var(--border-subtle); color: var(--text-primary); padding: 10px 14px;">
+                            <input id="instagram" name="instagram" type="text" value="<?= htmlspecialchars((string)($profile['instagram'] ?? ''), ENT_QUOTES, 'UTF-8') ?>" placeholder="@usuario" class="form-control">
                         </div>
                         <div class="col-md-4">
                             <label for="facebook" style="display:block; font-size:14px; font-weight:600; color:var(--text-primary); margin-bottom:8px;">Facebook</label>
-                            <input id="facebook" name="facebook" type="text" value="<?= htmlspecialchars((string)($profile['facebook'] ?? ''), ENT_QUOTES, 'UTF-8') ?>" placeholder="@usuario" class="form-control" style="background: var(--surface-subtle); border: 1px solid var(--border-subtle); color: var(--text-primary); padding: 10px 14px;">
+                            <input id="facebook" name="facebook" type="text" value="<?= htmlspecialchars((string)($profile['facebook'] ?? ''), ENT_QUOTES, 'UTF-8') ?>" placeholder="@usuario" class="form-control">
                         </div>
                     </div>
 
