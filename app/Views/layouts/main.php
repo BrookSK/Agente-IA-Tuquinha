@@ -548,6 +548,27 @@ if (!empty($_SESSION['user_id'])) {
             filter: invert(1);
         }
 
+        /* Fix dropdown/select option text visibility */
+        select {
+            color: var(--text-primary);
+            background: var(--surface-subtle);
+        }
+        
+        select option {
+            background: var(--surface-card);
+            color: var(--text-primary);
+        }
+        
+        body[data-theme="light"] select {
+            color: var(--text-primary);
+            background: var(--input-bg);
+        }
+        
+        body[data-theme="light"] select option {
+            background: #ffffff;
+            color: #1f2933;
+        }
+
         /* Scrollbar customizado para a sidebar */
         .sidebar::-webkit-scrollbar {
             width: 8px;
