@@ -20,15 +20,23 @@ class ApiCoursesController
         
         $pdo = Database::getConnection();
         
-        // Get courses the user is enrolled in
+        // Get courses the user has access to (via enrollment OR purchase)
         $stmt = $pdo->prepare('
-            SELECT 
+            SELECT DISTINCT
                 c.id,
                 c.title
             FROM courses c
-            INNER JOIN course_enrollments ce ON ce.course_id = c.id
-            WHERE ce.user_id = :user_id
-            AND c.is_active = 1
+            WHERE c.is_active = 1
+            AND (
+                EXISTS (
+                    SELECT 1 FROM course_enrollments ce 
+                    WHERE ce.course_id = c.id AND ce.user_id = :user_id
+                )
+                OR EXISTS (
+                    SELECT 1 FROM course_purchases cp 
+                    WHERE cp.course_id = c.id AND cp.user_id = :user_id AND cp.status = "paid"
+                )
+            )
             ORDER BY c.title ASC
         ');
         $stmt->execute(['user_id' => $userId]);
@@ -59,10 +67,21 @@ class ApiCoursesController
         
         $pdo = Database::getConnection();
         
-        // Verify user has access to this course
+        // Verify user has access to this course (via enrollment OR purchase)
         $accessStmt = $pdo->prepare('
-            SELECT id FROM course_enrollments
-            WHERE user_id = :user_id AND course_id = :course_id
+            SELECT 1 FROM courses c
+            WHERE c.id = :course_id
+            AND c.is_active = 1
+            AND (
+                EXISTS (
+                    SELECT 1 FROM course_enrollments ce 
+                    WHERE ce.course_id = c.id AND ce.user_id = :user_id
+                )
+                OR EXISTS (
+                    SELECT 1 FROM course_purchases cp 
+                    WHERE cp.course_id = c.id AND cp.user_id = :user_id AND cp.status = "paid"
+                )
+            )
             LIMIT 1
         ');
         $accessStmt->execute([
