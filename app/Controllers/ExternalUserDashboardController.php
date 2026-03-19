@@ -67,10 +67,22 @@ class ExternalUserDashboardController extends Controller
         $coursesWithProgress = 0;
         foreach ($enrolledCourses as $enrollment) {
             $courseId = (int)$enrollment['course_id'];
-            $progress = CourseLessonProgress::getCourseProgress($userId, $courseId);
-            if ($progress > 0) {
-                $totalProgress += $progress;
-                $coursesWithProgress++;
+            
+            // Get completed lessons for this course
+            $completedLessons = CourseLessonProgress::completedLessonIdsByUserAndCourse($courseId, $userId);
+            $completedCount = count($completedLessons);
+            
+            // Get total lessons for this course
+            $course = Course::findById($courseId);
+            if ($course) {
+                $totalLessons = CourseLesson::countByCourse($courseId);
+                if ($totalLessons > 0) {
+                    $progress = round(($completedCount / $totalLessons) * 100);
+                    if ($progress > 0) {
+                        $totalProgress += $progress;
+                        $coursesWithProgress++;
+                    }
+                }
             }
         }
         $averageProgress = $coursesWithProgress > 0 ? round($totalProgress / $coursesWithProgress) : 0;
