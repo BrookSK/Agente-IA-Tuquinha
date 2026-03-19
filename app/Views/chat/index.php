@@ -720,23 +720,26 @@ if (!empty($conversationId) && !empty($personaOptions) && is_array($personaOptio
 <button id="chat-scroll-bottom-btn" type="button" aria-label="Descer para o fim" style="
     position: fixed;
     left: 50%;
-    transform: translateX(-50%);
-    bottom: 96px;
+    transform: translateX(-50%) translateY(10px);
+    bottom: 140px;
     z-index: 9999;
-    width: 42px;
-    height: 42px;
+    width: 34px;
+    height: 34px;
     border-radius: 999px;
-    border: 1px solid rgba(255,255,255,0.18);
-    background: rgba(0,0,0,0.55);
+    border: 1px solid rgba(255,255,255,0.16);
+    background: rgba(0,0,0,0.48);
     color: #ffffff;
-    display: none;
+    display: inline-flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    box-shadow: 0 10px 28px rgba(0,0,0,0.35);
+    box-shadow: 0 10px 22px rgba(0,0,0,0.32);
     backdrop-filter: blur(8px);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 160ms ease, transform 160ms ease;
 ">
-    <span style="font-size:18px; line-height: 1;">↓</span>
+    <span style="font-size:16px; line-height: 1;">↓</span>
 </button>
                 <?php
                     $personaBadgeText = 'Padrão do Tuquinha';
@@ -1743,6 +1746,20 @@ if (!empty($conversationId) && !empty($personaOptions) && is_array($personaOptio
         const NEAR_PX = 220;
         let raf = 0;
 
+        const setVisible = (visible) => {
+            if (visible) {
+                btn.classList.add('tuq-visible');
+                btn.style.opacity = '1';
+                btn.style.pointerEvents = 'auto';
+                btn.style.transform = 'translateX(-50%) translateY(0)';
+            } else {
+                btn.classList.remove('tuq-visible');
+                btn.style.opacity = '0';
+                btn.style.pointerEvents = 'none';
+                btn.style.transform = 'translateX(-50%) translateY(10px)';
+            }
+        };
+
         const isNearBottom = () => {
             const remaining = el.scrollHeight - (el.scrollTop + el.clientHeight);
             return remaining <= NEAR_PX;
@@ -1753,7 +1770,7 @@ if (!empty($conversationId) && !empty($personaOptions) && is_array($personaOptio
                 cancelAnimationFrame(raf);
             }
             raf = requestAnimationFrame(() => {
-                btn.style.display = isNearBottom() ? 'none' : 'inline-flex';
+                setVisible(!isNearBottom());
             });
         };
 
