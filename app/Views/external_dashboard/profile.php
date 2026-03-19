@@ -327,36 +327,6 @@ $accentColor = !empty($branding['accent_color']) ? $branding['accent_color'] : '
                 </div>
             <?php endif; ?>
 
-            <!-- Portfolio -->
-            <div class="profile-card">
-                <div class="profile-card-header">
-                    <span class="profile-card-title">Portfólio</span>
-                    <span style="font-size:.72rem;color:var(--text-secondary);">último publicado</span>
-                </div>
-                <div class="profile-card-body">
-                    <?php
-                        $portfolioCover = '';
-                        $portfolioTitle = '';
-                        if (!empty($lastPublishedPortfolioItem) && is_array($lastPublishedPortfolioItem)) {
-                            $portfolioCover = trim((string)($lastPublishedPortfolioItem['cover_url'] ?? ''));
-                            $portfolioTitle = trim((string)($lastPublishedPortfolioItem['title'] ?? ''));
-                        }
-                    ?>
-                    <div style="width:100%; aspect-ratio:16/9; border-radius:10px; background:linear-gradient(135deg, #2d2a25, #1a1916); overflow:hidden; position:relative; margin-bottom:10px;">
-                        <?php if ($portfolioCover !== ''): ?>
-                            <img src="<?= htmlspecialchars($portfolioCover, ENT_QUOTES, 'UTF-8') ?>" alt="" style="width:100%; height:100%; object-fit:cover;"/>
-                        <?php else: ?>
-                            <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;opacity:.3;">
-                                <svg width="32" height="32" fill="none" stroke="#fff" stroke-width="1.5" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-                            </div>
-                        <?php endif; ?>
-                    </div>
-                    <p style="font-size:.75rem; font-weight:700; color:var(--text-secondary); margin-bottom:8px;">2025</p>
-                    <a href="/painel-externo/perfil?user_id=<?= $profileId ?>#portfolio" class="profile-btn profile-btn-primary" style="width:100%; justify-content:center; text-decoration:none;">
-                        Ver portfólio
-                    </a>
-                </div>
-            </div>
         </div>
 
         <!-- MIDDLE COLUMN -->
