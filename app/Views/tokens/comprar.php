@@ -20,6 +20,9 @@
     .tuq-tokens-actions { margin-top: 6px; display:flex; gap: 10px; align-items: center; flex-wrap: wrap; }
     .tuq-tokens-pay { display:flex; flex-direction:column; gap: 8px; }
     .tuq-tokens-pay-options { display:flex; flex-wrap:wrap; gap: 10px; font-size: 13px; color:#ddd; }
+    .tuq-tokens-preview-main { display:flex; align-items:baseline; gap: 10px; flex-wrap: wrap; }
+    .tuq-tokens-preview-amount { font-size: 13px; color:#bdbdbd; }
+    .tuq-tokens-preview-amount strong { color:#f5f5f5; font-weight: 850; }
     @media (max-width: 760px) {
         .tuq-tokens-top { grid-template-columns: 1fr; }
         .tuq-tokens-form-row { grid-template-columns: 1fr; }
@@ -102,7 +105,10 @@
 
                     <div class="tuq-tokens-card">
                         <div style="font-size:11px; color:#8d8d8d; margin-bottom:4px;">Você vai receber</div>
-                        <div id="tokens-preview" style="font-size:22px; font-weight:850; line-height:1.1;">— tokens</div>
+                        <div class="tuq-tokens-preview-main">
+                            <div id="tokens-preview" style="font-size:22px; font-weight:850; line-height:1.1;">— tokens</div>
+                            <div id="amount-preview" class="tuq-tokens-preview-amount"></div>
+                        </div>
                         <div id="tokens-total" style="font-size:12px; color:#bdbdbd; margin-top:6px;"></div>
                     </div>
                 </div>
@@ -168,6 +174,7 @@
         var amountInput = document.getElementById('amount-input');
         var tokensHidden = document.getElementById('tokens-hidden');
         var tokensPreview = document.getElementById('tokens-preview');
+        var amountPreview = document.getElementById('amount-preview');
         var totalEl = document.getElementById('tokens-total');
         var form = document.getElementById('token-topup-form');
         <?php $priceJs = $pricePer1k > 0 ? $pricePer1k : 0; ?>
@@ -201,6 +208,7 @@
             if (amountDesired <= 0) {
                 tokensHidden.value = '0';
                 tokensPreview.textContent = '— tokens';
+                if (amountPreview) amountPreview.textContent = '';
                 totalEl.textContent = '';
                 return;
             }
@@ -214,7 +222,10 @@
 
             tokensHidden.value = String(tokens);
             tokensPreview.textContent = tokens.toLocaleString('pt-BR') + ' tokens';
-            totalEl.textContent = 'Cobrança: R$ ' + formatBRL(amountFinal) + ' (' + blocks + 'x 1.000 tokens)';
+            if (amountPreview) {
+                amountPreview.innerHTML = 'por <strong>R$ ' + formatBRL(amountFinal) + '</strong>';
+            }
+            totalEl.textContent = 'Cobrança em ' + blocks + 'x 1.000 tokens · Preço: R$ ' + formatBRL(pricePer1k) + ' / 1.000';
         }
 
         function enforceMinOnBlur() {
@@ -246,8 +257,10 @@
             });
         }
 
-        // default
-        amountInput.value = '25,00';
+        // default (não sobrescreve enquanto usuário digita / autofill)
+        if (!String(amountInput.value || '').trim()) {
+            amountInput.value = '25,00';
+        }
         compute();
     })();
 </script>
