@@ -398,6 +398,15 @@ function render_markdown_safe(string $text): string {
      visibility: hidden !important;
  }
 
+ .tuq-has-showcase #chat-window::-webkit-scrollbar {
+     width: 0 !important;
+     height: 0 !important;
+ }
+
+ .tuq-has-showcase #chat-window {
+     scrollbar-width: none;
+ }
+
  .tuq-has-showcase {
      height: calc(100vh - 56px - 80px);
      overflow: hidden;
@@ -425,8 +434,34 @@ function render_markdown_safe(string $text): string {
      scrollbar-width: none;
  }
 
+ body.tuq-body-lock * {
+     scrollbar-width: none;
+ }
+
+ body.tuq-body-lock *::-webkit-scrollbar {
+     width: 0 !important;
+     height: 0 !important;
+ }
+
  body.tuq-body-lock .main-content {
      overflow: hidden !important;
+ }
+
+ body.tuq-body-lock .main-content.tuq-showcase-lock {
+     overflow: hidden !important;
+ }
+
+ body.tuq-body-lock .main-content.tuq-showcase-lock {
+     scrollbar-width: none;
+ }
+
+ body.tuq-body-lock .main-content.tuq-showcase-lock::-webkit-scrollbar {
+     width: 0 !important;
+     height: 0 !important;
+ }
+
+ body.tuq-body-lock .main-content {
+     scrollbar-width: none;
  }
 
  body.tuq-body-lock .main-content::-webkit-scrollbar {
@@ -509,20 +544,88 @@ if (!empty($conversationId) && !empty($personaOptions) && is_array($personaOptio
 ?>
 <?php if (!empty($shouldShowPersonaShowcase)): ?>
     <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            try {
-                document.body.classList.add('tuq-body-lock');
-                document.documentElement.classList.add('tuq-body-lock');
+        (function () {
+            function lockShowcaseScroll() {
+                try {
+                    document.body.classList.add('tuq-body-lock');
+                    document.documentElement.classList.add('tuq-body-lock');
 
-                var mc = document.querySelector('.main-content');
-                if (mc) {
-                    if (!mc.dataset.prevOverflowY) {
-                        mc.dataset.prevOverflowY = (mc.style.overflowY || '');
+                    try {
+                        if (typeof window.__tuqShowcaseScrollY !== 'number') {
+                            window.__tuqShowcaseScrollY = window.scrollY || 0;
+                            document.body.style.top = (-window.__tuqShowcaseScrollY) + 'px';
+                        }
+                    } catch (e) {}
+
+                    var se = document.scrollingElement || document.documentElement;
+                    if (se && se.style) {
+                        if (!se.dataset.prevOverflow) {
+                            se.dataset.prevOverflow = (se.style.overflow || '');
+                        }
+                        se.style.setProperty('overflow', 'hidden', 'important');
+                        se.style.setProperty('overflow-y', 'hidden', 'important');
+                        se.style.setProperty('scrollbar-width', 'none', 'important');
                     }
-                    mc.style.overflowY = 'hidden';
+
+                    var targets = [];
+                    var mc = document.querySelector('.main-content');
+                    if (mc) {
+                        targets.push(mc);
+                        try { mc.classList.add('tuq-showcase-lock'); } catch (e) {}
+                    }
+                    var main = document.querySelector('main');
+                    if (main) targets.push(main);
+
+                    targets.forEach(function (el) {
+                        if (!el || !el.style) return;
+                        if (!el.dataset.prevOverflowY) {
+                            el.dataset.prevOverflowY = (el.style.overflowY || '');
+                        }
+                        if (!el.dataset.prevOverflow) {
+                            el.dataset.prevOverflow = (el.style.overflow || '');
+                        }
+                        if (!el.dataset.prevHeight) {
+                            el.dataset.prevHeight = (el.style.height || '');
+                        }
+                        if (!el.dataset.prevMaxHeight) {
+                            el.dataset.prevMaxHeight = (el.style.maxHeight || '');
+                        }
+                        el.style.setProperty('overflow-y', 'hidden', 'important');
+                        el.style.setProperty('overflow', 'hidden', 'important');
+                        el.style.setProperty('scrollbar-width', 'none', 'important');
+                        el.style.setProperty('height', '100%', 'important');
+                        el.style.setProperty('max-height', '100%', 'important');
+                        try { el.scrollTop = 0; } catch (e) {}
+                    });
+                } catch (e) {}
+            }
+
+            // Aplica o lock o mais cedo possível
+            lockShowcaseScroll();
+
+            // Alguns scripts/estilos do layout reaplicam overflow-y:auto depois; reforça por um curto período
+            try {
+                if (window.__tuqShowcaseLockInterval) {
+                    clearInterval(window.__tuqShowcaseLockInterval);
                 }
+                window.__tuqShowcaseLockInterval = setInterval(lockShowcaseScroll, 100);
+                setTimeout(function () {
+                    try {
+                        if (window.__tuqShowcaseLockInterval) {
+                            clearInterval(window.__tuqShowcaseLockInterval);
+                            window.__tuqShowcaseLockInterval = null;
+                        }
+                    } catch (e) {}
+                }, 2500);
             } catch (e) {}
-        });
+
+            // Reaplica após o DOM pronto e mais alguns ticks (alguns layouts setam overflow depois)
+            document.addEventListener('DOMContentLoaded', function () {
+                lockShowcaseScroll();
+                setTimeout(lockShowcaseScroll, 50);
+                setTimeout(lockShowcaseScroll, 200);
+            });
+        })();
     </script>
 <?php endif; ?>
 <div id="tuq-chat-root" class="<?= !empty($shouldShowPersonaShowcase) ? 'tuq-has-showcase' : '' ?>" style="max-width: 900px; width: 100%; margin: 0 auto; padding: 0 8px; display: flex; flex-direction: column; min-height: calc(100vh - 56px - 80px); box-sizing: border-box;">
@@ -2499,10 +2602,44 @@ if (!empty($conversationId) && !empty($personaOptions) && is_array($personaOptio
                         document.body.classList.remove('tuq-body-lock');
                         document.documentElement.classList.remove('tuq-body-lock');
 
-                        var mc = document.querySelector('.main-content');
-                        if (mc) {
-                            mc.style.overflowY = (mc.dataset.prevOverflowY || '');
+                        try {
+                            if (window.__tuqShowcaseLockInterval) {
+                                clearInterval(window.__tuqShowcaseLockInterval);
+                                window.__tuqShowcaseLockInterval = null;
+                            }
+                        } catch (e) {}
+
+                        var se = document.scrollingElement || document.documentElement;
+                        if (se && se.style) {
+                            se.style.setProperty('overflow', (se.dataset.prevOverflow || ''), '');
+                            se.style.setProperty('overflow-y', (se.dataset.prevOverflowY || ''), '');
+                            se.style.setProperty('scrollbar-width', '', '');
                         }
+
+                        var mc = document.querySelector('.main-content');
+                        var targets = [];
+                        if (mc) {
+                            targets.push(mc);
+                            try { mc.classList.remove('tuq-showcase-lock'); } catch (e) {}
+                        }
+                        var main = document.querySelector('main');
+                        if (main) targets.push(main);
+
+                        targets.forEach(function (el) {
+                            if (!el || !el.style) return;
+                            el.style.setProperty('overflow-y', (el.dataset.prevOverflowY || ''), '');
+                            el.style.setProperty('overflow', (el.dataset.prevOverflow || ''), '');
+                            el.style.setProperty('scrollbar-width', '', '');
+                            el.style.setProperty('height', (el.dataset.prevHeight || ''), '');
+                            el.style.setProperty('max-height', (el.dataset.prevMaxHeight || ''), '');
+                        });
+
+                        try {
+                            var y = (typeof window.__tuqShowcaseScrollY === 'number') ? window.__tuqShowcaseScrollY : 0;
+                            window.__tuqShowcaseScrollY = null;
+                            document.body.style.top = '';
+                            window.scrollTo(0, y);
+                        } catch (e) {}
                     } catch (e) {}
                 }
             } catch (e) {}
