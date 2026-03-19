@@ -100,8 +100,79 @@ function render_markdown_safe(string $text): string {
         return '<a href="' . $hrefAttr . '">' . $label . '</a>';
     }, $escaped);
 
-    $blocks = preg_split("/\n{2,}/", $escaped);
     $out = '';
+
+    $parseRow = function (string $row): array {
+        $row = trim($row);
+        if ($row === '') return [];
+        $row = preg_replace('/^\|/', '', $row);
+        $row = preg_replace('/\|$/', '', $row);
+        $cells = explode('|', (string)$row);
+        $outCells = [];
+        foreach ($cells as $c) {
+            $outCells[] = trim((string)$c);
+        }
+        return $outCells;
+    };
+
+    $isTableSeparatorLine = function (string $line): bool {
+        $s = preg_replace('/\s+/', '', trim($line));
+        if ($s === '') return false;
+        return (bool)preg_match('/^\|?\:?-+\:?(\|\:?-+\:?)+\|?$/', $s);
+    };
+
+    $renderTable = function (string $mdTable, array $header, array $rows): string {
+        $maxCols = count($header);
+        foreach ($rows as $r) {
+            $maxCols = max($maxCols, count($r));
+        }
+        $normalizeCols = function (array $r) use ($maxCols): array {
+            $r2 = $r;
+            while (count($r2) < $maxCols) { $r2[] = ''; }
+            if (count($r2) > $maxCols) { $r2 = array_slice($r2, 0, $maxCols); }
+            return $r2;
+        };
+        $header = $normalizeCols($header);
+        $rows = array_map($normalizeCols, $rows);
+
+        $mdAttr = htmlspecialchars($mdTable, ENT_QUOTES, 'UTF-8');
+
+        $html = '<div class="tuq-md-table-wrap">'
+            . '<div class="tuq-md-table-head">'
+            . '<div class="tuq-md-table-title">Tabela</div>'
+            . '<button type="button" class="tuq-copy-table-btn copy-table-btn" data-table-md="' . $mdAttr . '">' 
+            . '<span style="opacity:0.9;">⧉</span><span>Copiar tabela</span>'
+            . '</button>'
+            . '</div>'
+            . '<table>';
+
+        if (!empty($header)) {
+            $html .= '<thead><tr>';
+            foreach ($header as $h) { $html .= '<th>' . $h . '</th>'; }
+            $html .= '</tr></thead>';
+        }
+
+        $html .= '<tbody>';
+        foreach ($rows as $r) {
+            $html .= '<tr>';
+            foreach ($r as $c) { $html .= '<td>' . $c . '</td>'; }
+            $html .= '</tr>';
+        }
+        $html .= '</tbody></table></div>';
+        return $html;
+    };
+
+    $flushText = function (string $txt) use (&$out): void {
+        $txt = trim($txt);
+        if ($txt === '') return;
+        if (preg_match('/^<h[2-4]>.*<\/h[2-4]>$/s', $txt)) {
+            $out .= $txt;
+            return;
+        }
+        $out .= '<p>' . nl2br($txt) . '</p>';
+    };
+
+    $blocks = preg_split("/\n{2,}/", $escaped);
     foreach ($blocks as $b) {
         $b = trim((string)$b);
         if ($b === '') {
@@ -113,95 +184,59 @@ function render_markdown_safe(string $text): string {
         }
 
         $lines = preg_split("/\n/", $b);
-        $line0 = isset($lines[0]) ? trim((string)$lines[0]) : '';
-        $line1 = isset($lines[1]) ? trim((string)$lines[1]) : '';
-        $isTable = false;
-        if ($line0 !== '' && $line1 !== '' && (strpos($line0, '|') !== false)) {
-            $sep = preg_replace('/\s+/', '', $line1);
-            if ($sep !== '' && preg_match('/^\|?\:?-+\:?(\|\:?-+\:?)+' . '\|?$/', $sep)) {
-                $isTable = true;
+        $buf = '';
+        for ($i = 0; $i < count($lines); $i++) {
+            $line = (string)$lines[$i];
+            $trimLine = trim($line);
+
+            if ($trimLine === '[[HR]]') {
+                $flushText($buf);
+                $buf = '';
+                $out .= '<hr class="tuq-chat-hr">';
+                continue;
             }
+
+            if (preg_match('/^<h[2-4]>.*<\/h[2-4]>$/s', $trimLine)) {
+                $flushText($buf);
+                $buf = '';
+                $out .= $trimLine;
+                continue;
+            }
+
+            $lineNext = isset($lines[$i + 1]) ? (string)$lines[$i + 1] : '';
+            if ($trimLine !== '' && strpos($trimLine, '|') !== false && $lineNext !== '' && $isTableSeparatorLine($lineNext)) {
+                $flushText($buf);
+                $buf = '';
+
+                $tableLines = [];
+                $tableLines[] = $trimLine;
+                $tableLines[] = (string)$lineNext;
+
+                $header = $parseRow($trimLine);
+                $rows = [];
+
+                $j = $i + 2;
+                while ($j < count($lines)) {
+                    $rowLine = (string)$lines[$j];
+                    $rowTrim = trim($rowLine);
+                    if ($rowTrim === '') break;
+                    if (strpos($rowTrim, '|') === false) break;
+                    $tableLines[] = $rowTrim;
+                    $r = $parseRow($rowTrim);
+                    if (!empty($r)) { $rows[] = $r; }
+                    $j++;
+                }
+
+                $mdTable = implode("\n", $tableLines);
+                $out .= $renderTable($mdTable, $header, $rows);
+                $i = $j - 1;
+                continue;
+            }
+
+            $buf .= ($buf === '' ? '' : "\n") . $line;
         }
 
-        if ($isTable) {
-            $parseRow = function (string $row): array {
-                $row = trim($row);
-                if ($row === '') return [];
-                $row = preg_replace('/^\|/', '', $row);
-                $row = preg_replace('/\|$/', '', $row);
-                $cells = explode('|', (string)$row);
-                $outCells = [];
-                foreach ($cells as $c) {
-                    $outCells[] = trim((string)$c);
-                }
-                return $outCells;
-            };
-
-            $header = $parseRow((string)$lines[0]);
-            $rows = [];
-            for ($i = 2; $i < count($lines); $i++) {
-                $r = $parseRow((string)$lines[$i]);
-                if (!empty($r)) {
-                    $rows[] = $r;
-                }
-            }
-
-            $maxCols = count($header);
-            foreach ($rows as $r) {
-                $maxCols = max($maxCols, count($r));
-            }
-
-            $normalizeCols = function (array $r) use ($maxCols): array {
-                $r2 = $r;
-                while (count($r2) < $maxCols) {
-                    $r2[] = '';
-                }
-                if (count($r2) > $maxCols) {
-                    $r2 = array_slice($r2, 0, $maxCols);
-                }
-                return $r2;
-            };
-            $header = $normalizeCols($header);
-            $rows = array_map($normalizeCols, $rows);
-
-            $mdTable = $b;
-            $mdAttr = htmlspecialchars($mdTable, ENT_QUOTES, 'UTF-8');
-
-            $out .= '<div class="tuq-md-table-wrap">'
-                . '<div class="tuq-md-table-head">'
-                . '<div class="tuq-md-table-title">Tabela</div>'
-                . '<button type="button" class="tuq-copy-table-btn copy-table-btn" data-table-md="' . $mdAttr . '">' 
-                . '<span style="opacity:0.9;">⧉</span><span>Copiar tabela</span>'
-                . '</button>'
-                . '</div>'
-                . '<table>';
-
-            if (!empty($header)) {
-                $out .= '<thead><tr>';
-                foreach ($header as $h) {
-                    $out .= '<th>' . $h . '</th>';
-                }
-                $out .= '</tr></thead>';
-            }
-
-            $out .= '<tbody>';
-            foreach ($rows as $r) {
-                $out .= '<tr>';
-                foreach ($r as $c) {
-                    $out .= '<td>' . $c . '</td>';
-                }
-                $out .= '</tr>';
-            }
-            $out .= '</tbody></table></div>';
-            continue;
-        }
-
-        if (preg_match('/^<h[2-4]>.*<\/h[2-4]>$/s', $b)) {
-            $out .= $b;
-            continue;
-        }
-        $b = nl2br($b);
-        $out .= '<p>' . $b . '</p>';
+        $flushText($buf);
     }
     return '<div class="tuq-chat-md">' . $out . '</div>';
 }
