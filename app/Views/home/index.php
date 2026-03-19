@@ -249,7 +249,7 @@
                 <div style="position:relative; width:100%; padding-top:56.25%; background:#000;">
                     <?php if ($videoUrl !== ''): ?>
                         <?php if ($isDirectVideo): ?>
-                            <video id="tuqAboutVideoEl" src="<?= htmlspecialchars($videoUrl) ?>" controls playsinline style="position:absolute; inset:0; width:100%; height:100%;"></video>
+                            <video id="tuqAboutVideoEl" src="<?= htmlspecialchars($videoUrl) ?>" controls controlsList="nodownload" oncontextmenu="return false;" playsinline style="position:absolute; inset:0; width:100%; height:100%;"></video>
                         <?php else: ?>
                             <iframe id="tuqAboutIframe" src="" data-src="<?= htmlspecialchars($videoUrl) ?>" title="Vídeo: Quem é o Tuquinha" style="position:absolute; inset:0; width:100%; height:100%; border:0;" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
                         <?php endif; ?>

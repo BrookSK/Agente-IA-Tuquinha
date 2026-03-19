@@ -1222,4 +1222,57 @@ class ExternalUserDashboardController extends Controller
         echo json_encode(['ok' => true, 'signals' => $signals]);
         exit;
     }
+
+    // ==================== NOTIFICATIONS ====================
+
+    public function notifications(): void
+    {
+        $currentUser = $this->requireLogin();
+        $branding = $this->getBrandingForUser($currentUser);
+        $userId = (int)$currentUser['id'];
+
+        require_once __DIR__ . '/../Models/UserNotification.php';
+        $notifications = \UserNotification::findByUserId($userId);
+
+        $this->view('external_dashboard/notifications', [
+            'pageTitle' => 'Notificações',
+            'user' => $currentUser,
+            'branding' => $branding,
+            'notifications' => $notifications,
+            'layout' => 'external_user_dashboard',
+        ]);
+    }
+
+    public function markNotificationAsRead(): void
+    {
+        $currentUser = $this->requireLogin();
+        $userId = (int)$currentUser['id'];
+        $notificationId = isset($_POST['notification_id']) ? (int)$_POST['notification_id'] : 0;
+
+        if ($notificationId <= 0) {
+            header('Content-Type: application/json');
+            echo json_encode(['ok' => false]);
+            exit;
+        }
+
+        require_once __DIR__ . '/../Models/UserNotification.php';
+        \UserNotification::markAsRead($notificationId);
+
+        header('Content-Type: application/json');
+        echo json_encode(['ok' => true]);
+        exit;
+    }
+
+    public function markAllNotificationsAsRead(): void
+    {
+        $currentUser = $this->requireLogin();
+        $userId = (int)$currentUser['id'];
+
+        require_once __DIR__ . '/../Models/UserNotification.php';
+        \UserNotification::markAllAsRead($userId);
+
+        $_SESSION['social_success'] = 'Todas as notificações foram marcadas como lidas.';
+        header('Location: /painel-externo/notificacoes');
+        exit;
+    }
 }

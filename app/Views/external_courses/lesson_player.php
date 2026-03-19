@@ -51,7 +51,7 @@ foreach ($lessons as $l) {
             <?php else: ?>
                 <?php if ($isDirectVideoFile): ?>
                     <div style="position:relative; padding-bottom:56.25%; height:0; overflow:hidden; border-radius:12px; background:#000;">
-                        <video src="<?= htmlspecialchars($videoUrl, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?>" preload="metadata" playsinline controls style="position:absolute; inset:0; width:100%; height:100%; background:#000;"></video>
+                        <video src="<?= htmlspecialchars($videoUrl, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?>" preload="metadata" playsinline controls controlsList="nodownload" oncontextmenu="return false;" style="position:absolute; inset:0; width:100%; height:100%; background:#000;"></video>
                     </div>
                 <?php else: ?>
                     <div style="position:relative; padding-bottom:56.25%; height:0; overflow:hidden; border-radius:12px; background:#000;">

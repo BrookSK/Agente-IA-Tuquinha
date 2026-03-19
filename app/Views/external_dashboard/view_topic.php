@@ -44,7 +44,7 @@ $createdAt = $topic['created_at'] ?? '';
             <?php if ($topicMediaKind === 'image'): ?>
                 <img src="<?= htmlspecialchars($topicMediaUrl, ENT_QUOTES, 'UTF-8') ?>" alt="" style="max-width: 100%; border-radius: 12px; border: 1px solid var(--border); display: block;">
             <?php elseif ($topicMediaKind === 'video'): ?>
-                <video controls style="width: 100%; max-width: 100%; border-radius: 12px; border: 1px solid var(--border); display: block;">
+                <video controls controlsList="nodownload" oncontextmenu="return false;" style="width: 100%; max-width: 100%; border-radius: 12px; border: 1px solid var(--border); display: block;">
                     <source src="<?= htmlspecialchars($topicMediaUrl, ENT_QUOTES, 'UTF-8') ?>" type="<?= htmlspecialchars($topicMediaMime !== '' ? $topicMediaMime : 'video/mp4', ENT_QUOTES, 'UTF-8') ?>">
                 </video>
             <?php else: ?>
@@ -161,7 +161,7 @@ $createdAt = $topic['created_at'] ?? '';
                             <?php if ($postMediaKind === 'image'): ?>
                                 <img src="<?= htmlspecialchars($postMediaUrl, ENT_QUOTES, 'UTF-8') ?>" alt="" style="max-width: 100%; border-radius: 10px; border: 1px solid var(--border); display: block;">
                             <?php elseif ($postMediaKind === 'video'): ?>
-                                <video controls style="width: 100%; max-width: 100%; border-radius: 10px; border: 1px solid var(--border); display: block;">
+                                <video controls controlsList="nodownload" oncontextmenu="return false;" style="width: 100%; max-width: 100%; border-radius: 10px; border: 1px solid var(--border); display: block;">
                                     <source src="<?= htmlspecialchars($postMediaUrl, ENT_QUOTES, 'UTF-8') ?>" type="<?= htmlspecialchars($postMediaMime !== '' ? $postMediaMime : 'video/mp4', ENT_QUOTES, 'UTF-8') ?>">
                                 </video>
                             <?php else: ?>
@@ -214,7 +214,7 @@ $createdAt = $topic['created_at'] ?? '';
                 <div id="mediaPreview" style="display: none; margin-top: 12px; padding: 12px; background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 8px; position: relative;">
                     <button type="button" onclick="clearMedia()" style="position: absolute; top: 8px; right: 8px; background: rgba(0,0,0,0.6); border: none; color: white; width: 24px; height: 24px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 16px;">×</button>
                     <img id="imagePreview" style="max-width: 100%; max-height: 200px; border-radius: 6px; display: none;">
-                    <video id="videoPreview" controls style="max-width: 100%; max-height: 200px; border-radius: 6px; display: none;"></video>
+                    <video id="videoPreview" controls controlsList="nodownload" oncontextmenu="return false;" style="max-width: 100%; max-height: 200px; border-radius: 6px; display: none;"></video>
                     <div id="fileInfo" style="font-size: 13px; color: var(--text-secondary);"></div>
                 </div>
                 

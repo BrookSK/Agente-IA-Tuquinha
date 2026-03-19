@@ -187,6 +187,10 @@ $router->get('/painel-externo/chat/stream', 'ExternalUserDashboardController@cha
 $router->post('/painel-externo/webrtc/send', 'ExternalUserDashboardController@webrtcSend');
 $router->get('/painel-externo/webrtc/poll', 'ExternalUserDashboardController@webrtcPoll');
 
+$router->get('/painel-externo/notificacoes', 'ExternalUserDashboardController@notifications');
+$router->post('/painel-externo/notificacoes/marcar-lida', 'ExternalUserDashboardController@markNotificationAsRead');
+$router->post('/painel-externo/notificacoes/marcar-todas-lidas', 'ExternalUserDashboardController@markAllNotificationsAsRead');
+
 $router->get('/cursos', 'CourseController@index');
 $router->get('/cursos/ver', 'CourseController@show');
 $router->post('/cursos/inscrever', 'CourseController@enroll');
