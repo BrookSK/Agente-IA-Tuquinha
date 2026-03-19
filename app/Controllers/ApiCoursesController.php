@@ -103,7 +103,7 @@ class ApiCoursesController
             FROM course_lessons
             WHERE course_id = :course_id
             AND is_published = 1
-            ORDER BY order_index ASC, title ASC
+            ORDER BY sort_order ASC, title ASC
         ');
         $stmt->execute(['course_id' => $courseId]);
         
