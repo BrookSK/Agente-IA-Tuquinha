@@ -49,10 +49,8 @@ class ApiCoursesController
             return;
         }
         
-        // Get course ID from URL path
-        $path = $_SERVER['REQUEST_URI'] ?? '';
-        preg_match('/\/api\/courses\/(\d+)\/lessons/', $path, $matches);
-        $courseId = isset($matches[1]) ? (int)$matches[1] : 0;
+        // Get course ID from route parameter
+        $courseId = isset($_GET['id']) ? (int)$_GET['id'] : 0;
         
         if ($courseId <= 0) {
             echo json_encode([]);

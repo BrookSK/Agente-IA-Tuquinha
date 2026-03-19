@@ -209,9 +209,14 @@ $slug = (string)($community['slug'] ?? '');
         // Fetch available courses
         async function fetchCourses() {
             try {
+                console.log('Fetching enrolled courses...');
                 const response = await fetch('/api/courses/enrolled');
+                console.log('Response status:', response.status);
                 if (response.ok) {
                     courses = await response.json();
+                    console.log('Courses loaded:', courses);
+                } else {
+                    console.error('Failed to fetch courses, status:', response.status);
                 }
             } catch (e) {
                 console.error('Failed to fetch courses:', e);
@@ -222,9 +227,15 @@ $slug = (string)($community['slug'] ?? '');
         // Fetch lessons for a specific course
         async function fetchLessonsForCourse(courseId) {
             try {
+                console.log('Fetching lessons for course:', courseId);
                 const response = await fetch('/api/courses/' + courseId + '/lessons');
+                console.log('Lessons response status:', response.status);
                 if (response.ok) {
-                    return await response.json();
+                    const lessons = await response.json();
+                    console.log('Lessons loaded:', lessons);
+                    return lessons;
+                } else {
+                    console.error('Failed to fetch lessons, status:', response.status);
                 }
             } catch (e) {
                 console.error('Failed to fetch lessons:', e);
@@ -347,8 +358,10 @@ $slug = (string)($community['slug'] ?? '');
 
         textarea.addEventListener('input', function() {
             const { start, word } = getCurrentWord();
+            console.log('Input detected, word:', word, 'courses count:', courses.length);
             
             if (word === '@') {
+                console.log('@ detected, showing courses');
                 mentionStart = start;
                 showCourseDropdown(courses);
             } else if (word.startsWith('@') && word.length > 1) {
@@ -357,6 +370,7 @@ $slug = (string)($community['slug'] ?? '');
                 const filtered = courses.filter(c => 
                     c.title.toLowerCase().includes(query)
                 ).slice(0, 8);
+                console.log('Filtered courses:', filtered);
                 showCourseDropdown(filtered);
             } else {
                 dropdown.style.display = 'none';
