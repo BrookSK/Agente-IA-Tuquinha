@@ -613,7 +613,7 @@ class ExternalUserDashboardController extends Controller
         // Parse and store user mentions
         \App\Controllers\CommunitiesController::parseUserMentionsStatic($body, $topicId, $postId, (int)$user['id']);
 
-        header('Location: /painel-externo/comunidade/topico?id=' . $topicId . '&slug=' . urlencode($community['slug'] ?? ''));
+        header('Location: /painel-externo/comunidade/topico?id=' . $topicId . '&slug=' . urlencode($community['slug'] ?? '') . '#post-' . $postId);
         exit;
     }
 
