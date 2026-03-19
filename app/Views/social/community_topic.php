@@ -156,30 +156,30 @@ $slug = (string)($community['slug'] ?? '');
                             }
                         }
                     ?>
-                    <div style="background:#050509; border-radius:12px; border:1px solid #272727; padding:8px 10px; <?= $parentPostId ? 'margin-left:40px; border-left:3px solid #ff6f60;' : '' ?>">
+                    <div style="background:#050509; border-radius:12px; border:1px solid #272727; padding:10px 12px; <?= $parentPostId ? 'margin-left:40px; border-left:3px solid #ff6f60;' : '' ?>">
                         <?php if ($parentPostId && $parentAuthor): ?>
-                            <div style="font-size:11px; color:#b0b0b0; margin-bottom:4px; padding:4px 8px; background:#1a1a24; border-radius:4px;">
+                            <div style="font-size:11px; color:#b0b0b0; margin-bottom:8px; padding:4px 8px; background:#1a1a24; border-radius:4px;">
                                 ↳ Respondendo a <strong style="color:#ff6f60;"><?= htmlspecialchars($parentAuthor, ENT_QUOTES, 'UTF-8') ?></strong>
                             </div>
                         <?php endif; ?>
-                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:3px;">
-                            <div style="font-size:13px; color:#f5f5f5; font-weight:500;">
-                                <span style="display:inline-flex; align-items:center; gap:8px;">
-                                    <span style="width:24px; height:24px; border-radius:50%; overflow:hidden; background:radial-gradient(circle at 30% 20%, #fff 0, #ff8a65 25%, #e53935 65%, #050509 100%); display:inline-flex; align-items:center; justify-content:center; font-size:12px; font-weight:800; color:#050509; flex:0 0 24px;">
-                                        <?php if ($postAuthorAvatar !== ''): ?>
-                                            <img src="<?= htmlspecialchars($postAuthorAvatar, ENT_QUOTES, 'UTF-8') ?>" alt="" style="width:100%; height:100%; object-fit:cover; display:block;">
-                                        <?php else: ?>
-                                            <?= htmlspecialchars($postAuthorInitial, ENT_QUOTES, 'UTF-8') ?>
-                                        <?php endif; ?>
-                                    </span>
-                                    <span><?= htmlspecialchars($postAuthorName, ENT_QUOTES, 'UTF-8') ?></span>
-                                </span>
+                        <div style="display:flex; align-items:center; gap:10px; margin-bottom:10px;">
+                            <div style="width:36px; height:36px; border-radius:50%; overflow:hidden; background:radial-gradient(circle at 30% 20%, #fff 0, #ff8a65 25%, #e53935 65%, #050509 100%); display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+                                <?php if ($postAuthorAvatar !== ''): ?>
+                                    <img src="<?= htmlspecialchars($postAuthorAvatar, ENT_QUOTES, 'UTF-8') ?>" alt="" style="width:100%; height:100%; object-fit:cover;">
+                                <?php else: ?>
+                                    <span style="font-size:14px; font-weight:800; color:#050509;"><?= htmlspecialchars($postAuthorInitial, ENT_QUOTES, 'UTF-8') ?></span>
+                                <?php endif; ?>
                             </div>
-                            <?php if (!empty($p['created_at'])): ?>
-                                <div style="font-size:11px; color:#b0b0b0;">
-                                    <?= htmlspecialchars(date('d/m/Y H:i', strtotime((string)$p['created_at'])), ENT_QUOTES, 'UTF-8') ?>
+                            <div style="flex:1; min-width:0;">
+                                <div style="display:flex; justify-content:space-between; align-items:center;">
+                                    <span style="font-size:13px; color:#f5f5f5; font-weight:500;"><?= htmlspecialchars($postAuthorName, ENT_QUOTES, 'UTF-8') ?></span>
+                                    <?php if (!empty($p['created_at'])): ?>
+                                        <span style="font-size:11px; color:#b0b0b0;">
+                                            <?= htmlspecialchars(date('d/m/Y H:i', strtotime((string)$p['created_at'])), ENT_QUOTES, 'UTF-8') ?>
+                                        </span>
+                                    <?php endif; ?>
                                 </div>
-                            <?php endif; ?>
+                            </div>
                         </div>
                         <div style="font-size:13px; color:#f5f5f5;">
                             <?= nl2br(\App\Controllers\CommunitiesController::renderLessonMentions((string)($p['body'] ?? ''))) ?>

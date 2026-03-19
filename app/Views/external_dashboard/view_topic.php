@@ -106,6 +106,8 @@ $createdAt = $topic['created_at'] ?? '';
                     $postBody = trim((string)($post['body'] ?? ''));
                     $postAuthor = trim((string)($post['user_name'] ?? 'Anônimo'));
                     $postCreatedAt = $post['created_at'] ?? '';
+                    $postAvatar = trim((string)($post['user_avatar_path'] ?? ''));
+                    $postAuthorInitial = mb_strtoupper(mb_substr($postAuthor, 0, 1, 'UTF-8'), 'UTF-8');
                     $parentPostId = isset($post['parent_post_id']) ? (int)$post['parent_post_id'] : null;
                     
                     // Find parent post info if this is a reply
@@ -125,15 +127,26 @@ $createdAt = $topic['created_at'] ?? '';
                             ↳ Respondendo a <strong style="color: var(--accent);"><?= htmlspecialchars($parentAuthor, ENT_QUOTES, 'UTF-8') ?></strong>
                         </div>
                     <?php endif; ?>
-                    <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 8px;">
-                        <span style="font-weight: 600; color: var(--text-primary);">
-                            <?= htmlspecialchars($postAuthor, ENT_QUOTES, 'UTF-8') ?>
-                        </span>
-                        <?php if ($postCreatedAt): ?>
-                            <span style="font-size: 12px; color: var(--text-secondary);">
-                                <?= htmlspecialchars($postCreatedAt, ENT_QUOTES, 'UTF-8') ?>
-                            </span>
-                        <?php endif; ?>
+                    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+                        <div style="width: 40px; height: 40px; border-radius: 50%; overflow: hidden; background: linear-gradient(135deg, var(--accent) 0%, #6366f1 100%); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                            <?php if ($postAvatar !== ''): ?>
+                                <img src="<?= htmlspecialchars($postAvatar, ENT_QUOTES, 'UTF-8') ?>" alt="" style="width: 100%; height: 100%; object-fit: cover;">
+                            <?php else: ?>
+                                <span style="font-size: 16px; font-weight: 700; color: white;"><?= htmlspecialchars($postAuthorInitial, ENT_QUOTES, 'UTF-8') ?></span>
+                            <?php endif; ?>
+                        </div>
+                        <div style="flex: 1; min-width: 0;">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <span style="font-weight: 600; color: var(--text-primary);">
+                                    <?= htmlspecialchars($postAuthor, ENT_QUOTES, 'UTF-8') ?>
+                                </span>
+                                <?php if ($postCreatedAt): ?>
+                                    <span style="font-size: 12px; color: var(--text-secondary);">
+                                        <?= htmlspecialchars($postCreatedAt, ENT_QUOTES, 'UTF-8') ?>
+                                    </span>
+                                <?php endif; ?>
+                            </div>
+                        </div>
                     </div>
                     <div style="font-size: 14px; line-height: 1.6; color: var(--text-primary); white-space: pre-line;">
                         <?= nl2br(\App\Controllers\CommunitiesController::renderLessonMentions($postBody)) ?>

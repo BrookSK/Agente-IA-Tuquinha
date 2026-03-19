@@ -1936,41 +1936,48 @@ class CommunitiesController extends Controller
 
     public function togglePostLike(): void
     {
-        $user = $this->requireLogin();
-        $userId = (int)$user['id'];
-
-        $postId = isset($_POST['post_id']) ? (int)$_POST['post_id'] : 0;
-        
-        if ($postId <= 0) {
-            header('Content-Type: application/json');
-            echo json_encode(['success' => false, 'error' => 'Post inválido']);
-            exit;
-        }
-
-        // Verify post exists
-        $post = CommunityTopicPost::findById($postId);
-        if (!$post) {
-            header('Content-Type: application/json');
-            echo json_encode(['success' => false, 'error' => 'Post não encontrado']);
-            exit;
-        }
-
-        // Toggle like
-        CommunityPostLike::toggle($postId, $userId);
-
-        // Get updated counts
-        $likesCount = CommunityPostLike::likesCountByPostIds([$postId]);
-        $count = $likesCount[$postId] ?? 0;
-
-        $likedByUser = CommunityPostLike::likedPostIdsByUser($userId, [$postId]);
-        $isLiked = isset($likedByUser[$postId]);
-
         header('Content-Type: application/json');
-        echo json_encode([
-            'success' => true,
-            'likes_count' => $count,
-            'is_liked' => $isLiked
-        ]);
+        
+        try {
+            $user = $this->requireLogin();
+            $userId = (int)$user['id'];
+
+            $postId = isset($_POST['post_id']) ? (int)$_POST['post_id'] : 0;
+            
+            if ($postId <= 0) {
+                echo json_encode(['success' => false, 'error' => 'Post inválido']);
+                exit;
+            }
+
+            // Verify post exists
+            $post = CommunityTopicPost::findById($postId);
+            if (!$post) {
+                echo json_encode(['success' => false, 'error' => 'Post não encontrado']);
+                exit;
+            }
+
+            // Toggle like
+            CommunityPostLike::toggle($postId, $userId);
+
+            // Get updated counts
+            $likesCount = CommunityPostLike::likesCountByPostIds([$postId]);
+            $count = $likesCount[$postId] ?? 0;
+
+            $likedByUser = CommunityPostLike::likedPostIdsByUser($userId, [$postId]);
+            $isLiked = isset($likedByUser[$postId]);
+
+            echo json_encode([
+                'success' => true,
+                'likes_count' => $count,
+                'is_liked' => $isLiked
+            ]);
+        } catch (\Exception $e) {
+            echo json_encode([
+                'success' => false,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+        }
         exit;
     }
 
