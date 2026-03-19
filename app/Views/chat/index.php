@@ -716,6 +716,28 @@ if (!empty($conversationId) && !empty($personaOptions) && is_array($personaOptio
                 <div class="tuqChatTitleText" title="<?= htmlspecialchars($conversationTitleText) ?>">
                     <?= htmlspecialchars($conversationTitleText) ?>
                 </div>
+
+<button id="chat-scroll-bottom-btn" type="button" aria-label="Descer para o fim" style="
+    position: fixed;
+    left: 50%;
+    transform: translateX(-50%);
+    bottom: 96px;
+    z-index: 9999;
+    width: 42px;
+    height: 42px;
+    border-radius: 999px;
+    border: 1px solid rgba(255,255,255,0.18);
+    background: rgba(0,0,0,0.55);
+    color: #ffffff;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 10px 28px rgba(0,0,0,0.35);
+    backdrop-filter: blur(8px);
+">
+    <span style="font-size:18px; line-height: 1;">↓</span>
+</button>
                 <?php
                     $personaBadgeText = 'Padrão do Tuquinha';
                     if (!empty($currentPersona) && is_array($currentPersona)) {
@@ -1293,7 +1315,7 @@ if (!empty($conversationId) && !empty($personaOptions) && is_array($personaOptio
         </div>
     <?php endif; ?>
 
-    <div id="chat-window" style="flex: 1; overflow-y: auto; padding: 12px 4px 12px 0;">
+    <div id="chat-window" style="flex: 1; overflow-y: auto; padding: 12px 4px 12px 0; position: relative;">
         <?php
         $attachmentsByMessageId = [];
         $legacyAttachments = [];
@@ -1710,6 +1732,43 @@ if (!empty($conversationId) && !empty($personaOptions) && is_array($personaOptio
     if (chatWindow) {
         chatWindow.scrollTop = chatWindow.scrollHeight;
     }
+
+    (function () {
+        const btn = document.getElementById('chat-scroll-bottom-btn');
+        const el = document.getElementById('chat-window');
+        if (!btn || !el) {
+            return;
+        }
+
+        const NEAR_PX = 220;
+        let raf = 0;
+
+        const isNearBottom = () => {
+            const remaining = el.scrollHeight - (el.scrollTop + el.clientHeight);
+            return remaining <= NEAR_PX;
+        };
+
+        const update = () => {
+            if (raf) {
+                cancelAnimationFrame(raf);
+            }
+            raf = requestAnimationFrame(() => {
+                btn.style.display = isNearBottom() ? 'none' : 'inline-flex';
+            });
+        };
+
+        btn.addEventListener('click', () => {
+            try {
+                el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' });
+            } catch (e) {
+                el.scrollTop = el.scrollHeight;
+            }
+        });
+
+        el.addEventListener('scroll', update, { passive: true });
+        window.addEventListener('resize', update);
+        update();
+    })();
 
     // Toggle painel de regras do chat
     const rulesToggle = document.getElementById('chat-rules-toggle');
