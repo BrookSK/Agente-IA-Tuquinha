@@ -226,6 +226,17 @@ function esc_attr(string $s): string {
             .card { padding: 14px; margin-bottom: 16px; }
             .btn { padding: 9px 14px; font-size: 12px; }
         }
+        
+        /* Fix dropdown/select option text visibility */
+        select {
+            color: var(--text-primary) !important;
+            background: var(--bg-main) !important;
+        }
+        
+        select option {
+            background: var(--bg-card) !important;
+            color: var(--text-primary) !important;
+        }
     </style>
 </head>
 <body>
