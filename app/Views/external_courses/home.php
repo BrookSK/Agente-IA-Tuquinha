@@ -6,6 +6,7 @@
 $title = trim((string)($course['title'] ?? ''));
 $desc = trim((string)($course['short_description'] ?? ''));
 $long = trim((string)($course['description'] ?? ''));
+$tagline = trim((string)($course['tagline'] ?? 'Aprenda Agora.'));
 $priceCents = isset($course['price_cents']) ? (int)$course['price_cents'] : 0;
 $price = number_format(max($priceCents, 0) / 100, 2, ',', '.');
 $imagePath = trim((string)($course['image_path'] ?? ''));
@@ -46,12 +47,12 @@ $logoUrl = isset($branding) && is_array($branding) && !empty($branding['logo_url
     background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.03'/%3E%3C/svg%3E");
     background-size: 180px; opacity: .4; pointer-events: none;
   }
+  body { padding-top: 72px; }
   nav {
-    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
     display: flex; align-items: center; justify-content: space-between;
-    padding: 0 40px; height: 68px;
-    background: rgba(8,9,13,.7); backdrop-filter: blur(20px) saturate(180%);
-    border-bottom: 1px solid var(--border);
+    padding: 0 80px; height: 72px; background: rgba(8,9,13,.95);
+    backdrop-filter: blur(12px); border-bottom: 1px solid var(--border);
   }
   .nav-brand {
     display: flex; align-items: center; gap: 12px;
@@ -105,13 +106,17 @@ $logoUrl = isset($branding) && is_array($branding) && !empty($branding['logo_url
   }
   .hero-title {
     font-family: 'Syne', sans-serif; font-weight: 800;
-    font-size: clamp(2.4rem, 4vw, 3.6rem); line-height: 1.08;
+    font-size: clamp(1.8rem, 5vw, 3.6rem); line-height: 1.15;
     letter-spacing: -1.5px; color: var(--text);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    max-width: 100%;
   }
   .hero-title .hl {
     background: linear-gradient(90deg, var(--accent), var(--accent2));
     -webkit-background-clip: text; -webkit-text-fill-color: transparent;
     background-clip: text;
+    font-size: clamp(1.5rem, 4.5vw, 3rem);
+    white-space: nowrap;
   }
   .hero-sub {
     font-size: 1rem; color: #ffffff; line-height: 1.7; max-width: 420px;
@@ -409,8 +414,6 @@ $logoUrl = isset($branding) && is_array($branding) && !empty($branding['logo_url
   <div class="nav-actions">
     <?php if (!empty($_SESSION['user_id'])): ?>
       <a href="/painel-externo" class="btn-primary">Acessar Painel</a>
-    <?php else: ?>
-      <button class="btn-primary" onclick="document.querySelector('.form-input').focus()">Começar Agora</button>
     <?php endif; ?>
   </div>
 </nav>
@@ -424,9 +427,11 @@ $logoUrl = isset($branding) && is_array($branding) && !empty($branding['logo_url
       </div>
 
       <h1 class="hero-title">
-        <?= htmlspecialchars($title, ENT_QUOTES, 'UTF-8') ?><br>
-        <span class="hl">Aprenda Agora.</span>
+        <?= htmlspecialchars($title, ENT_QUOTES, 'UTF-8') ?>
       </h1>
+      <h2 class="hero-title" style="margin-top: 8px;">
+        <span class="hl"><?= htmlspecialchars($tagline, ENT_QUOTES, 'UTF-8') ?></span>
+      </h2>
 
       <p class="hero-sub">
         <?= htmlspecialchars($desc ?: 'Acesse conteúdo exclusivo e transforme seu conhecimento com especialistas de referência.', ENT_QUOTES, 'UTF-8') ?>

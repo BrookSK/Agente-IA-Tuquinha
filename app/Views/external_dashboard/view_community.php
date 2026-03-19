@@ -17,8 +17,8 @@ $coverImage = trim((string)($community['cover_image_path'] ?? ''));
     </div>
     
     <?php if ($coverImage !== ''): ?>
-        <div style="width: 100%; max-width: 800px; height: 200px; border-radius: 14px; overflow: hidden; margin-bottom: 20px; background: rgba(255,255,255,0.05);">
-            <img src="<?= htmlspecialchars($coverImage, ENT_QUOTES, 'UTF-8') ?>" alt="<?= htmlspecialchars($communityName, ENT_QUOTES, 'UTF-8') ?>" style="width: 100%; height: 100%; object-fit: cover;">
+        <div style="width: 100%; max-width: 1200px; height: 300px; border-radius: 14px; overflow: hidden; margin-bottom: 20px; background: rgba(255,255,255,0.05);">
+            <img src="<?= htmlspecialchars($coverImage, ENT_QUOTES, 'UTF-8') ?>" alt="<?= htmlspecialchars($communityName, ENT_QUOTES, 'UTF-8') ?>" style="width: 100%; height: 100%; object-fit: contain;">
         </div>
     <?php endif; ?>
     

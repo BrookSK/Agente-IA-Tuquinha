@@ -113,7 +113,7 @@ $companyName = isset($branding) && is_array($branding) ? trim((string)($branding
                 </h2>
             </div>
 
-            <div class="form-group">
+            <div class="form-group" style="grid-column: 1 / -1;">
                 <label class="form-label">Data de Nascimento *</label>
                 <input name="birthdate" type="date" required class="form-input">
             </div>
@@ -220,8 +220,8 @@ $companyName = isset($branding) && is_array($branding) ? trim((string)($branding
                 </div>
             <?php endif; ?>
 
-            <div style="grid-column: 1 / -1; display: flex; gap: 1rem; margin-top: 2rem;">
-                <button type="submit" class="btn" style="flex: 1; font-size: 1.125rem; padding: 1rem; display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;">
+            <div style="grid-column: 1 / -1; display: flex; flex-direction: column; gap: 1rem; margin-top: 2rem;">
+                <button type="submit" class="btn" style="width: 100%; padding: 1rem 2rem; font-size: 1rem; display: flex; align-items: center; justify-content: center; gap: 0.5rem; margin-bottom: 1rem;">
                     <?php if ($priceCents > 0): ?>
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <line x1="12" y1="1" x2="12" y2="23"></line>
@@ -236,7 +236,7 @@ $companyName = isset($branding) && is_array($branding) ? trim((string)($branding
                         Criar Conta Gratuita
                     <?php endif; ?>
                 </button>
-                <a href="/curso-externo?token=<?= urlencode($token) ?>" class="btn-outline" style="padding: 1rem 2rem; display: inline-flex; align-items: center;">
+                <a href="/curso-externo?token=<?= urlencode($token) ?>" class="btn-outline" style="width: 100%; padding: 1rem 2rem; display: flex; align-items: center; justify-content: center; text-decoration: none;">
                     Voltar
                 </a>
             </div>

@@ -61,7 +61,7 @@ $isAdmin = !empty($_SESSION['is_admin']);
 $isOwner = $user && !empty($course['owner_user_id']) && (int)$course['owner_user_id'] === (int)($user['id'] ?? 0);
 $canCommentLesson = $user && ($isEnrolled || $isOwner || $isAdmin);
 ?>
-<div style="max-width: 1120px; margin: 0 auto; display:flex; gap:18px;">
+<div style="width: 100%; padding: 0 20px; margin: 0 auto; display:flex; gap:18px; box-sizing: border-box;">
     <aside style="flex:0 0 220px; border-radius:16px; border:1px solid #272727; background:#050509; padding:10px 8px; max-height:80vh; overflow:auto;">
         <div style="font-size:13px; font-weight:600; margin-bottom:8px; color:#f5f5f5;">Aulas do curso</div>
         <?php if (empty($moduleLessons)): ?>

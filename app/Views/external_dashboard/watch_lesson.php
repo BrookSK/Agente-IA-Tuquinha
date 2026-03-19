@@ -58,7 +58,7 @@ foreach ($lessons as $l) {
 
 $canCommentLesson = $user && $isEnrolled;
 ?>
-<div style="max-width: 1120px; margin: 0 auto; display:flex; gap:18px;">
+<div style="width: 100%; padding: 0 20px; margin: 0 auto; display:flex; gap:18px; box-sizing: border-box;">
     <aside style="flex:0 0 220px; border-radius:16px; border:1px solid var(--border); background:var(--bg-card); padding:10px 8px; max-height:80vh; overflow:auto;">
         <div style="font-size:13px; font-weight:600; margin-bottom:8px; color:var(--text-primary);">Aulas do curso</div>
         <?php if (empty($moduleLessons)): ?>

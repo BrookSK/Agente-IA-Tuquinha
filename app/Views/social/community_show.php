@@ -101,9 +101,9 @@ $canModerate = !empty($canModerate);
     </section>
 
     <section style="background:var(--surface-card); border-radius:16px; border:1px solid var(--border-subtle); overflow:hidden;">
-        <div style="width:100%; height:220px; background:radial-gradient(circle at 30% 20%, #fff 0, #ff8a65 25%, #e53935 65%, #050509 100%);">
+        <div style="width:100%; height:300px; background:radial-gradient(circle at 30% 20%, #fff 0, #ff8a65 25%, #e53935 65%, #050509 100%);">
             <?php if ($coverImage !== ''): ?>
-                <img src="<?= htmlspecialchars($coverImage, ENT_QUOTES, 'UTF-8') ?>" alt="Capa da comunidade" style="width:100%; height:100%; object-fit:cover; display:block;">
+                <img src="<?= htmlspecialchars($coverImage, ENT_QUOTES, 'UTF-8') ?>" alt="Capa da comunidade" style="width:100%; height:100%; object-fit:contain; display:block;">
             <?php else: ?>
                 <div style="width:100%; height:100%; display:flex; align-items:flex-end; padding:14px;">
                     <div style="background:rgba(0,0,0,0.45); border:1px solid rgba(255,255,255,0.12); color:#fff; padding:8px 10px; border-radius:12px; font-size:14px; font-weight:700;">

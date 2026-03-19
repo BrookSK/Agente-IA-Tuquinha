@@ -69,6 +69,14 @@ if ($externalToken !== '') {
         </div>
 
         <div>
+            <label style="font-size:13px; color:var(--text-primary); display:block; margin-bottom:4px;">Frase de Destaque (Tagline)</label>
+            <input type="text" name="tagline" value="<?= htmlspecialchars($course['tagline'] ?? 'Aprenda Agora.') ?>" placeholder="Ex: Aprenda Agora." style="
+                width:100%; padding:8px 10px; border-radius:8px; border:1px solid var(--border-subtle);
+                background:var(--surface-subtle); color:var(--text-primary); font-size:13px;">
+            <div style="font-size:11px; color:#777; margin-top:3px;">Frase exibida abaixo do título na página externa do curso.</div>
+        </div>
+
+        <div>
             <label style="font-size:13px; color:var(--text-primary); display:block; margin-bottom:4px;">Imagem do curso</label>
             <input type="text" name="image_path" value="<?= htmlspecialchars($course['image_path'] ?? '') ?>" placeholder="Opcional. Você pode informar uma URL direta ou enviar um arquivo abaixo." style="
                 width:100%; padding:8px 10px; border-radius:8px; border:1px solid var(--border-subtle);

@@ -114,9 +114,12 @@ function esc_attr(string $s): string {
         
         /* Header */
         .site-header {
-            background: transparent;
-            position: sticky;
+            background: rgba(8,9,13,.95);
+            backdrop-filter: blur(12px);
+            position: fixed;
             top: 0;
+            left: 0;
+            right: 0;
             z-index: 100;
         }
         
@@ -258,11 +261,12 @@ function esc_attr(string $s): string {
         .footer-bottom {
             max-width: 1400px;
             margin: 2rem auto 0;
-            padding-top: 2rem;
+            padding: 1.5rem 2rem;
             border-top: 1px solid var(--border);
             text-align: center;
             color: var(--text-muted);
             font-size: 0.85rem;
+            z-index: 1000;
         }
         
         /* Cards */

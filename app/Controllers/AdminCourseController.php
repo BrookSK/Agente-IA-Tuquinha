@@ -223,12 +223,15 @@ class AdminCourseController extends Controller
 
         $allowCommunityAccess = !empty($_POST['allow_community_access']) ? 1 : 0;
 
+        $tagline = trim((string)($_POST['tagline'] ?? ''));
+        
         $data = [
             'owner_user_id' => $ownerUserId ?: null,
             'title' => $title,
             'slug' => $slug,
             'short_description' => $shortDescription !== '' ? $shortDescription : null,
             'description' => $description !== '' ? $description : null,
+            'tagline' => $tagline !== '' ? $tagline : 'Aprenda Agora.',
             'image_path' => $imagePath !== '' ? $imagePath : null,
             'badge_image_path' => $badgeImagePath !== '' ? $badgeImagePath : null,
             'certificate_syllabus' => $certificateSyllabus !== '' ? $certificateSyllabus : null,
