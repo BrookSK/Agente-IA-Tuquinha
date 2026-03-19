@@ -62,30 +62,16 @@ class ExternalUserDashboardController extends Controller
         $enrolledCourses = CourseEnrollment::allByUser($userId);
         $enrolledCoursesCount = count($enrolledCourses);
 
-        // Calculate average progress
-        $totalProgress = 0;
+        // Calculate average progress (simplified - count courses with any progress)
         $coursesWithProgress = 0;
         foreach ($enrolledCourses as $enrollment) {
             $courseId = (int)$enrollment['course_id'];
-            
-            // Get completed lessons for this course
             $completedLessons = CourseLessonProgress::completedLessonIdsByUserAndCourse($courseId, $userId);
-            $completedCount = count($completedLessons);
-            
-            // Get total lessons for this course
-            $course = Course::findById($courseId);
-            if ($course) {
-                $totalLessons = CourseLesson::countByCourse($courseId);
-                if ($totalLessons > 0) {
-                    $progress = round(($completedCount / $totalLessons) * 100);
-                    if ($progress > 0) {
-                        $totalProgress += $progress;
-                        $coursesWithProgress++;
-                    }
-                }
+            if (count($completedLessons) > 0) {
+                $coursesWithProgress++;
             }
         }
-        $averageProgress = $coursesWithProgress > 0 ? round($totalProgress / $coursesWithProgress) : 0;
+        $averageProgress = $enrolledCoursesCount > 0 ? round(($coursesWithProgress / $enrolledCoursesCount) * 100) : 0;
 
         // Get communities count
         $communities = CourseAllowedCommunity::allowedCommunitiesByUser($userId);
