@@ -152,6 +152,68 @@ function esc_attr(string $s): string {
             text-decoration: none;
         }
         .btn:hover { opacity: 0.9; }
+        
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            .container { flex-direction: column; }
+            .sidebar {
+                width: 100%;
+                height: auto;
+                position: relative;
+                padding: 16px;
+            }
+            .logo {
+                margin-bottom: 16px;
+                padding-bottom: 12px;
+            }
+            .logo img { max-height: 36px !important; max-width: 160px !important; }
+            .logo-img { width: 36px; height: 36px; font-size: 16px; }
+            .logo-text { font-size: 16px; }
+            nav {
+                display: grid;
+                grid-template-columns: repeat(2, 1fr);
+                gap: 8px;
+            }
+            .nav-item {
+                padding: 12px;
+                font-size: 13px;
+                flex-direction: column;
+                text-align: center;
+                gap: 6px;
+            }
+            .nav-item svg { width: 18px; height: 18px; }
+            .nav-item:last-child {
+                grid-column: 1 / -1;
+                margin-top: 8px;
+                padding-top: 12px;
+            }
+            .main-content {
+                margin-left: 0;
+                padding: 20px 16px;
+            }
+            .header h1 { font-size: 22px; }
+            .header p { font-size: 13px; }
+            .card { padding: 16px; border-radius: 12px; }
+        }
+        
+        @media (max-width: 640px) {
+            .sidebar { padding: 12px; }
+            .logo { margin-bottom: 12px; padding-bottom: 10px; }
+            .logo img { max-height: 32px !important; max-width: 140px !important; }
+            nav { gap: 6px; }
+            .nav-item {
+                padding: 10px 8px;
+                font-size: 12px;
+                gap: 4px;
+            }
+            .nav-item svg { width: 16px; height: 16px; }
+            .main-content { padding: 16px 12px; }
+            .header { margin-bottom: 20px; }
+            .header h1 { font-size: 20px; }
+            .header p { font-size: 12px; }
+            .card { padding: 14px; margin-bottom: 16px; }
+            .btn { padding: 9px 14px; font-size: 12px; }
+        }
     </style>
 </head>
 <body>

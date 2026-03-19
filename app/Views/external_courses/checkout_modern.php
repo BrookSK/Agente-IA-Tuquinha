@@ -34,7 +34,7 @@ $companyName = isset($branding) && is_array($branding) ? trim((string)($branding
         </div>
     <?php endif; ?>
 
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-bottom: 2rem;">
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 2rem;" class="info-cards-grid">
         <div class="card" style="background: rgba(99, 102, 241, 0.05); border-color: var(--accent);">
             <div style="font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--accent); font-weight: 700; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -66,7 +66,7 @@ $companyName = isset($branding) && is_array($branding) ? trim((string)($branding
     </div>
 
     <div class="card">
-        <form action="/curso-externo/checkout" method="post" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.5rem;">
+        <form action="/curso-externo/checkout" method="post" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.5rem;" class="checkout-form">
             <input type="hidden" name="token" value="<?= htmlspecialchars($token, ENT_QUOTES, 'UTF-8') ?>">
 
             <div style="grid-column: 1 / -1;">
@@ -179,7 +179,7 @@ $companyName = isset($branding) && is_array($branding) ? trim((string)($branding
                     </h2>
                 </div>
 
-                <div style="grid-column: 1 / -1; display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem;">
+                <div class="billing-grid" style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px;">
                     <label class="card" style="cursor: pointer; padding: 1.25rem; transition: all 0.2s;">
                         <input type="radio" name="billing_type" value="PIX" checked style="display: none;">
                         <div style="text-align: center;">
@@ -254,5 +254,20 @@ $companyName = isset($branding) && is_array($branding) ? trim((string)($branding
     .card:has(input[type="radio"]:checked) {
         border-color: var(--accent);
         background: rgba(99, 102, 241, 0.1);
+    }
+    
+    @media (max-width: 768px) {
+        .info-cards-grid { grid-template-columns: 1fr !important; gap: 1rem !important; }
+        .checkout-form { grid-template-columns: 1fr !important; gap: 1rem !important; }
+        .billing-grid { grid-template-columns: 1fr !important; }
+    }
+    
+    @media (max-width: 640px) {
+        .container { padding: 0 0.75rem !important; }
+        h1 { font-size: 1.5rem !important; line-height: 1.25; }
+        h2 { font-size: 1.1rem !important; }
+        .card { padding: 1rem !important; }
+        .info-cards-grid { gap: 0.875rem !important; margin-bottom: 1.5rem !important; }
+        .checkout-form { gap: 0.875rem !important; }
     }
 </style>

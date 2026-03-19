@@ -401,23 +401,47 @@ function esc_attr(string $s): string {
         }
         
         @media (max-width: 768px) {
+            body { overflow-x: hidden; }
+            .container { padding: 0 1rem; max-width: 100%; }
+            .site-header { padding: 1rem; }
             .header-content {
                 flex-direction: column;
                 text-align: center;
+                gap: 1rem;
             }
-            
+            .header-brand img { height: 36px !important; max-width: 160px !important; }
             .header-nav {
-                flex-direction: column;
+                flex-direction: row;
                 gap: 0.75rem;
+                width: 100%;
+                justify-content: center;
             }
-            
-            .hero-title {
-                font-size: 2rem;
-            }
-            
-            .footer-content {
-                grid-template-columns: 1fr;
-            }
+            .header-nav a { font-size: 0.85rem; }
+            .header-nav .btn { padding: 0.5rem 1rem; font-size: 0.85rem; }
+            .hero-title { font-size: 1.75rem; line-height: 1.2; }
+            .card { padding: 1.25rem; border-radius: 12px; }
+            .form-group { margin-bottom: 1rem; }
+            .form-label { font-size: 0.85rem; margin-bottom: 0.375rem; }
+            .form-input, .form-select { padding: 0.75rem; font-size: 0.9rem; }
+            .form-hint { font-size: 0.75rem; }
+            .btn { padding: 0.75rem 1.25rem; font-size: 0.9rem; }
+            .footer-content { grid-template-columns: 1fr; gap: 1.5rem; }
+            .footer-section { text-align: center; }
+            .footer-bottom { font-size: 0.8rem; padding: 1rem; }
+        }
+        
+        @media (max-width: 640px) {
+            .container { padding: 0 0.75rem; }
+            .site-header { padding: 0.75rem; }
+            .header-brand img { height: 32px !important; max-width: 140px !important; }
+            .header-nav { flex-direction: column; width: 100%; }
+            .header-nav a, .header-nav .btn { width: 100%; text-align: center; }
+            h1 { font-size: 1.5rem; line-height: 1.25; }
+            h2 { font-size: 1.25rem; }
+            p { font-size: 0.9rem; }
+            .card { padding: 1rem; }
+            .form-input, .form-select { font-size: 1rem; }
+            .btn { width: 100%; padding: 0.875rem; }
         }
     </style>
 </head>

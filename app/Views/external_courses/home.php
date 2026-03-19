@@ -345,22 +345,49 @@ $logoUrl = isset($branding) && is_array($branding) && !empty($branding['logo_url
   ::-webkit-scrollbar-thumb { background: #2a2d3a; border-radius: 3px; }
   @media (max-width: 1024px) {
     .hero { grid-template-columns: 1fr; }
-    .hero-left { padding: 100px 40px 40px; text-align: center; }
+    .hero-left { padding: 80px 32px 32px; text-align: center; }
     .hero-sub { max-width: 100%; }
     .hero-cta { justify-content: center; }
-    .hero-right { padding: 20px 40px 80px; }
-    .section { padding: 80px 40px; }
+    .hero-right { padding: 20px 32px 60px; }
+    .section { padding: 60px 32px; }
     .cta-banner {
-      margin: 0 40px 60px; padding: 40px; flex-direction: column; text-align: center;
+      margin: 0 32px 48px; padding: 32px; flex-direction: column; text-align: center;
     }
-    footer { flex-direction: column; gap: 12px; text-align: center; padding: 28px 40px; }
+    footer { flex-direction: column; gap: 12px; text-align: center; padding: 24px 32px; }
   }
   @media (max-width: 640px) {
-    nav { padding: 0 20px; }
-    .section { padding: 60px 20px; }
-    .cta-banner { margin: 0 20px 40px; padding: 30px 24px; }
-    .form-row { grid-template-columns: 1fr; }
-    footer { padding: 28px 20px; }
+    body { overflow-x: hidden; }
+    nav { padding: 0 16px; height: auto; min-height: 60px; }
+    .nav-brand img { height: 32px !important; max-width: 140px !important; }
+    .nav-actions { gap: 8px; }
+    .nav-actions .btn { padding: 8px 14px; font-size: 0.85rem; }
+    .hero-left { padding: 60px 16px 24px; }
+    .hero-title { font-size: 2rem !important; line-height: 1.15; letter-spacing: -0.5px; }
+    .hero-sub { font-size: 0.9rem; line-height: 1.6; }
+    .hero-cta { flex-direction: column; width: 100%; }
+    .btn-lg { width: 100%; justify-content: center; padding: 12px 20px; font-size: 0.9rem; }
+    .hero-right { padding: 16px 16px 48px; }
+    .login-card { padding: 28px 20px; max-width: 100%; margin: 0; }
+    .card-head h2 { font-size: 1.25rem; }
+    .card-head p { font-size: 0.8rem; }
+    .tabs { font-size: 0.85rem; padding: 3px; }
+    .tab { padding: 8px 12px; }
+    .form-group { margin-bottom: 16px; }
+    .form-label { font-size: 0.8rem; margin-bottom: 6px; }
+    .form-input { padding: 11px 12px; font-size: 0.9rem; }
+    .btn-submit { padding: 12px; font-size: 0.9rem; }
+    .section { padding: 48px 16px; }
+    .section-head h2 { font-size: 1.75rem; }
+    .section-head p { font-size: 0.9rem; }
+    .courses-grid { grid-template-columns: 1fr; gap: 16px; }
+    .course-card { margin: 0; }
+    .course-title { font-size: 1rem; }
+    .course-desc { font-size: 0.8rem; }
+    .cta-banner { margin: 0 16px 32px; padding: 24px 20px; border-radius: 16px; }
+    .cta-banner h2 { font-size: 1.5rem; }
+    .cta-banner p { font-size: 0.9rem; }
+    .form-row { grid-template-columns: 1fr; gap: 12px; }
+    footer { padding: 20px 16px; font-size: 0.8rem; }
   }
   .panel { display: none; }
   .panel.active { display: block; }
