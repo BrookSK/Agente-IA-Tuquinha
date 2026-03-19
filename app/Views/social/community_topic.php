@@ -195,9 +195,17 @@ $slug = (string)($community['slug'] ?? '');
 
     // Lesson Mention Autocomplete - Hierarchical (Course > Lesson)
     (function(){
+        alert('Script de menção carregado! Verifique o console.');
         const textarea = document.getElementById('replyTextarea');
         const dropdown = document.getElementById('lessonMentionDropdown');
-        if (!textarea || !dropdown) return;
+        console.log('Lesson mention autocomplete initializing...', {textarea, dropdown});
+        if (!textarea || !dropdown) {
+            console.error('Textarea or dropdown not found!');
+            alert('ERRO: Textarea ou dropdown não encontrado!');
+            return;
+        }
+        console.log('Autocomplete initialized successfully');
+        alert('Autocomplete inicializado com sucesso!');
 
         let courses = [];
         let currentCourse = null;
