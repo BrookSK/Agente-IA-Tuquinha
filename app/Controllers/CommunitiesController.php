@@ -950,7 +950,7 @@ class CommunitiesController extends Controller
             }
         }
 
-        CommunityTopicPost::create([
+        $postId = CommunityTopicPost::create([
             'topic_id' => $topicId,
             'user_id' => $userId,
             'body' => $body,
@@ -958,6 +958,9 @@ class CommunitiesController extends Controller
             'media_mime' => $mediaMime,
             'media_kind' => $mediaKind,
         ]);
+
+        // Parse and store lesson mentions
+        $this->parseLessonMentions($body, $topicId, $postId, $userId);
 
         $_SESSION['communities_success'] = 'Resposta enviada.';
         header('Location: /comunidades/topicos/ver?topic_id=' . $topicId);
@@ -1764,5 +1767,82 @@ class CommunitiesController extends Controller
         $_SESSION['communities_success'] = 'Denúncia marcada como resolvida.';
         header('Location: /comunidades/membros?slug=' . urlencode((string)$community['slug']));
         exit;
+    }
+
+    private function parseLessonMentions(string $body, int $topicId, ?int $commentId, int $userId): void
+    {
+        // Extract lesson mentions from text (format: @LessonTitle)
+        preg_match_all('/@([^@\s]+(?:\s+[^@\s]+)*)/', $body, $matches);
+        
+        if (empty($matches[1])) {
+            return;
+        }
+        
+        $pdo = \App\Core\Database::getConnection();
+        
+        foreach ($matches[1] as $lessonTitle) {
+            $lessonTitle = trim($lessonTitle);
+            if ($lessonTitle === '') {
+                continue;
+            }
+            
+            // Find lesson by title that user has access to
+            $stmt = $pdo->prepare('
+                SELECT cl.id, cl.course_id
+                FROM course_lessons cl
+                INNER JOIN course_enrollments ce ON ce.course_id = cl.course_id
+                WHERE ce.user_id = :user_id
+                AND cl.title = :title
+                AND cl.is_published = 1
+                LIMIT 1
+            ');
+            $stmt->execute([
+                'user_id' => $userId,
+                'title' => $lessonTitle
+            ]);
+            
+            $lesson = $stmt->fetch(\PDO::FETCH_ASSOC);
+            
+            if ($lesson) {
+                // Store mention
+                $insertStmt = $pdo->prepare('
+                    INSERT INTO community_lesson_mentions 
+                    (topic_id, comment_id, lesson_id, mentioned_by_user_id, created_at)
+                    VALUES (:topic_id, :comment_id, :lesson_id, :user_id, NOW())
+                ');
+                $insertStmt->execute([
+                    'topic_id' => $topicId,
+                    'comment_id' => $commentId,
+                    'lesson_id' => (int)$lesson['id'],
+                    'user_id' => $userId
+                ]);
+            }
+        }
+    }
+
+    public static function renderLessonMentions(string $text): string
+    {
+        // Convert @LessonTitle to clickable links
+        return preg_replace_callback('/@([^@\s]+(?:\s+[^@\s]+)*)/', function($matches) {
+            $lessonTitle = trim($matches[1]);
+            
+            $pdo = \App\Core\Database::getConnection();
+            $stmt = $pdo->prepare('
+                SELECT cl.id, cl.course_id
+                FROM course_lessons cl
+                WHERE cl.title = :title
+                AND cl.is_published = 1
+                LIMIT 1
+            ');
+            $stmt->execute(['title' => $lessonTitle]);
+            $lesson = $stmt->fetch(\PDO::FETCH_ASSOC);
+            
+            if ($lesson) {
+                $lessonUrl = '/painel-externo/aula?lesson_id=' . (int)$lesson['id'];
+                return '<a href="' . htmlspecialchars($lessonUrl, ENT_QUOTES, 'UTF-8') . '" style="color: #ff6f60; text-decoration: none; font-weight: 600;" title="Ir para a aula">@' . htmlspecialchars($lessonTitle, ENT_QUOTES, 'UTF-8') . '</a>';
+            }
+            
+            return $matches[0];
+        }, $text);
     }
 }

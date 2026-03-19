@@ -182,6 +182,9 @@ $router->get('/noticias', 'NewsController@index');
 $router->get('/noticias/ver', 'NewsController@show');
 $router->post('/noticias/email', 'NewsController@toggleEmail');
 
+// API Routes
+$router->get('/api/lessons/search', 'ApiLessonsController@search');
+
 // Kanban (Trello-like)
 $router->get('/kanban', 'KanbanController@index');
 $router->post('/kanban/quadro/criar', 'KanbanController@createBoard');

@@ -66,7 +66,7 @@ $slug = (string)($community['slug'] ?? '');
         </h1>
         <?php if (!empty($topic['body'])): ?>
             <div style="font-size:13px; color:#f5f5f5; margin-top:4px;">
-                <?= nl2br(htmlspecialchars((string)$topic['body'], ENT_QUOTES, 'UTF-8')) ?>
+                <?= nl2br(\App\Controllers\CommunitiesController::renderLessonMentions(htmlspecialchars((string)$topic['body'], ENT_QUOTES, 'UTF-8'))) ?>
             </div>
         <?php endif; ?>
         <?php if ($topicMediaUrl !== ''): ?>
@@ -93,7 +93,10 @@ $slug = (string)($community['slug'] ?? '');
         <?php if ($isMember): ?>
             <form action="/comunidades/topicos/responder" method="post" enctype="multipart/form-data" style="margin-bottom:10px; display:flex; flex-direction:column; gap:6px;">
                 <input type="hidden" name="topic_id" value="<?= (int)($topic['id'] ?? 0) ?>">
-                <textarea name="body" rows="3" placeholder="Responda este tópico..." style="width:100%; padding:6px 8px; border-radius:8px; border:1px solid #272727; background:#050509; color:#f5f5f5; font-size:13px; resize:vertical;"></textarea>
+                <div style="position: relative;">
+                    <textarea id="replyTextarea" name="body" rows="3" placeholder="Responda este tópico... (use @ para mencionar uma aula)" style="width:100%; padding:6px 8px; border-radius:8px; border:1px solid #272727; background:#050509; color:#f5f5f5; font-size:13px; resize:vertical;"></textarea>
+                    <div id="lessonMentionDropdown" style="display: none; position: absolute; background: #111118; border: 1px solid #272727; border-radius: 8px; max-height: 200px; overflow-y: auto; z-index: 1000; box-shadow: 0 4px 12px rgba(0,0,0,0.5); min-width: 250px;"></div>
+                </div>
                 <div style="display:flex; flex-wrap:wrap; gap:10px; align-items:center; justify-content:space-between;">
                     <div style="display:flex; flex-direction:column; gap:6px;">
                         <input id="communityReplyMediaInput" type="file" name="media" accept="image/*,video/*" style="display:none;">
@@ -157,7 +160,7 @@ $slug = (string)($community['slug'] ?? '');
                             <?php endif; ?>
                         </div>
                         <div style="font-size:13px; color:#f5f5f5;">
-                            <?= nl2br(htmlspecialchars((string)($p['body'] ?? ''), ENT_QUOTES, 'UTF-8')) ?>
+                            <?= nl2br(\App\Controllers\CommunitiesController::renderLessonMentions(htmlspecialchars((string)($p['body'] ?? ''), ENT_QUOTES, 'UTF-8'))) ?>
                         </div>
                         <?php if ($postMediaUrl !== ''): ?>
                             <div style="margin-top:6px;">
@@ -187,6 +190,150 @@ $slug = (string)($community['slug'] ?? '');
         input.addEventListener('change', function(){
             var f = input.files && input.files[0] ? input.files[0] : null;
             nameEl.textContent = f ? f.name : 'Nenhum arquivo selecionado';
+        });
+    })();
+
+    // Lesson Mention Autocomplete
+    (function(){
+        const textarea = document.getElementById('replyTextarea');
+        const dropdown = document.getElementById('lessonMentionDropdown');
+        if (!textarea || !dropdown) return;
+
+        let lessons = [];
+        let mentionStart = -1;
+        let selectedIndex = 0;
+
+        // Fetch available lessons
+        async function fetchLessons() {
+            try {
+                const response = await fetch('/api/lessons/search');
+                if (response.ok) {
+                    lessons = await response.json();
+                }
+            } catch (e) {
+                console.error('Failed to fetch lessons:', e);
+            }
+        }
+        fetchLessons();
+
+        function getCaretPosition() {
+            return textarea.selectionStart;
+        }
+
+        function setCaretPosition(pos) {
+            textarea.setSelectionRange(pos, pos);
+            textarea.focus();
+        }
+
+        function getCurrentWord() {
+            const pos = getCaretPosition();
+            const text = textarea.value;
+            let start = pos;
+            while (start > 0 && text[start - 1] !== ' ' && text[start - 1] !== '\n') {
+                start--;
+            }
+            return { start, word: text.substring(start, pos) };
+        }
+
+        function showDropdown(filteredLessons) {
+            if (filteredLessons.length === 0) {
+                dropdown.style.display = 'none';
+                return;
+            }
+
+            selectedIndex = 0;
+            dropdown.innerHTML = filteredLessons.map((lesson, idx) => 
+                `<div class="lesson-mention-item" data-index="${idx}" style="padding: 8px 12px; cursor: pointer; font-size: 13px; color: #f5f5f5; ${idx === 0 ? 'background: #1a1a24;' : ''}">
+                    <div style="font-weight: 600;">${lesson.title}</div>
+                    <div style="font-size: 11px; color: #b0b0b0;">${lesson.course_title || 'Curso'}</div>
+                </div>`
+            ).join('');
+
+            const rect = textarea.getBoundingClientRect();
+            dropdown.style.top = (rect.height + 4) + 'px';
+            dropdown.style.left = '0px';
+            dropdown.style.display = 'block';
+
+            // Add click handlers
+            dropdown.querySelectorAll('.lesson-mention-item').forEach((item, idx) => {
+                item.addEventListener('mouseenter', () => {
+                    selectedIndex = idx;
+                    updateSelection();
+                });
+                item.addEventListener('click', () => {
+                    insertMention(filteredLessons[idx]);
+                });
+            });
+        }
+
+        function updateSelection() {
+            const items = dropdown.querySelectorAll('.lesson-mention-item');
+            items.forEach((item, idx) => {
+                item.style.background = idx === selectedIndex ? '#1a1a24' : 'transparent';
+            });
+        }
+
+        function insertMention(lesson) {
+            const text = textarea.value;
+            const beforeMention = text.substring(0, mentionStart);
+            const afterCaret = text.substring(getCaretPosition());
+            const mention = `@${lesson.title}`;
+            
+            textarea.value = beforeMention + mention + ' ' + afterCaret;
+            setCaretPosition(beforeMention.length + mention.length + 1);
+            
+            dropdown.style.display = 'none';
+            mentionStart = -1;
+        }
+
+        textarea.addEventListener('input', function() {
+            const { start, word } = getCurrentWord();
+            
+            if (word.startsWith('@') && word.length > 1) {
+                mentionStart = start;
+                const query = word.substring(1).toLowerCase();
+                const filtered = lessons.filter(l => 
+                    l.title.toLowerCase().includes(query)
+                ).slice(0, 5);
+                showDropdown(filtered);
+            } else {
+                dropdown.style.display = 'none';
+                mentionStart = -1;
+            }
+        });
+
+        textarea.addEventListener('keydown', function(e) {
+            if (dropdown.style.display === 'none') return;
+
+            const items = dropdown.querySelectorAll('.lesson-mention-item');
+            if (items.length === 0) return;
+
+            if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                selectedIndex = (selectedIndex + 1) % items.length;
+                updateSelection();
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                selectedIndex = (selectedIndex - 1 + items.length) % items.length;
+                updateSelection();
+            } else if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                const lessonData = JSON.parse(items[selectedIndex].getAttribute('data-lesson') || '{}');
+                if (lessonData.title) {
+                    insertMention(lessonData);
+                }
+            } else if (e.key === 'Escape') {
+                dropdown.style.display = 'none';
+                mentionStart = -1;
+            }
+        });
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!textarea.contains(e.target) && !dropdown.contains(e.target)) {
+                dropdown.style.display = 'none';
+                mentionStart = -1;
+            }
         });
     })();
 </script>
