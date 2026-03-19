@@ -121,7 +121,7 @@ $createdAt = $topic['created_at'] ?? '';
                         }
                     }
                 ?>
-                <div style="padding: 14px; border: 1px solid var(--border); border-radius: 10px; background: rgba(255,255,255,0.02); <?= $parentPostId ? 'margin-left: 40px; border-left: 3px solid var(--accent);' : '' ?>">
+                <div id="post-<?= (int)($post['id'] ?? 0) ?>" style="padding: 14px; border: 1px solid var(--border); border-radius: 10px; background: rgba(255,255,255,0.02); <?= $parentPostId ? 'margin-left: 40px; border-left: 3px solid var(--accent);' : '' ?>">
                     <?php if ($parentPostId && $parentAuthor): ?>
                         <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 8px; padding: 6px 10px; background: rgba(255,255,255,0.03); border-radius: 6px;">
                             ↳ Respondendo a <strong style="color: var(--accent);"><?= htmlspecialchars($parentAuthor, ENT_QUOTES, 'UTF-8') ?></strong>
@@ -647,4 +647,23 @@ function clearMedia() {
     document.getElementById('imagePreview').src = '';
     document.getElementById('videoPreview').src = '';
 }
+
+// Scroll to post if hash is present in URL (from notifications)
+window.addEventListener('load', function() {
+    if (window.location.hash) {
+        const hash = window.location.hash;
+        const element = document.querySelector(hash);
+        if (element) {
+            setTimeout(function() {
+                element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                // Add highlight effect
+                element.style.transition = 'all 0.3s';
+                element.style.boxShadow = '0 0 0 3px rgba(239, 68, 68, 0.3)';
+                setTimeout(function() {
+                    element.style.boxShadow = '';
+                }, 2000);
+            }, 300);
+        }
+    }
+});
 </script>
