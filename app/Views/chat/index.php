@@ -100,8 +100,79 @@ function render_markdown_safe(string $text): string {
         return '<a href="' . $hrefAttr . '">' . $label . '</a>';
     }, $escaped);
 
-    $blocks = preg_split("/\n{2,}/", $escaped);
     $out = '';
+
+    $parseRow = function (string $row): array {
+        $row = trim($row);
+        if ($row === '') return [];
+        $row = preg_replace('/^\|/', '', $row);
+        $row = preg_replace('/\|$/', '', $row);
+        $cells = explode('|', (string)$row);
+        $outCells = [];
+        foreach ($cells as $c) {
+            $outCells[] = trim((string)$c);
+        }
+        return $outCells;
+    };
+
+    $isTableSeparatorLine = function (string $line): bool {
+        $s = preg_replace('/\s+/', '', trim($line));
+        if ($s === '') return false;
+        return (bool)preg_match('/^\|?\:?-+\:?(\|\:?-+\:?)+\|?$/', $s);
+    };
+
+    $renderTable = function (string $mdTable, array $header, array $rows): string {
+        $maxCols = count($header);
+        foreach ($rows as $r) {
+            $maxCols = max($maxCols, count($r));
+        }
+        $normalizeCols = function (array $r) use ($maxCols): array {
+            $r2 = $r;
+            while (count($r2) < $maxCols) { $r2[] = ''; }
+            if (count($r2) > $maxCols) { $r2 = array_slice($r2, 0, $maxCols); }
+            return $r2;
+        };
+        $header = $normalizeCols($header);
+        $rows = array_map($normalizeCols, $rows);
+
+        $mdAttr = htmlspecialchars($mdTable, ENT_QUOTES, 'UTF-8');
+
+        $html = '<div class="tuq-md-table-wrap">'
+            . '<div class="tuq-md-table-head">'
+            . '<div class="tuq-md-table-title">Tabela</div>'
+            . '<button type="button" class="tuq-copy-table-btn copy-table-btn" data-table-md="' . $mdAttr . '">' 
+            . '<span style="opacity:0.9;">⧉</span><span>Copiar tabela</span>'
+            . '</button>'
+            . '</div>'
+            . '<table>';
+
+        if (!empty($header)) {
+            $html .= '<thead><tr>';
+            foreach ($header as $h) { $html .= '<th>' . $h . '</th>'; }
+            $html .= '</tr></thead>';
+        }
+
+        $html .= '<tbody>';
+        foreach ($rows as $r) {
+            $html .= '<tr>';
+            foreach ($r as $c) { $html .= '<td>' . $c . '</td>'; }
+            $html .= '</tr>';
+        }
+        $html .= '</tbody></table></div>';
+        return $html;
+    };
+
+    $flushText = function (string $txt) use (&$out): void {
+        $txt = trim($txt);
+        if ($txt === '') return;
+        if (preg_match('/^<h[2-4]>.*<\/h[2-4]>$/s', $txt)) {
+            $out .= $txt;
+            return;
+        }
+        $out .= '<p>' . nl2br($txt) . '</p>';
+    };
+
+    $blocks = preg_split("/\n{2,}/", $escaped);
     foreach ($blocks as $b) {
         $b = trim((string)$b);
         if ($b === '') {
@@ -113,95 +184,59 @@ function render_markdown_safe(string $text): string {
         }
 
         $lines = preg_split("/\n/", $b);
-        $line0 = isset($lines[0]) ? trim((string)$lines[0]) : '';
-        $line1 = isset($lines[1]) ? trim((string)$lines[1]) : '';
-        $isTable = false;
-        if ($line0 !== '' && $line1 !== '' && (strpos($line0, '|') !== false)) {
-            $sep = preg_replace('/\s+/', '', $line1);
-            if ($sep !== '' && preg_match('/^\|?\:?-+\:?(\|\:?-+\:?)+' . '\|?$/', $sep)) {
-                $isTable = true;
+        $buf = '';
+        for ($i = 0; $i < count($lines); $i++) {
+            $line = (string)$lines[$i];
+            $trimLine = trim($line);
+
+            if ($trimLine === '[[HR]]') {
+                $flushText($buf);
+                $buf = '';
+                $out .= '<hr class="tuq-chat-hr">';
+                continue;
             }
+
+            if (preg_match('/^<h[2-4]>.*<\/h[2-4]>$/s', $trimLine)) {
+                $flushText($buf);
+                $buf = '';
+                $out .= $trimLine;
+                continue;
+            }
+
+            $lineNext = isset($lines[$i + 1]) ? (string)$lines[$i + 1] : '';
+            if ($trimLine !== '' && strpos($trimLine, '|') !== false && $lineNext !== '' && $isTableSeparatorLine($lineNext)) {
+                $flushText($buf);
+                $buf = '';
+
+                $tableLines = [];
+                $tableLines[] = $trimLine;
+                $tableLines[] = (string)$lineNext;
+
+                $header = $parseRow($trimLine);
+                $rows = [];
+
+                $j = $i + 2;
+                while ($j < count($lines)) {
+                    $rowLine = (string)$lines[$j];
+                    $rowTrim = trim($rowLine);
+                    if ($rowTrim === '') break;
+                    if (strpos($rowTrim, '|') === false) break;
+                    $tableLines[] = $rowTrim;
+                    $r = $parseRow($rowTrim);
+                    if (!empty($r)) { $rows[] = $r; }
+                    $j++;
+                }
+
+                $mdTable = implode("\n", $tableLines);
+                $out .= $renderTable($mdTable, $header, $rows);
+                $i = $j - 1;
+                continue;
+            }
+
+            $buf .= ($buf === '' ? '' : "\n") . $line;
         }
 
-        if ($isTable) {
-            $parseRow = function (string $row): array {
-                $row = trim($row);
-                if ($row === '') return [];
-                $row = preg_replace('/^\|/', '', $row);
-                $row = preg_replace('/\|$/', '', $row);
-                $cells = explode('|', (string)$row);
-                $outCells = [];
-                foreach ($cells as $c) {
-                    $outCells[] = trim((string)$c);
-                }
-                return $outCells;
-            };
-
-            $header = $parseRow((string)$lines[0]);
-            $rows = [];
-            for ($i = 2; $i < count($lines); $i++) {
-                $r = $parseRow((string)$lines[$i]);
-                if (!empty($r)) {
-                    $rows[] = $r;
-                }
-            }
-
-            $maxCols = count($header);
-            foreach ($rows as $r) {
-                $maxCols = max($maxCols, count($r));
-            }
-
-            $normalizeCols = function (array $r) use ($maxCols): array {
-                $r2 = $r;
-                while (count($r2) < $maxCols) {
-                    $r2[] = '';
-                }
-                if (count($r2) > $maxCols) {
-                    $r2 = array_slice($r2, 0, $maxCols);
-                }
-                return $r2;
-            };
-            $header = $normalizeCols($header);
-            $rows = array_map($normalizeCols, $rows);
-
-            $mdTable = $b;
-            $mdAttr = htmlspecialchars($mdTable, ENT_QUOTES, 'UTF-8');
-
-            $out .= '<div class="tuq-md-table-wrap">'
-                . '<div class="tuq-md-table-head">'
-                . '<div class="tuq-md-table-title">Tabela</div>'
-                . '<button type="button" class="tuq-copy-table-btn copy-table-btn" data-table-md="' . $mdAttr . '">' 
-                . '<span style="opacity:0.9;">⧉</span><span>Copiar tabela</span>'
-                . '</button>'
-                . '</div>'
-                . '<table>';
-
-            if (!empty($header)) {
-                $out .= '<thead><tr>';
-                foreach ($header as $h) {
-                    $out .= '<th>' . $h . '</th>';
-                }
-                $out .= '</tr></thead>';
-            }
-
-            $out .= '<tbody>';
-            foreach ($rows as $r) {
-                $out .= '<tr>';
-                foreach ($r as $c) {
-                    $out .= '<td>' . $c . '</td>';
-                }
-                $out .= '</tr>';
-            }
-            $out .= '</tbody></table></div>';
-            continue;
-        }
-
-        if (preg_match('/^<h[2-4]>.*<\/h[2-4]>$/s', $b)) {
-            $out .= $b;
-            continue;
-        }
-        $b = nl2br($b);
-        $out .= '<p>' . $b . '</p>';
+        $flushText($buf);
     }
     return '<div class="tuq-chat-md">' . $out . '</div>';
 }
@@ -392,15 +427,78 @@ function render_markdown_safe(string $text): string {
      padding:6px 10px 0 10px;
  }
 
- .tuq-has-showcase #chat-window {
+ .main-content {
      flex: 1 1 auto !important;
+     overflow-y: hidden !important;
+     display: flex;
+     flex-direction: column;
+     min-height: 0;
+     padding: 0 !important;
+     box-sizing: border-box;
+     -ms-overflow-style: none;
+     scrollbar-width: none;
+ }
+
+ .main {
+     display: flex !important;
+     flex-direction: column !important;
+     height: 100vh !important;
+     min-height: 0 !important;
      overflow: hidden !important;
-     visibility: hidden !important;
+ }
+
+ .main-content::-webkit-scrollbar {
+     width: 0;
+     height: 0;
+ }
+
+ .tuq-has-showcase #chat-window {
+     display: none !important;
+ }
+
+ .tuq-has-showcase #chat-window::-webkit-scrollbar {
+     width: 0 !important;
+     height: 0 !important;
+ }
+
+ .tuq-has-showcase #chat-window {
+     scrollbar-width: none;
  }
 
  .tuq-has-showcase {
-     height: calc(100vh - 56px - 80px);
+     height: 100%;
+     min-height: 0;
      overflow: hidden;
+ }
+
+ .tuq-has-showcase #chat-persona-showcase {
+     display: flex;
+     flex-direction: column;
+     flex: 1 1 auto;
+     min-height: 0;
+     overflow: hidden;
+ }
+
+ .tuq-has-showcase #chat-persona-showcase > div {
+     display: flex;
+     flex-direction: column;
+     flex: 1 1 auto;
+     min-height: 0;
+     margin-bottom: 0 !important;
+ }
+
+ .tuq-has-showcase .chat-persona-stage {
+     flex: 1 1 auto;
+     min-height: 0 !important;
+     overflow: hidden !important;
+ }
+
+ .tuq-has-showcase #chat-persona-carousel {
+     height: 100% !important;
+ }
+
+ #tuq-chat-root form[action="/chat/send"] {
+     margin-bottom: 10px !important;
  }
 
  body.tuq-body-lock {
@@ -423,6 +521,41 @@ function render_markdown_safe(string $text): string {
 
  html.tuq-body-lock {
      scrollbar-width: none;
+ }
+
+ body.tuq-body-lock * {
+     scrollbar-width: none;
+ }
+
+ body.tuq-body-lock *::-webkit-scrollbar {
+     width: 0 !important;
+     height: 0 !important;
+ }
+
+ body.tuq-body-lock .main-content {
+     overflow: hidden !important;
+ }
+
+ body.tuq-body-lock .main-content.tuq-showcase-lock {
+     overflow: hidden !important;
+ }
+
+ body.tuq-body-lock .main-content.tuq-showcase-lock {
+     scrollbar-width: none;
+ }
+
+ body.tuq-body-lock .main-content.tuq-showcase-lock::-webkit-scrollbar {
+     width: 0 !important;
+     height: 0 !important;
+ }
+
+ body.tuq-body-lock .main-content {
+     scrollbar-width: none;
+ }
+
+ body.tuq-body-lock .main-content::-webkit-scrollbar {
+     width: 0 !important;
+     height: 0 !important;
  }
 </style>
 <?php
@@ -500,15 +633,83 @@ if (!empty($conversationId) && !empty($personaOptions) && is_array($personaOptio
 ?>
 <?php if (!empty($shouldShowPersonaShowcase)): ?>
     <script>
-        document.addEventListener('DOMContentLoaded', function () {
+        (function () {
+            function lockShowcaseScroll() {
+                try {
+                    document.body.classList.add('tuq-body-lock');
+                    document.documentElement.classList.add('tuq-body-lock');
+
+                    try {
+                        if (typeof window.__tuqShowcaseScrollY !== 'number') {
+                            window.__tuqShowcaseScrollY = window.scrollY || 0;
+                            document.body.style.top = (-window.__tuqShowcaseScrollY) + 'px';
+                        }
+                    } catch (e) {}
+
+                    var se = document.scrollingElement || document.documentElement;
+                    if (se && se.style) {
+                        if (!se.dataset.prevOverflow) {
+                            se.dataset.prevOverflow = (se.style.overflow || '');
+                        }
+                        se.style.setProperty('overflow', 'hidden', 'important');
+                        se.style.setProperty('overflow-y', 'hidden', 'important');
+                        se.style.setProperty('scrollbar-width', 'none', 'important');
+                    }
+
+                    var targets = [];
+                    var mc = document.querySelector('.main-content');
+                    if (mc) {
+                        targets.push(mc);
+                        try { mc.classList.add('tuq-showcase-lock'); } catch (e) {}
+                    }
+                    var main = document.querySelector('main');
+                    if (main) targets.push(main);
+
+                    targets.forEach(function (el) {
+                        if (!el || !el.style) return;
+                        if (!el.dataset.prevOverflowY) {
+                            el.dataset.prevOverflowY = (el.style.overflowY || '');
+                        }
+                        if (!el.dataset.prevOverflow) {
+                            el.dataset.prevOverflow = (el.style.overflow || '');
+                        }
+                        el.style.setProperty('overflow-y', 'hidden', 'important');
+                        el.style.setProperty('overflow', 'hidden', 'important');
+                        el.style.setProperty('scrollbar-width', 'none', 'important');
+                        try { el.scrollTop = 0; } catch (e) {}
+                    });
+                } catch (e) {}
+            }
+
+            // Aplica o lock o mais cedo possível
+            lockShowcaseScroll();
+
+            // Alguns scripts/estilos do layout reaplicam overflow-y:auto depois; reforça por um curto período
             try {
-                document.body.classList.add('tuq-body-lock');
-                document.documentElement.classList.add('tuq-body-lock');
+                if (window.__tuqShowcaseLockInterval) {
+                    clearInterval(window.__tuqShowcaseLockInterval);
+                }
+                window.__tuqShowcaseLockInterval = setInterval(lockShowcaseScroll, 100);
+                setTimeout(function () {
+                    try {
+                        if (window.__tuqShowcaseLockInterval) {
+                            clearInterval(window.__tuqShowcaseLockInterval);
+                            window.__tuqShowcaseLockInterval = null;
+                        }
+                    } catch (e) {}
+                }, 2500);
             } catch (e) {}
-        });
+
+            // Reaplica após o DOM pronto e mais alguns ticks (alguns layouts setam overflow depois)
+            document.addEventListener('DOMContentLoaded', function () {
+                lockShowcaseScroll();
+                setTimeout(lockShowcaseScroll, 50);
+                setTimeout(lockShowcaseScroll, 200);
+            });
+        })();
     </script>
 <?php endif; ?>
-<div id="tuq-chat-root" class="<?= !empty($shouldShowPersonaShowcase) ? 'tuq-has-showcase' : '' ?>" style="max-width: 900px; width: 100%; margin: 0 auto; padding: 0 8px; display: flex; flex-direction: column; min-height: calc(100vh - 56px - 80px); box-sizing: border-box;">
+<div id="tuq-chat-root" class="<?= !empty($shouldShowPersonaShowcase) ? 'tuq-has-showcase' : '' ?>" style="max-width: 900px; width: 100%; margin: 0 auto; padding: 0 8px; display: flex; flex-direction: column; flex: 1 1 auto; min-height: 0; box-sizing: border-box;">
     <?php if (!empty($conversationId)): ?>
         <div class="tuqChatTopbar">
             <div class="tuqChatTitleWrap">
@@ -1908,9 +2109,9 @@ if (!empty($conversationId) && !empty($personaOptions) && is_array($personaOptio
 
             let out = escapeHtml(text || '');
             // ##/###/#### títulos -> headings
-            out = out.replace(/^####\s*(.+)$/gm, '<h4>$1</h4>');
-            out = out.replace(/^###\s*(.+)$/gm, '<h3>$1</h3>');
-            out = out.replace(/^##\s*(.+)$/gm, '<h2>$1</h2>');
+            out = out.replace(/^#\s+(.+)$/gm, '<h2>$1</h2>');
+            out = out.replace(/^##\s+(.+)$/gm, '<h3>$1</h3>');
+            out = out.replace(/^#{3,6}\s+(.+)$/gm, '<h4>$1</h4>');
             // **negrito** -> <strong>
             out = out.replace(/\*\*([\s\S]+?)\*\*/g, '<strong>$1</strong>');
             out = out.replace(/(^|[^*])\*([^*\n][^*]*?)\*(?!\*)/g, '$1<em>$2</em>');
@@ -2481,6 +2682,43 @@ if (!empty($conversationId) && !empty($personaOptions) && is_array($personaOptio
                     try {
                         document.body.classList.remove('tuq-body-lock');
                         document.documentElement.classList.remove('tuq-body-lock');
+
+                        try {
+                            if (window.__tuqShowcaseLockInterval) {
+                                clearInterval(window.__tuqShowcaseLockInterval);
+                                window.__tuqShowcaseLockInterval = null;
+                            }
+                        } catch (e) {}
+
+                        var se = document.scrollingElement || document.documentElement;
+                        if (se && se.style) {
+                            se.style.setProperty('overflow', (se.dataset.prevOverflow || ''), '');
+                            se.style.setProperty('overflow-y', (se.dataset.prevOverflowY || ''), '');
+                            se.style.setProperty('scrollbar-width', '', '');
+                        }
+
+                        var mc = document.querySelector('.main-content');
+                        var targets = [];
+                        if (mc) {
+                            targets.push(mc);
+                            try { mc.classList.remove('tuq-showcase-lock'); } catch (e) {}
+                        }
+                        var main = document.querySelector('main');
+                        if (main) targets.push(main);
+
+                        targets.forEach(function (el) {
+                            if (!el || !el.style) return;
+                            el.style.setProperty('overflow-y', (el.dataset.prevOverflowY || ''), '');
+                            el.style.setProperty('overflow', (el.dataset.prevOverflow || ''), '');
+                            el.style.setProperty('scrollbar-width', '', '');
+                        });
+
+                        try {
+                            var y = (typeof window.__tuqShowcaseScrollY === 'number') ? window.__tuqShowcaseScrollY : 0;
+                            window.__tuqShowcaseScrollY = null;
+                            document.body.style.top = '';
+                            window.scrollTo(0, y);
+                        } catch (e) {}
                     } catch (e) {}
                 }
             } catch (e) {}
