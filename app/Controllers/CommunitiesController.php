@@ -1847,7 +1847,7 @@ class CommunitiesController extends Controller
             
             if ($lesson) {
                 $lessonUrl = '/painel-externo/aula?lesson_id=' . (int)$lesson['id'];
-                return '<a href="' . htmlspecialchars($lessonUrl, ENT_QUOTES, 'UTF-8') . '" style="color: #ff6f60; text-decoration: none; font-weight: 600;" title="Ir para a aula">@' . htmlspecialchars($lessonTitle, ENT_QUOTES, 'UTF-8') . '</a>';
+                return '<a href="' . htmlspecialchars($lessonUrl, ENT_QUOTES, 'UTF-8') . '" style="color: #007bff; text-decoration: underline; font-weight: 500;" title="Ir para a aula">@' . htmlspecialchars($lessonTitle, ENT_QUOTES, 'UTF-8') . '</a>';
             }
             
             return $matches[0];
