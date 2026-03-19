@@ -87,14 +87,15 @@ class Course
     public static function create(array $data): int
     {
         $pdo = Database::getConnection();
-        $stmt = $pdo->prepare('INSERT INTO courses (owner_user_id, title, slug, short_description, description, image_path, badge_image_path, certificate_syllabus, certificate_workload_hours, certificate_location, is_paid, price_cents, allow_plan_access_only, allow_public_purchase, is_active, is_external, allow_community_access)
-            VALUES (:owner_user_id, :title, :slug, :short_description, :description, :image_path, :badge_image_path, :certificate_syllabus, :certificate_workload_hours, :certificate_location, :is_paid, :price_cents, :allow_plan_access_only, :allow_public_purchase, :is_active, :is_external, :allow_community_access)');
+        $stmt = $pdo->prepare('INSERT INTO courses (owner_user_id, title, slug, short_description, description, tagline, image_path, badge_image_path, certificate_syllabus, certificate_workload_hours, certificate_location, is_paid, price_cents, allow_plan_access_only, allow_public_purchase, is_active, is_external, allow_community_access)
+            VALUES (:owner_user_id, :title, :slug, :short_description, :description, :tagline, :image_path, :badge_image_path, :certificate_syllabus, :certificate_workload_hours, :certificate_location, :is_paid, :price_cents, :allow_plan_access_only, :allow_public_purchase, :is_active, :is_external, :allow_community_access)');
         $stmt->execute([
             'owner_user_id' => $data['owner_user_id'] ?? null,
             'title' => $data['title'] ?? '',
             'slug' => $data['slug'] ?? '',
             'short_description' => $data['short_description'] ?? null,
             'description' => $data['description'] ?? null,
+            'tagline' => $data['tagline'] ?? 'Aprenda Agora.',
             'image_path' => $data['image_path'] ?? null,
             'badge_image_path' => $data['badge_image_path'] ?? null,
             'certificate_syllabus' => $data['certificate_syllabus'] ?? null,
@@ -120,6 +121,7 @@ class Course
             slug = :slug,
             short_description = :short_description,
             description = :description,
+            tagline = :tagline,
             image_path = :image_path,
             badge_image_path = :badge_image_path,
             certificate_syllabus = :certificate_syllabus,
@@ -141,6 +143,7 @@ class Course
             'slug' => $data['slug'] ?? '',
             'short_description' => $data['short_description'] ?? null,
             'description' => $data['description'] ?? null,
+            'tagline' => $data['tagline'] ?? 'Aprenda Agora.',
             'image_path' => $data['image_path'] ?? null,
             'badge_image_path' => $data['badge_image_path'] ?? null,
             'certificate_syllabus' => $data['certificate_syllabus'] ?? null,

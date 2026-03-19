@@ -9,18 +9,18 @@ $communitySlug = trim((string)($community['slug'] ?? ''));
 $coverImage = trim((string)($community['cover_image_path'] ?? ''));
 ?>
 
+<?php if ($coverImage !== ''): ?>
+    <div style="width: 100%; height: 300px; overflow: hidden; margin-bottom: 20px; background: rgba(255,255,255,0.05); margin-left: -30px; margin-right: -30px; width: calc(100% + 60px);">
+        <img src="<?= htmlspecialchars($coverImage, ENT_QUOTES, 'UTF-8') ?>" alt="<?= htmlspecialchars($communityName, ENT_QUOTES, 'UTF-8') ?>" style="width: 100%; height: 100%; object-fit: contain;">
+    </div>
+<?php endif; ?>
+
 <div class="header">
     <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
         <a href="/painel-externo/comunidade" style="color: var(--text-secondary); text-decoration: none; font-size: 14px;">
             ← Voltar para comunidades
         </a>
     </div>
-    
-    <?php if ($coverImage !== ''): ?>
-        <div style="width: 100%; max-width: 1200px; height: 300px; border-radius: 14px; overflow: hidden; margin-bottom: 20px; background: rgba(255,255,255,0.05);">
-            <img src="<?= htmlspecialchars($coverImage, ENT_QUOTES, 'UTF-8') ?>" alt="<?= htmlspecialchars($communityName, ENT_QUOTES, 'UTF-8') ?>" style="width: 100%; height: 100%; object-fit: contain;">
-        </div>
-    <?php endif; ?>
     
     <h1><?= htmlspecialchars($communityName, ENT_QUOTES, 'UTF-8') ?></h1>
     

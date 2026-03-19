@@ -75,11 +75,12 @@ $logoUrl = isset($branding) && is_array($branding) && !empty($branding['logo_url
   }
   .btn-ghost:hover { color: var(--text); background: rgba(255,255,255,.05); }
   .btn-primary {
-    background: var(--accent); border: none; cursor: pointer; color: #fff;
+    background: var(--accent); border: none; cursor: pointer; color: #ffffff !important;
     font-family: 'Syne', sans-serif; font-weight: 700; font-size: .875rem;
     padding: 10px 22px; border-radius: 12px;
     transition: transform .2s, box-shadow .2s, background .2s;
     box-shadow: 0 4px 18px rgba(45,110,246,.35);
+    text-decoration: none; display: inline-block;
   }
   .btn-primary:hover {
     background: #4080ff; transform: translateY(-1px);
@@ -132,7 +133,7 @@ $logoUrl = isset($branding) && is_array($branding) && !empty($branding['logo_url
   }
   .btn-lg.primary {
     background: linear-gradient(135deg, var(--accent), var(--accent2));
-    color: #fff; box-shadow: 0 6px 24px rgba(45,110,246,.4);
+    color: #ffffff !important; box-shadow: 0 6px 24px rgba(45,110,246,.4);
   }
   .btn-lg.primary:hover {
     transform: translateY(-2px); box-shadow: 0 12px 32px rgba(45,110,246,.55);

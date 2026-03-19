@@ -115,10 +115,10 @@ $companyName = isset($branding) && is_array($branding) ? trim((string)($branding
 
             <div class="form-group" style="grid-column: 1 / -1;">
                 <label class="form-label">Data de Nascimento *</label>
-                <input name="birthdate" type="date" required class="form-input">
+                <input name="birthdate" type="date" required class="form-input" style="max-width: 100%;">
             </div>
             
-            <div class="form-group">
+            <div class="form-group" style="grid-column: 1 / -1;">
                 <label class="form-label">Telefone</label>
                 <input name="phone" class="form-input" placeholder="(00) 00000-0000">
             </div>
@@ -227,7 +227,7 @@ $companyName = isset($branding) && is_array($branding) ? trim((string)($branding
                             <line x1="12" y1="1" x2="12" y2="23"></line>
                             <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
                         </svg>
-                        Finalizar Compra - R$ <?= $price ?>
+                        Finalizar Compra
                     <?php else: ?>
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <circle cx="12" cy="12" r="10"></circle>
@@ -236,7 +236,7 @@ $companyName = isset($branding) && is_array($branding) ? trim((string)($branding
                         Criar Conta Gratuita
                     <?php endif; ?>
                 </button>
-                <a href="/curso-externo?token=<?= urlencode($token) ?>" class="btn-outline" style="width: 100%; padding: 1rem 2rem; display: flex; align-items: center; justify-content: center; text-decoration: none;">
+                <a href="/curso-externo?token=<?= urlencode($token) ?>" style="width: 100%; padding: 1rem 2rem; display: flex; align-items: center; justify-content: center; text-decoration: none; color: var(--text-secondary); background: transparent; border: none;">
                     Voltar
                 </a>
             </div>

@@ -121,6 +121,7 @@ function esc_attr(string $s): string {
             left: 0;
             right: 0;
             z-index: 100;
+            border-bottom: 1px solid var(--border);
         }
         
         .header-content {
