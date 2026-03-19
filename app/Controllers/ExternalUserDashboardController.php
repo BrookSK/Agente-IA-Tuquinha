@@ -686,10 +686,15 @@ class ExternalUserDashboardController extends Controller
 
         $isFavoriteFriend = false;
         if ($friendship && ($friendship['status'] ?? '') === 'accepted') {
-            $pairUserId = (int)($friendship['user_id'] ?? 0);
-            if ($pairUserId === $currentId) {
+            $friendshipUserId = (int)($friendship['user_id'] ?? 0);
+            $friendshipFriendId = (int)($friendship['friend_user_id'] ?? 0);
+            
+            // Check which position the current user is in the normalized pair
+            if ($friendshipUserId === $currentId) {
+                // Current user is user_id (user1)
                 $isFavoriteFriend = !empty($friendship['is_favorite_user1']);
-            } else {
+            } elseif ($friendshipFriendId === $currentId) {
+                // Current user is friend_user_id (user2)
                 $isFavoriteFriend = !empty($friendship['is_favorite_user2']);
             }
         }
@@ -790,7 +795,7 @@ class ExternalUserDashboardController extends Controller
 
         if ($toUserId <= 0 || $body === '' || strlen($body) > 4000) {
             $_SESSION['social_error'] = 'Dados inválidos para o scrap.';
-            header('Location: /painel-externo/perfil?user_id=' . $toUserId);
+            header('Location: /painel-externo/perfil?user_id=' . $toUserId . '#scraps');
             exit;
         }
 
@@ -801,7 +806,7 @@ class ExternalUserDashboardController extends Controller
         ]);
 
         $_SESSION['social_success'] = 'Scrap enviado.';
-        header('Location: /painel-externo/perfil?user_id=' . $toUserId);
+        header('Location: /painel-externo/perfil?user_id=' . $toUserId . '#scraps');
         exit;
     }
 

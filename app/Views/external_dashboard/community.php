@@ -18,16 +18,30 @@
 <?php else: ?>
     <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px;">
         <?php foreach ($communities as $community): ?>
+            <?php
+                $communityImage = trim((string)($community['image_path'] ?? ''));
+                $communityName = htmlspecialchars($community['name'] ?? '', ENT_QUOTES, 'UTF-8');
+                $communityInitial = mb_strtoupper(mb_substr($community['name'] ?? 'C', 0, 1, 'UTF-8'), 'UTF-8');
+            ?>
             <div class="card">
                 <?php if (!empty($community['cover_image_path'])): ?>
                     <div style="width: 100%; height: 120px; border-radius: 10px; overflow: hidden; margin-bottom: 12px; background: rgba(255,255,255,0.05);">
-                        <img src="<?= htmlspecialchars($community['cover_image_path'], ENT_QUOTES, 'UTF-8') ?>" alt="<?= htmlspecialchars($community['name'] ?? '', ENT_QUOTES, 'UTF-8') ?>" style="width: 100%; height: 100%; object-fit: cover;">
+                        <img src="<?= htmlspecialchars($community['cover_image_path'], ENT_QUOTES, 'UTF-8') ?>" alt="<?= $communityName ?>" style="width: 100%; height: 100%; object-fit: cover;">
                     </div>
                 <?php endif; ?>
                 
-                <h3 style="font-size: 18px; font-weight: 700; margin-bottom: 8px;">
-                    <?= htmlspecialchars($community['name'] ?? '', ENT_QUOTES, 'UTF-8') ?>
-                </h3>
+                <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+                    <div style="width: 50px; height: 50px; border-radius: 12px; overflow: hidden; background: linear-gradient(135deg, var(--accent), var(--accent2)); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                        <?php if ($communityImage !== ''): ?>
+                            <img src="<?= htmlspecialchars($communityImage, ENT_QUOTES, 'UTF-8') ?>" alt="" style="width: 100%; height: 100%; object-fit: cover;">
+                        <?php else: ?>
+                            <span style="font-size: 20px; font-weight: 700; color: var(--button-text);"><?= htmlspecialchars($communityInitial, ENT_QUOTES, 'UTF-8') ?></span>
+                        <?php endif; ?>
+                    </div>
+                    <h3 style="font-size: 18px; font-weight: 700; margin: 0; flex: 1;">
+                        <?= $communityName ?>
+                    </h3>
+                </div>
                 
                 <?php if (!empty($community['description'])): ?>
                     <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 12px; line-height: 1.5;">

@@ -29,7 +29,7 @@ if (is_array($friendship)) {
 
 $isFavoriteFriend = !empty($isFavoriteFriend);
 
-$profileId = (int)($profile['id'] ?? 0);
+$profileId = (int)($profileUser['id'] ?? 0);
 $currentId = (int)($user['id'] ?? 0);
 $isOwnProfile = $profileId === $currentId;
 
@@ -255,11 +255,6 @@ $accentColor = !empty($branding['accent_color']) ? $branding['accent_color'] : '
                 <!-- Friendship Badge -->
                 <div class="profile-card">
                     <div class="profile-card-body">
-                        <div style="background: linear-gradient(135deg, #e8f8ef, #d4f0e2); border: 1.5px solid #b8e8cc; border-radius: 10px; padding: 10px 14px; font-size: .78rem; color: <?= $accentColor ?>; font-weight: 500; text-align: center; margin-bottom: 14px; line-height: 1.4;">
-                            <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24" style="vertical-align:middle;margin-right:4px;"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-                            Vocês são amigos na rede social do Tuquinha.
-                        </div>
-
                         <form action="/painel-externo/amigos/favorito" method="post" style="margin:0 0 10px 0;">
                             <input type="hidden" name="user_id" value="<?= $profileId ?>">
                             <input type="hidden" name="is_favorite" value="<?= $isFavoriteFriend ? '0' : '1' ?>">
@@ -279,7 +274,9 @@ $accentColor = !empty($branding['accent_color']) ? $branding['accent_color'] : '
                             </a>
                         </div>
 
-                        <p style="text-align: center; font-size: .72rem; color: var(--text-secondary); margin-top: 14px;">0 visita(s) neste perfil.</p>
+                        <p style="text-align: center; font-size: .72rem; color: var(--text-secondary); margin-top: 14px;">
+                            <?= (int)($profile['visits_count'] ?? 0) ?> visita(s) neste perfil.
+                        </p>
                     </div>
                 </div>
             <?php elseif (!$isOwnProfile && $friendStatus === 'pending' && $requestedById === $currentId): ?>
