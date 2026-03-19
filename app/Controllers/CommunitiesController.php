@@ -1849,7 +1849,7 @@ class CommunitiesController extends Controller
             $lesson = $stmt->fetch(\PDO::FETCH_ASSOC);
             
             if ($lesson) {
-                $lessonUrl = '/painel-externo/aula?lesson_id=' . (int)$lesson['id'];
+                $lessonUrl = '/painel-externo/aula?id=' . (int)$lesson['id'] . '&course_id=' . (int)$lesson['course_id'];
                 return '<a href="' . htmlspecialchars($lessonUrl, ENT_QUOTES, 'UTF-8') . '" style="color: #007bff; text-decoration: underline; font-weight: 500;" title="Ir para a aula">@' . $lessonTitle . '</a>';
             }
             
