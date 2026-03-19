@@ -9,15 +9,38 @@ $communitySlug = trim((string)($community['slug'] ?? ''));
 $coverImage = trim((string)($community['cover_image_path'] ?? ''));
 ?>
 
-<?php if (empty($topics)): ?>
-    <div style="text-align: center; padding: 40px;">
-        <div style="font-size: 48px; margin-bottom: 12px;">💬</div>
-        <p style="font-size: 14px; color: var(--text-secondary);">
-            Ainda não há tópicos nesta comunidade. Seja o primeiro a criar um!
-        </p>
+<?php if ($coverImage !== ''): ?>
+    <div style="width: 100%; height: 300px; overflow: hidden; margin-bottom: 20px; background: rgba(255,255,255,0.05); margin-left: -30px; margin-right: -30px; width: calc(100% + 60px);">
+        <img src="<?= htmlspecialchars($coverImage, ENT_QUOTES, 'UTF-8') ?>" alt="<?= htmlspecialchars($communityName, ENT_QUOTES, 'UTF-8') ?>" style="width: 100%; height: 100%; object-fit: contain;">
     </div>
-<?php else: ?>
-    <div style="display: flex; flex-direction: column; gap: 16px;">
+<?php endif; ?>
+
+<div class="header">
+    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+        <a href="/painel-externo/comunidade" style="color: var(--text-secondary); text-decoration: none; font-size: 14px;">
+            ← Voltar para comunidades
+        </a>
+    </div>
+    
+    <h1><?= htmlspecialchars($communityName, ENT_QUOTES, 'UTF-8') ?></h1>
+    
+    <?php if ($communityDescription !== ''): ?>
+        <p style="margin-top: 8px;"><?= htmlspecialchars($communityDescription, ENT_QUOTES, 'UTF-8') ?></p>
+    <?php endif; ?>
+</div>
+
+<div class="card">
+    <h2 style="font-size: 20px; font-weight: 700; margin-bottom: 16px;">Tópicos da Comunidade</h2>
+    
+    <?php if (empty($topics)): ?>
+        <div style="text-align: center; padding: 40px;">
+            <div style="font-size: 48px; margin-bottom: 12px;">💬</div>
+            <p style="font-size: 14px; color: var(--text-secondary);">
+                Ainda não há tópicos nesta comunidade. Seja o primeiro a criar um!
+            </p>
+        </div>
+    <?php else: ?>
+        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px;">
             <?php foreach ($topics as $topic): ?>
                 <?php
                     $topicCoverUrl = trim((string)($topic['cover_image_url'] ?? ''));
@@ -70,6 +93,7 @@ $coverImage = trim((string)($community['cover_image_path'] ?? ''));
                         </div>
                     </a>
                 <?php endif; ?>
-        <?php endforeach; ?>
-    </div>
-<?php endif; ?>
+            <?php endforeach; ?>
+        </div>
+    <?php endif; ?>
+</div>
