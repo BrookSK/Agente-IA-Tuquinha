@@ -70,6 +70,7 @@ $prefilledPassword = (string)($prefilledData['password'] ?? '');
             $courseDescription = !empty($course['description']) ? trim((string)$course['description']) : '';
             $courseShortDescription = !empty($course['short_description']) ? trim((string)$course['short_description']) : '';
             $courseWorkload = !empty($course['certificate_workload_hours']) ? (int)$course['certificate_workload_hours'] : 0;
+            $courseSyllabus = !empty($course['certificate_syllabus']) ? trim((string)$course['certificate_syllabus']) : '';
             
             // Usar dados dinâmicos passados pelo controller
             $totalModules = isset($courseDetails['totalModules']) ? (int)$courseDetails['totalModules'] : 0;
@@ -135,13 +136,19 @@ $prefilledPassword = (string)($prefilledData['password'] ?? '');
                             </svg>
                             Conteúdo Programático
                         </h4>
-                        <p style="font-size: 0.9rem; color: var(--text-secondary);">
-                            <?php if ($totalModules > 0 && $totalLessons > 0): ?>
-                                <?= $totalModules ?> módulo<?= $totalModules > 1 ? 's' : '' ?> com <?= $totalLessons ?> aula<?= $totalLessons > 1 ? 's' : '' ?>
-                            <?php else: ?>
-                                Acesso completo a todos os módulos e aulas do curso
-                            <?php endif; ?>
-                        </p>
+                        <?php if ($courseSyllabus): ?>
+                            <div style="font-size: 0.9rem; color: var(--text-secondary); line-height: 1.8;">
+                                <?= nl2br(htmlspecialchars($courseSyllabus, ENT_QUOTES, 'UTF-8')) ?>
+                            </div>
+                        <?php else: ?>
+                            <p style="font-size: 0.9rem; color: var(--text-secondary);">
+                                <?php if ($totalModules > 0 && $totalLessons > 0): ?>
+                                    <?= $totalModules ?> módulo<?= $totalModules > 1 ? 's' : '' ?> com <?= $totalLessons ?> aula<?= $totalLessons > 1 ? 's' : '' ?>
+                                <?php else: ?>
+                                    Acesso completo a todos os módulos e aulas do curso
+                                <?php endif; ?>
+                            </p>
+                        <?php endif; ?>
                     </div>
                     
                     <div>
