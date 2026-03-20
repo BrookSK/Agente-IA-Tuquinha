@@ -73,14 +73,13 @@ if ($slug !== '') {
     background-size: 180px; opacity: .4; pointer-events: none;
   }
   body { padding-top: 72px; }
-  nav {
+  .site-header {
     position: fixed; top: 0; left: 0; right: 0; z-index: 9999;
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 0 80px; height: 72px; background: rgba(8,9,13,.95);
-    backdrop-filter: blur(12px); width: 100%;
+    background: rgba(8,9,13,.95);
+    backdrop-filter: blur(12px);
     border-bottom: 1px solid rgba(255,255,255,.07);
   }
-  nav::after {
+  .site-header::after {
     content: '';
     position: absolute;
     bottom: -4px;
@@ -92,7 +91,16 @@ if ($slug !== '') {
     border-radius: 4px;
     z-index: -1;
   }
-  .nav-brand {
+  .header-content {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 1rem 80px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 2rem;
+  }
+  .header-brand {
     display: flex; align-items: center; gap: 12px;
     font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1.1rem;
     letter-spacing: -.5px; color: var(--text); text-decoration: none;
@@ -107,15 +115,25 @@ if ($slug !== '') {
     overflow: hidden;
   }
   .brand-icon img { width: 100%; height: 100%; object-fit: cover; }
-  .nav-actions { display: flex; align-items: center; gap: 12px; position: relative; z-index: 10; }
-  .nav-actions a:not(.btn-primary) {
-    background: none !important;
-    border: none !important;
-    box-shadow: none !important;
-    padding: 8px 16px;
-    color: var(--muted);
+  .header-nav { 
+    display: flex; 
+    align-items: center; 
+    gap: 1.5rem; 
+    position: relative; 
+    z-index: 10; 
   }
-  .nav-actions a:not(.btn-primary):hover {
+  .header-nav a:not(.btn) {
+    background: none;
+    border: none;
+    box-shadow: none;
+    padding: 0;
+    color: var(--muted);
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 0.95rem;
+    transition: color 0.2s;
+  }
+  .header-nav a:not(.btn):hover {
     color: var(--text);
   }
   .btn-ghost {
@@ -458,61 +476,28 @@ if ($slug !== '') {
       max-width: 100vw !important;
       width: 100% !important;
     }
-    nav { 
-      padding: 0 16px; 
-      height: 60px; 
-      min-height: 60px; 
-      margin-bottom: 0;
-      display: flex;
-      width: 100%;
-      position: fixed;
-      z-index: 9999;
-    }
-    nav::after { display: none !important; }
-    .nav-brand img { height: 32px !important; max-width: 140px !important; }
-    .brand-icon { width: 32px; height: 32px; font-size: 0.75rem; }
-    .mobile-menu-toggle { 
-      display: block !important; 
-      position: relative;
-      z-index: 10001;
-    }
-    .nav-actions {
-      position: fixed;
-      top: 60px;
-      left: 0;
-      right: 0;
-      background: rgba(8,9,13,.98);
-      backdrop-filter: blur(12px);
+    .site-header { padding: 0.75rem; }
+    .site-header::after { display: none !important; }
+    .header-content {
+      padding: 0 16px;
       flex-direction: column;
-      padding: 20px 16px;
-      gap: 12px;
-      border-bottom: 1px solid var(--border);
-      transform: translateY(-100%);
-      opacity: 0;
-      visibility: hidden;
-      transition: transform 0.3s ease, opacity 0.3s ease, visibility 0.3s;
-      z-index: 9998;
-      max-width: 100%;
-    }
-    .nav-actions.active {
-      transform: translateY(0);
-      opacity: 1;
-      visibility: visible;
-    }
-    .nav-actions .btn-ghost,
-    .nav-actions .btn-primary { 
-      padding: 14px 20px; 
-      font-size: 0.95rem; 
-      width: 100%; 
       text-align: center;
-      display: block;
+      gap: 1rem;
     }
-    .nav-actions .btn-ghost {
-      background: rgba(255,255,255,.05);
-      color: var(--text);
+    .header-brand img { height: 32px !important; max-width: 140px !important; }
+    .brand-icon { width: 32px; height: 32px; font-size: 0.75rem; }
+    .header-nav {
+      flex-direction: row;
+      gap: 0.75rem;
+      width: 100%;
+      justify-content: center;
     }
-    .nav-actions .btn-ghost:hover {
-      background: rgba(255,255,255,.1);
+    .header-nav a { font-size: 0.85rem; }
+    .header-nav .btn { 
+      padding: 0.5rem 1rem; 
+      font-size: 0.85rem; 
+      width: 100%;
+      text-align: center;
     }
     .hero { 
       padding-top: 0; 
@@ -630,37 +615,33 @@ if ($slug !== '') {
 </head>
 <body>
 
-<nav>
-  <a class="nav-brand" href="<?= $courseHref ?>">
-    <?php if ($logoUrl): ?>
-      <img src="<?= htmlspecialchars($logoUrl, ENT_QUOTES, 'UTF-8') ?>" alt="Logo" style="height: 40px; width: auto; max-width: 200px; object-fit: contain;">
-    <?php else: ?>
-      <div class="brand-icon">
-        <?= htmlspecialchars(strtoupper(substr($companyName ?: 'OC', 0, 2)), ENT_QUOTES, 'UTF-8') ?>
-      </div>
-      <?= htmlspecialchars($companyName ?: 'Curso Online', ENT_QUOTES, 'UTF-8') ?>
-    <?php endif; ?>
-  </a>
-  <button class="mobile-menu-toggle" onclick="toggleMobileMenu()" aria-label="Menu">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <line x1="3" y1="12" x2="21" y2="12"></line>
-      <line x1="3" y1="6" x2="21" y2="6"></line>
-      <line x1="3" y1="18" x2="21" y2="18"></line>
-    </svg>
-  </button>
-  <div class="nav-actions" id="mobileMenu">
-    <?php if (!empty($_SESSION['user_id'])): ?>
-      <a href="/painel-externo" class="btn-primary">Acessar Painel</a>
-    <?php else: ?>
-      <a href="#login" onclick="event.preventDefault(); document.getElementById('login-section').scrollIntoView({behavior: 'smooth'}); setTimeout(() => switchTab('login', document.querySelector('[data-tab=login]')), 300); toggleMobileMenu();">Entrar</a>
-      <?php if ($priceCents > 0): ?>
-        <a href="<?= $checkoutHref ?>" class="btn-primary">Comprar por R$ <?= $price ?></a>
+<header class="site-header">
+  <div class="header-content">
+    <a href="<?= $courseHref ?>" class="header-brand">
+      <?php if ($logoUrl): ?>
+        <img src="<?= htmlspecialchars($logoUrl, ENT_QUOTES, 'UTF-8') ?>" alt="<?= htmlspecialchars($title, ENT_QUOTES, 'UTF-8') ?>" style="height: 50px; width: auto; max-width: 250px; object-fit: contain;">
       <?php else: ?>
-        <a href="#login" class="btn-primary" onclick="event.preventDefault(); document.getElementById('login-section').scrollIntoView({behavior: 'smooth'}); setTimeout(() => switchTab('register', document.querySelector('[data-tab=register]')), 300); toggleMobileMenu();">Criar Conta Grátis</a>
+        <div class="brand-icon">
+          <?= htmlspecialchars(strtoupper(substr($companyName ?: 'OC', 0, 2)), ENT_QUOTES, 'UTF-8') ?>
+        </div>
+        <?= htmlspecialchars($companyName ?: 'Curso Online', ENT_QUOTES, 'UTF-8') ?>
       <?php endif; ?>
-    <?php endif; ?>
+    </a>
+    
+    <nav class="header-nav">
+      <?php if (!empty($_SESSION['user_id'])): ?>
+        <a href="/painel-externo" class="btn" style="padding: 0.5rem 1.25rem; font-size: 0.9rem;">Acessar Painel</a>
+      <?php else: ?>
+        <a href="#login" onclick="event.preventDefault(); document.getElementById('login-section').scrollIntoView({behavior: 'smooth'}); setTimeout(() => switchTab('login', document.querySelector('[data-tab=login]')), 300);">Entrar</a>
+        <?php if ($priceCents > 0): ?>
+          <a href="<?= $checkoutHref ?>" class="btn" style="padding: 0.5rem 1.25rem; font-size: 0.9rem;">Comprar por R$ <?= $price ?></a>
+        <?php else: ?>
+          <a href="#login" class="btn" style="padding: 0.5rem 1.25rem; font-size: 0.9rem;" onclick="event.preventDefault(); document.getElementById('login-section').scrollIntoView({behavior: 'smooth'}); setTimeout(() => switchTab('register', document.querySelector('[data-tab=register]')), 300);">Criar Conta Grátis</a>
+        <?php endif; ?>
+      <?php endif; ?>
+    </nav>
   </div>
-</nav>
+</header>
 
 <div class="page">
   <section class="hero">
@@ -837,25 +818,18 @@ if ($slug !== '') {
     document.getElementById('panel-' + tab).classList.add('active');
   }
 
-  function toggleMobileMenu() {
-    const menu = document.getElementById('mobileMenu');
-    const toggle = document.querySelector('.mobile-menu-toggle');
-    if (menu) {
-      menu.classList.toggle('active');
-    }
-    if (toggle) {
-      toggle.classList.toggle('active');
-    }
-  }
-
-  // Close mobile menu when clicking outside
-  document.addEventListener('click', function(event) {
-    const menu = document.getElementById('mobileMenu');
-    const toggle = document.querySelector('.mobile-menu-toggle');
-    if (menu && toggle && !menu.contains(event.target) && !toggle.contains(event.target)) {
-      menu.classList.remove('active');
-      toggle.classList.remove('active');
-    }
+  // Scroll suave para seção de login
+  document.addEventListener('DOMContentLoaded', function() {
+    const loginLinks = document.querySelectorAll('a[href="#login"]');
+    loginLinks.forEach(link => {
+      link.addEventListener('click', function(e) {
+        e.preventDefault();
+        const loginSection = document.getElementById('login-section');
+        if (loginSection) {
+          loginSection.scrollIntoView({ behavior: 'smooth' });
+        }
+      });
+    });
   });
 
   const observer = new IntersectionObserver((entries) => {
