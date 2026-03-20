@@ -412,7 +412,10 @@ function esc_attr(string $s): string {
     </div>
     
     <script>
-        function toggleMobileMenu() {
+        function toggleMobileMenu(event) {
+            if (event) {
+                event.stopPropagation();
+            }
             const sidebar = document.getElementById('mobileSidebar');
             const toggle = document.querySelector('.mobile-menu-toggle');
             if (sidebar) {
@@ -432,6 +435,14 @@ function esc_attr(string $s): string {
                 toggle.classList.remove('active');
             }
         });
+        
+        // Prevent sidebar clicks from closing the menu
+        const sidebar = document.getElementById('mobileSidebar');
+        if (sidebar) {
+            sidebar.addEventListener('click', function(event) {
+                event.stopPropagation();
+            });
+        }
         
         // Close mobile menu when clicking on a nav item
         document.querySelectorAll('.nav-item').forEach(item => {
