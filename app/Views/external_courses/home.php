@@ -78,6 +78,19 @@ if ($slug !== '') {
     display: flex; align-items: center; justify-content: space-between;
     padding: 0 80px; height: 72px; background: rgba(8,9,13,.95);
     backdrop-filter: blur(12px); width: 100%;
+    border-bottom: 1px solid rgba(255,255,255,.07);
+  }
+  nav::after {
+    content: '';
+    position: absolute;
+    bottom: -4px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: calc(100% - 160px);
+    height: 4px;
+    background: linear-gradient(90deg, #ff6b35 0%, #f7931e 50%, #fdc830 100%);
+    border-radius: 4px;
+    z-index: -1;
   }
   .nav-brand {
     display: flex; align-items: center; gap: 12px;
@@ -95,6 +108,16 @@ if ($slug !== '') {
   }
   .brand-icon img { width: 100%; height: 100%; object-fit: cover; }
   .nav-actions { display: flex; align-items: center; gap: 12px; position: relative; z-index: 10; }
+  .nav-actions a:not(.btn-primary) {
+    background: none !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 8px 16px;
+    color: var(--muted);
+  }
+  .nav-actions a:not(.btn-primary):hover {
+    color: var(--text);
+  }
   .btn-ghost {
     background: none; border: none; cursor: pointer; color: var(--muted);
     font-family: inherit; font-size: .875rem; padding: 8px 16px;
@@ -629,7 +652,7 @@ if ($slug !== '') {
     <?php if (!empty($_SESSION['user_id'])): ?>
       <a href="/painel-externo" class="btn-primary">Acessar Painel</a>
     <?php else: ?>
-      <a href="#login" class="btn-ghost" onclick="event.preventDefault(); document.getElementById('login-section').scrollIntoView({behavior: 'smooth'}); setTimeout(() => switchTab('login', document.querySelector('[data-tab=login]')), 300); toggleMobileMenu();">Entrar</a>
+      <a href="#login" onclick="event.preventDefault(); document.getElementById('login-section').scrollIntoView({behavior: 'smooth'}); setTimeout(() => switchTab('login', document.querySelector('[data-tab=login]')), 300); toggleMobileMenu();">Entrar</a>
       <?php if ($priceCents > 0): ?>
         <a href="<?= $checkoutHref ?>" class="btn-primary">Comprar por R$ <?= $price ?></a>
       <?php else: ?>
