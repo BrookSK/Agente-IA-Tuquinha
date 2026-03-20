@@ -1325,7 +1325,8 @@ if (!empty($breadcrumb)) {
         <div class="notion-page-body">
             <div class="notion-editor-wrap">
                 <?php if ($current): ?>
-                    <div id="editorjs" style="background:transparent;"></div>
+                    <div id="editorjs" style="background:transparent; min-height:300px; cursor:text;"></div>
+                    <div id="editor-hint" class="notion-editor-hint"></div>
                 <?php endif; ?>
             </div>
         </div>
@@ -1997,6 +1998,39 @@ if (!empty($breadcrumb)) {
 
     if (pageId) {
         runIdle(initEditor);
+    }
+
+    // Click anywhere in the editor area to focus the last block (or insert one)
+    var editorWrap = document.querySelector('.notion-page-body');
+    if (editorWrap && canEdit) {
+        editorWrap.addEventListener('click', function (e) {
+            try {
+                if (!editor) return;
+                var t = e && e.target ? e.target : null;
+                // Only trigger if clicking on the wrapper itself, not on a block
+                if (!t) return;
+                var inBlock = t.closest && (
+                    t.closest('.ce-block') ||
+                    t.closest('.ce-toolbar') ||
+                    t.closest('.ce-popover') ||
+                    t.closest('.notion-title-wrap')
+                );
+                if (inBlock) return;
+                // Focus the last block or insert a new paragraph
+                var ready = (editor.isReady && typeof editor.isReady.then === 'function') ? editor.isReady : Promise.resolve();
+                ready.then(function () {
+                    try {
+                        var count = editor.blocks.getBlocksCount ? editor.blocks.getBlocksCount() : 0;
+                        if (count > 0) {
+                            editor.caret.setToLastBlock('end');
+                        } else {
+                            editor.blocks.insert('paragraph', { text: '' }, {}, 0, true);
+                            editor.caret.setToLastBlock('end');
+                        }
+                    } catch (e2) {}
+                }).catch(function () {});
+            } catch (err) {}
+        });
     }
 
     var saving = false;
