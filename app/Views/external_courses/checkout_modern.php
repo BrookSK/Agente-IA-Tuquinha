@@ -69,6 +69,7 @@ $prefilledPassword = (string)($prefilledData['password'] ?? '');
             $courseImage = !empty($course['image_path']) ? trim((string)$course['image_path']) : '';
             $courseDescription = !empty($course['description']) ? trim((string)$course['description']) : '';
             $courseShortDescription = !empty($course['short_description']) ? trim((string)$course['short_description']) : '';
+            $courseWorkload = !empty($course['certificate_workload_hours']) ? (int)$course['certificate_workload_hours'] : 0;
             
             // Usar dados dinâmicos passados pelo controller
             $totalModules = isset($courseDetails['totalModules']) ? (int)$courseDetails['totalModules'] : 0;
@@ -87,13 +88,21 @@ $prefilledPassword = (string)($prefilledData['password'] ?? '');
                     <h3 style="font-size: 1.5rem; font-weight: 700; color: var(--text-primary); margin: 0;">
                         <?= htmlspecialchars($courseTitle, ENT_QUOTES, 'UTF-8') ?>
                     </h3>
-                    <?php if ($totalModules > 0 || $totalLessons > 0): ?>
+                    <?php if ($totalModules > 0 || $totalLessons > 0 || $courseWorkload > 0): ?>
                         <div style="display: flex; align-items: center; gap: 0.5rem; color: var(--accent); font-weight: 600; white-space: nowrap;">
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
-                                <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <polyline points="12 6 12 12 16 14"></polyline>
                             </svg>
-                            <?= $totalModules ?> módulos • <?= $totalLessons ?> aulas
+                            <?php if ($courseWorkload > 0): ?>
+                                <?= $courseWorkload ?>h
+                            <?php endif; ?>
+                            <?php if (($totalModules > 0 || $totalLessons > 0) && $courseWorkload > 0): ?>
+                                •
+                            <?php endif; ?>
+                            <?php if ($totalModules > 0 || $totalLessons > 0): ?>
+                                <?= $totalModules ?> módulos • <?= $totalLessons ?> aulas
+                            <?php endif; ?>
                         </div>
                     <?php endif; ?>
                 </div>
