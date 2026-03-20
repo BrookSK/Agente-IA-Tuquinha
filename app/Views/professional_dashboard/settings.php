@@ -1,9 +1,13 @@
 <?php
 /** @var array $user */
 /** @var array|null $branding */
+/** @var string|null $baseDomain */
 
 $companyName = $branding['company_name'] ?? '';
 $logoUrl = $branding['logo_url'] ?? '';
+$faviconUrl = $branding['favicon_url'] ?? '';
+$subdomain = $branding['subdomain'] ?? '';
+$subdomainStatus = $branding['subdomain_status'] ?? 'none';
 $primaryColor = $branding['primary_color'] ?? '';
 $secondaryColor = $branding['secondary_color'] ?? '';
 $textColor = $branding['text_color'] ?? '';
@@ -15,6 +19,11 @@ $backgroundImageUrl = $branding['background_image_url'] ?? '';
 
 $success = $_SESSION['professional_success'] ?? null;
 unset($_SESSION['professional_success']);
+
+$error = $_SESSION['professional_error'] ?? null;
+unset($_SESSION['professional_error']);
+
+$baseDomain = isset($baseDomain) ? (string)$baseDomain : '';
 ?>
 
 <div style="max-width: 900px; margin: 0 auto; padding: 2rem;">
@@ -27,9 +36,32 @@ unset($_SESSION['professional_success']);
         </div>
     <?php endif; ?>
 
+    <?php if ($error): ?>
+        <div style="background: rgba(239, 68, 68, 0.1); border: 1px solid #ef4444; border-radius: 10px; padding: 1rem; margin-bottom: 2rem; color: #ef4444;">
+            <?= htmlspecialchars($error, ENT_QUOTES, 'UTF-8') ?>
+        </div>
+    <?php endif; ?>
+
     <form action="/profissional/configuracoes/branding" method="post" enctype="multipart/form-data">
         <div style="background: #1a1a2e; border: 1px solid #2a2a3e; border-radius: 14px; padding: 2rem; margin-bottom: 2rem;">
             <h2 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 1.5rem; color: #6366f1;">📋 Informações Básicas</h2>
+
+            <div style="margin-bottom: 1.5rem;">
+                <label style="display: block; font-weight: 600; margin-bottom: 0.5rem;">Subdomínio do seu catálogo</label>
+                <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+                    <input type="text" name="subdomain" id="partner-subdomain" value="<?= htmlspecialchars((string)$subdomain, ENT_QUOTES, 'UTF-8') ?>"
+                           placeholder="empresa" autocomplete="off"
+                           style="flex:1 1 240px; padding: 0.75rem; background: #14141f; border: 1px solid #2a2a3e; border-radius: 8px; color: #fff;">
+                    <div id="partner-subdomain-status" style="min-width:140px; font-size:12px; color:#888;"></div>
+                </div>
+                <div style="margin-top:6px; font-size: 0.85rem; color: #888;">
+                    URL: <strong id="partner-subdomain-preview"></strong>
+                </div>
+                <div style="margin-top:6px; font-size: 0.85rem; color: #888;">
+                    Status: <strong><?= htmlspecialchars((string)$subdomainStatus, ENT_QUOTES, 'UTF-8') ?></strong>
+                </div>
+                <small style="color: #888; font-size: 0.85rem;">Após salvar, o admin precisa aprovar e apontar no DNS antes de ficar disponível.</small>
+            </div>
             
             <div style="margin-bottom: 1.5rem;">
                 <label style="display: block; font-weight: 600; margin-bottom: 0.5rem;">Nome da Empresa</label>
@@ -52,6 +84,22 @@ unset($_SESSION['professional_success']);
                 <input type="file" name="logo_upload" accept="image/*" 
                        style="width: 100%; padding: 0.75rem; background: #14141f; border: 1px solid #2a2a3e; border-radius: 8px; color: #fff;">
                 <small style="color: #888; font-size: 0.85rem;">Tamanho recomendado: <strong>200x200px</strong> (quadrado, PNG com fundo transparente)</small>
+            </div>
+
+            <div style="margin-bottom: 1.5rem;">
+                <label style="display: block; font-weight: 600; margin-bottom: 0.5rem;">Favicon</label>
+                <?php if ($faviconUrl): ?>
+                    <div style="margin-bottom: 1rem; display:flex; gap:12px; align-items:center; flex-wrap:wrap;">
+                        <img src="<?= htmlspecialchars($faviconUrl, ENT_QUOTES, 'UTF-8') ?>" alt="Favicon" style="width:32px; height:32px; border-radius: 8px; border: 1px solid #2a2a3e; background:#14141f;">
+                        <label style="display: flex; align-items: center; gap: 0.5rem;">
+                            <input type="checkbox" name="remove_favicon" value="1">
+                            <span style="color: #ef4444;">Remover favicon</span>
+                        </label>
+                    </div>
+                <?php endif; ?>
+                <input type="file" name="favicon_upload" accept="image/*"
+                       style="width: 100%; padding: 0.75rem; background: #14141f; border: 1px solid #2a2a3e; border-radius: 8px; color: #fff;">
+                <small style="color: #888; font-size: 0.85rem;">Recomendado: <strong>512x512px</strong> (PNG). O navegador gera os tamanhos internos.</small>
             </div>
         </div>
 
@@ -151,3 +199,72 @@ unset($_SESSION['professional_success']);
         </div>
     </form>
 </div>
+
+<script>
+(function () {
+    var input = document.getElementById('partner-subdomain');
+    var statusEl = document.getElementById('partner-subdomain-status');
+    var previewEl = document.getElementById('partner-subdomain-preview');
+    if (!input || !statusEl || !previewEl) return;
+
+    var baseDomain = <?= json_encode($baseDomain !== '' ? $baseDomain : '') ?>;
+
+    function normalize(v) {
+        v = (v || '').toString().toLowerCase().trim();
+        v = v.replace(/\s+/g, '');
+        v = v.replace(/[^a-z0-9\-]/g, '');
+        v = v.replace(/^-+|-+$/g, '');
+        v = v.replace(/\-+/g, '-');
+        return v;
+    }
+
+    function setPreview(v) {
+        if (!v) {
+            previewEl.textContent = baseDomain ? ('https://{sub}.' + baseDomain + '/') : 'https://{sub}/';
+            return;
+        }
+        previewEl.textContent = baseDomain ? ('https://' + v + '.' + baseDomain + '/') : ('https://' + v + '/');
+    }
+
+    var t = null;
+    function check() {
+        var v = normalize(input.value);
+        setPreview(v);
+        if (!v) {
+            statusEl.textContent = 'Digite um prefixo';
+            statusEl.style.color = '#888';
+            return;
+        }
+        statusEl.textContent = 'Verificando...';
+        statusEl.style.color = '#888';
+
+        fetch('/profissional/subdominio/check?value=' + encodeURIComponent(v), { credentials: 'same-origin' })
+            .then(function (r) { return r.json(); })
+            .then(function (data) {
+                if (!data || !data.ok) {
+                    statusEl.textContent = (data && data.error) ? data.error : 'Inválido';
+                    statusEl.style.color = '#ef4444';
+                    return;
+                }
+                if (data.available) {
+                    statusEl.textContent = 'Disponível';
+                    statusEl.style.color = '#10b981';
+                } else {
+                    statusEl.textContent = 'Indisponível';
+                    statusEl.style.color = '#ef4444';
+                }
+            })
+            .catch(function () {
+                statusEl.textContent = 'Erro ao verificar';
+                statusEl.style.color = '#ef4444';
+            });
+    }
+
+    input.addEventListener('input', function () {
+        clearTimeout(t);
+        t = setTimeout(check, 350);
+    });
+
+    check();
+})();
+</script>

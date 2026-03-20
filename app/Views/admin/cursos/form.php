@@ -10,11 +10,12 @@ $partnerEmail = $partnerEmail ?? '';
 
 $isExternal = !empty($course['is_external']);
 $externalToken = isset($course['external_token']) ? trim((string)$course['external_token']) : '';
+$courseSlug = isset($course['slug']) ? trim((string)$course['slug']) : '';
 $externalUrl = '';
-if ($externalToken !== '') {
+if ($courseSlug !== '') {
     $scheme = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') ? 'https://' : 'http://';
     $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
-    $externalUrl = $scheme . $host . '/curso-externo?token=' . urlencode($externalToken);
+    $externalUrl = $scheme . $host . '/curso/' . urlencode($courseSlug);
 }
 ?>
 <div style="max-width: 720px; margin: 0 auto;">

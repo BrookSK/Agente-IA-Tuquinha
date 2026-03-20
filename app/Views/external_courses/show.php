@@ -9,6 +9,14 @@ $long = trim((string)($course['description'] ?? ''));
 $priceCents = isset($course['price_cents']) ? (int)$course['price_cents'] : 0;
 $price = number_format(max($priceCents, 0) / 100, 2, ',', '.');
 $imagePath = trim((string)($course['image_path'] ?? ''));
+
+$isPartnerSite = !empty($isPartnerSite);
+$slug = isset($slug) ? trim((string)$slug) : '';
+
+$checkoutHref = '/';
+if ($slug !== '') {
+    $checkoutHref = '/curso/' . urlencode($slug) . '/checkout';
+}
 ?>
 
 <?php if ($imagePath !== ''): ?>
@@ -36,11 +44,11 @@ $imagePath = trim((string)($course['image_path'] ?? ''));
 <div style="display:flex; flex-wrap:wrap; gap:10px; align-items:center; margin-top:10px;">
     <div style="font-size:14px; font-weight:900; color: var(--text-primary);">
       <?php if (!empty($course['is_paid']) && !empty($course['price_cents'])): ?>
-        <a href="/curso-externo/checkout?token=<?= urlencode($token) ?>" class="btn">
+        <a href="<?= $checkoutHref ?>" class="btn">
             Comprar por R$ <?= number_format($course['price_cents'] / 100, 2, ',', '.') ?>
         </a>
     <?php else: ?>
-        <a href="/curso-externo/checkout?token=<?= urlencode($token) ?>" class="btn">
+        <a href="<?= $checkoutHref ?>" class="btn">
             Cadastrar-se gratuitamente
         </a>
     <?php endif; ?>

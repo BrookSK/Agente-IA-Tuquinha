@@ -344,11 +344,12 @@ HTML;
     {
         $isExternalUser = !empty($_SESSION['user_id']) && User::isExternalCourseUser((int)$_SESSION['user_id']);
         $externalToken = $_SESSION['external_course_token'] ?? null;
+        $isPartnerSite = !empty($_SERVER['TUQ_PARTNER_SITE']);
         
         unset($_SESSION['user_id'], $_SESSION['user_name'], $_SESSION['user_email'], $_SESSION['is_admin'], $_SESSION['external_course_token']);
         
-        if ($isExternalUser && $externalToken) {
-            header('Location: /curso-externo?token=' . urlencode($externalToken));
+        if ($isPartnerSite) {
+            header('Location: /');
         } elseif ($isExternalUser) {
             header('Location: /painel-externo');
         } else {

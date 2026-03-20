@@ -66,6 +66,35 @@ class Course
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
+    public static function allExternalActiveByOwner(int $userId): array
+    {
+        if ($userId <= 0) {
+            return [];
+        }
+
+        $pdo = Database::getConnection();
+        $stmt = $pdo->prepare('SELECT * FROM courses WHERE owner_user_id = :owner_id AND is_active = 1 AND is_external = 1 ORDER BY created_at DESC');
+        $stmt->execute(['owner_id' => $userId]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public static function findExternalActiveBySlugAndOwner(string $slug, int $ownerUserId): ?array
+    {
+        $slug = trim($slug);
+        if ($slug === '' || $ownerUserId <= 0) {
+            return null;
+        }
+
+        $pdo = Database::getConnection();
+        $stmt = $pdo->prepare('SELECT * FROM courses WHERE slug = :slug AND owner_user_id = :owner_id AND is_active = 1 AND is_external = 1 LIMIT 1');
+        $stmt->execute([
+            'slug' => $slug,
+            'owner_id' => $ownerUserId,
+        ]);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $row ?: null;
+    }
+
     public static function findById(int $id): ?array
     {
         $pdo = Database::getConnection();

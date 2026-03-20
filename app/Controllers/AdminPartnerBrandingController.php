@@ -5,7 +5,10 @@ namespace App\Controllers;
 use App\Core\Controller;
 use App\Models\CoursePartner;
 use App\Models\CoursePartnerBranding;
+use App\Models\Setting;
+use App\Models\User;
 use App\Services\MediaStorageService;
+use App\Services\MailService;
 
 class AdminPartnerBrandingController extends Controller
 {
@@ -55,10 +58,18 @@ class AdminPartnerBrandingController extends Controller
 
         $branding = CoursePartnerBranding::findByUserId($userId);
 
+        $baseDomain = trim((string)Setting::get('partner_courses_base_domain', ''));
+        if ($baseDomain === '') {
+            $appPublicUrl = trim((string)Setting::get('app_public_url', ''));
+            $host = $appPublicUrl !== '' ? (string)(parse_url($appPublicUrl, PHP_URL_HOST) ?? '') : '';
+            $baseDomain = trim($host);
+        }
+
         $this->view('admin/partner_branding/form', [
             'pageTitle' => 'Branding: ' . (string)($partner['user_name'] ?? ''),
             'partner' => $partner,
             'branding' => $branding,
+            'baseDomain' => $baseDomain,
         ]);
     }
 
@@ -203,6 +214,56 @@ class AdminPartnerBrandingController extends Controller
         ]);
 
         $_SESSION['admin_partner_branding_success'] = 'Branding atualizado.';
+        header('Location: /admin/branding-parceiros/editar?user_id=' . $userId);
+        exit;
+    }
+
+    public function approveSubdomain(): void
+    {
+        $this->ensureAdmin();
+
+        $userId = isset($_POST['user_id']) ? (int)$_POST['user_id'] : 0;
+        if ($userId <= 0) {
+            $_SESSION['admin_partner_branding_error'] = 'Parceiro inválido.';
+            header('Location: /admin/branding-parceiros');
+            exit;
+        }
+
+        $branding = CoursePartnerBranding::findByUserId($userId);
+        $subdomain = strtolower(trim((string)($branding['subdomain'] ?? '')));
+        if ($subdomain === '') {
+            $_SESSION['admin_partner_branding_error'] = 'Este parceiro não tem subdomínio.';
+            header('Location: /admin/branding-parceiros/editar?user_id=' . $userId);
+            exit;
+        }
+
+        $now = date('Y-m-d H:i:s');
+        CoursePartnerBranding::upsert($userId, [
+            'subdomain' => $subdomain,
+            'subdomain_status' => 'approved',
+            'subdomain_approved_at' => $now,
+        ]);
+
+        $user = User::findById($userId);
+        if ($user && !empty($user['email'])) {
+            $baseDomain = trim((string)Setting::get('partner_courses_base_domain', ''));
+            if ($baseDomain === '') {
+                $appPublicUrl = trim((string)Setting::get('app_public_url', ''));
+                $host = $appPublicUrl !== '' ? (string)(parse_url($appPublicUrl, PHP_URL_HOST) ?? '') : '';
+                $baseDomain = trim($host);
+            }
+            $fullHost = $baseDomain !== '' ? ($subdomain . '.' . $baseDomain) : $subdomain;
+            $subject = 'Seu subdomínio foi aprovado!';
+            $content = '<p style="font-size:14px; margin:0 0 10px 0;">Seu subdomínio foi aprovado e já pode ser acessado:</p>'
+                . '<p style="font-size:14px; margin:0 0 10px 0;"><strong>' . htmlspecialchars($fullHost, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') . '</strong></p>'
+                . '<p style="font-size:13px; margin:0; color:#b0b0b0;">Se você ainda não consegue acessar, aguarde a propagação do DNS.</p>';
+
+            $cta = $baseDomain !== '' ? ('https://' . $fullHost . '/') : null;
+            $body = MailService::buildDefaultTemplate((string)($user['name'] ?? 'Parceiro'), $content, $cta ? 'Abrir catálogo' : null, $cta, null);
+            MailService::send((string)$user['email'], (string)($user['name'] ?? ''), $subject, $body);
+        }
+
+        $_SESSION['admin_partner_branding_success'] = 'Subdomínio aprovado.';
         header('Location: /admin/branding-parceiros/editar?user_id=' . $userId);
         exit;
     }

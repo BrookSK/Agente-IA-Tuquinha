@@ -31,13 +31,15 @@
                     <tr>
                         <th style="text-align:left; padding:10px 12px; border-bottom:1px solid var(--border-subtle);">Parceiro</th>
                         <th style="text-align:left; padding:10px 12px; border-bottom:1px solid var(--border-subtle);">E-mail</th>
+                        <th style="text-align:left; padding:10px 12px; border-bottom:1px solid var(--border-subtle);">Subdomínio</th>
+                        <th style="text-align:left; padding:10px 12px; border-bottom:1px solid var(--border-subtle);">Status</th>
                         <th style="text-align:center; padding:10px 12px; border-bottom:1px solid var(--border-subtle);">Ação</th>
                     </tr>
                 </thead>
                 <tbody>
                 <?php if (empty($partners)): ?>
                     <tr>
-                        <td colspan="3" style="padding:12px; color:var(--text-secondary);">Nenhum parceiro encontrado.</td>
+                        <td colspan="5" style="padding:12px; color:var(--text-secondary);">Nenhum parceiro encontrado.</td>
                     </tr>
                 <?php else: ?>
                     <?php foreach ($partners as $p): ?>
@@ -47,6 +49,12 @@
                             </td>
                             <td style="padding:10px 12px; color:var(--text-secondary);">
                                 <?= htmlspecialchars((string)($p['user_email'] ?? ''), ENT_QUOTES, 'UTF-8') ?>
+                            </td>
+                            <td style="padding:10px 12px; color:var(--text-secondary);">
+                                <?= htmlspecialchars((string)($p['branding_subdomain'] ?? ''), ENT_QUOTES, 'UTF-8') ?>
+                            </td>
+                            <td style="padding:10px 12px; color:var(--text-secondary);">
+                                <?= htmlspecialchars((string)($p['branding_subdomain_status'] ?? ''), ENT_QUOTES, 'UTF-8') ?>
                             </td>
                             <td style="padding:10px 12px; text-align:center;">
                                 <a href="/admin/branding-parceiros/editar?user_id=<?= (int)($p['user_id'] ?? 0) ?>" style="display:inline-flex; align-items:center; padding:7px 12px; border-radius:999px; border:1px solid var(--border-subtle); background:var(--surface-subtle); color:var(--text-primary); text-decoration:none; font-size:12px;">Editar branding</a>

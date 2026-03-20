@@ -36,6 +36,26 @@ if ($companyName === '') {
     $companyName = 'Plataforma de Cursos';
 }
 
+$isPartnerSite = !empty($isPartnerSite);
+$slug = isset($slug) ? trim((string)$slug) : '';
+
+$brandHref = '/';
+if ($slug !== '') {
+    $brandHref = '/curso/' . urlencode($slug);
+}
+
+$loginHref = '';
+$ctaHref = '';
+if (empty($_SESSION['user_id'])) {
+    if ($slug !== '') {
+        $loginHref = '/curso/' . urlencode($slug) . '/login';
+        $ctaHref = '/curso/' . urlencode($slug) . '/checkout';
+    } elseif (!$isPartnerSite) {
+        $loginHref = '/login';
+        $ctaHref = '/registrar';
+    }
+}
+
 function esc_attr(string $s): string {
     return htmlspecialchars($s, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
 }
@@ -67,6 +87,9 @@ function esc_attr(string $s): string {
             --success: #10b981;
             --error: #ef4444;
             --warning: #f59e0b;
+            --bg-image: <?= $backgroundImageUrl !== '' ? ("url('" . esc_attr($backgroundImageUrl) . "')") : 'none' ?>;
+            --bg-attachment: <?= $backgroundImageUrl !== '' ? 'fixed' : 'scroll' ?>;
+            --bg-overlay-opacity: <?= $backgroundImageUrl !== '' ? '1' : '0' ?>;
         }
         
         * {
@@ -84,15 +107,11 @@ function esc_attr(string $s): string {
             display: flex;
             flex-direction: column;
             padding-top: 100px;
-            <?php if ($backgroundImageUrl !== ''): ?>
-            background-image: url('<?= esc_attr($backgroundImageUrl) ?>');
+            background-image: var(--bg-image);
             background-size: cover;
             background-position: center;
-            background-attachment: fixed;
-            <?php endif; ?>
+            background-attachment: var(--bg-attachment);
         }
-        
-        <?php if ($backgroundImageUrl !== ''): ?>
         body::before {
             content: '';
             position: fixed;
@@ -102,8 +121,9 @@ function esc_attr(string $s): string {
             bottom: 0;
             background: linear-gradient(135deg, rgba(10,10,15,0.95) 0%, rgba(20,20,31,0.9) 100%);
             z-index: 0;
+            opacity: var(--bg-overlay-opacity);
+            pointer-events: none;
         }
-        <?php endif; ?>
         
         .site-wrapper {
             position: relative;
@@ -455,7 +475,7 @@ function esc_attr(string $s): string {
     <div class="site-wrapper">
         <header class="site-header">
             <div class="header-content">
-                <a href="<?= isset($token) ? '/curso-externo?token=' . urlencode($token) : '/' ?>" class="header-brand">
+                <a href="<?= $brandHref ?>" class="header-brand">
                     <?php if ($logoUrl !== ''): ?>
                         <img src="<?= esc_attr($logoUrl) ?>" alt="<?= esc_attr($companyName) ?>" style="height: 50px; width: auto; max-width: 250px; object-fit: contain;">
                     <?php else: ?>
@@ -472,8 +492,12 @@ function esc_attr(string $s): string {
                 
                 <nav class="header-nav">
                     <?php if (empty($_SESSION['user_id'])): ?>
-                        <a href="<?= isset($token) ? '/curso-externo/login?token=' . urlencode($token) : '/login' ?>">Entrar</a>
-                        <a href="<?= isset($token) ? '/curso-externo/checkout?token=' . urlencode($token) : '/registrar' ?>" class="btn" style="padding: 0.5rem 1.25rem; font-size: 0.9rem;">Começar Agora</a>
+                        <?php if ($loginHref !== ''): ?>
+                            <a href="<?= $loginHref ?>">Entrar</a>
+                        <?php endif; ?>
+                        <?php if ($ctaHref !== ''): ?>
+                            <a href="<?= $ctaHref ?>" class="btn" style="padding: 0.5rem 1.25rem; font-size: 0.9rem;">Começar Agora</a>
+                        <?php endif; ?>
                     <?php else: ?>
                         <a href="/painel-externo">Meu Painel</a>
                         <a href="/logout">Sair</a>

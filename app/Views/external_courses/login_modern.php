@@ -6,6 +6,21 @@
 
 $courseTitle = trim((string)($course['title'] ?? ''));
 $companyName = isset($branding) && is_array($branding) ? trim((string)($branding['company_name'] ?? '')) : '';
+
+$isPartnerSite = !empty($isPartnerSite);
+$slug = isset($slug) ? trim((string)$slug) : '';
+
+$loginAction = '/login';
+$forgotHref = '/senha/esqueci';
+$checkoutHref = '/';
+$backHref = '/';
+
+if ($slug !== '') {
+    $loginAction = '/curso/' . urlencode($slug) . '/login';
+    $forgotHref = '/curso/' . urlencode($slug) . '/senha/esqueci';
+    $checkoutHref = '/curso/' . urlencode($slug) . '/checkout';
+    $backHref = '/curso/' . urlencode($slug);
+}
 ?>
 
 <div class="container-narrow">
@@ -23,7 +38,7 @@ $companyName = isset($branding) && is_array($branding) ? trim((string)($branding
             </div>
         <?php endif; ?>
 
-        <form action="/curso-externo/login" method="post">
+        <form action="<?= $loginAction ?>" method="post">
             <input type="hidden" name="token" value="<?= htmlspecialchars($token, ENT_QUOTES, 'UTF-8') ?>">
             
             <div class="form-group">
@@ -41,7 +56,7 @@ $companyName = isset($branding) && is_array($branding) ? trim((string)($branding
                     <input type="checkbox" name="remember" style="width: 18px; height: 18px;">
                     <span style="font-size: 0.9rem; color: var(--text-secondary);">Lembrar-me</span>
                 </label>
-                <a href="/curso-externo/senha/esqueci?token=<?= urlencode($token) ?>" style="color: var(--accent); text-decoration: none; font-size: 0.9rem; font-weight: 600;">
+                <a href="<?= $forgotHref ?>" style="color: var(--accent); text-decoration: none; font-size: 0.9rem; font-weight: 600;">
                     Esqueci minha senha
                 </a>
             </div>
@@ -55,14 +70,14 @@ $companyName = isset($branding) && is_array($branding) ? trim((string)($branding
             <p style="color: var(--text-secondary); font-size: 0.95rem; margin-bottom: 1rem;">
                 Ainda não tem uma conta?
             </p>
-            <a href="/curso-externo/checkout?token=<?= urlencode($token) ?>" class="btn" style="display: inline-block; padding: 0.75rem 1.5rem;">
+            <a href="<?= $checkoutHref ?>" class="btn" style="display: inline-block; padding: 0.75rem 1.5rem;">
                 Criar Conta Agora
             </a>
         </div>
     </div>
     
     <div style="text-align: center; margin-top: 1.5rem;">
-        <a href="/curso-externo?token=<?= urlencode($token) ?>" style="color: var(--text-secondary); text-decoration: none; font-size: 0.9rem;">
+        <a href="<?= $backHref ?>" style="color: var(--text-secondary); text-decoration: none; font-size: 0.9rem;">
             ← Voltar para a página inicial
         </a>
     </div>

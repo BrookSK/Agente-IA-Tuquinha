@@ -1,10 +1,15 @@
 <?php
 /** @var array $partner */
 /** @var array|null $branding */
+/** @var string|null $baseDomain */
 
 $branding = $branding ?? null;
 $companyName = trim((string)($branding['company_name'] ?? ''));
 $logoUrl = trim((string)($branding['logo_url'] ?? ''));
+$subdomain = trim((string)($branding['subdomain'] ?? ''));
+$subdomainStatus = trim((string)($branding['subdomain_status'] ?? ''));
+$baseDomain = isset($baseDomain) ? (string)$baseDomain : '';
+$fullHost = ($subdomain !== '' && $baseDomain !== '') ? ($subdomain . '.' . $baseDomain) : $subdomain;
 $primary = trim((string)($branding['primary_color'] ?? ''));
 $secondary = trim((string)($branding['secondary_color'] ?? ''));
 $headerImageUrl = trim((string)($branding['header_image_url'] ?? ''));
@@ -42,6 +47,38 @@ $backgroundImageUrl = trim((string)($branding['background_image_url'] ?? ''));
         </div>
         <?php unset($_SESSION['admin_partner_branding_error']); ?>
     <?php endif; ?>
+
+    <div style="border:1px solid var(--border-subtle); border-radius:14px; background:var(--surface-card); padding:14px 14px; margin-bottom:12px;">
+        <div style="display:flex; gap:12px; flex-wrap:wrap; align-items:flex-start;">
+            <div style="flex:1 1 280px;">
+                <div style="font-size:12px; color:var(--text-secondary); margin-bottom:4px;">Subdomínio solicitado pelo parceiro</div>
+                <div style="font-size:13px; font-weight:800; color:var(--text-primary);">
+                    <?= htmlspecialchars($fullHost !== '' ? $fullHost : '-', ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?>
+                </div>
+                <div style="font-size:12px; color:var(--text-secondary); margin-top:4px;">Status: <strong><?= htmlspecialchars($subdomainStatus !== '' ? $subdomainStatus : 'none', ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?></strong></div>
+            </div>
+            <div style="flex:1 1 260px;">
+                <div style="font-size:12px; color:var(--text-secondary); margin-bottom:4px;">Preview</div>
+                <div style="font-size:13px; color:var(--text-primary);">
+                    <?php if ($fullHost !== ''): ?>
+                        <a href="<?= htmlspecialchars('https://' . $fullHost . '/', ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?>" target="_blank" rel="noopener" style="color:var(--text-primary); text-decoration:none; border-bottom:1px dashed var(--border-subtle);">
+                            <?= htmlspecialchars('https://' . $fullHost . '/', ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?>
+                        </a>
+                    <?php else: ?>
+                        <span style="color:var(--text-secondary);">-</span>
+                    <?php endif; ?>
+                </div>
+            </div>
+            <div style="flex:0 0 auto; display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+                <?php if ($subdomain !== '' && $subdomainStatus === 'pending'): ?>
+                    <form method="post" action="/admin/branding-parceiros/aprovar-subdominio" onsubmit="return confirm('Aprovar subdomínio e notificar o parceiro por e-mail?');" style="margin:0;">
+                        <input type="hidden" name="user_id" value="<?= (int)($partner['user_id'] ?? 0) ?>">
+                        <button type="submit" style="border:none; border-radius:999px; padding:9px 14px; background:linear-gradient(135deg,#10b981,#34d399); color:#050509; font-weight:900; cursor:pointer;">Aprovar subdomínio</button>
+                    </form>
+                <?php endif; ?>
+            </div>
+        </div>
+    </div>
 
     <form method="post" action="/admin/branding-parceiros/salvar" enctype="multipart/form-data" style="border:1px solid var(--border-subtle); border-radius:14px; background:var(--surface-card); padding:14px 14px;">
         <input type="hidden" name="user_id" value="<?= (int)($partner['user_id'] ?? 0) ?>">

@@ -7,6 +7,14 @@
 /** @var float $amountReais */
 /** @var string|null $paymentUrl */
 ?>
+
+<?php
+$isPartnerSite = !empty($isPartnerSite);
+$slug = isset($slug) ? trim((string)$slug) : '';
+
+$statusEndpoint = '/status-pagamento';
+$dashboardHref = '/painel-externo/meus-cursos';
+?>
 <div style="max-width: 560px; margin: 0 auto; text-align: center;">
     <div style="margin-bottom: 20px;">
         <div style="width: 80px; height: 80px; margin: 0 auto 16px; border-radius: 50%; background: linear-gradient(135deg, var(--accent), var(--accent2)); display: flex; align-items: center; justify-content: center; font-size: 40px;">
@@ -56,7 +64,7 @@
 
     <p style="font-size: 12px; color: #777; margin-top: 20px;">
         Caso o pagamento já tenha sido realizado e esta página não atualize, 
-        <a href="/painel-externo/meus-cursos?token=<?= urlencode($token) ?>" style="color: var(--accent); text-decoration: underline;">clique aqui</a>.
+        <a href="<?= $dashboardHref ?>" style="color: var(--accent); text-decoration: underline;">clique aqui</a>.
     </p>
 </div>
 
@@ -84,7 +92,7 @@
             return;
         }
 
-        fetch('/curso-externo/status-pagamento?purchase_id=' + purchaseId)
+        fetch('<?= $statusEndpoint ?>?purchase_id=' + purchaseId)
             .then(function(response) {
                 return response.json();
             })

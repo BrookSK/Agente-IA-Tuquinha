@@ -33,6 +33,21 @@ $currentLessonId = (int)($lesson['id'] ?? 0);
 $completedLessonIds = is_array($completedLessonIds ?? null) ? $completedLessonIds : [];
 $isLessonCompleted = !empty($completedLessonIds[$currentLessonId] ?? false);
 
+$isPartnerSite = !empty($isPartnerSite);
+$slug = isset($slug) ? trim((string)$slug) : '';
+
+$completeAction = '/';
+$commentAction = '/';
+$membersHref = '/';
+$lessonHrefBase = '/';
+
+if ($slug !== '') {
+    $completeAction = '/curso/' . urlencode($slug) . '/aula/concluir';
+    $commentAction = '/curso/' . urlencode($slug) . '/aula/comentar';
+    $membersHref = '/curso/' . urlencode($slug) . '/membros';
+    $lessonHrefBase = '/curso/' . urlencode($slug) . '/aula?lesson_id=';
+}
+
 $publishedLessons = [];
 foreach ($lessons as $l) {
     if (empty($l['is_published'])) continue;
@@ -65,7 +80,7 @@ foreach ($lessons as $l) {
                     </div>
                     <div style="display:flex; gap:8px; flex-wrap:wrap;">
                         <?php if (!$isLessonCompleted): ?>
-                            <form action="/curso-externo/aula/concluir" method="post" style="margin:0;">
+                            <form action="<?= $completeAction ?>" method="post" style="margin:0;">
                                 <input type="hidden" name="token" value="<?= htmlspecialchars($token, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?>">
                                 <input type="hidden" name="lesson_id" value="<?= (int)$currentLessonId ?>">
                                 <button type="submit" class="btn">Marcar como concluída</button>
@@ -73,10 +88,10 @@ foreach ($lessons as $l) {
                         <?php endif; ?>
 
                         <?php if ($prevLessonId > 0): ?>
-                            <a class="btn-outline" href="/curso-externo/aula?token=<?= urlencode($token) ?>&lesson_id=<?= (int)$prevLessonId ?>">← Anterior</a>
+                            <a class="btn-outline" href="<?= $lessonHrefBase ?><?= (int)$prevLessonId ?>">← Anterior</a>
                         <?php endif; ?>
                         <?php if ($nextLessonId > 0): ?>
-                            <a class="btn" href="/curso-externo/aula?token=<?= urlencode($token) ?>&lesson_id=<?= (int)$nextLessonId ?>">Próxima →</a>
+                            <a class="btn" href="<?= $lessonHrefBase ?><?= (int)$nextLessonId ?>">Próxima →</a>
                         <?php endif; ?>
                     </div>
                 </div>
@@ -113,7 +128,7 @@ foreach ($lessons as $l) {
                 </div>
             <?php endif; ?>
 
-            <form action="/curso-externo/aula/comentar" method="post" style="margin:0;">
+            <form action="<?= $commentAction ?>" method="post" style="margin:0;">
                 <input type="hidden" name="token" value="<?= htmlspecialchars($token, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?>">
                 <input type="hidden" name="lesson_id" value="<?= (int)$currentLessonId ?>">
                 <label>Escreva um comentário</label>
@@ -125,7 +140,7 @@ foreach ($lessons as $l) {
         </div>
 
         <div style="margin-top:12px;">
-            <a class="btn-outline" href="/curso-externo/membros?token=<?= urlencode($token) ?>">Voltar para área de membros</a>
+            <a class="btn-outline" href="<?= $membersHref ?>">Voltar para área de membros</a>
         </div>
     </div>
 
@@ -140,7 +155,7 @@ foreach ($lessons as $l) {
                     $isCur = $lid === $currentLessonId;
                     $isDone = !empty($completedLessonIds[$lid] ?? false);
                 ?>
-                <a href="/curso-externo/aula?token=<?= urlencode($token) ?>&lesson_id=<?= $lid ?>" style="
+                <a href="<?= $lessonHrefBase ?><?= $lid ?>" style="
                     display:flex; gap:10px; align-items:center; padding:8px 10px; border-radius:12px;
                     border:1px solid <?= $isCur ? 'var(--accent)' : 'transparent' ?>;
                     background: <?= $isCur ? 'rgba(255,255,255,0.05)' : 'transparent' ?>;

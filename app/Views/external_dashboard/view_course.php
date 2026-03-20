@@ -37,16 +37,16 @@
                 <div style="font-size: 24px; font-weight: 800; color: var(--accent);">
                     R$ <?= number_format($course['price_cents'] / 100, 2, ',', '.') ?>
                 </div>
-                <?php if (!empty($course['external_token'])): ?>
-                    <a href="/curso-externo/checkout?token=<?= urlencode($course['external_token']) ?>" class="btn">
+                <?php if (!empty($course['slug'])): ?>
+                    <a href="/curso/<?= urlencode((string)$course['slug']) ?>/checkout" class="btn">
                         Comprar agora
                     </a>
                 <?php endif; ?>
             </div>
         <?php else: ?>
             <div style="font-size: 16px; font-weight: 600; color: #6be28d; margin-bottom: 12px;">Curso Gratuito</div>
-            <?php if (!empty($course['external_token'])): ?>
-                <a href="/curso-externo?token=<?= urlencode($course['external_token']) ?>" class="btn">
+            <?php if (!empty($course['slug'])): ?>
+                <a href="/curso/<?= urlencode((string)$course['slug']) ?>" class="btn">
                     Inscrever-se gratuitamente
                 </a>
             <?php endif; ?>

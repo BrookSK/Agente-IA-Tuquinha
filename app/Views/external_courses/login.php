@@ -5,6 +5,16 @@
 /** @var string|null $error */
 
 $courseTitle = trim((string)($course['title'] ?? ''));
+
+$isPartnerSite = !empty($isPartnerSite);
+$slug = isset($slug) ? trim((string)$slug) : '';
+
+$loginAction = '/login';
+$checkoutHref = '/';
+if ($slug !== '') {
+    $loginAction = '/curso/' . urlencode($slug) . '/login';
+    $checkoutHref = '/curso/' . urlencode($slug) . '/checkout';
+}
 ?>
 
 <h1 style="font-size:20px; font-weight:900; margin:0 0 8px 0;">Login</h1>
@@ -16,7 +26,7 @@ $courseTitle = trim((string)($course['title'] ?? ''));
     </div>
 <?php endif; ?>
 
-<form action="/curso-externo/login" method="post" style="display: flex; flex-direction: column; gap: 14px; max-width: 400px;">
+<form action="<?= $loginAction ?>" method="post" style="display: flex; flex-direction: column; gap: 14px; max-width: 400px;">
     <input type="hidden" name="token" value="<?= htmlspecialchars($token, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?>">
     
     <div>
@@ -31,13 +41,13 @@ $courseTitle = trim((string)($course['title'] ?? ''));
     
     <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-top: 8px;">
         <button type="submit" class="btn">Entrar</button>
-        <a href="/curso-externo/checkout?token=<?= urlencode($token) ?>" class="btn-outline">Voltar para cadastro</a>
+        <a href="<?= $checkoutHref ?>" class="btn-outline">Voltar para cadastro</a>
     </div>
 </form>
 
 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--border);">
     <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 8px;">Ainda não tem uma conta?</p>
-    <a href="/curso-externo/checkout?token=<?= urlencode($token) ?>" style="color: var(--accent); font-size: 14px; font-weight: 600; text-decoration: none;">
+    <a href="<?= $checkoutHref ?>" style="color: var(--accent); font-size: 14px; font-weight: 600; text-decoration: none;">
         Criar conta e comprar curso →
     </a>
 </div>
