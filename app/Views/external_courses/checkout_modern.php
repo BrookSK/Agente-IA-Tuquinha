@@ -71,32 +71,11 @@ $prefilledPassword = (string)($prefilledData['password'] ?? '');
             $courseShortDescription = !empty($course['short_description']) ? trim((string)$course['short_description']) : '';
             $courseId = !empty($course['id']) ? (int)$course['id'] : 0;
             
-            // Inicializar variáveis
-            $totalModules = 0;
-            $totalLessons = 0;
-            $communities = [];
-            
-            // Buscar dados dinâmicos do curso
-            if ($courseId > 0) {
-                try {
-                    $db = \App\Core\Database::getInstance();
-                    
-                    // Buscar total de módulos
-                    $modulesResult = $db->query("SELECT COUNT(*) as total FROM course_modules WHERE course_id = ?", [$courseId]);
-                    $totalModules = isset($modulesResult[0]['total']) ? (int)$modulesResult[0]['total'] : 0;
-                    
-                    // Buscar total de aulas
-                    $lessonsResult = $db->query("SELECT COUNT(*) as total FROM course_lessons WHERE course_id = ?", [$courseId]);
-                    $totalLessons = isset($lessonsResult[0]['total']) ? (int)$lessonsResult[0]['total'] : 0;
-                    
-                    // Buscar comunidades
-                    $communities = $db->query("SELECT c.name FROM course_allowed_communities cac 
-                                               INNER JOIN communities c ON c.id = cac.community_id 
-                                               WHERE cac.course_id = ? AND c.is_active = 1", [$courseId]);
-                } catch (\Exception $e) {
-                    // Silenciar erro para não quebrar o checkout
-                }
-            }
+            // Buscar dados dinâmicos usando helper
+            $courseDetails = \App\Helpers\CourseHelper::getCourseDetails($courseId);
+            $totalModules = $courseDetails['totalModules'];
+            $totalLessons = $courseDetails['totalLessons'];
+            $communities = $courseDetails['communities'];
             ?>
             
             <?php if ($courseImage): ?>
