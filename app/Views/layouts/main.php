@@ -1063,7 +1063,7 @@ if (!empty($_SESSION['user_id'])) {
                         </a>
                     <?php endif; ?>
                     <?php if ($canUseProfessionalArea): ?>
-                        <a href="/profissional" class="sidebar-button<?= $isActiveNav('/profissional') ? ' sidebar-button--active' : '' ?>" style="margin-top: 6px;">
+                        <a href="/profissional" class="sidebar-button<?= ($currentPath === '/profissional') ? ' sidebar-button--active' : '' ?>" style="margin-top: 6px;">
                             <span class="icon" aria-hidden="true"><?php echo $renderMenuIcon('professional_dashboard', '🧑‍🏫'); ?></span>
                             <span>Painel do profissional</span>
                         </a>
