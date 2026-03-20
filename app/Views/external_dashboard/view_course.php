@@ -4,6 +4,58 @@
 /** @var array $modules */
 /** @var array|null $branding */
 ?>
+<style>
+    .lesson-item:hover {
+        background: rgba(255,255,255,0.06) !important;
+        border-color: var(--accent) !important;
+    }
+    
+    @media (max-width: 768px) {
+        .header h1 {
+            font-size: 22px !important;
+        }
+        
+        .header p {
+            font-size: 13px !important;
+        }
+        
+        .card {
+            padding: 14px !important;
+        }
+        
+        .lesson-item {
+            padding: 10px !important;
+            gap: 10px !important;
+        }
+        
+        .lesson-item > div:first-child {
+            font-size: 18px !important;
+        }
+        
+        .lesson-item > div:nth-child(2) > div:first-child {
+            font-size: 13px !important;
+        }
+        
+        .lesson-item > div:nth-child(2) > div:last-child {
+            font-size: 11px !important;
+        }
+    }
+    
+    @media (max-width: 640px) {
+        .header h1 {
+            font-size: 20px !important;
+        }
+        
+        .header p {
+            font-size: 12px !important;
+        }
+        
+        .card {
+            padding: 12px !important;
+            margin-bottom: 14px !important;
+        }
+    }
+</style>
 <div class="header">
     <h1><?= htmlspecialchars($course['title'] ?? '', ENT_QUOTES, 'UTF-8') ?></h1>
     <?php if (!empty($course['short_description'])): ?>
@@ -115,10 +167,3 @@
         ← Voltar para cursos disponíveis
     </a>
 </div>
-
-<style>
-.lesson-item:hover {
-    background: rgba(255,255,255,0.06) !important;
-    border-color: rgba(255,255,255,0.15) !important;
-}
-</style>
