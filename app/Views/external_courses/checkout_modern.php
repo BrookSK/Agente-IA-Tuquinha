@@ -68,35 +68,7 @@ $prefilledPassword = (string)($prefilledData['password'] ?? '');
             <?php 
             $courseImage = !empty($course['image_path']) ? trim((string)$course['image_path']) : '';
             $courseDescription = !empty($course['description']) ? trim((string)$course['description']) : '';
-            $courseShortDescription = !empty($course['short_description']) ? trim((string)$course['short_description']) : '';
-            $courseId = !empty($course['id']) ? (int)$course['id'] : 0;
-            
-            $totalModules = 0;
-            $totalLessons = 0;
-            $communities = [];
-            $totalCommunities = 0;
-            
-            try {
-                // Buscar módulos do curso
-                $db = \App\Core\Database::getInstance();
-                $modulesQuery = "SELECT COUNT(*) as total_modules FROM course_modules WHERE course_id = ?";
-                $modulesResult = $db->query($modulesQuery, [$courseId]);
-                $totalModules = $modulesResult[0]['total_modules'] ?? 0;
-                
-                // Buscar aulas do curso
-                $lessonsQuery = "SELECT COUNT(*) as total_lessons FROM course_lessons WHERE course_id = ?";
-                $lessonsResult = $db->query($lessonsQuery, [$courseId]);
-                $totalLessons = $lessonsResult[0]['total_lessons'] ?? 0;
-                
-                // Buscar comunidades do curso
-                $communitiesQuery = "SELECT c.name FROM course_allowed_communities cac 
-                                     INNER JOIN communities c ON c.id = cac.community_id 
-                                     WHERE cac.course_id = ? AND c.is_active = 1";
-                $communities = $db->query($communitiesQuery, [$courseId]);
-                $totalCommunities = count($communities);
-            } catch (\Exception $e) {
-                // Se houver erro, continua com valores padrão
-            }
+            $courseWorkload = !empty($course['workload_hours']) ? (int)$course['workload_hours'] : 0;
             ?>
             
             <?php if ($courseImage): ?>
@@ -110,24 +82,16 @@ $prefilledPassword = (string)($prefilledData['password'] ?? '');
                     <h3 style="font-size: 1.5rem; font-weight: 700; color: var(--text-primary); margin: 0;">
                         <?= htmlspecialchars($courseTitle, ENT_QUOTES, 'UTF-8') ?>
                     </h3>
-                    <?php if ($totalModules > 0 || $totalLessons > 0): ?>
+                    <?php if ($courseWorkload > 0): ?>
                         <div style="display: flex; align-items: center; gap: 0.5rem; color: var(--accent); font-weight: 600; white-space: nowrap;">
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
-                                <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <polyline points="12 6 12 12 16 14"></polyline>
                             </svg>
-                            <?= $totalModules ?> módulos • <?= $totalLessons ?> aulas
+                            <?= $courseWorkload ?>h de conteúdo
                         </div>
                     <?php endif; ?>
                 </div>
-                
-                <?php if ($courseShortDescription): ?>
-                    <div style="margin-bottom: 1.25rem;">
-                        <p style="font-size: 1rem; color: var(--text-secondary); line-height: 1.6; font-weight: 500;">
-                            <?= htmlspecialchars($courseShortDescription, ENT_QUOTES, 'UTF-8') ?>
-                        </p>
-                    </div>
-                <?php endif; ?>
                 
                 <?php if ($courseDescription): ?>
                     <div style="margin-bottom: 1.25rem;">
@@ -150,11 +114,7 @@ $prefilledPassword = (string)($prefilledData['password'] ?? '');
                             Conteúdo Programático
                         </h4>
                         <p style="font-size: 0.9rem; color: var(--text-secondary);">
-                            <?php if ($totalModules > 0 && $totalLessons > 0): ?>
-                                <?= $totalModules ?> módulo<?= $totalModules > 1 ? 's' : '' ?> com <?= $totalLessons ?> aula<?= $totalLessons > 1 ? 's' : '' ?>
-                            <?php else: ?>
-                                Acesso completo a todos os módulos e aulas do curso
-                            <?php endif; ?>
+                            Acesso completo a todos os módulos e aulas do curso
                         </p>
                     </div>
                     
@@ -168,20 +128,9 @@ $prefilledPassword = (string)($prefilledData['password'] ?? '');
                             </svg>
                             Comunidades
                         </h4>
-                        <?php if ($totalCommunities > 0): ?>
-                            <p style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 0.5rem;">
-                                Acesso a <?= $totalCommunities ?> comunidade<?= $totalCommunities > 1 ? 's' : '' ?>:
-                            </p>
-                            <ul style="font-size: 0.85rem; color: var(--text-secondary); margin: 0; padding-left: 1.25rem; line-height: 1.8;">
-                                <?php foreach ($communities as $community): ?>
-                                    <li><?= htmlspecialchars($community['name'], ENT_QUOTES, 'UTF-8') ?></li>
-                                <?php endforeach; ?>
-                            </ul>
-                        <?php else: ?>
-                            <p style="font-size: 0.9rem; color: var(--text-secondary);">
-                                Acesso às comunidades exclusivas do curso
-                            </p>
-                        <?php endif; ?>
+                        <p style="font-size: 0.9rem; color: var(--text-secondary);">
+                            Acesso às comunidades exclusivas do curso
+                        </p>
                     </div>
                 </div>
             </div>
