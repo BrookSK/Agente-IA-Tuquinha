@@ -3,6 +3,7 @@
 /** @var array|null $branding */
 /** @var string $token */
 /** @var string|null $error */
+/** @var array $prefilledData */
 
 $courseTitle = trim((string)($course['title'] ?? ''));
 $priceCents = isset($course['price_cents']) ? (int)$course['price_cents'] : 0;
@@ -21,6 +22,15 @@ if ($slug !== '') {
     $backHref = '/curso/' . urlencode($slug);
     $loginHref = '/curso/' . urlencode($slug) . '/login';
 }
+
+// Dados pré-preenchidos do formulário de registro
+$prefilledData = isset($prefilledData) && is_array($prefilledData) ? $prefilledData : [];
+$prefilledName = '';
+if (!empty($prefilledData['first_name']) || !empty($prefilledData['last_name'])) {
+    $prefilledName = trim((string)($prefilledData['first_name'] ?? '') . ' ' . (string)($prefilledData['last_name'] ?? ''));
+}
+$prefilledEmail = trim((string)($prefilledData['email'] ?? ''));
+$prefilledPassword = (string)($prefilledData['password'] ?? '');
 ?>
 
 <div class="container" style="max-width: 900px;">
@@ -97,17 +107,17 @@ if ($slug !== '') {
 
             <div class="form-group">
                 <label class="form-label">Nome Completo *</label>
-                <input name="name" required class="form-input" placeholder="João Silva">
+                <input name="name" required class="form-input" placeholder="João Silva" value="<?= htmlspecialchars($prefilledName, ENT_QUOTES, 'UTF-8') ?>">
             </div>
             
             <div class="form-group">
                 <label class="form-label">E-mail *</label>
-                <input name="email" type="email" required class="form-input" placeholder="joao@email.com">
+                <input name="email" type="email" required class="form-input" placeholder="joao@email.com" value="<?= htmlspecialchars($prefilledEmail, ENT_QUOTES, 'UTF-8') ?>">
             </div>
             
             <div class="form-group">
                 <label class="form-label">Senha *</label>
-                <input name="password" type="password" minlength="8" required class="form-input" placeholder="Mínimo 8 caracteres">
+                <input name="password" type="password" minlength="8" required class="form-input" placeholder="Mínimo 8 caracteres" value="<?= htmlspecialchars($prefilledPassword, ENT_QUOTES, 'UTF-8') ?>">
                 <div class="form-hint">Escolha uma senha forte com letras, números e símbolos</div>
             </div>
             

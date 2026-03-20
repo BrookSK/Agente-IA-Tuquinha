@@ -21,6 +21,7 @@ $checkoutHref = '/';
 $loginAction = '/login';
 $forgotHref = '/senha/esqueci';
 $registerAction = '/registrar';
+$registerFreeAction = '/registrar';
 
 if ($slug !== '') {
     $courseHref = '/curso/' . urlencode($slug);
@@ -28,6 +29,7 @@ if ($slug !== '') {
     $loginAction = '/curso/' . urlencode($slug) . '/login';
     $forgotHref = '/curso/' . urlencode($slug) . '/senha/esqueci';
     $registerAction = '/curso/' . urlencode($slug) . '/checkout';
+    $registerFreeAction = '/curso/' . urlencode($slug) . '/registrar';
 }
 ?>
 <!DOCTYPE html>
@@ -714,21 +716,21 @@ if ($slug !== '') {
         </div>
 
         <div id="panel-register" class="panel">
-          <form action="<?= $registerAction ?>" method="post">
+          <form action="<?= $registerFreeAction ?>" method="post" id="registerForm">
             <input type="hidden" name="token" value="<?= htmlspecialchars($token, ENT_QUOTES, 'UTF-8') ?>">
             <div class="form-row">
               <div class="form-group">
                 <label>Nome</label>
                 <div class="input-wrap">
                   <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                  <input class="form-input" type="text" name="first_name" placeholder="Seu nome" required>
+                  <input class="form-input" type="text" name="first_name" id="reg_first_name" placeholder="Seu nome" required>
                 </div>
               </div>
               <div class="form-group">
                 <label>Sobrenome</label>
                 <div class="input-wrap">
                   <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                  <input class="form-input" type="text" name="last_name" placeholder="Sobrenome" required>
+                  <input class="form-input" type="text" name="last_name" id="reg_last_name" placeholder="Sobrenome" required>
                 </div>
               </div>
             </div>
@@ -736,20 +738,25 @@ if ($slug !== '') {
               <label>E-mail</label>
               <div class="input-wrap">
                 <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,12 2,6"/></svg>
-                <input class="form-input" type="email" name="email" placeholder="seu@email.com" required>
+                <input class="form-input" type="email" name="email" id="reg_email" placeholder="seu@email.com" required>
               </div>
             </div>
             <div class="form-group">
               <label>Senha</label>
               <div class="input-wrap">
                 <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-                <input class="form-input" type="password" name="password" placeholder="Mínimo 8 caracteres" required>
+                <input class="form-input" type="password" name="password" id="reg_password" placeholder="Mínimo 8 caracteres" required>
               </div>
             </div>
             <input type="hidden" name="phone" value="">
             <input type="hidden" name="cpf" value="">
             <button type="submit" class="btn-submit">Criar conta gratuita →</button>
           </form>
+          <?php if ($priceCents > 0): ?>
+          <p style="text-align: center; margin-top: 1rem; font-size: 0.9rem; color: var(--muted);">
+            Quer comprar o curso? <a href="<?= $checkoutHref ?>" style="color: var(--accent2); font-weight: 600; text-decoration: none;">Ir para checkout</a>
+          </p>
+          <?php endif; ?>
         </div>
       </div>
     </div>

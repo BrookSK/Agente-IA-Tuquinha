@@ -159,6 +159,7 @@ if ($isPartnerHost) {
     $partnerRouter->post('/curso/{slug}/login', 'ExternalCourseController@login');
     $partnerRouter->get('/curso/{slug}/senha/esqueci', 'ExternalCourseController@showForgotPassword');
     $partnerRouter->post('/curso/{slug}/senha/esqueci', 'ExternalCourseController@sendForgotPassword');
+    $partnerRouter->post('/curso/{slug}/registrar', 'ExternalCourseController@registerFree');
     $partnerRouter->get('/curso/{slug}/checkout', 'ExternalCourseController@checkout');
     $partnerRouter->post('/curso/{slug}/checkout', 'ExternalCourseController@processCheckout');
     $partnerRouter->get('/status-pagamento', 'ExternalCourseController@checkPaymentStatus');
@@ -280,6 +281,7 @@ $router->get('/curso/{slug}/login', 'ExternalCourseController@showLogin');
 $router->post('/curso/{slug}/login', 'ExternalCourseController@login');
 $router->get('/curso/{slug}/senha/esqueci', 'ExternalCourseController@showForgotPassword');
 $router->post('/curso/{slug}/senha/esqueci', 'ExternalCourseController@sendForgotPassword');
+$router->post('/curso/{slug}/registrar', 'ExternalCourseController@registerFree');
 $router->get('/curso/{slug}/checkout', 'ExternalCourseController@checkout');
 $router->post('/curso/{slug}/checkout', 'ExternalCourseController@processCheckout');
 $router->get('/status-pagamento', 'ExternalCourseController@checkPaymentStatus');
