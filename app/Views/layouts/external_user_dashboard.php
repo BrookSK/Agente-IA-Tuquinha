@@ -299,6 +299,21 @@ function esc_attr(string $s): string {
             color: var(--text-primary) !important;
         }
     </style>
+    <script>
+        function toggleMobileMenu(event) {
+            if (event) {
+                event.stopPropagation();
+            }
+            const sidebar = document.getElementById('mobileSidebar');
+            const toggle = document.querySelector('.mobile-menu-toggle');
+            if (sidebar) {
+                sidebar.classList.toggle('active');
+            }
+            if (toggle) {
+                toggle.classList.toggle('active');
+            }
+        }
+    </script>
 </head>
 <body>
     <header class="mobile-header">
@@ -412,20 +427,6 @@ function esc_attr(string $s): string {
     </div>
     
     <script>
-        function toggleMobileMenu(event) {
-            if (event) {
-                event.stopPropagation();
-            }
-            const sidebar = document.getElementById('mobileSidebar');
-            const toggle = document.querySelector('.mobile-menu-toggle');
-            if (sidebar) {
-                sidebar.classList.toggle('active');
-            }
-            if (toggle) {
-                toggle.classList.toggle('active');
-            }
-        }
-        
         // Close mobile menu when clicking outside
         document.addEventListener('click', function(event) {
             const sidebar = document.getElementById('mobileSidebar');
