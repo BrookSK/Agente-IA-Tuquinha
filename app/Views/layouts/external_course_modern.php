@@ -472,24 +472,55 @@ function esc_attr(string $s): string {
             margin-bottom: 2rem;
         }
         
+        .mobile-menu-toggle {
+            display: none;
+            background: none;
+            border: none;
+            padding: 8px;
+            cursor: pointer;
+            color: var(--text-primary);
+        }
+        .mobile-menu-toggle svg {
+            width: 24px;
+            height: 24px;
+        }
+        
         @media (max-width: 768px) {
-            body { overflow-x: hidden; padding-top: 120px; }
+            body { overflow-x: hidden; padding-top: 140px; }
             .container { padding: 0 1rem; max-width: 100%; }
             .site-header { padding: 1rem; }
             .header-content {
-                flex-direction: column;
-                text-align: center;
+                flex-direction: row;
+                justify-content: space-between;
+                align-items: center;
                 gap: 1rem;
             }
             .header-brand img { height: 36px !important; max-width: 160px !important; }
+            .mobile-menu-toggle { display: block; }
             .header-nav {
-                flex-direction: row;
-                gap: 0.75rem;
-                width: 100%;
-                justify-content: center;
+                position: fixed;
+                top: 72px;
+                left: 0;
+                right: 0;
+                background: rgba(8,9,13,.98);
+                backdrop-filter: blur(12px);
+                flex-direction: column;
+                padding: 20px 16px;
+                gap: 12px;
+                border-bottom: 1px solid var(--border);
+                transform: translateY(-100%);
+                opacity: 0;
+                visibility: hidden;
+                transition: transform 0.3s ease, opacity 0.3s ease, visibility 0.3s;
+                z-index: 9998;
             }
-            .header-nav a { font-size: 0.85rem; }
-            .header-nav .btn { padding: 0.5rem 1rem; font-size: 0.85rem; }
+            .header-nav.active {
+                transform: translateY(0);
+                opacity: 1;
+                visibility: visible;
+            }
+            .header-nav a { font-size: 0.95rem; width: 100%; text-align: center; padding: 12px; }
+            .header-nav .btn { padding: 12px 20px; font-size: 0.95rem; width: 100%; }
             .hero-title { font-size: 1.75rem; line-height: 1.2; }
             .card { padding: 1.25rem; border-radius: 12px; }
             .form-group { margin-bottom: 1rem; }
@@ -503,10 +534,12 @@ function esc_attr(string $s): string {
         }
         
         @media (max-width: 640px) {
+            body { padding-top: 120px; }
             .container { padding: 0 0.75rem; }
-            .site-header { padding: 0.75rem; }
+            .site-header { padding: 0.75rem; height: 60px; }
+            .header-content { padding: 0; }
             .header-brand img { height: 32px !important; max-width: 140px !important; }
-            .header-nav { flex-direction: column; width: 100%; }
+            .header-nav { top: 60px; }
             .header-nav a, .header-nav .btn { width: 100%; text-align: center; }
             h1 { font-size: 1.5rem; line-height: 1.25; }
             h2 { font-size: 1.25rem; }
@@ -536,7 +569,15 @@ function esc_attr(string $s): string {
                     <img src="<?= esc_attr($headerImageUrl) ?>" alt="Header" style="height: 50px; object-fit: contain;">
                 <?php endif; ?>
                 
-                <nav class="header-nav">
+                <button class="mobile-menu-toggle" onclick="toggleMobileMenu()" aria-label="Menu">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="3" y1="12" x2="21" y2="12"></line>
+                        <line x1="3" y1="6" x2="21" y2="6"></line>
+                        <line x1="3" y1="18" x2="21" y2="18"></line>
+                    </svg>
+                </button>
+                
+                <nav class="header-nav" id="mobileMenu">
                     <?php if (empty($_SESSION['user_id'])): ?>
                         <?php if ($loginHref !== ''): ?>
                             <a href="<?= $loginHref ?>">Entrar</a>
@@ -572,5 +613,28 @@ function esc_attr(string $s): string {
             </div>
         </footer>
     </div>
+    
+    <script>
+        function toggleMobileMenu() {
+            const menu = document.getElementById('mobileMenu');
+            const toggle = document.querySelector('.mobile-menu-toggle');
+            if (menu) {
+                menu.classList.toggle('active');
+            }
+            if (toggle) {
+                toggle.classList.toggle('active');
+            }
+        }
+        
+        // Close mobile menu when clicking outside
+        document.addEventListener('click', function(event) {
+            const menu = document.getElementById('mobileMenu');
+            const toggle = document.querySelector('.mobile-menu-toggle');
+            if (menu && toggle && !menu.contains(event.target) && !toggle.contains(event.target)) {
+                menu.classList.remove('active');
+                toggle.classList.remove('active');
+            }
+        });
+    </script>
 </body>
 </html>
