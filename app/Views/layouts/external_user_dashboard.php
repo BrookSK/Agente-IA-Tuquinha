@@ -180,7 +180,7 @@ function esc_attr(string $s): string {
         }
         
         @media (max-width: 768px) {
-            body { padding-top: 60px; }
+            body { padding-top: 80px; }
             .container { flex-direction: column; }
             .mobile-header { 
                 display: flex !important;
@@ -195,6 +195,10 @@ function esc_attr(string $s): string {
                 align-items: center;
                 justify-content: space-between;
                 z-index: 1001;
+                margin-bottom: 20px;
+            }
+            .mobile-header .logo {
+                margin-top: 8px;
             }
             .mobile-header .logo img {
                 max-height: 36px !important;
