@@ -1075,24 +1075,18 @@ class ExternalUserDashboardController extends Controller
         UserFriend::request($fromUserId, $otherUserId);
 
         // Criar notificação para o usuário que recebeu o convite
-        try {
-            require_once __DIR__ . '/../Models/UserNotification.php';
-            $fromUser = \App\Models\User::findById($fromUserId);
-            if ($fromUser) {
-                \UserNotification::create([
-                    'user_id' => $otherUserId,
-                    'type' => 'friend_request',
-                    'related_type' => 'user',
-                    'related_id' => $fromUserId,
-                    'actor_user_id' => $fromUserId,
-                    'title' => 'Novo pedido de amizade',
-                    'message' => $fromUser['name'] . ' enviou um pedido de amizade para você.',
-                    'link' => '/painel-externo/perfil?user_id=' . $fromUserId
-                ]);
-            }
-        } catch (\Exception $e) {
-            // Silenciar erro de notificação
-        }
+        require_once __DIR__ . '/../Models/UserNotification.php';
+        $fromUserName = $user['name'] ?? 'Alguém';
+        \UserNotification::create([
+            'user_id' => $otherUserId,
+            'type' => 'friend_request',
+            'related_type' => 'user',
+            'related_id' => $fromUserId,
+            'actor_user_id' => $fromUserId,
+            'title' => 'Novo pedido de amizade',
+            'message' => $fromUserName . ' enviou um pedido de amizade para você.',
+            'link' => '/painel-externo/perfil?user_id=' . $fromUserId
+        ]);
 
         if ($this->wantsJson()) {
             header('Content-Type: application/json');
@@ -1141,24 +1135,18 @@ class ExternalUserDashboardController extends Controller
         
         // Se aceitou o pedido, criar notificação para quem enviou
         if ($decision === 'accepted') {
-            try {
-                require_once __DIR__ . '/../Models/UserNotification.php';
-                $currentUser = \App\Models\User::findById($currentUserId);
-                if ($currentUser) {
-                    \UserNotification::create([
-                        'user_id' => $otherUserId,
-                        'type' => 'friend_accepted',
-                        'related_type' => 'user',
-                        'related_id' => $currentUserId,
-                        'actor_user_id' => $currentUserId,
-                        'title' => 'Pedido de amizade aceito',
-                        'message' => $currentUser['name'] . ' aceitou seu pedido de amizade.',
-                        'link' => '/painel-externo/perfil?user_id=' . $currentUserId
-                    ]);
-                }
-            } catch (\Exception $e) {
-                // Silenciar erro de notificação
-            }
+            require_once __DIR__ . '/../Models/UserNotification.php';
+            $currentUserName = $user['name'] ?? 'Alguém';
+            \UserNotification::create([
+                'user_id' => $otherUserId,
+                'type' => 'friend_accepted',
+                'related_type' => 'user',
+                'related_id' => $currentUserId,
+                'actor_user_id' => $currentUserId,
+                'title' => 'Pedido de amizade aceito',
+                'message' => $currentUserName . ' aceitou seu pedido de amizade.',
+                'link' => '/painel-externo/perfil?user_id=' . $currentUserId
+            ]);
         }
         
         $_SESSION['friends_success'] = 'Decisão registrada.';
