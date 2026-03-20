@@ -1076,9 +1076,10 @@ class ExternalUserDashboardController extends Controller
 
         // Criar notificação para o usuário que recebeu o convite
         try {
+            require_once __DIR__ . '/../Models/UserNotification.php';
             $fromUser = \App\Models\User::findById($fromUserId);
             if ($fromUser) {
-                \App\Models\UserNotification::create([
+                \UserNotification::create([
                     'user_id' => $otherUserId,
                     'type' => 'friend_request',
                     'related_type' => 'user',
@@ -1141,9 +1142,10 @@ class ExternalUserDashboardController extends Controller
         // Se aceitou o pedido, criar notificação para quem enviou
         if ($decision === 'accept') {
             try {
+                require_once __DIR__ . '/../Models/UserNotification.php';
                 $currentUser = \App\Models\User::findById($currentUserId);
                 if ($currentUser) {
-                    \App\Models\UserNotification::create([
+                    \UserNotification::create([
                         'user_id' => $otherUserId,
                         'type' => 'friend_accepted',
                         'related_type' => 'user',
@@ -1288,10 +1290,11 @@ class ExternalUserDashboardController extends Controller
 
         // Criar notificação para o destinatário da mensagem
         try {
+            require_once __DIR__ . '/../Models/UserNotification.php';
             $recipientId = ($currentId === $user1) ? $user2 : $user1;
             $sender = \App\Models\User::findById($currentId);
             if ($sender && $recipientId > 0) {
-                \App\Models\UserNotification::create([
+                \UserNotification::create([
                     'user_id' => $recipientId,
                     'type' => 'message',
                     'related_type' => 'conversation',
