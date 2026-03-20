@@ -1057,7 +1057,9 @@ class ExternalUserDashboardController extends Controller
 
     public function friendRequest(): void
     {
+        error_log("[DEBUG] friendRequest() foi chamado");
         $user = $this->requireLogin();
+        error_log("[DEBUG] User logado: " . ($user['name'] ?? 'N/A'));
         $fromUserId = (int)$user['id'];
 
         $otherUserId = isset($_POST['user_id']) ? (int)$_POST['user_id'] : 0;
@@ -1129,7 +1131,9 @@ class ExternalUserDashboardController extends Controller
 
     public function friendDecide(): void
     {
+        error_log("[DEBUG] friendDecide() foi chamado");
         $user = $this->requireLogin();
+        error_log("[DEBUG] User logado: " . ($user['name'] ?? 'N/A'));
         $currentUserId = (int)$user['id'];
 
         $otherUserId = isset($_POST['user_id']) ? (int)$_POST['user_id'] : 0;
