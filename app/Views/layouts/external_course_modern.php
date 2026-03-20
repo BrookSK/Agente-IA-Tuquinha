@@ -234,25 +234,20 @@ function esc_attr(string $s): string {
             z-index: 10;
         }
         
-        .header-nav a {
+        .header-nav a:not(.btn) {
             color: var(--text-secondary);
             text-decoration: none;
             font-weight: 500;
             font-size: 0.95rem;
             transition: color 0.2s;
-            background: none;
+            background: transparent;
             border: none;
             padding: 0;
+            box-shadow: none;
         }
         
-        .header-nav a:hover {
+        .header-nav a:not(.btn):hover {
             color: var(--text-primary);
-        }
-        
-        .header-nav a:not(.btn) {
-            background: transparent !important;
-            border: none !important;
-            box-shadow: none !important;
         }
         
         a:not(.btn):not(.header-brand):not(.nav-item) {

@@ -79,17 +79,6 @@ if ($slug !== '') {
     padding: 0 80px; height: 72px; background: rgba(8,9,13,.95);
     backdrop-filter: blur(12px); width: 100%;
   }
-  nav::after {
-    content: '';
-    position: absolute;
-    bottom: -4px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: calc(100% - 160px);
-    height: 4px;
-    background: linear-gradient(90deg, #ff6b35 0%, #f7931e 50%, #fdc830 100%);
-    border-radius: 4px;
-  }
   .nav-brand {
     display: flex; align-items: center; gap: 12px;
     font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1.1rem;
