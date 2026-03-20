@@ -1074,6 +1074,25 @@ class ExternalUserDashboardController extends Controller
 
         UserFriend::request($fromUserId, $otherUserId);
 
+        // Criar notificação para o usuário que recebeu o convite
+        try {
+            $fromUser = \App\Models\User::findById($fromUserId);
+            if ($fromUser) {
+                \App\Models\UserNotification::create([
+                    'user_id' => $otherUserId,
+                    'type' => 'friend_request',
+                    'related_type' => 'user',
+                    'related_id' => $fromUserId,
+                    'actor_user_id' => $fromUserId,
+                    'title' => 'Novo pedido de amizade',
+                    'message' => $fromUser['name'] . ' enviou um pedido de amizade para você.',
+                    'link' => '/painel-externo/perfil?user_id=' . $fromUserId
+                ]);
+            }
+        } catch (\Exception $e) {
+            // Silenciar erro de notificação
+        }
+
         if ($this->wantsJson()) {
             header('Content-Type: application/json');
             echo json_encode(['ok' => true]);
@@ -1118,6 +1137,28 @@ class ExternalUserDashboardController extends Controller
         }
 
         UserFriend::decide($currentUserId, $otherUserId, $decision);
+        
+        // Se aceitou o pedido, criar notificação para quem enviou
+        if ($decision === 'accept') {
+            try {
+                $currentUser = \App\Models\User::findById($currentUserId);
+                if ($currentUser) {
+                    \App\Models\UserNotification::create([
+                        'user_id' => $otherUserId,
+                        'type' => 'friend_accepted',
+                        'related_type' => 'user',
+                        'related_id' => $currentUserId,
+                        'actor_user_id' => $currentUserId,
+                        'title' => 'Pedido de amizade aceito',
+                        'message' => $currentUser['name'] . ' aceitou seu pedido de amizade.',
+                        'link' => '/painel-externo/perfil?user_id=' . $currentUserId
+                    ]);
+                }
+            } catch (\Exception $e) {
+                // Silenciar erro de notificação
+            }
+        }
+        
         $_SESSION['friends_success'] = 'Decisão registrada.';
         header('Location: /painel-externo/amigos');
         exit;
