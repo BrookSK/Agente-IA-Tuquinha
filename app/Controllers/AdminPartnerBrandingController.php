@@ -94,6 +94,7 @@ class AdminPartnerBrandingController extends Controller
 
         $existing = CoursePartnerBranding::findByUserId($userId);
         $logoUrl = $existing['logo_url'] ?? null;
+        $faviconUrl = $existing['favicon_url'] ?? null;
         $headerImageUrl = $existing['header_image_url'] ?? null;
         $footerImageUrl = $existing['footer_image_url'] ?? null;
         $heroImageUrl = $existing['hero_image_url'] ?? null;
@@ -102,6 +103,11 @@ class AdminPartnerBrandingController extends Controller
         $removeLogo = !empty($_POST['remove_logo']);
         if ($removeLogo) {
             $logoUrl = null;
+        }
+
+        $removeFavicon = !empty($_POST['remove_favicon']);
+        if ($removeFavicon) {
+            $faviconUrl = null;
         }
 
         $removeHeaderImage = !empty($_POST['remove_header_image']);
@@ -134,6 +140,21 @@ class AdminPartnerBrandingController extends Controller
                     $remoteUrl = MediaStorageService::uploadFile($tmp, $name, $mime);
                     if ($remoteUrl !== null) {
                         $logoUrl = $remoteUrl;
+                    }
+                }
+            }
+        }
+
+        if (!$removeFavicon && !empty($_FILES['favicon_upload']['tmp_name'])) {
+            $err = $_FILES['favicon_upload']['error'] ?? UPLOAD_ERR_NO_FILE;
+            if ($err === UPLOAD_ERR_OK) {
+                $tmp = (string)($_FILES['favicon_upload']['tmp_name'] ?? '');
+                $name = (string)($_FILES['favicon_upload']['name'] ?? '');
+                $mime = (string)($_FILES['favicon_upload']['type'] ?? '');
+                if ($tmp !== '' && is_file($tmp)) {
+                    $remoteUrl = MediaStorageService::uploadFile($tmp, $name, $mime);
+                    if ($remoteUrl !== null) {
+                        $faviconUrl = $remoteUrl;
                     }
                 }
             }
@@ -202,6 +223,7 @@ class AdminPartnerBrandingController extends Controller
         CoursePartnerBranding::upsert($userId, [
             'company_name' => $companyName,
             'logo_url' => $logoUrl,
+            'favicon_url' => $faviconUrl,
             'primary_color' => $primary,
             'secondary_color' => $secondary,
             'text_color' => $textColor,

@@ -1023,6 +1023,7 @@ if (!empty($_SESSION['user_id'])) {
                         }
 
                         $canUsePersonalities = !empty($_SESSION['is_admin']) || (!empty($currentPlanForMenu) && !empty($currentPlanForMenu['allow_personalities']));
+                        $canUseProfessionalArea = !empty($_SESSION['is_admin']) || (!empty($currentPlanForMenu) && !empty($currentPlanForMenu['allow_courses']));
                         $monthlyTokenLimitForMenu = !empty($currentPlanForMenu) ? (int)($currentPlanForMenu['monthly_token_limit'] ?? 0) : 0;
                         $canBuyExtraTokens = !empty($_SESSION['is_admin']) || ($hasActiveSubscriptionForMenu && $monthlyTokenLimitForMenu > 0);
 
@@ -1059,6 +1060,20 @@ if (!empty($_SESSION['user_id'])) {
                         <a href="/suporte" class="sidebar-button<?= $isActiveNav('/suporte') ? ' sidebar-button--active' : '' ?>" style="margin-top: 6px;">
                             <span class="icon" aria-hidden="true"><?php echo $renderMenuIcon('account_support', '🛟'); ?></span>
                             <span>Suporte</span>
+                        </a>
+                    <?php endif; ?>
+                    <?php if ($canUseProfessionalArea): ?>
+                        <a href="/profissional" class="sidebar-button<?= $isActiveNav('/profissional') ? ' sidebar-button--active' : '' ?>" style="margin-top: 6px;">
+                            <span class="icon" aria-hidden="true"><?php echo $renderMenuIcon('professional_dashboard', '🧑‍🏫'); ?></span>
+                            <span>Painel do profissional</span>
+                        </a>
+                        <a href="/profissional/configuracoes" class="sidebar-button<?= $isActiveNav('/profissional/configuracoes') ? ' sidebar-button--active' : '' ?>" style="margin-top: 6px;">
+                            <span class="icon" aria-hidden="true"><?php echo $renderMenuIcon('professional_branding', '🎨'); ?></span>
+                            <span>Branding do parceiro</span>
+                        </a>
+                        <a href="/profissional/cursos" class="sidebar-button<?= $isActiveNav('/profissional/cursos') ? ' sidebar-button--active' : '' ?>" style="margin-top: 6px;">
+                            <span class="icon" aria-hidden="true"><?php echo $renderMenuIcon('professional_courses', '🎓'); ?></span>
+                            <span>Meus cursos</span>
                         </a>
                     <?php endif; ?>
                     <?php if (!empty($isCoursePartner)): ?>

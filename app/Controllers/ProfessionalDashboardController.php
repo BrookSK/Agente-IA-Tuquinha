@@ -11,7 +11,9 @@ use App\Models\CoursePurchase;
 use App\Models\CoursePartnerBranding;
 use App\Models\ProfessionalMetrics;
 use App\Models\Community;
+use App\Models\Plan;
 use App\Models\Setting;
+use App\Models\Subscription;
 use App\Services\MailService;
 
 class ProfessionalDashboardController extends Controller
@@ -30,10 +32,29 @@ class ProfessionalDashboardController extends Controller
             exit;
         }
 
-        $partner = CoursePartner::findByUserId((int)$user['id']);
-        if (!$partner) {
-            header('Location: /');
-            exit;
+        if (empty($_SESSION['is_admin'])) {
+            $email = trim((string)($user['email'] ?? ''));
+            $planAllowsCourses = false;
+            if ($email !== '') {
+                try {
+                    $sub = Subscription::findLastByEmail($email);
+                    if ($sub && !empty($sub['plan_id'])) {
+                        $status = strtolower((string)($sub['status'] ?? ''));
+                        if (!in_array($status, ['canceled', 'expired'], true)) {
+                            $plan = Plan::findById((int)$sub['plan_id']);
+                            $planAllowsCourses = !empty($plan) && !empty($plan['allow_courses']);
+                        }
+                    }
+                } catch (\Throwable $e) {
+                    $planAllowsCourses = false;
+                }
+            }
+
+            $partner = CoursePartner::findByUserId((int)$user['id']);
+            if (!$planAllowsCourses && !$partner) {
+                header('Location: /');
+                exit;
+            }
         }
 
         return $user;
@@ -58,11 +79,127 @@ class ProfessionalDashboardController extends Controller
         $user = $this->requireProfessional();
         $courses = Course::allByOwner((int)$user['id']);
 
+        $success = $_SESSION['professional_courses_success'] ?? null;
+        $error = $_SESSION['professional_courses_error'] ?? null;
+        unset($_SESSION['professional_courses_success'], $_SESSION['professional_courses_error']);
+
         $this->view('professional_dashboard/courses', [
             'pageTitle' => 'Meus Cursos',
             'user' => $user,
             'courses' => $courses,
+            'success' => $success,
+            'error' => $error,
         ]);
+    }
+
+    public function courseForm(): void
+    {
+        $user = $this->requireProfessional();
+
+        $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
+        $course = null;
+        if ($id > 0) {
+            $course = Course::findById($id);
+            if (!$course || (int)($course['owner_user_id'] ?? 0) !== (int)$user['id']) {
+                header('Location: /profissional/cursos');
+                exit;
+            }
+        }
+
+        $error = $_SESSION['professional_courses_form_error'] ?? null;
+        unset($_SESSION['professional_courses_form_error']);
+
+        $this->view('professional_dashboard/course_form', [
+            'pageTitle' => $course ? 'Editar curso' : 'Novo curso',
+            'user' => $user,
+            'course' => $course,
+            'error' => $error,
+        ]);
+    }
+
+    public function courseSave(): void
+    {
+        $user = $this->requireProfessional();
+        $userId = (int)$user['id'];
+
+        $id = isset($_POST['id']) ? (int)$_POST['id'] : 0;
+
+        $title = trim((string)($_POST['title'] ?? ''));
+        $slug = trim((string)($_POST['slug'] ?? ''));
+        $shortDescription = trim((string)($_POST['short_description'] ?? ''));
+        $description = trim((string)($_POST['description'] ?? ''));
+
+        $isExternal = !empty($_POST['is_external']) ? 1 : 0;
+        $isActive = !empty($_POST['is_active']) ? 1 : 0;
+        $isPaid = !empty($_POST['is_paid']) ? 1 : 0;
+
+        $priceRaw = trim((string)($_POST['price'] ?? '0'));
+        $priceCents = 0;
+        if ($priceRaw !== '') {
+            $priceCents = (int)round(str_replace([',', ' '], ['.', ''], $priceRaw) * 100);
+            if ($priceCents < 0) {
+                $priceCents = 0;
+            }
+        }
+
+        if ($title === '' || $slug === '') {
+            $_SESSION['professional_courses_form_error'] = 'Preencha pelo menos título e slug do curso.';
+            $target = $id > 0 ? ('/profissional/cursos/editar?id=' . $id) : '/profissional/cursos/novo';
+            header('Location: ' . $target);
+            exit;
+        }
+
+        $existingSlug = Course::findBySlug($slug);
+        if ($existingSlug && (int)($existingSlug['id'] ?? 0) !== $id) {
+            $_SESSION['professional_courses_form_error'] = 'Este slug já está em uso. Escolha outro.';
+            $target = $id > 0 ? ('/profissional/cursos/editar?id=' . $id) : '/profissional/cursos/novo';
+            header('Location: ' . $target);
+            exit;
+        }
+
+        if ($id > 0) {
+            $course = Course::findById($id);
+            if (!$course || (int)($course['owner_user_id'] ?? 0) !== $userId) {
+                header('Location: /profissional/cursos');
+                exit;
+            }
+            Course::update($id, [
+                'owner_user_id' => $userId,
+                'title' => $title,
+                'slug' => $slug,
+                'short_description' => $shortDescription !== '' ? $shortDescription : null,
+                'description' => $description !== '' ? $description : null,
+                'is_paid' => $isPaid,
+                'price_cents' => $isPaid ? $priceCents : null,
+                'allow_plan_access_only' => $isExternal ? 0 : 1,
+                'allow_public_purchase' => 0,
+                'is_active' => $isActive,
+                'is_external' => $isExternal,
+                'allow_community_access' => 0,
+            ]);
+            $_SESSION['professional_courses_success'] = 'Curso atualizado com sucesso.';
+            header('Location: /profissional/cursos');
+            exit;
+        }
+
+        Course::create([
+            'owner_user_id' => $userId,
+            'title' => $title,
+            'slug' => $slug,
+            'short_description' => $shortDescription !== '' ? $shortDescription : null,
+            'description' => $description !== '' ? $description : null,
+            'is_paid' => $isPaid,
+            'price_cents' => $isPaid ? $priceCents : null,
+            'allow_plan_access_only' => $isExternal ? 0 : 1,
+            'allow_public_purchase' => 0,
+            'is_active' => $isActive,
+            'is_external' => $isExternal,
+            'allow_community_access' => 0,
+        ]);
+
+        $_SESSION['professional_courses_success'] = 'Curso criado com sucesso.';
+        header('Location: /profissional/cursos');
+        exit;
     }
 
     public function students(): void
