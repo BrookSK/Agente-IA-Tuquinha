@@ -74,10 +74,21 @@
                     <?php else: ?>
                         <?php 
                         $courseSlug = !empty($course['slug']) ? (string)$course['slug'] : '';
-                        $courseLink = $courseSlug !== '' ? '/curso/' . urlencode($courseSlug) : '/painel-externo/curso?id=' . (int)$course['id'];
+                        $isPaid = !empty($course['is_paid']) || (!empty($course['price_cents']) && (int)$course['price_cents'] > 0);
+                        
+                        if ($isPaid && $courseSlug !== '') {
+                            $courseLink = '/curso/' . urlencode($courseSlug) . '/checkout';
+                            $buttonText = 'Comprar curso';
+                        } elseif ($courseSlug !== '') {
+                            $courseLink = '/curso/' . urlencode($courseSlug);
+                            $buttonText = 'Ver curso';
+                        } else {
+                            $courseLink = '/painel-externo/curso?id=' . (int)$course['id'];
+                            $buttonText = 'Ver curso';
+                        }
                         ?>
                         <a href="<?= $courseLink ?>" class="btn" style="margin-left: auto;">
-                            Ver curso
+                            <?= $buttonText ?>
                         </a>
                     <?php endif; ?>
                 </div>

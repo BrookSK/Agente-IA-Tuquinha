@@ -523,9 +523,20 @@ class ExternalCourseController extends Controller
             $branding = CoursePartnerBranding::findByUserId((int)$course['owner_user_id']);
         }
 
-        // Recupera dados pré-preenchidos da sessão
+        // Recupera dados pré-preenchidos da sessão ou do usuário logado
         $prefilledData = $_SESSION['checkout_prefill'] ?? [];
         unset($_SESSION['checkout_prefill']); // Limpa após usar
+
+        // Se usuário está logado e não há dados pré-preenchidos, usa dados do usuário
+        if (empty($prefilledData) && !empty($_SESSION['user_id'])) {
+            $user = User::findById((int)$_SESSION['user_id']);
+            if ($user) {
+                $prefilledData = [
+                    'name' => trim((string)($user['name'] ?? '')),
+                    'email' => trim((string)($user['email'] ?? '')),
+                ];
+            }
+        }
 
         $this->view('external_courses/checkout_modern', [
             'pageTitle' => 'Comprar: ' . (string)($course['title'] ?? 'Curso'),

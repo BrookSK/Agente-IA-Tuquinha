@@ -23,12 +23,18 @@ if ($slug !== '') {
     $loginHref = '/curso/' . urlencode($slug) . '/login';
 }
 
-// Dados pré-preenchidos do formulário de registro
+// Dados pré-preenchidos do formulário de registro ou usuário logado
 $prefilledData = isset($prefilledData) && is_array($prefilledData) ? $prefilledData : [];
 $prefilledName = '';
+
+// Se veio do formulário de registro (tem first_name e last_name)
 if (!empty($prefilledData['first_name']) || !empty($prefilledData['last_name'])) {
     $prefilledName = trim((string)($prefilledData['first_name'] ?? '') . ' ' . (string)($prefilledData['last_name'] ?? ''));
+} elseif (!empty($prefilledData['name'])) {
+    // Se veio do usuário logado (tem name completo)
+    $prefilledName = trim((string)$prefilledData['name']);
 }
+
 $prefilledEmail = trim((string)($prefilledData['email'] ?? ''));
 $prefilledPassword = (string)($prefilledData['password'] ?? '');
 ?>

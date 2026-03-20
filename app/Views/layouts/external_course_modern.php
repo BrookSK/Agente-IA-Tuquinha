@@ -68,8 +68,12 @@ function esc_attr(string $s): string {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="<?= $primary !== '' ? esc_attr($primary) : '#e53935' ?>">
-    <title><?= esc_attr($pageTitle ?? $companyName) ?></title>
-    <link rel="icon" type="image/png" href="<?= $faviconUrl !== '' ? esc_attr($faviconUrl) : '/public/favicon.png' ?>">
+    <title>📚 <?= esc_attr($pageTitle ?? $companyName) ?></title>
+    <?php if ($faviconUrl !== ''): ?>
+        <link rel="icon" type="image/png" href="<?= esc_attr($faviconUrl) ?>">
+    <?php else: ?>
+        <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📚</text></svg>">
+    <?php endif; ?>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
