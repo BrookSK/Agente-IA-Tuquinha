@@ -71,11 +71,22 @@ $prefilledPassword = (string)($prefilledData['password'] ?? '');
             $courseShortDescription = !empty($course['short_description']) ? trim((string)$course['short_description']) : '';
             $courseId = !empty($course['id']) ? (int)$course['id'] : 0;
             
+            // Inicializar com valores padrão
+            $totalModules = 0;
+            $totalLessons = 0;
+            $communities = [];
+            
             // Buscar dados dinâmicos usando helper
-            $courseDetails = \App\Helpers\CourseHelper::getCourseDetails($courseId);
-            $totalModules = $courseDetails['totalModules'];
-            $totalLessons = $courseDetails['totalLessons'];
-            $communities = $courseDetails['communities'];
+            try {
+                if (class_exists('\App\Helpers\CourseHelper')) {
+                    $courseDetails = \App\Helpers\CourseHelper::getCourseDetails($courseId);
+                    $totalModules = $courseDetails['totalModules'];
+                    $totalLessons = $courseDetails['totalLessons'];
+                    $communities = $courseDetails['communities'];
+                }
+            } catch (\Exception $e) {
+                // Continua com valores padrão
+            }
             ?>
             
             <?php if ($courseImage): ?>
