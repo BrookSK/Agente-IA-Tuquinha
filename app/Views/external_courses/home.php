@@ -141,6 +141,8 @@ if ($slug !== '') {
     background: rgba(45,110,246,.12); border: 1px solid rgba(45,110,246,.3);
     color: var(--accent2); border-radius: 100px; padding: 6px 14px;
     font-size: .78rem; font-weight: 500; width: fit-content; letter-spacing: .5px;
+    max-width: 100%;
+    text-align: center;
   }
   .badge-dot {
     width: 6px; height: 6px; border-radius: 50%; background: var(--accent2);
@@ -158,7 +160,6 @@ if ($slug !== '') {
     -webkit-background-clip: text; -webkit-text-fill-color: transparent;
     background-clip: text;
     font-size: clamp(1.5rem, 4.5vw, 3rem);
-    white-space: nowrap;
   }
   .hero-sub {
     font-size: 1rem; color: #ffffff; line-height: 1.7; max-width: 420px;
@@ -482,12 +483,20 @@ if ($slug !== '') {
       opacity: 1;
       visibility: visible;
     }
+    .nav-actions .btn-ghost,
     .nav-actions .btn-primary { 
       padding: 14px 20px; 
       font-size: 0.95rem; 
       width: 100%; 
       text-align: center;
       display: block;
+    }
+    .nav-actions .btn-ghost {
+      background: rgba(255,255,255,.05);
+      color: var(--text);
+    }
+    .nav-actions .btn-ghost:hover {
+      background: rgba(255,255,255,.1);
     }
     .hero { 
       padding-top: 0; 
@@ -505,13 +514,28 @@ if ($slug !== '') {
       max-width: 100%;
       overflow-x: hidden;
     }
-    .badge { margin: 0 auto; }
+    .badge { 
+      margin: 0 auto;
+      font-size: 0.7rem;
+      padding: 6px 12px;
+      max-width: calc(100% - 40px);
+      white-space: normal;
+      text-align: center;
+    }
     .hero-title { 
       font-size: 1.75rem !important; 
       line-height: 1.2; 
       letter-spacing: -0.5px; 
       text-align: center;
       white-space: normal;
+      word-wrap: break-word;
+      overflow-wrap: break-word;
+    }
+    .hero-title .hl {
+      font-size: 1.5rem !important;
+      white-space: normal;
+      word-wrap: break-word;
+      display: inline;
     }
     .hero-sub { 
       font-size: 0.9rem; 
@@ -611,6 +635,9 @@ if ($slug !== '') {
   <div class="nav-actions" id="mobileMenu">
     <?php if (!empty($_SESSION['user_id'])): ?>
       <a href="/painel-externo" class="btn-primary">Acessar Painel</a>
+    <?php else: ?>
+      <a href="#login" class="btn-ghost" onclick="switchTab('login', this); toggleMobileMenu();">Login</a>
+      <a href="#login" class="btn-primary" onclick="switchTab('register', this); toggleMobileMenu();">Criar Conta Grátis</a>
     <?php endif; ?>
   </div>
 </nav>
