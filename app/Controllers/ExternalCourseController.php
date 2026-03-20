@@ -496,6 +496,11 @@ class ExternalCourseController extends Controller
             $branding = CoursePartnerBranding::findByUserId((int)$course['owner_user_id']);
         }
 
+        // Salva slug do curso na sessão para usar no logout
+        if ($slug !== '') {
+            $_SESSION['external_course_slug'] = $slug;
+        }
+        
         $this->view('external_courses/home', [
             'pageTitle' => (string)($branding['company_name'] ?? ($course['title'] ?? 'Curso')),
             'course' => $course,

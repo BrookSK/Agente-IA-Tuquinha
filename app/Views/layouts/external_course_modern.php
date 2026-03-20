@@ -231,6 +231,9 @@ function esc_attr(string $s): string {
         .main-content {
             flex: 1;
             padding: 3rem 2rem;
+            background: transparent;
+            position: relative;
+            z-index: 1;
         }
         
         .container {

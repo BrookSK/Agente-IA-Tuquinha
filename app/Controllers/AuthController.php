@@ -343,11 +343,7 @@ HTML;
     public function logout(): void
     {
         $isExternalUser = !empty($_SESSION['user_id']) && User::isExternalCourseUser((int)$_SESSION['user_id']);
-        $partnerId = 0;
-        
-        if ($isExternalUser) {
-            $partnerId = User::getExternalCoursePartnerId((int)$_SESSION['user_id']);
-        }
+        $courseSlug = $_SESSION['external_course_slug'] ?? '';
         
         $isPartnerSite = !empty($_SERVER['TUQ_PARTNER_SITE']);
         
@@ -355,24 +351,9 @@ HTML;
         
         if ($isPartnerSite) {
             header('Location: /');
-        } elseif ($isExternalUser && $partnerId > 0) {
-            // Redireciona para a home do profissional (primeiro curso ativo do proprietário)
-            require_once __DIR__ . '/../Models/Course.php';
-            $courses = \App\Models\Course::allActive();
-            $partnerCourse = null;
-            
-            foreach ($courses as $course) {
-                if ((int)($course['owner_user_id'] ?? 0) === $partnerId) {
-                    $partnerCourse = $course;
-                    break;
-                }
-            }
-            
-            if ($partnerCourse && !empty($partnerCourse['slug'])) {
-                header('Location: /curso/' . urlencode($partnerCourse['slug']));
-            } else {
-                header('Location: /');
-            }
+        } elseif ($isExternalUser && $courseSlug !== '') {
+            // Redireciona para a home do curso de onde o usuário veio
+            header('Location: /curso/' . urlencode($courseSlug));
         } else {
             header('Location: /');
         }
