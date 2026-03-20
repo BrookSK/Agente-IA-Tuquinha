@@ -481,6 +481,10 @@
                                         <?php foreach ($allowedModels as $m): ?>
                                             <?php
                                                 $m = (string)$m;
+                                                // Skip coming soon models entirely - same behavior as chat
+                                                if (!empty($comingSoonModels[$m])) {
+                                                    continue;
+                                                }
                                                 $label = $m;
                                                 if ($m === 'gpt-5.2-chat-latest') {
                                                     $label = 'GPT-5.2 Chat';
@@ -488,20 +492,13 @@
                                                 if ($m === 'gemini-2.5-flash-image' || $m === 'gemini-3-pro-image-preview') {
                                                     $label = $m . ' (Nano Banana)';
                                                 }
-                                                if (!empty($comingSoonModels[$m])) {
-                                                    $label .= ' • Em breve';
-                                                }
                                             ?>
-                                            <option value="<?= htmlspecialchars($m) ?>" <?= $currentModel === $m ? 'selected' : '' ?> data-coming-soon="<?= !empty($comingSoonModels[$m]) ? '1' : '0' ?>">
+                                            <option value="<?= htmlspecialchars($m) ?>" <?= $currentModel === $m ? 'selected' : '' ?>>
                                                 <?= htmlspecialchars($label) ?>
                                             </option>
                                         <?php endforeach; ?>
                                     </select>
-                                    <span id="projectModelComingSoonBadge" style="display:none; font-size:9px; text-transform:uppercase; letter-spacing:0.14em; border-radius:999px; padding:2px 7px; background:#201216; color:#ffcc80; border:1px solid #ff6f60;">Em breve</span>
                                 </div>
-                            </div>
-                            <div id="projectModelComingSoonHint" style="display:none; margin:-4px 0 8px 0; font-size:11px; color:#ffcc80;">
-                                Este modelo ainda está em breve. Você pode selecionar, mas não dá para enviar mensagens com ele.
                             </div>
                         <?php endif; ?>
                         <?php if (!empty($planAllowsPersonalities) && !empty($personalities) && is_array($personalities)): ?>
@@ -1599,36 +1596,8 @@
                 (function () {
                     var form = document.getElementById('projectComposerForm');
                     var sel = document.getElementById('projectComposerModel');
-                    var badge = document.getElementById('projectModelComingSoonBadge');
-                    var hint = document.getElementById('projectModelComingSoonHint');
                     if (!form || !sel) return;
-
-                    function isComingSoonSelected() {
-                        try {
-                            var opt = sel.options && sel.selectedIndex >= 0 ? sel.options[sel.selectedIndex] : null;
-                            if (!opt) return false;
-                            return String(opt.getAttribute('data-coming-soon') || '') === '1';
-                        } catch (e) {
-                            return false;
-                        }
-                    }
-
-                    function syncComingSoonUi() {
-                        var cs = isComingSoonSelected();
-                        if (badge) badge.style.display = cs ? 'inline-flex' : 'none';
-                        if (hint) hint.style.display = cs ? 'block' : 'none';
-                    }
-
-                    sel.addEventListener('change', syncComingSoonUi);
-                    form.addEventListener('submit', function (e) {
-                        if (isComingSoonSelected()) {
-                            try { if (e) e.preventDefault(); } catch (err) {}
-                            syncComingSoonUi();
-                            return false;
-                        }
-                    });
-
-                    syncComingSoonUi();
+                    // Coming soon models are no longer shown in the selector.
                 })();
             </script>
 
