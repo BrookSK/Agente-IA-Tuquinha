@@ -195,4 +195,89 @@ class UserNotification
             'link' => $link,
         ]);
     }
+    
+    /**
+     * Cria notificação de pedido de amizade
+     */
+    public static function createFriendRequestNotification(
+        int $recipientUserId,
+        int $requesterUserId,
+        string $link
+    ): int {
+        $pdo = Database::getConnection();
+        
+        // Busca nome de quem enviou o pedido
+        $stmt = $pdo->prepare("SELECT preferred_name, name FROM users WHERE id = :id");
+        $stmt->execute([':id' => $requesterUserId]);
+        $requester = $stmt->fetch(PDO::FETCH_ASSOC);
+        $requesterName = $requester['preferred_name'] ?? $requester['name'] ?? 'Alguém';
+        
+        return self::create([
+            'user_id' => $recipientUserId,
+            'type' => 'friend_request',
+            'related_type' => 'user',
+            'related_id' => $requesterUserId,
+            'actor_user_id' => $requesterUserId,
+            'title' => 'Novo pedido de amizade',
+            'message' => "{$requesterName} enviou um pedido de amizade para você",
+            'link' => $link,
+        ]);
+    }
+    
+    /**
+     * Cria notificação de pedido de amizade aceito
+     */
+    public static function createFriendAcceptedNotification(
+        int $requesterUserId,
+        int $accepterUserId,
+        string $link
+    ): int {
+        $pdo = Database::getConnection();
+        
+        // Busca nome de quem aceitou o pedido
+        $stmt = $pdo->prepare("SELECT preferred_name, name FROM users WHERE id = :id");
+        $stmt->execute([':id' => $accepterUserId]);
+        $accepter = $stmt->fetch(PDO::FETCH_ASSOC);
+        $accepterName = $accepter['preferred_name'] ?? $accepter['name'] ?? 'Alguém';
+        
+        return self::create([
+            'user_id' => $requesterUserId,
+            'type' => 'friend_accepted',
+            'related_type' => 'user',
+            'related_id' => $accepterUserId,
+            'actor_user_id' => $accepterUserId,
+            'title' => 'Pedido de amizade aceito',
+            'message' => "{$accepterName} aceitou seu pedido de amizade",
+            'link' => $link,
+        ]);
+    }
+    
+    /**
+     * Cria notificação de nova mensagem
+     */
+    public static function createMessageNotification(
+        int $recipientUserId,
+        int $senderUserId,
+        int $conversationId,
+        string $link
+    ): int {
+        $pdo = Database::getConnection();
+        
+        // Busca nome de quem enviou a mensagem
+        $stmt = $pdo->prepare("SELECT preferred_name, name FROM users WHERE id = :id");
+        $stmt->execute([':id' => $senderUserId]);
+        $sender = $stmt->fetch(PDO::FETCH_ASSOC);
+        $senderName = $sender['preferred_name'] ?? $sender['name'] ?? 'Alguém';
+        
+        return self::create([
+            'user_id' => $recipientUserId,
+            'type' => 'message',
+            'related_type' => 'conversation',
+            'related_id' => $conversationId,
+            'actor_user_id' => $senderUserId,
+            'title' => 'Nova mensagem',
+            'message' => "{$senderName} enviou uma mensagem para você",
+            'link' => $link,
+        ]);
+    }
 }

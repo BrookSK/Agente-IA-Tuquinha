@@ -1057,11 +1057,7 @@ class ExternalUserDashboardController extends Controller
 
     public function friendRequest(): void
     {
-        file_put_contents(__DIR__ . '/../../debug_notifications.log', date('Y-m-d H:i:s') . " - [DEBUG] friendRequest() foi chamado\n", FILE_APPEND);
-        error_log("[DEBUG] friendRequest() foi chamado");
         $user = $this->requireLogin();
-        file_put_contents(__DIR__ . '/../../debug_notifications.log', date('Y-m-d H:i:s') . " - [DEBUG] User logado: " . ($user['name'] ?? 'N/A') . "\n", FILE_APPEND);
-        error_log("[DEBUG] User logado: " . ($user['name'] ?? 'N/A'));
         $fromUserId = (int)$user['id'];
 
         $otherUserId = isset($_POST['user_id']) ? (int)$_POST['user_id'] : 0;
@@ -1079,32 +1075,13 @@ class ExternalUserDashboardController extends Controller
         UserFriend::request($fromUserId, $otherUserId);
 
         // Criar notificação para o usuário que recebeu o convite
-        file_put_contents(__DIR__ . '/../../debug_notifications.log', date('Y-m-d H:i:s') . " - [FRIEND_REQUEST] Iniciando criação - fromUserId: $fromUserId, otherUserId: $otherUserId\n", FILE_APPEND);
-        error_log("[FRIEND_REQUEST] Iniciando criação de notificação - fromUserId: $fromUserId, otherUserId: $otherUserId");
-        try {
-            require_once __DIR__ . '/../Models/UserNotification.php';
-            $fromUserName = $user['name'] ?? 'Alguém';
-            file_put_contents(__DIR__ . '/../../debug_notifications.log', date('Y-m-d H:i:s') . " - [FRIEND_REQUEST] Nome: $fromUserName\n", FILE_APPEND);
-            error_log("[FRIEND_REQUEST] Nome do usuário: $fromUserName");
-            
-            $notificationId = \UserNotification::create([
-                'user_id' => $otherUserId,
-                'type' => 'friend_request',
-                'related_type' => 'user',
-                'related_id' => $fromUserId,
-                'actor_user_id' => $fromUserId,
-                'title' => 'Novo pedido de amizade',
-                'message' => $fromUserName . ' enviou um pedido de amizade para você.',
-                'link' => '/painel-externo/perfil?user_id=' . $fromUserId
-            ]);
-            
-            file_put_contents(__DIR__ . '/../../debug_notifications.log', date('Y-m-d H:i:s') . " - [FRIEND_REQUEST] Notificação criada - ID: $notificationId\n", FILE_APPEND);
-            error_log("[FRIEND_REQUEST] Notificação criada com sucesso - ID: $notificationId");
-        } catch (\Exception $e) {
-            file_put_contents(__DIR__ . '/../../debug_notifications.log', date('Y-m-d H:i:s') . " - [FRIEND_REQUEST] ERRO: " . $e->getMessage() . "\n", FILE_APPEND);
-            error_log("[FRIEND_REQUEST] ERRO ao criar notificação: " . $e->getMessage());
-            error_log("[FRIEND_REQUEST] Stack trace: " . $e->getTraceAsString());
-        }
+        require_once __DIR__ . '/../Models/UserNotification.php';
+        $link = '/painel-externo/perfil?user_id=' . $fromUserId;
+        \UserNotification::createFriendRequestNotification(
+            $otherUserId,
+            $fromUserId,
+            $link
+        );
 
         if ($this->wantsJson()) {
             header('Content-Type: application/json');
@@ -1137,9 +1114,7 @@ class ExternalUserDashboardController extends Controller
 
     public function friendDecide(): void
     {
-        error_log("[DEBUG] friendDecide() foi chamado");
         $user = $this->requireLogin();
-        error_log("[DEBUG] User logado: " . ($user['name'] ?? 'N/A'));
         $currentUserId = (int)$user['id'];
 
         $otherUserId = isset($_POST['user_id']) ? (int)$_POST['user_id'] : 0;
@@ -1154,35 +1129,14 @@ class ExternalUserDashboardController extends Controller
         UserFriend::decide($currentUserId, $otherUserId, $decision);
         
         // Se aceitou o pedido, criar notificação para quem enviou
-        file_put_contents(__DIR__ . '/../../debug_notifications.log', date('Y-m-d H:i:s') . " - [FRIEND_DECIDE] Decision: $decision, currentUserId: $currentUserId, otherUserId: $otherUserId\n", FILE_APPEND);
-        error_log("[FRIEND_DECIDE] Decision: $decision, currentUserId: $currentUserId, otherUserId: $otherUserId");
         if ($decision === 'accepted') {
-            file_put_contents(__DIR__ . '/../../debug_notifications.log', date('Y-m-d H:i:s') . " - [FRIEND_ACCEPTED] Iniciando criação\n", FILE_APPEND);
-            error_log("[FRIEND_ACCEPTED] Iniciando criação de notificação de aceite");
-            try {
-                require_once __DIR__ . '/../Models/UserNotification.php';
-                $currentUserName = $user['name'] ?? 'Alguém';
-                file_put_contents(__DIR__ . '/../../debug_notifications.log', date('Y-m-d H:i:s') . " - [FRIEND_ACCEPTED] Nome: $currentUserName\n", FILE_APPEND);
-                error_log("[FRIEND_ACCEPTED] Nome do usuário: $currentUserName");
-                
-                $notificationId = \UserNotification::create([
-                    'user_id' => $otherUserId,
-                    'type' => 'friend_accepted',
-                    'related_type' => 'user',
-                    'related_id' => $currentUserId,
-                    'actor_user_id' => $currentUserId,
-                    'title' => 'Pedido de amizade aceito',
-                    'message' => $currentUserName . ' aceitou seu pedido de amizade.',
-                    'link' => '/painel-externo/perfil?user_id=' . $currentUserId
-                ]);
-                
-                file_put_contents(__DIR__ . '/../../debug_notifications.log', date('Y-m-d H:i:s') . " - [FRIEND_ACCEPTED] Notificação criada - ID: $notificationId\n", FILE_APPEND);
-                error_log("[FRIEND_ACCEPTED] Notificação criada com sucesso - ID: $notificationId");
-            } catch (\Exception $e) {
-                file_put_contents(__DIR__ . '/../../debug_notifications.log', date('Y-m-d H:i:s') . " - [FRIEND_ACCEPTED] ERRO: " . $e->getMessage() . "\n", FILE_APPEND);
-                error_log("[FRIEND_ACCEPTED] ERRO ao criar notificação: " . $e->getMessage());
-                error_log("[FRIEND_ACCEPTED] Stack trace: " . $e->getTraceAsString());
-            }
+            require_once __DIR__ . '/../Models/UserNotification.php';
+            $link = '/painel-externo/perfil?user_id=' . $currentUserId;
+            \UserNotification::createFriendAcceptedNotification(
+                $otherUserId,
+                $currentUserId,
+                $link
+            );
         }
         
         $_SESSION['friends_success'] = 'Decisão registrada.';
@@ -1313,25 +1267,15 @@ class ExternalUserDashboardController extends Controller
         SocialConversation::touchWithMessage($conversationId, $messageId);
 
         // Criar notificação para o destinatário da mensagem
-        try {
-            require_once __DIR__ . '/../Models/UserNotification.php';
-            $recipientId = ($currentId === $user1) ? $user2 : $user1;
-            $sender = \App\Models\User::findById($currentId);
-            if ($sender && $recipientId > 0) {
-                \UserNotification::create([
-                    'user_id' => $recipientId,
-                    'type' => 'message',
-                    'related_type' => 'conversation',
-                    'related_id' => $conversationId,
-                    'actor_user_id' => $currentId,
-                    'title' => 'Nova mensagem',
-                    'message' => ($sender['preferred_name'] ?? $sender['name']) . ' enviou uma mensagem para você.',
-                    'link' => '/painel-externo/chat?conversation_id=' . $conversationId
-                ]);
-            }
-        } catch (\Exception $e) {
-            // Silenciar erro de notificação
-        }
+        require_once __DIR__ . '/../Models/UserNotification.php';
+        $recipientId = ($currentId === $user1) ? $user2 : $user1;
+        $link = '/painel-externo/chat?conversation_id=' . $conversationId;
+        \UserNotification::createMessageNotification(
+            $recipientId,
+            $currentId,
+            $conversationId,
+            $link
+        );
 
         header('Content-Type: application/json');
         echo json_encode([
