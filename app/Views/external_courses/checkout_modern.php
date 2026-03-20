@@ -8,6 +8,19 @@ $courseTitle = trim((string)($course['title'] ?? ''));
 $priceCents = isset($course['price_cents']) ? (int)$course['price_cents'] : 0;
 $price = number_format(max($priceCents, 0) / 100, 2, ',', '.');
 $companyName = isset($branding) && is_array($branding) ? trim((string)($branding['company_name'] ?? '')) : '';
+
+$isPartnerSite = !empty($isPartnerSite);
+$slug = isset($slug) ? trim((string)$slug) : '';
+
+$formAction = '/';
+$backHref = '/';
+$loginHref = '/login';
+
+if ($slug !== '') {
+    $formAction = '/curso/' . urlencode($slug) . '/checkout';
+    $backHref = '/curso/' . urlencode($slug);
+    $loginHref = '/curso/' . urlencode($slug) . '/login';
+}
 ?>
 
 <div class="container" style="max-width: 900px;">
@@ -66,7 +79,7 @@ $companyName = isset($branding) && is_array($branding) ? trim((string)($branding
     </div>
 
     <div class="card">
-        <form action="/curso-externo/checkout" method="post" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.5rem;" class="checkout-form">
+        <form action="<?= $formAction ?>" method="post" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.5rem;" class="checkout-form">
             <input type="hidden" name="token" value="<?= htmlspecialchars($token, ENT_QUOTES, 'UTF-8') ?>">
 
             <div style="grid-column: 1 / -1;">
@@ -232,7 +245,7 @@ $companyName = isset($branding) && is_array($branding) ? trim((string)($branding
                         Criar Conta Gratuita
                     <?php endif; ?>
                 </button>
-                <a href="/curso-externo?token=<?= urlencode($token) ?>" style="width: 100%; padding: 1rem 2rem; display: flex; align-items: center; justify-content: center; text-decoration: none; color: var(--text-secondary); background: transparent; border: none;">
+                <a href="<?= $backHref ?>" style="width: 100%; padding: 1rem 2rem; display: flex; align-items: center; justify-content: center; text-decoration: none; color: var(--text-secondary); background: transparent; border: none;">
                     Voltar
                 </a>
             </div>
@@ -241,7 +254,7 @@ $companyName = isset($branding) && is_array($branding) ? trim((string)($branding
 
     <div style="text-align: center; margin-top: 2rem;">
         <p style="color: var(--text-secondary); font-size: 0.9rem;">
-            Já tem uma conta? <a href="/curso-externo/login?token=<?= urlencode($token) ?>" style="color: var(--accent); font-weight: 600; text-decoration: none;">Fazer Login</a>
+            Já tem uma conta? <a href="<?= $loginHref ?>" style="color: var(--accent); font-weight: 600; text-decoration: none;">Fazer Login</a>
         </p>
     </div>
 </div>

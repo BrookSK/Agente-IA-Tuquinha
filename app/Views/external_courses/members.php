@@ -5,6 +5,16 @@
 
 $title = trim((string)($course['title'] ?? ''));
 $desc = trim((string)($course['short_description'] ?? ''));
+
+$isPartnerSite = !empty($isPartnerSite);
+$slug = isset($slug) ? trim((string)$slug) : '';
+
+$lessonHrefBase = '/';
+$backHref = '/';
+if ($slug !== '') {
+    $lessonHrefBase = '/curso/' . urlencode($slug) . '/aula?lesson_id=';
+    $backHref = '/curso/' . urlencode($slug);
+}
 ?>
 
 <h1 style="font-size:20px; font-weight:900; margin:0 0 8px 0;">Bem-vindo(a)!</h1>
@@ -19,10 +29,10 @@ $desc = trim((string)($course['short_description'] ?? ''));
 
     <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-top:12px;">
         <?php if ($firstLessonId > 0): ?>
-            <a class="btn" href="/curso-externo/aula?token=<?= urlencode($token) ?>&lesson_id=<?= (int)$firstLessonId ?>">Acessar aulas</a>
+            <a class="btn" href="<?= $lessonHrefBase ?><?= (int)$firstLessonId ?>">Acessar aulas</a>
         <?php else: ?>
             <span class="hint">Ainda não há aulas publicadas.</span>
         <?php endif; ?>
-        <a class="btn-outline" href="/curso-externo?token=<?= urlencode($token) ?>">Voltar para a página do curso</a>
+        <a class="btn-outline" href="<?= $backHref ?>">Voltar para a página do curso</a>
     </div>
 </div>

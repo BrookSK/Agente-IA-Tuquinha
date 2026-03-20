@@ -73,8 +73,8 @@
                         </a>
                     <?php else: ?>
                         <?php 
-                        $courseToken = !empty($course['external_token']) ? $course['external_token'] : '';
-                        $courseLink = $courseToken !== '' ? '/curso-externo?token=' . urlencode($courseToken) : '/painel-externo/curso?id=' . (int)$course['id'];
+                        $courseSlug = !empty($course['slug']) ? (string)$course['slug'] : '';
+                        $courseLink = $courseSlug !== '' ? '/curso/' . urlencode($courseSlug) : '/painel-externo/curso?id=' . (int)$course['id'];
                         ?>
                         <a href="<?= $courseLink ?>" class="btn" style="margin-left: auto;">
                             Ver curso

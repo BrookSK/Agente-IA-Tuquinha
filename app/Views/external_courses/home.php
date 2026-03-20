@@ -12,6 +12,23 @@ $price = number_format(max($priceCents, 0) / 100, 2, ',', '.');
 $imagePath = trim((string)($course['image_path'] ?? ''));
 $companyName = isset($branding) && is_array($branding) ? trim((string)($branding['company_name'] ?? '')) : '';
 $logoUrl = isset($branding) && is_array($branding) && !empty($branding['logo_url']) ? trim((string)$branding['logo_url']) : '';
+
+$isPartnerSite = !empty($isPartnerSite);
+$slug = isset($slug) ? trim((string)$slug) : '';
+
+$courseHref = '/';
+$checkoutHref = '/';
+$loginAction = '/login';
+$forgotHref = '/senha/esqueci';
+$registerAction = '/registrar';
+
+if ($slug !== '') {
+    $courseHref = '/curso/' . urlencode($slug);
+    $checkoutHref = '/curso/' . urlencode($slug) . '/checkout';
+    $loginAction = '/curso/' . urlencode($slug) . '/login';
+    $forgotHref = '/curso/' . urlencode($slug) . '/senha/esqueci';
+    $registerAction = '/curso/' . urlencode($slug) . '/checkout';
+}
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -527,7 +544,7 @@ $logoUrl = isset($branding) && is_array($branding) && !empty($branding['logo_url
 <body>
 
 <nav>
-  <a class="nav-brand" href="/curso-externo?token=<?= urlencode($token) ?>">
+  <a class="nav-brand" href="<?= $courseHref ?>">
     <?php if ($logoUrl): ?>
       <img src="<?= htmlspecialchars($logoUrl, ENT_QUOTES, 'UTF-8') ?>" alt="Logo" style="height: 40px; width: auto; max-width: 200px; object-fit: contain;">
     <?php else: ?>
@@ -572,11 +589,11 @@ $logoUrl = isset($branding) && is_array($branding) && !empty($branding['logo_url
 
       <div class="hero-cta">
         <?php if ($priceCents > 0): ?>
-          <a href="/curso-externo/checkout?token=<?= urlencode($token) ?>" class="btn-lg primary">
+          <a href="<?= $checkoutHref ?>" class="btn-lg primary">
             Comprar por R$ <?= $price ?>
           </a>
         <?php else: ?>
-          <a href="/curso-externo/checkout?token=<?= urlencode($token) ?>" class="btn-lg primary">
+          <a href="<?= $checkoutHref ?>" class="btn-lg primary">
             Cadastrar-se Gratuitamente
           </a>
         <?php endif; ?>
@@ -599,7 +616,7 @@ $logoUrl = isset($branding) && is_array($branding) && !empty($branding['logo_url
         </div>
 
         <div id="panel-login" class="panel active">
-          <form action="/curso-externo/login" method="post">
+          <form action="<?= $loginAction ?>" method="post">
             <input type="hidden" name="token" value="<?= htmlspecialchars($token, ENT_QUOTES, 'UTF-8') ?>">
             <div class="form-group">
               <label>E-mail</label>
@@ -616,14 +633,14 @@ $logoUrl = isset($branding) && is_array($branding) && !empty($branding['logo_url
               </div>
             </div>
             <div class="form-footer">
-              <a href="/curso-externo/senha/esqueci?token=<?= urlencode($token) ?>">Esqueci minha senha</a>
+              <a href="<?= $forgotHref ?>">Esqueci minha senha</a>
             </div>
             <button type="submit" class="btn-submit">Entrar na plataforma →</button>
           </form>
         </div>
 
         <div id="panel-register" class="panel">
-          <form action="/curso-externo/checkout" method="post">
+          <form action="<?= $registerAction ?>" method="post">
             <input type="hidden" name="token" value="<?= htmlspecialchars($token, ENT_QUOTES, 'UTF-8') ?>">
             <div class="form-row">
               <div class="form-group">
@@ -683,7 +700,7 @@ $logoUrl = isset($branding) && is_array($branding) && !empty($branding['logo_url
           <span class="course-price <?= $priceCents > 0 ? 'paid' : 'free' ?>">
             <?= $priceCents > 0 ? 'R$ ' . $price : 'Grátis' ?>
           </span>
-          <a href="/curso-externo/checkout?token=<?= urlencode($token) ?>" class="btn-card">Acessar</a>
+          <a href="<?= $checkoutHref ?>" class="btn-card">Acessar</a>
         </div>
       </div>
     </div>
@@ -707,7 +724,7 @@ $logoUrl = isset($branding) && is_array($branding) && !empty($branding['logo_url
       <h2>Pronto para transformar<br>seu aprendizado?</h2>
       <p><?= $priceCents > 0 ? 'Adquira acesso completo ao curso agora mesmo.' : 'Crie sua conta gratuitamente e comece a aprender hoje.' ?></p>
     </div>
-    <a href="/curso-externo/checkout?token=<?= urlencode($token) ?>" class="btn-lg primary">
+    <a href="<?= $checkoutHref ?>" class="btn-lg primary">
       <?= $priceCents > 0 ? 'Comprar Agora - R$ ' . $price : 'Começar Gratuitamente' ?> →
     </a>
   </div>

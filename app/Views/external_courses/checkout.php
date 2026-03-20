@@ -7,6 +7,18 @@
 $courseTitle = trim((string)($course['title'] ?? ''));
 $priceCents = isset($course['price_cents']) ? (int)$course['price_cents'] : 0;
 $price = number_format(max($priceCents, 0) / 100, 2, ',', '.');
+
+$isPartnerSite = !empty($isPartnerSite);
+$slug = isset($slug) ? trim((string)$slug) : '';
+
+$loginAction = '/login';
+$checkoutAction = '/';
+$backHref = '/';
+if ($slug !== '') {
+    $loginAction = '/curso/' . urlencode($slug) . '/login';
+    $checkoutAction = '/curso/' . urlencode($slug) . '/checkout';
+    $backHref = '/curso/' . urlencode($slug);
+}
 ?>
 
 <h1 style="font-size:20px; font-weight:900; margin:0 0 8px 0;">
@@ -37,7 +49,7 @@ $price = number_format(max($priceCents, 0) / 100, 2, ',', '.');
 <div id="loginFormContainer" style="display: none; padding: 16px; background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 12px; margin-bottom: 20px;">
     <h3 style="font-size: 16px; font-weight: 700; margin: 0 0 12px 0;">Login</h3>
     
-    <form action="/curso-externo/login" method="post" style="display: flex; flex-direction: column; gap: 12px;">
+    <form action="<?= $loginAction ?>" method="post" style="display: flex; flex-direction: column; gap: 12px;">
         <input type="hidden" name="token" value="<?= htmlspecialchars($token, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?>">
         
         <div>
@@ -80,7 +92,7 @@ function toggleLoginForm() {
     .billing-option-left { display:flex; align-items:flex-start; gap:10px; min-width:0; }
 </style>
 
-<form action="/curso-externo/checkout" method="post" class="grid">
+<form action="<?= $checkoutAction ?>" method="post" class="grid">
     <input type="hidden" name="token" value="<?= htmlspecialchars($token, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?>">
 
     <div style="grid-column: 1 / -1; font-size: 12px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--text-secondary);">Sua conta</div>
@@ -187,6 +199,6 @@ function toggleLoginForm() {
                 Criar conta gratuita
             <?php endif; ?>
         </button>
-        <a class="btn-outline" href="/curso-externo?token=<?= urlencode($token) ?>">Voltar</a>
+        <a class="btn-outline" href="<?= $backHref ?>">Voltar</a>
     </div>
 </form>

@@ -21,58 +21,199 @@ spl_autoload_register(function (string $class): void {
     }
 });
 
-// Gate de onboarding por indicação: se o usuário veio por indicação e o plano exige cartão,
-// ele não pode navegar por outras telas até concluir o checkout (ou seja, até não existir mais
-// um registro pending em user_referrals para este usuário).
+$baseDomain = '';
+$hostNoPort = '';
+$isPartnerHost = false;
+$partnerSubdomain = '';
+$partnerBranding = null;
+
 try {
-    $path = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?? '/';
+    $host = (string)($_SERVER['HTTP_HOST'] ?? '');
+    $hostNoPort = strtolower(trim(explode(':', $host, 2)[0] ?? ''));
 
-    $allowedPrefixes = [
-        '/',
-        '/checkout',
-        '/login',
-        '/registrar',
-        '/logout',
-        '/verificar-email',
-        '/senha',
-        '/suporte',
-    ];
-
-    $isAllowed = false;
-    foreach ($allowedPrefixes as $prefix) {
-        if ($prefix === '/') {
-            if ($path === '/') {
-                $isAllowed = true;
-                break;
-            }
-            continue;
-        }
-        if (strpos($path, $prefix) === 0) {
-            $isAllowed = true;
-            break;
-        }
+    $baseDomain = trim((string)\App\Models\Setting::get('partner_courses_base_domain', ''));
+    if ($baseDomain === '') {
+        $appPublicUrl = trim((string)\App\Models\Setting::get('app_public_url', ''));
+        $parsedHost = $appPublicUrl !== '' ? (string)(parse_url($appPublicUrl, PHP_URL_HOST) ?? '') : '';
+        $baseDomain = trim((string)$parsedHost);
     }
+    $baseDomain = strtolower(trim($baseDomain));
 
-    if (!$isAllowed && !empty($_SESSION['user_id']) && empty($_SESSION['is_admin'])) {
-        $userId = (int)$_SESSION['user_id'];
-        $pending = \App\Models\UserReferral::findFirstPendingForUser($userId);
-
-        if ($pending && !empty($pending['plan_id'])) {
-            $plan = \App\Models\Plan::findById((int)$pending['plan_id']);
-            if ($plan && !empty($plan['referral_enabled']) && !empty($plan['referral_require_card'])) {
-                $slug = (string)($plan['slug'] ?? '');
-                if ($slug !== '') {
-                    header('Location: /checkout?plan=' . urlencode($slug));
-                    exit;
-                }
-            }
+    if ($baseDomain !== '' && $hostNoPort !== '' && $hostNoPort !== $baseDomain && str_ends_with($hostNoPort, '.' . $baseDomain)) {
+        $prefix = substr($hostNoPort, 0, -strlen('.' . $baseDomain));
+        $prefix = trim((string)$prefix);
+        if ($prefix !== '' && strpos($prefix, '.') === false) {
+            $isPartnerHost = true;
+            $partnerSubdomain = $prefix;
+            $partnerBranding = \App\Models\CoursePartnerBranding::findBySubdomain($partnerSubdomain);
         }
     }
 } catch (\Throwable $e) {
-    // Se algo der errado no gate, não derruba o site.
+    $isPartnerHost = false;
+    $partnerBranding = null;
+}
+
+// Gate de onboarding por indicação: se o usuário veio por indicação e o plano exige cartão,
+// ele não pode navegar por outras telas até concluir o checkout (ou seja, até não existir mais
+// um registro pending em user_referrals para este usuário).
+if (!$isPartnerHost) {
+    try {
+        $path = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?? '/';
+
+        $allowedPrefixes = [
+            '/',
+            '/checkout',
+            '/login',
+            '/registrar',
+            '/logout',
+            '/verificar-email',
+            '/senha',
+            '/suporte',
+        ];
+
+        $isAllowed = false;
+        foreach ($allowedPrefixes as $prefix) {
+            if ($prefix === '/') {
+                if ($path === '/') {
+                    $isAllowed = true;
+                    break;
+                }
+                continue;
+            }
+            if (strpos($path, $prefix) === 0) {
+                $isAllowed = true;
+                break;
+            }
+        }
+
+        if (!$isAllowed && !empty($_SESSION['user_id']) && empty($_SESSION['is_admin'])) {
+            $userId = (int)$_SESSION['user_id'];
+            $pending = \App\Models\UserReferral::findFirstPendingForUser($userId);
+
+            if ($pending && !empty($pending['plan_id'])) {
+                $plan = \App\Models\Plan::findById((int)$pending['plan_id']);
+                if ($plan && !empty($plan['referral_enabled']) && !empty($plan['referral_require_card'])) {
+                    $slug = (string)($plan['slug'] ?? '');
+                    if ($slug !== '') {
+                        header('Location: /checkout?plan=' . urlencode($slug));
+                        exit;
+                    }
+                }
+            }
+        }
+    } catch (\Throwable $e) {
+        // Se algo der errado no gate, não derruba o site.
+    }
 }
 
 use App\Core\Router;
+
+if ($isPartnerHost) {
+    if (!$partnerBranding || !is_array($partnerBranding) || empty($partnerBranding['user_id'])) {
+        http_response_code(404);
+        $controllerClass = 'App\\Controllers\\ErrorController';
+        if (class_exists($controllerClass) && method_exists($controllerClass, 'notFound')) {
+            $controller = new $controllerClass();
+            $controller->notFound();
+        } else {
+            echo '404 - Página não encontrada';
+        }
+        exit;
+    }
+
+    $status = strtolower(trim((string)($partnerBranding['subdomain_status'] ?? 'none')));
+    if ($status !== 'approved') {
+        http_response_code(200);
+        $companyName = trim((string)($partnerBranding['company_name'] ?? ''));
+        if ($companyName === '') {
+            $companyName = 'Parceiro';
+        }
+        $primary = trim((string)($partnerBranding['primary_color'] ?? '#e53935'));
+        $secondary = trim((string)($partnerBranding['secondary_color'] ?? '#ff6f60'));
+        $safeCompany = htmlspecialchars($companyName, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+        $safeSub = htmlspecialchars($partnerSubdomain, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+        $safeBase = htmlspecialchars($baseDomain, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+        $safePrimary = htmlspecialchars($primary !== '' ? $primary : '#e53935', ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+        $safeSecondary = htmlspecialchars($secondary !== '' ? $secondary : '#ff6f60', ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+        echo '<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Aguardando aprovação</title>'
+            . '<meta name="theme-color" content="' . $safePrimary . '">' 
+            . '<style>body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;background:#050509;color:#f5f5f5;font-family:system-ui,-apple-system,BlinkMacSystemFont,\'Segoe UI\',sans-serif;padding:18px} .card{max-width:560px;width:100%;border:1px solid #272727;border-radius:18px;background:#111118;padding:22px 20px;text-align:center} .badge{display:inline-flex;align-items:center;gap:10px;padding:8px 14px;border-radius:999px;background:rgba(255,255,255,0.04);border:1px solid #272727;font-weight:700;font-size:13px} .dot{width:10px;height:10px;border-radius:50%;background:linear-gradient(135deg,' . $safePrimary . ',' . $safeSecondary . ')} h1{font-size:22px;margin:14px 0 6px 0} p{margin:0;color:#b0b0b0;font-size:14px;line-height:1.6} .host{margin-top:12px;font-size:13px;color:#b0b0b0}</style></head><body>'
+            . '<div class="card">'
+            . '<div class="badge"><span class="dot"></span>' . $safeCompany . '</div>'
+            . '<h1>Subdomínio aguardando aprovação</h1>'
+            . '<p>Este site ainda não foi aprovado pela equipe. Assim que a configuração de DNS for concluída e o subdomínio aprovado, ele ficará disponível automaticamente.</p>'
+            . '<div class="host">' . $safeSub . '.' . $safeBase . '</div>'
+            . '</div></body></html>';
+        exit;
+    }
+
+    $_SERVER['TUQ_PARTNER_SITE'] = '1';
+    $_SERVER['TUQ_PARTNER_USER_ID'] = (string)(int)$partnerBranding['user_id'];
+    $_SERVER['TUQ_PARTNER_SUBDOMAIN'] = $partnerSubdomain;
+
+    $partnerRouter = new Router();
+
+    $partnerRouter->get('/', 'ExternalCourseController@catalog');
+    $partnerRouter->get('/curso/{slug}', 'ExternalCourseController@show');
+    $partnerRouter->get('/curso/{slug}/login', 'ExternalCourseController@showLogin');
+    $partnerRouter->post('/curso/{slug}/login', 'ExternalCourseController@login');
+    $partnerRouter->get('/curso/{slug}/senha/esqueci', 'ExternalCourseController@showForgotPassword');
+    $partnerRouter->post('/curso/{slug}/senha/esqueci', 'ExternalCourseController@sendForgotPassword');
+    $partnerRouter->get('/curso/{slug}/checkout', 'ExternalCourseController@checkout');
+    $partnerRouter->post('/curso/{slug}/checkout', 'ExternalCourseController@processCheckout');
+    $partnerRouter->get('/status-pagamento', 'ExternalCourseController@checkPaymentStatus');
+    $partnerRouter->get('/curso/{slug}/membros', 'ExternalCourseController@members');
+    $partnerRouter->get('/curso/{slug}/aula', 'ExternalCourseController@lesson');
+    $partnerRouter->post('/curso/{slug}/aula/concluir', 'ExternalCourseController@completeLesson');
+    $partnerRouter->post('/curso/{slug}/aula/comentar', 'ExternalCourseController@commentLesson');
+
+    $partnerRouter->get('/logout', 'AuthController@logout');
+
+    $partnerRouter->get('/painel-externo', 'ExternalUserDashboardController@index');
+    $partnerRouter->get('/painel-externo/cursos', 'ExternalUserDashboardController@allCourses');
+    $partnerRouter->get('/painel-externo/meus-cursos', 'ExternalUserDashboardController@myCourses');
+    $partnerRouter->get('/painel-externo/comunidade', 'ExternalUserDashboardController@community');
+    $partnerRouter->get('/painel-externo/curso', 'ExternalUserDashboardController@viewCourse');
+    $partnerRouter->get('/painel-externo/aula', 'ExternalUserDashboardController@watchLesson');
+    $partnerRouter->post('/painel-externo/aula/concluir', 'ExternalUserDashboardController@completeLesson');
+    $partnerRouter->post('/painel-externo/aula/comentar', 'ExternalUserDashboardController@commentLesson');
+    $partnerRouter->get('/painel-externo/comunidade/ver', 'ExternalUserDashboardController@viewCommunity');
+    $partnerRouter->get('/painel-externo/comunidade/topico', 'ExternalUserDashboardController@viewTopic');
+    $partnerRouter->post('/painel-externo/comunidade/topico/responder', 'ExternalUserDashboardController@replyTopic');
+
+    $partnerRouter->get('/painel-externo/perfil', 'ExternalUserDashboardController@showProfile');
+    $partnerRouter->get('/painel-externo/perfil/editar', 'ExternalUserDashboardController@editProfile');
+    $partnerRouter->post('/painel-externo/perfil/salvar', 'ExternalUserDashboardController@saveProfile');
+    $partnerRouter->post('/painel-externo/perfil/scrap', 'ExternalUserDashboardController@postScrap');
+    $partnerRouter->post('/painel-externo/perfil/scrap/editar', 'ExternalUserDashboardController@editScrap');
+    $partnerRouter->post('/painel-externo/perfil/scrap/excluir', 'ExternalUserDashboardController@deleteScrap');
+    $partnerRouter->post('/painel-externo/perfil/scrap/visibilidade', 'ExternalUserDashboardController@toggleScrapVisibility');
+    $partnerRouter->post('/painel-externo/perfil/depoimento', 'ExternalUserDashboardController@submitTestimonial');
+    $partnerRouter->post('/painel-externo/perfil/depoimento/decidir', 'ExternalUserDashboardController@decideTestimonial');
+
+    $partnerRouter->get('/painel-externo/amigos', 'ExternalUserDashboardController@friendsList');
+    $partnerRouter->get('/painel-externo/amigos/adicionar', 'ExternalUserDashboardController@friendsAdd');
+    $partnerRouter->get('/painel-externo/amigos/buscar', 'ExternalUserDashboardController@friendsSearch');
+    $partnerRouter->post('/painel-externo/amigos/solicitar', 'ExternalUserDashboardController@friendRequest');
+    $partnerRouter->post('/painel-externo/amigos/cancelar', 'ExternalUserDashboardController@friendCancelRequest');
+    $partnerRouter->post('/painel-externo/amigos/decidir', 'ExternalUserDashboardController@friendDecide');
+    $partnerRouter->post('/painel-externo/amigos/remover', 'ExternalUserDashboardController@friendRemove');
+    $partnerRouter->post('/painel-externo/amigos/favorito', 'ExternalUserDashboardController@friendFavorite');
+
+    $partnerRouter->get('/painel-externo/chat', 'ExternalUserDashboardController@openChat');
+    $partnerRouter->post('/painel-externo/chat/enviar', 'ExternalUserDashboardController@sendMessage');
+    $partnerRouter->get('/painel-externo/chat/stream', 'ExternalUserDashboardController@chatStream');
+
+    $partnerRouter->post('/painel-externo/webrtc/send', 'ExternalUserDashboardController@webrtcSend');
+    $partnerRouter->get('/painel-externo/webrtc/poll', 'ExternalUserDashboardController@webrtcPoll');
+
+    $partnerRouter->get('/painel-externo/notificacoes', 'ExternalUserDashboardController@notifications');
+    $partnerRouter->post('/painel-externo/notificacoes/marcar-lida', 'ExternalUserDashboardController@markNotificationAsRead');
+    $partnerRouter->post('/painel-externo/notificacoes/marcar-todas-lidas', 'ExternalUserDashboardController@markAllNotificationsAsRead');
+
+    $partnerRouter->dispatch($_SERVER['REQUEST_URI'], $_SERVER['REQUEST_METHOD']);
+    exit;
+}
 
 $router = new Router();
 
@@ -133,19 +274,19 @@ $router->post('/tokens/comprar', 'TokenTopupController@create');
 $router->get('/tokens/historico', 'TokenTopupController@history');
 $router->get('/personalidades', 'PersonalityController@index');
 
-// Cursos externos (white-label)
-$router->get('/curso-externo', 'ExternalCourseController@show');
-$router->get('/curso-externo/login', 'ExternalCourseController@showLogin');
-$router->post('/curso-externo/login', 'ExternalCourseController@login');
-$router->get('/curso-externo/senha/esqueci', 'ExternalCourseController@showForgotPassword');
-$router->post('/curso-externo/senha/esqueci', 'ExternalCourseController@sendForgotPassword');
-$router->get('/curso-externo/checkout', 'ExternalCourseController@checkout');
-$router->post('/curso-externo/checkout', 'ExternalCourseController@processCheckout');
-$router->get('/curso-externo/payment-status', 'ExternalCourseController@paymentStatus');
-$router->get('/curso-externo/membros', 'ExternalCourseController@members');
-$router->get('/curso-externo/aula', 'ExternalCourseController@lesson');
-$router->post('/curso-externo/aula/concluir', 'ExternalCourseController@completeLesson');
-$router->post('/curso-externo/aula/comentar', 'ExternalCourseController@commentLesson');
+// Cursos externos (rota por slug)
+$router->get('/curso/{slug}', 'ExternalCourseController@show');
+$router->get('/curso/{slug}/login', 'ExternalCourseController@showLogin');
+$router->post('/curso/{slug}/login', 'ExternalCourseController@login');
+$router->get('/curso/{slug}/senha/esqueci', 'ExternalCourseController@showForgotPassword');
+$router->post('/curso/{slug}/senha/esqueci', 'ExternalCourseController@sendForgotPassword');
+$router->get('/curso/{slug}/checkout', 'ExternalCourseController@checkout');
+$router->post('/curso/{slug}/checkout', 'ExternalCourseController@processCheckout');
+$router->get('/status-pagamento', 'ExternalCourseController@checkPaymentStatus');
+$router->get('/curso/{slug}/membros', 'ExternalCourseController@members');
+$router->get('/curso/{slug}/aula', 'ExternalCourseController@lesson');
+$router->post('/curso/{slug}/aula/concluir', 'ExternalCourseController@completeLesson');
+$router->post('/curso/{slug}/aula/comentar', 'ExternalCourseController@commentLesson');
 
 // Painel de usuário externo
 $router->get('/painel-externo', 'ExternalUserDashboardController@index');
@@ -364,6 +505,7 @@ $router->get('/profissional/alunos', 'ProfessionalDashboardController@students')
 $router->get('/profissional/vendas', 'ProfessionalDashboardController@sales');
 $router->get('/profissional/comunidades', 'ProfessionalDashboardController@communities');
 $router->get('/profissional/configuracoes', 'ProfessionalDashboardController@settings');
+$router->get('/profissional/subdominio/check', 'ProfessionalDashboardController@checkSubdomain');
 $router->post('/profissional/configuracoes/branding', 'ProfessionalDashboardController@saveBranding');
 $router->get('/admin/login', 'AdminAuthController@login');
 $router->post('/admin/login', 'AdminAuthController@authenticate');
@@ -376,6 +518,7 @@ $router->post('/admin/comissoes/marcar-pago', 'AdminCommissionsController@markPa
 $router->get('/admin/branding-parceiros', 'AdminPartnerBrandingController@index');
 $router->get('/admin/branding-parceiros/editar', 'AdminPartnerBrandingController@form');
 $router->post('/admin/branding-parceiros/salvar', 'AdminPartnerBrandingController@save');
+$router->post('/admin/branding-parceiros/aprovar-subdominio', 'AdminPartnerBrandingController@approveSubdomain');
 $router->get('/admin/config', 'AdminConfigController@index');
 $router->post('/admin/config', 'AdminConfigController@save');
 $router->get('/admin/config/certificado-preview', 'AdminConfigController@certificatePreview');

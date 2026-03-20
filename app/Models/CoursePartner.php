@@ -10,9 +10,12 @@ class CoursePartner
     public static function allWithUser(): array
     {
         $pdo = Database::getConnection();
-        $stmt = $pdo->query('SELECT p.*, u.name AS user_name, u.email AS user_email
+        $stmt = $pdo->query('SELECT p.*, u.name AS user_name, u.email AS user_email,
+                b.subdomain AS branding_subdomain,
+                b.subdomain_status AS branding_subdomain_status
             FROM course_partners p
             JOIN users u ON u.id = p.user_id
+            LEFT JOIN course_partner_branding b ON b.user_id = p.user_id
             ORDER BY u.name ASC');
         return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
     }

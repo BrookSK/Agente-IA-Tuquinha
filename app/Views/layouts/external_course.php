@@ -11,6 +11,10 @@ $logoUrl = '';
 $primary = '';
 $secondary = '';
 
+$isPartnerSite = !empty($isPartnerSite);
+$slug = isset($slug) ? trim((string)$slug) : '';
+$loginHref = ($isPartnerSite && $slug !== '') ? ('/curso/' . urlencode($slug) . '/login') : '/login';
+
 if (isset($branding) && is_array($branding)) {
     $companyName = trim((string)($branding['company_name'] ?? ''));
     $logoUrl = trim((string)($branding['logo_url'] ?? ''));
@@ -175,7 +179,7 @@ function esc_attr(string $s): string {
             </div>
             <?php if (!$hideTopbarAction): ?>
                 <div>
-                    <a class="btn-outline" href="/login">Entrar</a>
+                    <a class="btn-outline" href="<?= $loginHref ?>">Entrar</a>
                 </div>
             <?php endif; ?>
         </div>

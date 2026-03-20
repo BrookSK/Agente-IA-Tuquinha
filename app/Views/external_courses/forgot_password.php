@@ -6,6 +6,16 @@
 /** @var string|null $success */
 
 $companyName = isset($branding) && is_array($branding) ? trim((string)($branding['company_name'] ?? '')) : '';
+
+$isPartnerSite = !empty($isPartnerSite);
+$slug = isset($slug) ? trim((string)$slug) : '';
+
+$formAction = '/senha/esqueci';
+$loginHref = '/login';
+if ($slug !== '') {
+    $formAction = '/curso/' . urlencode($slug) . '/senha/esqueci';
+    $loginHref = '/curso/' . urlencode($slug) . '/login';
+}
 ?>
 
 <div class="container-narrow">
@@ -29,7 +39,7 @@ $companyName = isset($branding) && is_array($branding) ? trim((string)($branding
             </div>
         <?php endif; ?>
 
-        <form action="/curso-externo/senha/esqueci" method="post">
+        <form action="<?= $formAction ?>" method="post">
             <input type="hidden" name="token" value="<?= htmlspecialchars($token, ENT_QUOTES, 'UTF-8') ?>">
             
             <div class="form-group">
@@ -49,7 +59,7 @@ $companyName = isset($branding) && is_array($branding) ? trim((string)($branding
             <p style="color: var(--text-secondary); font-size: 0.95rem; margin-bottom: 1rem;">
                 Lembrou sua senha?
             </p>
-            <a href="/curso-externo/login?token=<?= urlencode($token) ?>" style="color: var(--accent); text-decoration: none; font-weight: 600;">
+            <a href="<?= $loginHref ?>" style="color: var(--accent); text-decoration: none; font-weight: 600;">
                 Voltar para o Login
             </a>
         </div>

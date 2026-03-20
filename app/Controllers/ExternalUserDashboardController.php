@@ -3,7 +3,9 @@
 namespace App\Controllers;
 
 use App\Core\Controller;
+use App\Core\Database;
 use App\Models\User;
+use App\Models\Plan;
 use App\Models\Course;
 use App\Models\CourseEnrollment;
 use App\Models\CourseModule;
@@ -22,20 +24,30 @@ use App\Models\UserCourseBadge;
 use App\Models\SocialPortfolioItem;
 use App\Models\SocialConversation;
 use App\Models\SocialMessage;
+use App\Models\Subscription;
+use PDO;
 
 class ExternalUserDashboardController extends Controller
 {
     private function requireLogin(): array
     {
         if (empty($_SESSION['user_id'])) {
-            header('Location: /login');
+            if (!empty($_SERVER['TUQ_PARTNER_SITE'])) {
+                header('Location: /');
+            } else {
+                header('Location: /login');
+            }
             exit;
         }
 
         $user = User::findById((int)$_SESSION['user_id']);
         if (!$user) {
             unset($_SESSION['user_id'], $_SESSION['user_name'], $_SESSION['user_email']);
-            header('Location: /login');
+            if (!empty($_SERVER['TUQ_PARTNER_SITE'])) {
+                header('Location: /');
+            } else {
+                header('Location: /login');
+            }
             exit;
         }
 
@@ -57,6 +69,7 @@ class ExternalUserDashboardController extends Controller
         $user = $this->requireLogin();
         $branding = $this->getBrandingForUser($user);
         $userId = (int)$user['id'];
+        $isPartnerSite = !empty($_SERVER['TUQ_PARTNER_SITE']);
 
         // Get enrolled courses count
         $enrolledCourses = CourseEnrollment::allByUser($userId);
@@ -84,6 +97,7 @@ class ExternalUserDashboardController extends Controller
             'enrolledCoursesCount' => $enrolledCoursesCount,
             'averageProgress' => $averageProgress,
             'communitiesCount' => $communitiesCount,
+            'isPartnerSite' => $isPartnerSite,
             'layout' => 'external_user_dashboard',
         ]);
     }
@@ -93,6 +107,7 @@ class ExternalUserDashboardController extends Controller
         $user = $this->requireLogin();
         $branding = $this->getBrandingForUser($user);
         $partnerId = User::getExternalCoursePartnerId((int)$user['id']);
+        $isPartnerSite = !empty($_SERVER['TUQ_PARTNER_SITE']);
 
         $courses = [];
         if ($partnerId) {
@@ -116,6 +131,7 @@ class ExternalUserDashboardController extends Controller
             'user' => $user,
             'branding' => $branding,
             'courses' => $courses,
+            'isPartnerSite' => $isPartnerSite,
             'layout' => 'external_user_dashboard',
         ]);
     }
@@ -125,6 +141,7 @@ class ExternalUserDashboardController extends Controller
         $user = $this->requireLogin();
         $branding = $this->getBrandingForUser($user);
         $partnerId = User::getExternalCoursePartnerId((int)$user['id']);
+        $isPartnerSite = !empty($_SERVER['TUQ_PARTNER_SITE']);
 
         $enrollments = CourseEnrollment::allByUser((int)$user['id']);
         $myCourses = [];
@@ -141,6 +158,7 @@ class ExternalUserDashboardController extends Controller
             'user' => $user,
             'branding' => $branding,
             'courses' => $myCourses,
+            'isPartnerSite' => $isPartnerSite,
             'layout' => 'external_user_dashboard',
         ]);
     }
@@ -149,6 +167,7 @@ class ExternalUserDashboardController extends Controller
     {
         $user = $this->requireLogin();
         $branding = $this->getBrandingForUser($user);
+        $isPartnerSite = !empty($_SERVER['TUQ_PARTNER_SITE']);
 
         $allowedCommunities = CourseAllowedCommunity::allowedCommunitiesByUser((int)$user['id']);
 
@@ -157,6 +176,7 @@ class ExternalUserDashboardController extends Controller
             'user' => $user,
             'branding' => $branding,
             'communities' => $allowedCommunities,
+            'isPartnerSite' => $isPartnerSite,
             'layout' => 'external_user_dashboard',
         ]);
     }
@@ -166,6 +186,7 @@ class ExternalUserDashboardController extends Controller
         $user = $this->requireLogin();
         $branding = $this->getBrandingForUser($user);
         $partnerId = User::getExternalCoursePartnerId((int)$user['id']);
+        $isPartnerSite = !empty($_SERVER['TUQ_PARTNER_SITE']);
         
         $courseId = isset($_GET['id']) ? (int)$_GET['id'] : 0;
         $course = Course::findById($courseId);
@@ -215,6 +236,7 @@ class ExternalUserDashboardController extends Controller
             'course' => $course,
             'hasAccess' => $hasAccess,
             'modules' => $modules,
+            'isPartnerSite' => $isPartnerSite,
             'layout' => 'external_user_dashboard',
         ]);
     }
@@ -341,7 +363,7 @@ class ExternalUserDashboardController extends Controller
 
         $isEnrolled = CourseEnrollment::isEnrolled($courseId, (int)$user['id']);
         if ($isEnrolled) {
-            CourseLessonProgress::markCompleted((int)$user['id'], $lessonId);
+            CourseLessonProgress::markCompleted($courseId, $lessonId, (int)$user['id']);
         }
 
         header('Location: /painel-externo/aula?id=' . $lessonId . '&course_id=' . $courseId);
@@ -370,7 +392,12 @@ class ExternalUserDashboardController extends Controller
 
         $isEnrolled = CourseEnrollment::isEnrolled($courseId, (int)$user['id']);
         if ($isEnrolled) {
-            CourseLessonComment::create((int)$user['id'], $lessonId, $body);
+            CourseLessonComment::create([
+                'course_id' => $courseId,
+                'lesson_id' => $lessonId,
+                'user_id' => (int)$user['id'],
+                'body' => $body,
+            ]);
         }
 
         header('Location: /painel-externo/aula?id=' . $lessonId . '&course_id=' . $courseId);
@@ -1233,61 +1260,303 @@ class ExternalUserDashboardController extends Controller
         }
 
         header('Content-Type: text/event-stream');
-        header('Cache-Control: no-cache');
+        header('Cache-Control: no-cache, no-transform');
         header('Connection: keep-alive');
+        header('X-Accel-Buffering: no');
+        header('Content-Encoding: none');
 
-        echo "event: ping\ndata: {}\n\n";
+        if (function_exists('ini_set')) {
+            @ini_set('output_buffering', 'off');
+            @ini_set('zlib.output_compression', '0');
+            @ini_set('implicit_flush', '1');
+        }
+
+        @ignore_user_abort(true);
+        @set_time_limit(0);
+
+        while (ob_get_level() > 0) {
+            @ob_end_flush();
+        }
+
+        echo "event: ping\n";
+        echo "data: {}\n\n";
         @flush();
 
         $deadline = microtime(true) + 25.0;
         while (microtime(true) < $deadline) {
-            $newMessages = SocialMessage::newSince($conversationId, $lastId);
-            if (!empty($newMessages)) {
-                echo "event: messages\n";
-                echo "data: " . json_encode($newMessages) . "\n\n";
-                @flush();
+            if (connection_aborted()) {
                 break;
             }
-            usleep(500000);
+
+            $rows = SocialMessage::sinceId($conversationId, $lastId, 50);
+            if (!empty($rows)) {
+                foreach ($rows as $row) {
+                    $id = (int)($row['id'] ?? 0);
+                    $lastId = max($lastId, $id);
+                    echo "event: message\n";
+                    echo 'data: ' . json_encode([
+                        'id' => $id,
+                        'conversation_id' => (int)($row['conversation_id'] ?? 0),
+                        'sender_user_id' => (int)($row['sender_user_id'] ?? 0),
+                        'sender_name' => (string)($row['sender_name'] ?? ''),
+                        'body' => (string)($row['body'] ?? ''),
+                        'created_at' => (string)($row['created_at'] ?? ''),
+                    ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) . "\n\n";
+                }
+                @flush();
+            } else {
+                echo "event: ping\n";
+                echo "data: {}\n\n";
+                @flush();
+                usleep(400000);
+            }
         }
 
+        echo "event: done\n";
+        echo 'data: ' . json_encode(['last_id' => $lastId], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) . "\n\n";
+        @flush();
         exit;
     }
 
     // ==================== SOCIAL FEATURES - WEBRTC ====================
 
-    public function webrtcSend(): void
+    private function getActivePlanForUser(array $user): ?array
     {
-        $currentUser = $this->requireLogin();
-        $fromUserId = (int)$currentUser['id'];
+        if (!empty($_SESSION['is_admin'])) {
+            return Plan::findTopActive();
+        }
 
-        $toUserId = isset($_POST['to_user_id']) ? (int)$_POST['to_user_id'] : 0;
-        $signal = (string)($_POST['signal'] ?? '');
+        $email = trim((string)($user['email'] ?? ''));
+        if ($email === '') {
+            return null;
+        }
 
-        if ($toUserId <= 0 || $signal === '') {
-            header('Content-Type: application/json');
-            echo json_encode(['ok' => false]);
+        $subscription = Subscription::findLastByEmail($email);
+        if (!$subscription || empty($subscription['plan_id'])) {
+            return null;
+        }
+
+        $status = strtolower((string)($subscription['status'] ?? ''));
+        if (in_array($status, ['canceled', 'expired'], true)) {
+            return null;
+        }
+
+        $plan = Plan::findById((int)$subscription['plan_id']);
+        return $plan ?: null;
+    }
+
+    private function ensureParticipantAndFriends(int $currentUserId, int $conversationId): array
+    {
+        $conversation = SocialConversation::findById($conversationId);
+        if (!$conversation) {
+            http_response_code(404);
+            header('Content-Type: application/json; charset=utf-8');
+            echo json_encode(['ok' => false, 'error' => 'Conversa não encontrada.'], JSON_UNESCAPED_UNICODE);
             exit;
         }
 
-        \App\Models\SocialWebRtcSignal::send($fromUserId, $toUserId, $signal);
+        $u1 = (int)($conversation['user1_id'] ?? 0);
+        $u2 = (int)($conversation['user2_id'] ?? 0);
+        if ($currentUserId !== $u1 && $currentUserId !== $u2) {
+            http_response_code(403);
+            header('Content-Type: application/json; charset=utf-8');
+            echo json_encode(['ok' => false, 'error' => 'Você não participa desta conversa.'], JSON_UNESCAPED_UNICODE);
+            exit;
+        }
 
-        header('Content-Type: application/json');
-        echo json_encode(['ok' => true]);
-        exit;
+        $otherUserId = $currentUserId === $u1 ? $u2 : $u1;
+        $friendship = UserFriend::findFriendship($currentUserId, $otherUserId);
+        if (!$friendship || ($friendship['status'] ?? '') !== 'accepted') {
+            http_response_code(403);
+            header('Content-Type: application/json; charset=utf-8');
+            echo json_encode(['ok' => false, 'error' => 'Você só pode usar chamada com amigos aceitos.'], JSON_UNESCAPED_UNICODE);
+            exit;
+        }
+
+        return [$conversation, $otherUserId];
+    }
+
+    public function webrtcSend(): void
+    {
+        $currentUser = $this->requireLogin();
+        $currentId = (int)$currentUser['id'];
+
+        $conversationId = isset($_POST['conversation_id']) ? (int)$_POST['conversation_id'] : 0;
+        $kind = trim((string)($_POST['kind'] ?? ''));
+        $payload = $_POST['payload'] ?? null;
+        if (is_string($payload)) {
+            $decoded = json_decode($payload, true);
+            if (json_last_error() === JSON_ERROR_NONE) {
+                $payload = $decoded;
+            }
+        }
+
+        if ($conversationId <= 0) {
+            http_response_code(400);
+            header('Content-Type: application/json; charset=utf-8');
+            echo json_encode(['ok' => false, 'error' => 'Conversa inválida.'], JSON_UNESCAPED_UNICODE);
+            return;
+        }
+
+        if (!in_array($kind, ['offer', 'answer', 'ice', 'end', 'typing', 'media'], true)) {
+            http_response_code(400);
+            header('Content-Type: application/json; charset=utf-8');
+            echo json_encode(['ok' => false, 'error' => 'Tipo inválido.'], JSON_UNESCAPED_UNICODE);
+            return;
+        }
+
+        [, $otherUserId] = $this->ensureParticipantAndFriends($currentId, $conversationId);
+
+        if ($kind === 'offer' && empty($_SESSION['is_admin'])) {
+            $plan = $this->getActivePlanForUser($currentUser);
+            if (!$plan || empty($plan['allow_video_chat'])) {
+                http_response_code(403);
+                header('Content-Type: application/json; charset=utf-8');
+                echo json_encode([
+                    'ok' => false,
+                    'error' => 'Seu plano não permite iniciar chat de vídeo. Faça upgrade para um plano que inclua chamadas de vídeo.',
+                    'code' => 'video_chat_not_allowed',
+                ], JSON_UNESCAPED_UNICODE);
+                return;
+            }
+        }
+
+        if (function_exists('session_write_close')) {
+            @session_write_close();
+        }
+
+        $payloadJson = json_encode($payload, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+        if ($payloadJson === false) {
+            http_response_code(400);
+            header('Content-Type: application/json; charset=utf-8');
+            echo json_encode(['ok' => false, 'error' => 'Payload inválido.'], JSON_UNESCAPED_UNICODE);
+            return;
+        }
+
+        $pdo = Database::getConnection();
+        $stmt = $pdo->prepare('INSERT INTO social_webrtc_signals (conversation_id, from_user_id, to_user_id, kind, payload_json, created_at)
+            VALUES (:cid, :from_uid, :to_uid, :kind, :payload_json, NOW())');
+        $stmt->execute([
+            'cid' => $conversationId,
+            'from_uid' => $currentId,
+            'to_uid' => $otherUserId,
+            'kind' => $kind,
+            'payload_json' => $payloadJson,
+        ]);
+
+        if ($kind === 'answer') {
+            $ackOffer = $pdo->prepare('UPDATE social_webrtc_signals
+                SET delivered_at = NOW()
+                WHERE conversation_id = :cid
+                  AND to_user_id = :uid
+                  AND kind = \'offer\'
+                  AND delivered_at IS NULL');
+            $ackOffer->execute([
+                'cid' => $conversationId,
+                'uid' => $currentId,
+            ]);
+        }
+
+        if ($kind === 'end') {
+            $cleanup = $pdo->prepare('UPDATE social_webrtc_signals
+                SET delivered_at = NOW()
+                WHERE conversation_id = :cid
+                  AND delivered_at IS NULL
+                  AND kind IN (\'offer\', \'answer\', \'ice\', \'typing\')
+                  AND to_user_id IN (:u1, :u2)');
+            $cleanup->execute([
+                'cid' => $conversationId,
+                'u1' => $currentId,
+                'u2' => $otherUserId,
+            ]);
+        }
+
+        header('Content-Type: application/json; charset=utf-8');
+        echo json_encode(['ok' => true], JSON_UNESCAPED_UNICODE);
     }
 
     public function webrtcPoll(): void
     {
         $currentUser = $this->requireLogin();
-        $userId = (int)$currentUser['id'];
+        $currentId = (int)$currentUser['id'];
 
-        $lastId = isset($_GET['last_id']) ? (int)$_GET['last_id'] : 0;
-        $signals = \App\Models\SocialWebRtcSignal::pollForUser($userId, $lastId);
+        $conversationId = isset($_GET['conversation_id']) ? (int)$_GET['conversation_id'] : 0;
+        $sinceId = isset($_GET['since_id']) ? (int)$_GET['since_id'] : 0;
 
-        header('Content-Type: application/json');
-        echo json_encode(['ok' => true, 'signals' => $signals]);
-        exit;
+        if ($conversationId <= 0) {
+            http_response_code(400);
+            header('Content-Type: application/json; charset=utf-8');
+            echo json_encode(['ok' => false, 'error' => 'Conversa inválida.'], JSON_UNESCAPED_UNICODE);
+            return;
+        }
+
+        $this->ensureParticipantAndFriends($currentId, $conversationId);
+
+        if (function_exists('session_write_close')) {
+            @session_write_close();
+        }
+
+        $pdo = Database::getConnection();
+        $deadline = microtime(true) + 25.0;
+        $events = [];
+
+        while (microtime(true) < $deadline) {
+            $stmt = $pdo->prepare('SELECT id, kind, payload_json, from_user_id, created_at
+                FROM social_webrtc_signals
+                WHERE conversation_id = :cid
+                  AND to_user_id = :uid
+                  AND delivered_at IS NULL
+                  AND (id > :since_id OR kind = \'offer\')
+                ORDER BY id ASC
+                LIMIT 20');
+            $stmt->execute([
+                'cid' => $conversationId,
+                'uid' => $currentId,
+                'since_id' => $sinceId,
+            ]);
+            $rows = $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+
+            if (!empty($rows)) {
+                $idsToDeliver = [];
+                foreach ($rows as $row) {
+                    $id = (int)($row['id'] ?? 0);
+                    $kind = (string)($row['kind'] ?? '');
+                    if ($id > 0 && $kind !== 'offer') {
+                        $idsToDeliver[] = $id;
+                    }
+                    $decoded = null;
+                    $raw = (string)($row['payload_json'] ?? '');
+                    if ($raw !== '') {
+                        $decoded = json_decode($raw, true);
+                    }
+                    $events[] = [
+                        'id' => $id,
+                        'kind' => $kind,
+                        'from_user_id' => (int)($row['from_user_id'] ?? 0),
+                        'payload' => $decoded,
+                        'created_at' => (string)($row['created_at'] ?? ''),
+                    ];
+                    $sinceId = max($sinceId, $id);
+                }
+
+                if (!empty($idsToDeliver)) {
+                    $in = implode(',', array_fill(0, count($idsToDeliver), '?'));
+                    $upd = $pdo->prepare('UPDATE social_webrtc_signals SET delivered_at = NOW() WHERE id IN (' . $in . ')');
+                    $upd->execute($idsToDeliver);
+                }
+
+                break;
+            }
+
+            usleep(400000);
+        }
+
+        header('Content-Type: application/json; charset=utf-8');
+        echo json_encode([
+            'ok' => true,
+            'events' => $events,
+            'since_id' => $sinceId,
+        ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
     }
 
     // ==================== NOTIFICATIONS ====================

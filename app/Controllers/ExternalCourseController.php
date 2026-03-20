@@ -18,10 +18,150 @@ use App\Services\MailService;
 
 class ExternalCourseController extends Controller
 {
+    private function isPartnerSite(): bool
+    {
+        return !empty($_SERVER['TUQ_PARTNER_SITE']);
+    }
+
+    private function getPartnerOwnerUserId(): int
+    {
+        return (int)($_SERVER['TUQ_PARTNER_USER_ID'] ?? 0);
+    }
+
+    private function resolveExternalCourseFromGet(): array
+    {
+        if ($this->isPartnerSite()) {
+            $slug = trim((string)($_GET['slug'] ?? ''));
+            $ownerUserId = $this->getPartnerOwnerUserId();
+            $course = ($slug !== '' && $ownerUserId > 0)
+                ? Course::findExternalActiveBySlugAndOwner($slug, $ownerUserId)
+                : null;
+
+            $token = '';
+            if ($course) {
+                $token = trim((string)($course['external_token'] ?? ''));
+                if ($token === '' && !empty($course['id'])) {
+                    $token = (string)(Course::ensureExternalToken((int)$course['id']) ?? '');
+                }
+            }
+
+            return ['course' => $course, 'token' => $token, 'slug' => $slug];
+        }
+
+        $slug = trim((string)($_GET['slug'] ?? ''));
+        $course = null;
+        $token = '';
+
+        if ($slug !== '') {
+            $course = Course::findBySlug($slug);
+            if ($course && empty($course['is_external'])) {
+                $course = null;
+            }
+        }
+
+        if (!$course) {
+            $token = isset($_GET['token']) ? trim((string)$_GET['token']) : '';
+            $course = $token !== '' ? Course::findByExternalToken($token) : null;
+            if ($course) {
+                $slug = trim((string)($course['slug'] ?? ''));
+            }
+        }
+
+        if ($course) {
+            $token = $token !== '' ? $token : trim((string)($course['external_token'] ?? ''));
+            if ($token === '' && !empty($course['id'])) {
+                $token = (string)(Course::ensureExternalToken((int)$course['id']) ?? '');
+            }
+        }
+
+        return ['course' => $course, 'token' => $token, 'slug' => $slug];
+    }
+
+    private function resolveExternalCourseFromPost(): array
+    {
+        if ($this->isPartnerSite()) {
+            $slug = trim((string)($_GET['slug'] ?? ''));
+            $ownerUserId = $this->getPartnerOwnerUserId();
+            $course = ($slug !== '' && $ownerUserId > 0)
+                ? Course::findExternalActiveBySlugAndOwner($slug, $ownerUserId)
+                : null;
+
+            $token = '';
+            if ($course) {
+                $token = trim((string)($course['external_token'] ?? ''));
+                if ($token === '' && !empty($course['id'])) {
+                    $token = (string)(Course::ensureExternalToken((int)$course['id']) ?? '');
+                }
+            }
+
+            return ['course' => $course, 'token' => $token, 'slug' => $slug];
+        }
+
+        $slug = trim((string)($_GET['slug'] ?? ''));
+        $course = null;
+        $token = '';
+
+        if ($slug !== '') {
+            $course = Course::findBySlug($slug);
+            if ($course && empty($course['is_external'])) {
+                $course = null;
+            }
+        }
+
+        if (!$course) {
+            $token = isset($_POST['token']) ? trim((string)$_POST['token']) : '';
+            $course = $token !== '' ? Course::findByExternalToken($token) : null;
+            if ($course) {
+                $slug = trim((string)($course['slug'] ?? ''));
+            }
+        }
+
+        if ($course) {
+            $token = $token !== '' ? $token : trim((string)($course['external_token'] ?? ''));
+            if ($token === '' && !empty($course['id'])) {
+                $token = (string)(Course::ensureExternalToken((int)$course['id']) ?? '');
+            }
+        }
+
+        return ['course' => $course, 'token' => $token, 'slug' => $slug];
+    }
+
+    public function catalog(): void
+    {
+        $partnerId = $this->getPartnerOwnerUserId();
+        if ($partnerId <= 0) {
+            http_response_code(404);
+            echo 'Página não encontrada';
+            return;
+        }
+
+        $branding = CoursePartnerBranding::findByUserId($partnerId);
+        $courses = Course::allExternalActiveByOwner($partnerId);
+        $courses = is_array($courses) ? $courses : [];
+
+        if (count($courses) === 1) {
+            $slug = trim((string)($courses[0]['slug'] ?? ''));
+            if ($slug !== '') {
+                header('Location: /curso/' . urlencode($slug));
+                exit;
+            }
+        }
+
+        $this->view('external_courses/catalog', [
+            'pageTitle' => (string)($branding['company_name'] ?? 'Cursos'),
+            'branding' => $branding,
+            'courses' => $courses,
+            'layout' => 'external_course_modern',
+            'isPartnerSite' => $this->isPartnerSite(),
+        ]);
+    }
+
     public function showLogin(): void
     {
-        $token = isset($_GET['token']) ? trim((string)$_GET['token']) : '';
-        $course = $token !== '' ? Course::findByExternalToken($token) : null;
+        $resolved = $this->resolveExternalCourseFromGet();
+        $token = (string)$resolved['token'];
+        $slug = (string)$resolved['slug'];
+        $course = $resolved['course'];
         if (!$course) {
             header('Location: /');
             exit;
@@ -37,6 +177,8 @@ class ExternalCourseController extends Controller
             'course' => $course,
             'branding' => $branding,
             'token' => $token,
+            'slug' => $slug,
+            'isPartnerSite' => $this->isPartnerSite(),
             'error' => null,
             'layout' => 'external_course_modern',
         ]);
@@ -44,8 +186,10 @@ class ExternalCourseController extends Controller
 
     public function login(): void
     {
-        $token = isset($_POST['token']) ? trim((string)$_POST['token']) : '';
-        $course = $token !== '' ? Course::findByExternalToken($token) : null;
+        $resolved = $this->resolveExternalCourseFromPost();
+        $token = (string)$resolved['token'];
+        $slug = (string)$resolved['slug'];
+        $course = $resolved['course'];
         if (!$course) {
             header('Location: /');
             exit;
@@ -65,6 +209,8 @@ class ExternalCourseController extends Controller
                 'course' => $course,
                 'branding' => $branding,
                 'token' => $token,
+                'slug' => $slug,
+                'isPartnerSite' => $this->isPartnerSite(),
                 'error' => 'Informe seu e-mail e senha.',
                 'layout' => 'external_course_modern',
             ]);
@@ -78,6 +224,8 @@ class ExternalCourseController extends Controller
                 'course' => $course,
                 'branding' => $branding,
                 'token' => $token,
+                'slug' => $slug,
+                'isPartnerSite' => $this->isPartnerSite(),
                 'error' => 'E-mail ou senha inválidos.',
                 'layout' => 'external_course_modern',
             ]);
@@ -90,6 +238,8 @@ class ExternalCourseController extends Controller
                 'course' => $course,
                 'branding' => $branding,
                 'token' => $token,
+                'slug' => $slug,
+                'isPartnerSite' => $this->isPartnerSite(),
                 'savedCustomer' => null,
                 'error' => 'Antes de entrar, confirme seu e-mail.',
                 'layout' => 'external_course',
@@ -103,6 +253,8 @@ class ExternalCourseController extends Controller
                 'course' => $course,
                 'branding' => $branding,
                 'token' => $token,
+                'slug' => $slug,
+                'isPartnerSite' => $this->isPartnerSite(),
                 'savedCustomer' => null,
                 'error' => 'Sua conta foi desativada.',
                 'layout' => 'external_course',
@@ -118,15 +270,21 @@ class ExternalCourseController extends Controller
         if (!empty($user['is_external_course_user'])) {
             header('Location: /painel-externo');
         } else {
-            header('Location: /curso-externo/checkout?token=' . urlencode($token));
+            if ($slug !== '') {
+                header('Location: /curso/' . urlencode($slug) . '/checkout');
+            } else {
+                header('Location: /painel-externo');
+            }
         }
         exit;
     }
 
     public function showForgotPassword(): void
     {
-        $token = isset($_GET['token']) ? trim((string)$_GET['token']) : '';
-        $course = $token !== '' ? Course::findByExternalToken($token) : null;
+        $resolved = $this->resolveExternalCourseFromGet();
+        $token = (string)$resolved['token'];
+        $slug = (string)$resolved['slug'];
+        $course = $resolved['course'];
         if (!$course) {
             header('Location: /');
             exit;
@@ -142,6 +300,8 @@ class ExternalCourseController extends Controller
             'course' => $course,
             'branding' => $branding,
             'token' => $token,
+            'slug' => $slug,
+            'isPartnerSite' => $this->isPartnerSite(),
             'error' => null,
             'success' => null,
             'layout' => 'external_course_modern',
@@ -150,8 +310,10 @@ class ExternalCourseController extends Controller
 
     public function sendForgotPassword(): void
     {
-        $token = isset($_POST['token']) ? trim((string)$_POST['token']) : '';
-        $course = $token !== '' ? Course::findByExternalToken($token) : null;
+        $resolved = $this->resolveExternalCourseFromPost();
+        $token = (string)$resolved['token'];
+        $slug = (string)$resolved['slug'];
+        $course = $resolved['course'];
         if (!$course) {
             header('Location: /');
             exit;
@@ -169,6 +331,8 @@ class ExternalCourseController extends Controller
                 'course' => $course,
                 'branding' => $branding,
                 'token' => $token,
+                'slug' => $slug,
+                'isPartnerSite' => $this->isPartnerSite(),
                 'error' => 'Por favor, informe seu e-mail.',
                 'success' => null,
                 'layout' => 'external_course_modern',
@@ -183,6 +347,8 @@ class ExternalCourseController extends Controller
                 'course' => $course,
                 'branding' => $branding,
                 'token' => $token,
+                'slug' => $slug,
+                'isPartnerSite' => $this->isPartnerSite(),
                 'error' => 'Não encontramos uma conta com este e-mail.',
                 'success' => null,
                 'layout' => 'external_course_modern',
@@ -197,6 +363,8 @@ class ExternalCourseController extends Controller
             'course' => $course,
             'branding' => $branding,
             'token' => $token,
+            'slug' => $slug,
+            'isPartnerSite' => $this->isPartnerSite(),
             'error' => null,
             'success' => 'Enviamos um link de recuperação para seu e-mail. Verifique sua caixa de entrada.',
             'layout' => 'external_course_modern',
@@ -206,14 +374,24 @@ class ExternalCourseController extends Controller
     private function requireLogin(): array
     {
         if (empty($_SESSION['user_id'])) {
-            header('Location: /login');
+            $slug = trim((string)($_GET['slug'] ?? ''));
+            if ($slug !== '') {
+                header('Location: /curso/' . urlencode($slug) . '/login');
+            } else {
+                header('Location: /login');
+            }
             exit;
         }
 
         $user = User::findById((int)$_SESSION['user_id']);
         if (!$user) {
             unset($_SESSION['user_id'], $_SESSION['user_name'], $_SESSION['user_email']);
-            header('Location: /login');
+            $slug = trim((string)($_GET['slug'] ?? ''));
+            if ($slug !== '') {
+                header('Location: /curso/' . urlencode($slug) . '/login');
+            } else {
+                header('Location: /login');
+            }
             exit;
         }
 
@@ -303,8 +481,10 @@ class ExternalCourseController extends Controller
 
     public function show(): void
     {
-        $token = isset($_GET['token']) ? trim((string)$_GET['token']) : '';
-        $course = $token !== '' ? Course::findByExternalToken($token) : null;
+        $resolved = $this->resolveExternalCourseFromGet();
+        $token = (string)$resolved['token'];
+        $slug = (string)$resolved['slug'];
+        $course = $resolved['course'];
         if (!$course) {
             http_response_code(404);
             echo 'Curso não encontrado';
@@ -321,14 +501,18 @@ class ExternalCourseController extends Controller
             'course' => $course,
             'branding' => $branding,
             'token' => $token,
+            'slug' => $slug,
+            'isPartnerSite' => $this->isPartnerSite(),
             'layout' => 'external_course_modern',
         ]);
     }
 
     public function checkout(): void
     {
-        $token = isset($_GET['token']) ? trim((string)$_GET['token']) : '';
-        $course = $token !== '' ? Course::findByExternalToken($token) : null;
+        $resolved = $this->resolveExternalCourseFromGet();
+        $token = (string)$resolved['token'];
+        $slug = (string)$resolved['slug'];
+        $course = $resolved['course'];
         if (!$course) {
             header('Location: /');
             exit;
@@ -344,6 +528,8 @@ class ExternalCourseController extends Controller
             'course' => $course,
             'branding' => $branding,
             'token' => $token,
+            'slug' => $slug,
+            'isPartnerSite' => $this->isPartnerSite(),
             'error' => null,
             'layout' => 'external_course_modern',
         ]);
@@ -351,8 +537,10 @@ class ExternalCourseController extends Controller
 
     public function processCheckout(): void
     {
-        $token = isset($_POST['token']) ? trim((string)$_POST['token']) : '';
-        $course = $token !== '' ? Course::findByExternalToken($token) : null;
+        $resolved = $this->resolveExternalCourseFromPost();
+        $token = (string)$resolved['token'];
+        $slug = (string)$resolved['slug'];
+        $course = $resolved['course'];
         if (!$course) {
             header('Location: /');
             exit;
@@ -375,6 +563,8 @@ class ExternalCourseController extends Controller
                     'course' => $course,
                     'branding' => $branding,
                     'token' => $token,
+                    'slug' => $slug,
+                    'isPartnerSite' => $this->isPartnerSite(),
                     'savedCustomer' => null,
                     'error' => 'Por favor, preencha todos os campos obrigatórios.',
                     'layout' => 'external_course',
@@ -389,6 +579,8 @@ class ExternalCourseController extends Controller
                 'course' => $course,
                 'branding' => $branding,
                 'token' => $token,
+                'slug' => $slug,
+                'isPartnerSite' => $this->isPartnerSite(),
                 'savedCustomer' => null,
                 'error' => 'Sua senha deve ter pelo menos 8 caracteres.',
                 'layout' => 'external_course',
@@ -406,6 +598,8 @@ class ExternalCourseController extends Controller
                 'course' => $course,
                 'branding' => $branding,
                 'token' => $token,
+                'slug' => $slug,
+                'isPartnerSite' => $this->isPartnerSite(),
                 'savedCustomer' => null,
                 'error' => 'Já existe uma conta com este e-mail. Faça login e depois tente novamente.',
                 'layout' => 'external_course',
@@ -447,7 +641,8 @@ class ExternalCourseController extends Controller
                 $companyName = (string)($branding['company_name'] ?? '');
                 $logoUrl = (string)($branding['logo_url'] ?? '');
                 $greeting = $name !== '' ? $name : 'cliente';
-                $loginUrl = $this->buildExternalBaseUrl() . '/painel-externo';
+                $loginPath = $slug !== '' ? '/curso/' . urlencode($slug) . '/login' : '/login';
+                $loginUrl = $this->buildExternalBaseUrl() . $loginPath;
                 $content = '<p style="font-size:13px; color:#b0b0b0; line-height:1.55;">Sua conta foi criada com sucesso!</p>'
                     . '<p style="font-size:13px; color:#b0b0b0; line-height:1.55;">Dados de acesso:</p>'
                     . '<div style="font-size:13px; color:#f5f5f5; line-height:1.55; border:1px solid #272727; border-radius:12px; padding:10px 12px; background:#050509;">'
@@ -539,7 +734,8 @@ class ExternalCourseController extends Controller
                 $companyName = (string)($branding['company_name'] ?? '');
                 $logoUrl = (string)($branding['logo_url'] ?? '');
                 $greeting = $name !== '' ? $name : 'cliente';
-                $loginUrl = $this->buildExternalBaseUrl() . '/login';
+                $loginPath = $slug !== '' ? '/curso/' . urlencode($slug) . '/login' : '/login';
+                $loginUrl = $this->buildExternalBaseUrl() . $loginPath;
                 $content = '<p style="font-size:13px; color:#b0b0b0; line-height:1.55;">Sua conta foi criada para acessar o curso <b>' . htmlspecialchars((string)($course['title'] ?? ''), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') . '</b>.</p>'
                     . '<p style="font-size:13px; color:#b0b0b0; line-height:1.55;">Dados de acesso:</p>'
                     . '<div style="font-size:13px; color:#f5f5f5; line-height:1.55; border:1px solid #272727; border-radius:12px; padding:10px 12px; background:#050509;">'
@@ -561,6 +757,8 @@ class ExternalCourseController extends Controller
                 'course' => $course,
                 'branding' => $branding,
                 'token' => $token,
+                'slug' => $slug,
+                'isPartnerSite' => $this->isPartnerSite(),
                 'purchaseId' => $purchaseId,
                 'billingType' => $billingType,
                 'amountReais' => $finalPriceCents / 100,
@@ -576,6 +774,8 @@ class ExternalCourseController extends Controller
                 'course' => $course,
                 'branding' => $branding,
                 'token' => $token,
+                'slug' => $slug,
+                'isPartnerSite' => $this->isPartnerSite(),
                 'savedCustomer' => null,
                 'error' => 'Não consegui criar a cobrança para este curso. Tente novamente em alguns minutos.',
                 'layout' => 'external_course',
@@ -586,13 +786,10 @@ class ExternalCourseController extends Controller
 
     public function members(): void
     {
-        $token = isset($_GET['token']) ? trim((string)$_GET['token']) : '';
-        if ($token === '') {
-            header('Location: /');
-            exit;
-        }
-
-        $course = Course::findByExternalToken($token);
+        $resolved = $this->resolveExternalCourseFromGet();
+        $token = (string)$resolved['token'];
+        $slug = (string)$resolved['slug'];
+        $course = $resolved['course'];
         if (!$course) {
             http_response_code(404);
             echo 'Curso não encontrado';
@@ -602,7 +799,11 @@ class ExternalCourseController extends Controller
         $user = $this->requireLogin();
 
         if (!$this->canAccessExternalCourse($course, $user)) {
-            header('Location: /curso-externo?token=' . urlencode($token));
+            if ($slug !== '') {
+                header('Location: /curso/' . urlencode($slug));
+            } else {
+                header('Location: /');
+            }
             exit;
         }
 
@@ -629,6 +830,8 @@ class ExternalCourseController extends Controller
             'course' => $course,
             'branding' => $branding,
             'token' => $token,
+            'slug' => $slug,
+            'isPartnerSite' => $this->isPartnerSite(),
             'firstLessonId' => $firstLessonId,
             'layout' => 'external_course',
         ]);
@@ -636,18 +839,14 @@ class ExternalCourseController extends Controller
 
     public function lesson(): void
     {
-        $token = isset($_GET['token']) ? trim((string)$_GET['token']) : '';
+        $resolved = $this->resolveExternalCourseFromGet();
+        $token = (string)$resolved['token'];
+        $slug = (string)$resolved['slug'];
+        $course = $resolved['course'];
         $lessonId = isset($_GET['lesson_id']) ? (int)$_GET['lesson_id'] : 0;
-        if ($token === '' || $lessonId <= 0) {
+        if ($lessonId <= 0 || !$course) {
             header('Location: /');
             exit;
-        }
-
-        $course = Course::findByExternalToken($token);
-        if (!$course) {
-            http_response_code(404);
-            echo 'Curso não encontrado';
-            return;
         }
 
         $lesson = CourseLesson::findById($lessonId);
@@ -659,7 +858,11 @@ class ExternalCourseController extends Controller
 
         $user = $this->requireLogin();
         if (!$this->canAccessExternalCourse($course, $user)) {
-            header('Location: /curso-externo?token=' . urlencode($token));
+            if ($slug !== '') {
+                header('Location: /curso/' . urlencode($slug));
+            } else {
+                header('Location: /');
+            }
             exit;
         }
 
@@ -708,6 +911,8 @@ class ExternalCourseController extends Controller
             'completedLessonIds' => $completedLessonIds,
             'lessonComments' => $lessonComments,
             'token' => $token,
+            'slug' => $slug,
+            'isPartnerSite' => $this->isPartnerSite(),
             'prevLessonId' => $prevLessonId,
             'nextLessonId' => $nextLessonId,
             'layout' => 'external_course',
@@ -720,32 +925,41 @@ class ExternalCourseController extends Controller
     {
         $user = $this->requireLogin();
 
-        $token = isset($_POST['token']) ? trim((string)$_POST['token']) : '';
+        $resolved = $this->resolveExternalCourseFromPost();
+        $token = (string)$resolved['token'];
+        $slug = (string)$resolved['slug'];
+        $course = $resolved['course'];
         $lessonId = isset($_POST['lesson_id']) ? (int)$_POST['lesson_id'] : 0;
-        if ($token === '' || $lessonId <= 0) {
-            header('Location: /');
-            exit;
-        }
-
-        $course = Course::findByExternalToken($token);
-        if (!$course) {
+        if ($lessonId <= 0 || !$course) {
             header('Location: /');
             exit;
         }
 
         if (!$this->canAccessExternalCourse($course, $user)) {
-            header('Location: /curso-externo?token=' . urlencode($token));
+            if ($slug !== '') {
+                header('Location: /curso/' . urlencode($slug));
+            } else {
+                header('Location: /');
+            }
             exit;
         }
 
         $lesson = CourseLesson::findById($lessonId);
         if (!$lesson || empty($lesson['is_published']) || (int)($lesson['course_id'] ?? 0) !== (int)($course['id'] ?? 0)) {
-            header('Location: /curso-externo/membros?token=' . urlencode($token));
+            if ($slug !== '') {
+                header('Location: /curso/' . urlencode($slug) . '/membros');
+            } else {
+                header('Location: /');
+            }
             exit;
         }
 
         CourseLessonProgress::markCompleted((int)($course['id'] ?? 0), $lessonId, (int)($user['id'] ?? 0));
-        header('Location: /curso-externo/aula?token=' . urlencode($token) . '&lesson_id=' . $lessonId);
+        if ($slug !== '') {
+            header('Location: /curso/' . urlencode($slug) . '/aula?lesson_id=' . $lessonId);
+        } else {
+            header('Location: /');
+        }
         exit;
     }
 
@@ -753,28 +967,33 @@ class ExternalCourseController extends Controller
     {
         $user = $this->requireLogin();
 
-        $token = isset($_POST['token']) ? trim((string)$_POST['token']) : '';
+        $resolved = $this->resolveExternalCourseFromPost();
+        $token = (string)$resolved['token'];
+        $slug = (string)$resolved['slug'];
+        $course = $resolved['course'];
         $lessonId = isset($_POST['lesson_id']) ? (int)$_POST['lesson_id'] : 0;
         $body = trim((string)($_POST['body'] ?? ''));
-        if ($token === '' || $lessonId <= 0 || $body === '') {
-            header('Location: /');
-            exit;
-        }
-
-        $course = Course::findByExternalToken($token);
-        if (!$course) {
+        if ($lessonId <= 0 || $body === '' || !$course) {
             header('Location: /');
             exit;
         }
 
         if (!$this->canAccessExternalCourse($course, $user)) {
-            header('Location: /curso-externo?token=' . urlencode($token));
+            if ($slug !== '') {
+                header('Location: /curso/' . urlencode($slug));
+            } else {
+                header('Location: /');
+            }
             exit;
         }
 
         $lesson = CourseLesson::findById($lessonId);
         if (!$lesson || empty($lesson['is_published']) || (int)($lesson['course_id'] ?? 0) !== (int)($course['id'] ?? 0)) {
-            header('Location: /curso-externo/membros?token=' . urlencode($token));
+            if ($slug !== '') {
+                header('Location: /curso/' . urlencode($slug) . '/membros');
+            } else {
+                header('Location: /');
+            }
             exit;
         }
 
@@ -785,7 +1004,11 @@ class ExternalCourseController extends Controller
             'body' => $body,
         ]);
 
-        header('Location: /curso-externo/aula?token=' . urlencode($token) . '&lesson_id=' . $lessonId);
+        if ($slug !== '') {
+            header('Location: /curso/' . urlencode($slug) . '/aula?lesson_id=' . $lessonId);
+        } else {
+            header('Location: /');
+        }
         exit;
     }
 
@@ -806,8 +1029,7 @@ class ExternalCourseController extends Controller
         }
 
         if ($purchase['status'] === 'paid') {
-            $token = (string)($purchase['external_token'] ?? '');
-            $redirectUrl = $token !== '' ? '/painel-externo/meus-cursos?token=' . urlencode($token) : '/painel-externo/meus-cursos';
+            $redirectUrl = '/painel-externo/meus-cursos';
             
             $this->json([
                 'status' => 'paid',
