@@ -74,7 +74,7 @@ if ($userId > 0) {
         FROM course_enrollments ce
         INNER JOIN courses c ON c.id = ce.course_id
         WHERE ce.user_id = ? AND c.is_active = 1
-        ORDER BY ce.enrolled_at DESC
+        ORDER BY ce.created_at DESC
         LIMIT 3
     ";
     $stmt = $pdo->prepare($enrolledCoursesQuery);
