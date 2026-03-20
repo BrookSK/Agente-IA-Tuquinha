@@ -1057,8 +1057,10 @@ class ExternalUserDashboardController extends Controller
 
     public function friendRequest(): void
     {
+        file_put_contents(__DIR__ . '/../../debug_notifications.log', date('Y-m-d H:i:s') . " - [DEBUG] friendRequest() foi chamado\n", FILE_APPEND);
         error_log("[DEBUG] friendRequest() foi chamado");
         $user = $this->requireLogin();
+        file_put_contents(__DIR__ . '/../../debug_notifications.log', date('Y-m-d H:i:s') . " - [DEBUG] User logado: " . ($user['name'] ?? 'N/A') . "\n", FILE_APPEND);
         error_log("[DEBUG] User logado: " . ($user['name'] ?? 'N/A'));
         $fromUserId = (int)$user['id'];
 
@@ -1077,10 +1079,12 @@ class ExternalUserDashboardController extends Controller
         UserFriend::request($fromUserId, $otherUserId);
 
         // Criar notificação para o usuário que recebeu o convite
+        file_put_contents(__DIR__ . '/../../debug_notifications.log', date('Y-m-d H:i:s') . " - [FRIEND_REQUEST] Iniciando criação - fromUserId: $fromUserId, otherUserId: $otherUserId\n", FILE_APPEND);
         error_log("[FRIEND_REQUEST] Iniciando criação de notificação - fromUserId: $fromUserId, otherUserId: $otherUserId");
         try {
             require_once __DIR__ . '/../Models/UserNotification.php';
             $fromUserName = $user['name'] ?? 'Alguém';
+            file_put_contents(__DIR__ . '/../../debug_notifications.log', date('Y-m-d H:i:s') . " - [FRIEND_REQUEST] Nome: $fromUserName\n", FILE_APPEND);
             error_log("[FRIEND_REQUEST] Nome do usuário: $fromUserName");
             
             $notificationId = \UserNotification::create([
@@ -1094,8 +1098,10 @@ class ExternalUserDashboardController extends Controller
                 'link' => '/painel-externo/perfil?user_id=' . $fromUserId
             ]);
             
+            file_put_contents(__DIR__ . '/../../debug_notifications.log', date('Y-m-d H:i:s') . " - [FRIEND_REQUEST] Notificação criada - ID: $notificationId\n", FILE_APPEND);
             error_log("[FRIEND_REQUEST] Notificação criada com sucesso - ID: $notificationId");
         } catch (\Exception $e) {
+            file_put_contents(__DIR__ . '/../../debug_notifications.log', date('Y-m-d H:i:s') . " - [FRIEND_REQUEST] ERRO: " . $e->getMessage() . "\n", FILE_APPEND);
             error_log("[FRIEND_REQUEST] ERRO ao criar notificação: " . $e->getMessage());
             error_log("[FRIEND_REQUEST] Stack trace: " . $e->getTraceAsString());
         }
@@ -1148,12 +1154,15 @@ class ExternalUserDashboardController extends Controller
         UserFriend::decide($currentUserId, $otherUserId, $decision);
         
         // Se aceitou o pedido, criar notificação para quem enviou
+        file_put_contents(__DIR__ . '/../../debug_notifications.log', date('Y-m-d H:i:s') . " - [FRIEND_DECIDE] Decision: $decision, currentUserId: $currentUserId, otherUserId: $otherUserId\n", FILE_APPEND);
         error_log("[FRIEND_DECIDE] Decision: $decision, currentUserId: $currentUserId, otherUserId: $otherUserId");
         if ($decision === 'accepted') {
+            file_put_contents(__DIR__ . '/../../debug_notifications.log', date('Y-m-d H:i:s') . " - [FRIEND_ACCEPTED] Iniciando criação\n", FILE_APPEND);
             error_log("[FRIEND_ACCEPTED] Iniciando criação de notificação de aceite");
             try {
                 require_once __DIR__ . '/../Models/UserNotification.php';
                 $currentUserName = $user['name'] ?? 'Alguém';
+                file_put_contents(__DIR__ . '/../../debug_notifications.log', date('Y-m-d H:i:s') . " - [FRIEND_ACCEPTED] Nome: $currentUserName\n", FILE_APPEND);
                 error_log("[FRIEND_ACCEPTED] Nome do usuário: $currentUserName");
                 
                 $notificationId = \UserNotification::create([
@@ -1167,8 +1176,10 @@ class ExternalUserDashboardController extends Controller
                     'link' => '/painel-externo/perfil?user_id=' . $currentUserId
                 ]);
                 
+                file_put_contents(__DIR__ . '/../../debug_notifications.log', date('Y-m-d H:i:s') . " - [FRIEND_ACCEPTED] Notificação criada - ID: $notificationId\n", FILE_APPEND);
                 error_log("[FRIEND_ACCEPTED] Notificação criada com sucesso - ID: $notificationId");
             } catch (\Exception $e) {
+                file_put_contents(__DIR__ . '/../../debug_notifications.log', date('Y-m-d H:i:s') . " - [FRIEND_ACCEPTED] ERRO: " . $e->getMessage() . "\n", FILE_APPEND);
                 error_log("[FRIEND_ACCEPTED] ERRO ao criar notificação: " . $e->getMessage());
                 error_log("[FRIEND_ACCEPTED] Stack trace: " . $e->getTraceAsString());
             }
