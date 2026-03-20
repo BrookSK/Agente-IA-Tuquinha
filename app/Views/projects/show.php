@@ -533,6 +533,7 @@
                                             $parea = trim((string)($p['area'] ?? ''));
                                             $pimg = trim((string)($p['image_path'] ?? ''));
                                             if ($pid <= 0 || $pname === '') { continue; }
+                                            if (!empty($p['coming_soon'])) { continue; }
                                             $selected = $initialPersonaId > 0 && $pid === $initialPersonaId;
                                         ?>
                                         <button type="button" class="projectPersonaCard" data-persona-id="<?= $pid ?>" aria-pressed="<?= $selected ? 'true' : 'false' ?>" style="

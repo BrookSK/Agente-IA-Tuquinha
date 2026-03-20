@@ -31,7 +31,7 @@ class Personality
     public static function allVisibleForUsers(): array
     {
         $pdo = Database::getConnection();
-        $stmt = $pdo->query('SELECT * FROM personalities WHERE active = 1 ORDER BY is_default DESC, name ASC');
+        $stmt = $pdo->query('SELECT * FROM personalities WHERE active = 1 AND coming_soon = 0 ORDER BY is_default DESC, name ASC');
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
@@ -59,7 +59,7 @@ class Personality
         $stmt = $pdo->prepare('SELECT p.*
             FROM personalities p
             INNER JOIN personality_plans pp ON pp.personality_id = p.id
-            WHERE p.active = 1 AND pp.plan_id = :pid
+            WHERE p.active = 1 AND p.coming_soon = 0 AND pp.plan_id = :pid
             ORDER BY p.is_default DESC, p.name ASC');
         $stmt->execute(['pid' => $planId]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
