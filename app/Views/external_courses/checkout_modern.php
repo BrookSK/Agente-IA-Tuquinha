@@ -63,34 +63,77 @@ $prefilledPassword = (string)($prefilledData['password'] ?? '');
         </div>
     <?php endif; ?>
 
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 2rem;" class="info-cards-grid">
-        <div class="card" style="background: rgba(99, 102, 241, 0.05); border-color: var(--accent);">
-            <div style="font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--accent); font-weight: 700; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
-                    <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
-                </svg>
-                Segurança
-            </div>
-            <p style="font-size: 0.95rem; color: var(--text-secondary);">
-                Use uma senha forte e não compartilhe suas credenciais
-            </p>
-        </div>
-        
-        <div class="card" style="background: rgba(99, 102, 241, 0.05); border-color: var(--accent);">
-            <div style="font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--accent); font-weight: 700; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
-                </svg>
-                Acesso Rápido
-            </div>
-            <p style="font-size: 0.95rem; color: var(--text-secondary);">
-                <?php if ($priceCents > 0): ?>
-                    Após o pagamento, acesso imediato ao conteúdo
-                <?php else: ?>
-                    Acesso imediato após criar sua conta
+    <div class="card course-summary-card" style="background: rgba(99, 102, 241, 0.05); border-color: var(--accent); margin-bottom: 2rem;">
+        <div style="display: flex; gap: 1.5rem; align-items: flex-start;" class="course-summary-content">
+            <?php 
+            $courseImage = !empty($course['image_path']) ? trim((string)$course['image_path']) : '';
+            $courseDescription = !empty($course['description']) ? trim((string)$course['description']) : '';
+            $courseWorkload = !empty($course['workload_hours']) ? (int)$course['workload_hours'] : 0;
+            ?>
+            
+            <?php if ($courseImage): ?>
+                <div style="flex-shrink: 0; width: 180px; height: 120px; border-radius: 12px; overflow: hidden; background: rgba(0,0,0,0.3);" class="course-image">
+                    <img src="<?= htmlspecialchars($courseImage, ENT_QUOTES, 'UTF-8') ?>" alt="<?= htmlspecialchars($courseTitle, ENT_QUOTES, 'UTF-8') ?>" style="width: 100%; height: 100%; object-fit: cover;">
+                </div>
+            <?php endif; ?>
+            
+            <div style="flex: 1;">
+                <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1rem; gap: 1rem; flex-wrap: wrap;">
+                    <h3 style="font-size: 1.5rem; font-weight: 700; color: var(--text-primary); margin: 0;">
+                        <?= htmlspecialchars($courseTitle, ENT_QUOTES, 'UTF-8') ?>
+                    </h3>
+                    <?php if ($courseWorkload > 0): ?>
+                        <div style="display: flex; align-items: center; gap: 0.5rem; color: var(--accent); font-weight: 600; white-space: nowrap;">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <polyline points="12 6 12 12 16 14"></polyline>
+                            </svg>
+                            <?= $courseWorkload ?>h de conteúdo
+                        </div>
+                    <?php endif; ?>
+                </div>
+                
+                <?php if ($courseDescription): ?>
+                    <div style="margin-bottom: 1.25rem;">
+                        <h4 style="font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--accent); font-weight: 700; margin-bottom: 0.5rem;">
+                            Descrição
+                        </h4>
+                        <p style="font-size: 0.95rem; color: var(--text-secondary); line-height: 1.6;">
+                            <?= nl2br(htmlspecialchars($courseDescription, ENT_QUOTES, 'UTF-8')) ?>
+                        </p>
+                    </div>
                 <?php endif; ?>
-            </p>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;" class="course-details-grid">
+                    <div>
+                        <h4 style="font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--accent); font-weight: 700; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
+                                <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
+                            </svg>
+                            Conteúdo Programático
+                        </h4>
+                        <p style="font-size: 0.9rem; color: var(--text-secondary);">
+                            Acesso completo a todos os módulos e aulas do curso
+                        </p>
+                    </div>
+                    
+                    <div>
+                        <h4 style="font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--accent); font-weight: 700; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                                <circle cx="9" cy="7" r="4"></circle>
+                                <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                                <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                            </svg>
+                            Comunidades
+                        </h4>
+                        <p style="font-size: 0.9rem; color: var(--text-secondary);">
+                            Acesso às comunidades exclusivas do curso
+                        </p>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -282,7 +325,9 @@ $prefilledPassword = (string)($prefilledData['password'] ?? '');
     }
     
     @media (max-width: 768px) {
-        .info-cards-grid { grid-template-columns: 1fr !important; gap: 1rem !important; }
+        .course-summary-content { flex-direction: column !important; }
+        .course-image { width: 100% !important; height: 200px !important; }
+        .course-details-grid { grid-template-columns: 1fr !important; gap: 1rem !important; }
         .checkout-form { grid-template-columns: 1fr !important; gap: 1rem !important; }
         .billing-grid { grid-template-columns: 1fr !important; }
     }
@@ -292,7 +337,8 @@ $prefilledPassword = (string)($prefilledData['password'] ?? '');
         h1 { font-size: 1.5rem !important; line-height: 1.25; }
         h2 { font-size: 1.1rem !important; }
         .card { padding: 1rem !important; }
-        .info-cards-grid { gap: 0.875rem !important; margin-bottom: 1.5rem !important; }
+        .course-summary-card h3 { font-size: 1.25rem !important; }
+        .course-image { height: 160px !important; }
         .checkout-form { gap: 0.875rem !important; }
     }
 </style>
