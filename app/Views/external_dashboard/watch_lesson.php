@@ -58,8 +58,80 @@ foreach ($lessons as $l) {
 
 $canCommentLesson = $user && $isEnrolled;
 ?>
-<div style="width: 100%; padding: 0 20px; margin: 0 auto; display:flex; gap:18px; box-sizing: border-box;">
-    <aside style="flex:0 0 220px; border-radius:16px; border:1px solid var(--border); background:var(--bg-card); padding:10px 8px; max-height:80vh; overflow:auto;">
+<style>
+    .lesson-container {
+        width: 100%;
+        padding: 0 20px;
+        margin: 0 auto;
+        display: flex;
+        gap: 18px;
+        box-sizing: border-box;
+    }
+    
+    .lesson-sidebar {
+        flex: 0 0 220px;
+        border-radius: 16px;
+        border: 1px solid var(--border);
+        background: var(--bg-card);
+        padding: 10px 8px;
+        max-height: 80vh;
+        overflow: auto;
+    }
+    
+    .lesson-main {
+        flex: 1 1 auto;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+    
+    @media (max-width: 768px) {
+        .lesson-container {
+            flex-direction: column;
+            padding: 0 12px;
+            gap: 16px;
+        }
+        
+        .lesson-sidebar {
+            flex: 1 1 auto;
+            max-height: none;
+            order: 2;
+        }
+        
+        .lesson-main {
+            order: 1;
+        }
+        
+        .lesson-sidebar ul {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 8px !important;
+        }
+        
+        .lesson-sidebar li a {
+            font-size: 11px !important;
+            padding: 8px 10px !important;
+            border-radius: 8px !important;
+        }
+    }
+    
+    @media (max-width: 640px) {
+        .lesson-container {
+            padding: 0 8px;
+            gap: 12px;
+        }
+        
+        .lesson-sidebar {
+            padding: 8px 6px;
+        }
+        
+        .lesson-sidebar ul {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+<div class="lesson-container">
+    <aside class="lesson-sidebar">
         <div style="font-size:13px; font-weight:600; margin-bottom:8px; color:var(--text-primary);">Aulas do curso</div>
         <?php if (empty($moduleLessons)): ?>
             <div style="font-size:12px; color:var(--text-secondary);">Nenhuma aula cadastrada.</div>
@@ -95,7 +167,7 @@ $canCommentLesson = $user && $isEnrolled;
         <?php endif; ?>
     </aside>
 
-    <main style="flex:1 1 auto; display:flex; flex-direction:column; gap:12px;">
+    <main class="lesson-main">
         <header style="margin-bottom:4px;">
             <div style="font-size:13px; color:var(--text-secondary); margin-bottom:2px;">
                 Curso: <?= htmlspecialchars($courseTitle, ENT_QUOTES, 'UTF-8') ?>
