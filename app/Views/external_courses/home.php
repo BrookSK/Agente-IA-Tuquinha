@@ -480,24 +480,28 @@ if ($slug !== '') {
     .site-header::after { display: none !important; }
     .header-content {
       padding: 0 16px;
-      flex-direction: column;
-      text-align: center;
+      flex-direction: row;
+      justify-content: space-between;
+      align-items: center;
       gap: 1rem;
     }
     .header-brand img { height: 32px !important; max-width: 140px !important; }
     .brand-icon { width: 32px; height: 32px; font-size: 0.75rem; }
     .header-nav {
       flex-direction: row;
-      gap: 0.75rem;
-      width: 100%;
-      justify-content: center;
+      gap: 0;
+      width: auto;
+      justify-content: flex-end;
     }
-    .header-nav a { font-size: 0.85rem; }
+    .header-nav a:not(.btn) { 
+      display: none !important;  /* Esconde link "Entrar" no mobile */
+    }
     .header-nav .btn { 
       padding: 0.5rem 1rem; 
       font-size: 0.85rem; 
-      width: 100%;
+      width: auto;
       text-align: center;
+      white-space: nowrap;
     }
     .hero { 
       padding-top: 0; 

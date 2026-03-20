@@ -176,11 +176,21 @@ function esc_attr(string $s): string {
         /* Mobile Responsive */
         @media (max-width: 768px) {
             .container { flex-direction: column; }
+            .mobile-menu-toggle { display: block; }
             .sidebar {
-                width: 100%;
-                height: auto;
-                position: relative;
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 280px;
+                height: 100vh;
                 padding: 16px;
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+                z-index: 1000;
+                overflow-y: auto;
+            }
+            .sidebar.active {
+                transform: translateX(0);
             }
             .logo {
                 margin-bottom: 16px;
@@ -217,7 +227,7 @@ function esc_attr(string $s): string {
         }
         
         @media (max-width: 640px) {
-            .sidebar { padding: 12px; }
+            .sidebar { padding: 12px; width: 260px; }
             .logo { margin-bottom: 12px; padding-bottom: 10px; }
             .logo img { max-height: 32px !important; max-width: 140px !important; }
             nav { gap: 6px; }
@@ -235,6 +245,25 @@ function esc_attr(string $s): string {
             .btn { padding: 9px 14px; font-size: 12px; }
         }
         
+        /* Mobile Menu Toggle */
+        .mobile-menu-toggle {
+            display: none;
+            position: fixed;
+            top: 16px;
+            right: 16px;
+            z-index: 1001;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 8px;
+            cursor: pointer;
+            color: var(--text-primary);
+        }
+        .mobile-menu-toggle svg {
+            width: 24px;
+            height: 24px;
+        }
+        
         /* Fix dropdown/select option text visibility */
         select {
             color: var(--text-primary) !important;
@@ -248,8 +277,16 @@ function esc_attr(string $s): string {
     </style>
 </head>
 <body>
+    <button class="mobile-menu-toggle" onclick="toggleMobileMenu()" aria-label="Menu">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="3" y1="12" x2="21" y2="12"></line>
+            <line x1="3" y1="6" x2="21" y2="6"></line>
+            <line x1="3" y1="18" x2="21" y2="18"></line>
+        </svg>
+    </button>
+    
     <div class="container">
-        <div class="sidebar">
+        <div class="sidebar" id="mobileSidebar">
             <div class="logo">
                 <?php if ($logoUrl !== ''): ?>
                     <img src="<?= esc_attr($logoUrl) ?>" alt="<?= esc_attr($companyName) ?>" style="max-height: 50px; width: auto; max-width: 220px; object-fit: contain;">
@@ -340,5 +377,38 @@ function esc_attr(string $s): string {
             <?php include $viewFile; ?>
         </div>
     </div>
+    
+    <script>
+        function toggleMobileMenu() {
+            const sidebar = document.getElementById('mobileSidebar');
+            const toggle = document.querySelector('.mobile-menu-toggle');
+            if (sidebar) {
+                sidebar.classList.toggle('active');
+            }
+            if (toggle) {
+                toggle.classList.toggle('active');
+            }
+        }
+        
+        // Close mobile menu when clicking outside
+        document.addEventListener('click', function(event) {
+            const sidebar = document.getElementById('mobileSidebar');
+            const toggle = document.querySelector('.mobile-menu-toggle');
+            if (sidebar && toggle && !sidebar.contains(event.target) && !toggle.contains(event.target)) {
+                sidebar.classList.remove('active');
+                toggle.classList.remove('active');
+            }
+        });
+        
+        // Close mobile menu when clicking on a nav item
+        document.querySelectorAll('.nav-item').forEach(item => {
+            item.addEventListener('click', function() {
+                const sidebar = document.getElementById('mobileSidebar');
+                if (sidebar) {
+                    sidebar.classList.remove('active');
+                }
+            });
+        });
+    </script>
 </body>
 </html>
