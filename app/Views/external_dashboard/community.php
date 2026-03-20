@@ -74,7 +74,7 @@
                         </div>
                     </div>
                     <?php if ($courseSlug !== ''): ?>
-                        <a href="/curso/<?= urlencode($courseSlug) ?>" class="btn" style="width: 100%; text-align: center; background: rgba(255, 193, 7, 0.2); color: #ffc107; border: 1px solid rgba(255, 193, 7, 0.3);">
+                        <a href="/painel-externo/cursos?highlight=<?= urlencode($courseSlug) ?>" class="btn" style="width: 100%; text-align: center; background: rgba(255, 193, 7, 0.2); color: #ffc107; border: 1px solid rgba(255, 193, 7, 0.3);">
                             Ver curso necessário
                         </a>
                     <?php else: ?>
