@@ -10,6 +10,7 @@ $companyName = '';
 $logoUrl = '';
 $primary = '';
 $secondary = '';
+$faviconUrl = '';
 
 $isPartnerSite = !empty($isPartnerSite);
 $slug = isset($slug) ? trim((string)$slug) : '';
@@ -18,6 +19,7 @@ $loginHref = ($isPartnerSite && $slug !== '') ? ('/curso/' . urlencode($slug) . 
 if (isset($branding) && is_array($branding)) {
     $companyName = trim((string)($branding['company_name'] ?? ''));
     $logoUrl = trim((string)($branding['logo_url'] ?? ''));
+    $faviconUrl = trim((string)($branding['favicon_url'] ?? ''));
     $primary = trim((string)($branding['primary_color'] ?? ''));
     $secondary = trim((string)($branding['secondary_color'] ?? ''));
 }
@@ -37,6 +39,7 @@ function esc_attr(string $s): string {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#111118">
     <title><?= esc_attr($companyName) ?></title>
+    <link rel="icon" type="image/png" href="<?= $faviconUrl !== '' ? esc_attr($faviconUrl) : '/public/favicon.png' ?>">
     <style>
         :root {
             --bg-main: #050509;

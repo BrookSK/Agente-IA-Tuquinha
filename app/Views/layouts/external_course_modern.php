@@ -16,10 +16,12 @@ $footerImageUrl = '';
 $heroImageUrl = '';
 $backgroundImageUrl = '';
 $brandSubtitle = '';
+$faviconUrl = '';
 
 if (isset($branding) && is_array($branding)) {
     $companyName = trim((string)($branding['company_name'] ?? ''));
     $logoUrl = trim((string)($branding['logo_url'] ?? ''));
+    $faviconUrl = trim((string)($branding['favicon_url'] ?? ''));
     $primary = trim((string)($branding['primary_color'] ?? ''));
     $secondary = trim((string)($branding['secondary_color'] ?? ''));
     $textColor = trim((string)($branding['text_color'] ?? ''));
@@ -67,6 +69,7 @@ function esc_attr(string $s): string {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="<?= $primary !== '' ? esc_attr($primary) : '#e53935' ?>">
     <title><?= esc_attr($pageTitle ?? $companyName) ?></title>
+    <link rel="icon" type="image/png" href="<?= $faviconUrl !== '' ? esc_attr($faviconUrl) : '/public/favicon.png' ?>">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">

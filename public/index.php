@@ -501,6 +501,9 @@ $router->post('/parceiro/comissoes/salvar-dados', 'PartnerCommissionsController@
 // Painel do profissional
 $router->get('/profissional', 'ProfessionalDashboardController@index');
 $router->get('/profissional/cursos', 'ProfessionalDashboardController@courses');
+$router->get('/profissional/cursos/novo', 'ProfessionalDashboardController@courseForm');
+$router->get('/profissional/cursos/editar', 'ProfessionalDashboardController@courseForm');
+$router->post('/profissional/cursos/salvar', 'ProfessionalDashboardController@courseSave');
 $router->get('/profissional/alunos', 'ProfessionalDashboardController@students');
 $router->get('/profissional/vendas', 'ProfessionalDashboardController@sales');
 $router->get('/profissional/comunidades', 'ProfessionalDashboardController@communities');

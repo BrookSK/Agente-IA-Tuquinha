@@ -123,6 +123,19 @@ class AdminUserController extends Controller
             exit;
         }
 
+        if (!empty($toPlan['allow_courses'])) {
+            $existingPartner = CoursePartner::findByUserId($userId);
+            if (!$existingPartner) {
+                try {
+                    CoursePartner::create([
+                        'user_id' => $userId,
+                        'default_commission_percent' => 0.0,
+                    ]);
+                } catch (\Throwable $e) {
+                }
+            }
+        }
+
         // Cria assinatura interna ativa para liberar acessos (não cria assinatura no Asaas).
         $cpf = (string)($user['billing_cpf'] ?? ($user['cpf'] ?? ''));
         $cpf = trim($cpf);

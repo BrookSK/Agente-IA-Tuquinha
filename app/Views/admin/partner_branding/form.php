@@ -6,6 +6,7 @@
 $branding = $branding ?? null;
 $companyName = trim((string)($branding['company_name'] ?? ''));
 $logoUrl = trim((string)($branding['logo_url'] ?? ''));
+$faviconUrl = trim((string)($branding['favicon_url'] ?? ''));
 $subdomain = trim((string)($branding['subdomain'] ?? ''));
 $subdomainStatus = trim((string)($branding['subdomain_status'] ?? ''));
 $baseDomain = isset($baseDomain) ? (string)$baseDomain : '';
@@ -138,6 +139,28 @@ $backgroundImageUrl = trim((string)($branding['background_image_url'] ?? ''));
                 <label style="font-size:13px; color:var(--text-primary); display:block; margin-bottom:4px;">Upload da logo (arquivo)</label>
                 <input type="file" name="logo_upload" accept="image/*" style="width:100%; padding:10px; border-radius:12px; border:1px solid var(--border-subtle); background:var(--surface-subtle); color:var(--text-primary);">
                 <div style="font-size:11px; color:var(--text-secondary); margin-top:6px;">Tamanho recomendado: 200x200px</div>
+            </div>
+        </div>
+
+        <div style="margin-top:12px; border-top:1px dashed var(--border-subtle); padding-top:12px;">
+            <div style="font-size:13px; font-weight:700; margin-bottom:8px;">Favicon</div>
+
+            <?php if ($faviconUrl !== ''): ?>
+                <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap; margin-bottom:10px;">
+                    <div style="width:40px; height:40px; border-radius:12px; overflow:hidden; border:1px solid var(--border-subtle); background:var(--surface-subtle);">
+                        <img src="<?= htmlspecialchars($faviconUrl, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?>" alt="favicon" style="width:100%; height:100%; object-fit:cover; display:block;">
+                    </div>
+                    <label style="display:flex; align-items:center; gap:6px; font-size:12px; color:var(--text-secondary);">
+                        <input type="checkbox" name="remove_favicon" value="1">
+                        <span>Remover favicon atual</span>
+                    </label>
+                </div>
+            <?php endif; ?>
+
+            <div>
+                <label style="font-size:13px; color:var(--text-primary); display:block; margin-bottom:4px;">Upload do favicon (arquivo)</label>
+                <input type="file" name="favicon_upload" accept="image/*" style="width:100%; padding:10px; border-radius:12px; border:1px solid var(--border-subtle); background:var(--surface-subtle); color:var(--text-primary);">
+                <div style="font-size:11px; color:var(--text-secondary); margin-top:6px;">Tamanho recomendado: 512x512px (PNG)</div>
             </div>
         </div>
 
