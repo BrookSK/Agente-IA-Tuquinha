@@ -10,7 +10,16 @@ class CoursePartner
     public static function allWithUser(): array
     {
         $pdo = Database::getConnection();
-        $stmt = $pdo->query('SELECT p.*, u.name AS user_name, u.email AS user_email,
+        // Base on course_partner_branding so ALL branding requests appear,
+        // even if the user doesn't have a course_partners row yet.
+        $stmt = $pdo->query(
+            'SELECT
+                u.id AS user_id,
+                u.name AS user_name,
+                u.email AS user_email,
+                p.id AS partner_id,
+                p.default_commission_percent,
+                p.pix_key,
                 b.subdomain AS branding_subdomain,
                 b.subdomain_status AS branding_subdomain_status,
                 b.subdomain_requested_at AS branding_subdomain_requested_at,
@@ -18,13 +27,13 @@ class CoursePartner
                 b.company_name AS branding_company_name,
                 b.primary_color AS branding_primary_color,
                 b.secondary_color AS branding_secondary_color
-            FROM course_partners p
-            JOIN users u ON u.id = p.user_id
-            LEFT JOIN course_partner_branding b ON b.user_id = p.user_id
-            ORDER BY u.name ASC');
+            FROM course_partner_branding b
+            JOIN users u ON u.id = b.user_id
+            LEFT JOIN course_partners p ON p.user_id = b.user_id
+            ORDER BY u.name ASC'
+        );
         $rows = $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
 
-        // Attach base_domain from settings for convenience
         try {
             $baseDomain = trim((string)\App\Models\Setting::get('partner_courses_base_domain', ''));
             if ($baseDomain === '') {
@@ -32,7 +41,7 @@ class CoursePartner
                 $host = $appPublicUrl !== '' ? (string)(parse_url($appPublicUrl, PHP_URL_HOST) ?? '') : '';
                 $baseDomain = trim($host);
             }
-        } catch (\Throwable $e) {
+        } catch (\Throwable) {
             $baseDomain = '';
         }
 
