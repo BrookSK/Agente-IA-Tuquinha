@@ -167,6 +167,19 @@ function esc_attr(string $s): string {
             border-bottom: 1px solid var(--border);
         }
         
+        .site-header::after {
+            content: '';
+            position: absolute;
+            bottom: -4px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: calc(100% - 160px);
+            height: 4px;
+            background: linear-gradient(90deg, #ff6b35 0%, #f7931e 50%, #fdc830 100%);
+            border-radius: 4px;
+            z-index: -1;
+        }
+        
         .header-content {
             max-width: 1400px;
             margin: 0 auto;
@@ -227,10 +240,19 @@ function esc_attr(string $s): string {
             font-weight: 500;
             font-size: 0.95rem;
             transition: color 0.2s;
+            background: none;
+            border: none;
+            padding: 0;
         }
         
         .header-nav a:hover {
             color: var(--text-primary);
+        }
+        
+        .header-nav a:not(.btn) {
+            background: transparent !important;
+            border: none !important;
+            box-shadow: none !important;
         }
         
         a:not(.btn):not(.header-brand):not(.nav-item) {
