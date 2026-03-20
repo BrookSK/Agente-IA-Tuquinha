@@ -748,13 +748,14 @@
                 <input type="hidden" name="folder_path" value="/base">
                 <div style="display:flex; gap:8px; align-items:flex-end; flex-wrap:wrap;">
                     <div style="flex:2; min-width:220px;">
-                        <label style="display:block; font-size:12px; color:var(--text-secondary); margin-bottom:4px;">Arquivo</label>
-                        <input type="file" name="file" required style="width:100%; padding:7px 9px; border-radius:8px; border:1px solid var(--border-subtle); background:var(--surface-subtle); color:var(--text-primary); font-size:13px;">
+                        <label style="display:block; font-size:12px; color:var(--text-secondary); margin-bottom:4px;">Arquivos</label>
+                        <input type="file" name="file" id="filesUploadInput" multiple required style="width:100%; padding:7px 9px; border-radius:8px; border:1px solid var(--border-subtle); background:var(--surface-subtle); color:var(--text-primary); font-size:13px;">
                     </div>
                     <div>
-                        <button type="submit" style="border:none; border-radius:999px; padding:9px 14px; background:linear-gradient(135deg,#e53935,#ff6f60); color:#050509; font-weight:600; font-size:13px; cursor:pointer;">Enviar</button>
+                        <button type="button" id="filesUploadBtn" style="border:none; border-radius:999px; padding:9px 14px; background:linear-gradient(135deg,#e53935,#ff6f60); color:#050509; font-weight:600; font-size:13px; cursor:pointer;">Enviar</button>
                     </div>
                 </div>
+                <div id="filesUploadProgress" style="display:none; font-size:12px; color:var(--text-secondary); padding:4px 0;"></div>
                 <div style="background:rgba(255, 111, 96, 0.06); border:1px solid rgba(255, 111, 96, 0.35); border-radius:12px; padding:10px 12px; font-size:12px; line-height:1.35; color:#ff6f60;">
                     Arquivos de texto/código (txt, md, json, php, js, etc.) serão usados como contexto automaticamente.
                 </div>
@@ -763,6 +764,61 @@
                     Se tiver um arquivo do Office (Word, Excel ou PowerPoint), converta para <strong>PDF</strong>.
                 </div>
             </form>
+            <script>
+            (function() {
+                var btn = document.getElementById('filesUploadBtn');
+                if (!btn) return;
+                btn.addEventListener('click', function() {
+                    var input = document.getElementById('filesUploadInput');
+                    var form = document.getElementById('filesUploadForm');
+                    var progress = document.getElementById('filesUploadProgress');
+                    if (!input || !input.files || input.files.length === 0) {
+                        alert('Selecione ao menos um arquivo.');
+                        return;
+                    }
+                    var files = Array.from(input.files);
+                    var projectId = form.querySelector('[name="project_id"]').value;
+                    var total = files.length;
+                    var done = 0;
+                    var errors = [];
+                    btn.disabled = true;
+                    btn.textContent = 'Enviando...';
+                    progress.style.display = 'block';
+                    progress.textContent = '0 de ' + total + ' enviado(s)...';
+
+                    function uploadNext(index) {
+                        if (index >= files.length) {
+                            btn.disabled = false;
+                            btn.textContent = 'Enviar';
+                            if (errors.length > 0) {
+                                progress.style.color = '#ffbaba';
+                                progress.textContent = done + ' enviado(s). Erro em: ' + errors.join(', ');
+                            } else {
+                                progress.textContent = total + ' arquivo(s) enviado(s) com sucesso!';
+                            }
+                            setTimeout(function() { window.location.reload(); }, 1200);
+                            return;
+                        }
+                        var fd = new FormData();
+                        fd.append('project_id', projectId);
+                        fd.append('folder_path', '/base');
+                        fd.append('file', files[index]);
+                        progress.textContent = 'Enviando ' + (index + 1) + ' de ' + total + ': ' + files[index].name;
+                        fetch('/projetos/arquivo-base/upload', { method: 'POST', body: fd })
+                            .then(function(r) {
+                                done++;
+                                if (!r.ok) errors.push(files[index].name);
+                                uploadNext(index + 1);
+                            })
+                            .catch(function() {
+                                errors.push(files[index].name);
+                                uploadNext(index + 1);
+                            });
+                    }
+                    uploadNext(0);
+                });
+            })();
+            </script>
 
             <form id="filesTextForm" action="/projetos/arquivo-base/texto" method="post" style="display:none; flex-direction:column; gap:8px; margin-bottom:14px;">
                 <input type="hidden" name="project_id" value="<?= (int)($project['id'] ?? 0) ?>">
