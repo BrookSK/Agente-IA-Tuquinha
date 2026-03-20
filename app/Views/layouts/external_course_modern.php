@@ -105,9 +105,13 @@ function esc_attr(string $s): string {
             padding: 0;
         }
         
+        html {
+            background: #0a0a0f !important;
+        }
+        
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-            background: linear-gradient(135deg, #0a0a0f 0%, #14141f 50%, #1a1a2e 100%);
+            background: linear-gradient(135deg, #0a0a0f 0%, #14141f 50%, #1a1a2e 100%) !important;
             color: var(--text-primary);
             line-height: 1.6;
             min-height: 100vh;

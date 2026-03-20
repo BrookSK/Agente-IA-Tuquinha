@@ -39,7 +39,7 @@ $prefilledEmail = trim((string)($prefilledData['email'] ?? ''));
 $prefilledPassword = (string)($prefilledData['password'] ?? '');
 ?>
 
-<div class="container" style="max-width: 900px;">
+<div class="container" style="max-width: 900px; background: transparent !important;">
     <div style="text-align: center; margin-bottom: 3rem;">
         <h1 style="font-size: 2.5rem; font-weight: 900; margin-bottom: 0.5rem;">
             <?php if ($priceCents > 0): ?>
