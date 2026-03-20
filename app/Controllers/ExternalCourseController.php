@@ -543,6 +543,9 @@ class ExternalCourseController extends Controller
             }
         }
 
+        // Buscar dados dinâmicos do curso usando helper
+        $courseDetails = \App\Helpers\CourseHelper::getCourseDetails((int)($course['id'] ?? 0));
+
         $this->view('external_courses/checkout_modern', [
             'pageTitle' => 'Comprar: ' . (string)($course['title'] ?? 'Curso'),
             'course' => $course,
@@ -552,6 +555,7 @@ class ExternalCourseController extends Controller
             'isPartnerSite' => $this->isPartnerSite(),
             'error' => null,
             'prefilledData' => $prefilledData,
+            'courseDetails' => $courseDetails,
             'layout' => 'external_course_modern',
         ]);
     }
