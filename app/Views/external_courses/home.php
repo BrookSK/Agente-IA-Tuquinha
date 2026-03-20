@@ -94,6 +94,8 @@ if ($slug !== '') {
     display: flex; align-items: center; gap: 12px;
     font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1.1rem;
     letter-spacing: -.5px; color: var(--text); text-decoration: none;
+    position: relative;
+    z-index: 10;
   }
   .brand-icon {
     width: 36px; height: 36px; border-radius: 10px;
@@ -103,7 +105,7 @@ if ($slug !== '') {
     overflow: hidden;
   }
   .brand-icon img { width: 100%; height: 100%; object-fit: cover; }
-  .nav-actions { display: flex; align-items: center; gap: 12px; }
+  .nav-actions { display: flex; align-items: center; gap: 12px; position: relative; z-index: 10; }
   .btn-ghost {
     background: none; border: none; cursor: pointer; color: var(--muted);
     font-family: inherit; font-size: .875rem; padding: 8px 16px;
@@ -638,8 +640,12 @@ if ($slug !== '') {
     <?php if (!empty($_SESSION['user_id'])): ?>
       <a href="/painel-externo" class="btn-primary">Acessar Painel</a>
     <?php else: ?>
-      <a href="#login" class="btn-ghost" onclick="event.preventDefault(); document.getElementById('login-section').scrollIntoView({behavior: 'smooth'}); setTimeout(() => switchTab('login', document.querySelector('[data-tab=login]')), 300); toggleMobileMenu();">Login</a>
-      <a href="#login" class="btn-primary" onclick="event.preventDefault(); document.getElementById('login-section').scrollIntoView({behavior: 'smooth'}); setTimeout(() => switchTab('register', document.querySelector('[data-tab=register]')), 300); toggleMobileMenu();">Criar Conta Grátis</a>
+      <a href="#login" class="btn-ghost" onclick="event.preventDefault(); document.getElementById('login-section').scrollIntoView({behavior: 'smooth'}); setTimeout(() => switchTab('login', document.querySelector('[data-tab=login]')), 300); toggleMobileMenu();">Entrar</a>
+      <?php if ($priceCents > 0): ?>
+        <a href="<?= $checkoutHref ?>" class="btn-primary">Comprar por R$ <?= $price ?></a>
+      <?php else: ?>
+        <a href="#login" class="btn-primary" onclick="event.preventDefault(); document.getElementById('login-section').scrollIntoView({behavior: 'smooth'}); setTimeout(() => switchTab('register', document.querySelector('[data-tab=register]')), 300); toggleMobileMenu();">Criar Conta Grátis</a>
+      <?php endif; ?>
     <?php endif; ?>
   </div>
 </nav>
