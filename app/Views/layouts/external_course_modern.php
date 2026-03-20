@@ -473,7 +473,7 @@ function esc_attr(string $s): string {
         }
         
         @media (max-width: 768px) {
-            body { overflow-x: hidden; }
+            body { overflow-x: hidden; padding-top: 120px; }
             .container { padding: 0 1rem; max-width: 100%; }
             .site-header { padding: 1rem; }
             .header-content {
