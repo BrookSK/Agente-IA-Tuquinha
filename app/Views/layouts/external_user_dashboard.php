@@ -175,14 +175,15 @@ function esc_attr(string $s): string {
         
         /* Mobile Responsive */
         @media (max-width: 768px) {
+            body { padding-top: 60px; }
             .container { flex-direction: column; }
-            .mobile-menu-toggle { display: block; }
+            .mobile-header { display: flex; }
             .sidebar {
                 position: fixed;
-                top: 0;
+                top: 60px;
                 left: 0;
                 width: 280px;
-                height: 100vh;
+                height: calc(100vh - 60px);
                 padding: 16px;
                 transform: translateX(-100%);
                 transition: transform 0.3s ease;
@@ -191,6 +192,9 @@ function esc_attr(string $s): string {
             }
             .sidebar.active {
                 transform: translateX(0);
+            }
+            .sidebar .logo {
+                display: none;
             }
             .logo {
                 margin-bottom: 16px;
@@ -245,16 +249,29 @@ function esc_attr(string $s): string {
             .btn { padding: 9px 14px; font-size: 12px; }
         }
         
-        /* Mobile Menu Toggle */
-        .mobile-menu-toggle {
+        /* Mobile Header */
+        .mobile-header {
             display: none;
             position: fixed;
-            top: 16px;
-            right: 16px;
-            z-index: 1001;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 60px;
             background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: 8px;
+            border-bottom: 1px solid var(--border);
+            padding: 0 16px;
+            align-items: center;
+            justify-content: space-between;
+            z-index: 1001;
+        }
+        .mobile-header .logo img {
+            max-height: 36px !important;
+            width: auto;
+            max-width: 160px !important;
+        }
+        .mobile-menu-toggle {
+            background: none;
+            border: none;
             padding: 8px;
             cursor: pointer;
             color: var(--text-primary);
@@ -277,13 +294,22 @@ function esc_attr(string $s): string {
     </style>
 </head>
 <body>
-    <button class="mobile-menu-toggle" onclick="toggleMobileMenu()" aria-label="Menu">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <line x1="3" y1="12" x2="21" y2="12"></line>
-            <line x1="3" y1="6" x2="21" y2="6"></line>
-            <line x1="3" y1="18" x2="21" y2="18"></line>
-        </svg>
-    </button>
+    <header class="mobile-header">
+        <div class="logo">
+            <?php if ($logoUrl !== ''): ?>
+                <img src="<?= esc_attr($logoUrl) ?>" alt="<?= esc_attr($companyName) ?>" style="max-height: 36px; width: auto; max-width: 160px; object-fit: contain;">
+            <?php else: ?>
+                <div class="logo-text"><?= esc_attr($companyName) ?></div>
+            <?php endif; ?>
+        </div>
+        <button class="mobile-menu-toggle" onclick="toggleMobileMenu()" aria-label="Menu">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="3" y1="12" x2="21" y2="12"></line>
+                <line x1="3" y1="6" x2="21" y2="6"></line>
+                <line x1="3" y1="18" x2="21" y2="18"></line>
+            </svg>
+        </button>
+    </header>
     
     <div class="container">
         <div class="sidebar" id="mobileSidebar">
