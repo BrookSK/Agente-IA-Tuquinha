@@ -1140,7 +1140,7 @@ class ExternalUserDashboardController extends Controller
         UserFriend::decide($currentUserId, $otherUserId, $decision);
         
         // Se aceitou o pedido, criar notificação para quem enviou
-        if ($decision === 'accept') {
+        if ($decision === 'accepted') {
             try {
                 require_once __DIR__ . '/../Models/UserNotification.php';
                 $currentUser = \App\Models\User::findById($currentUserId);
