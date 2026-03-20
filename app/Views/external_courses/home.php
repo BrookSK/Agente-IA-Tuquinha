@@ -32,14 +32,6 @@ if ($slug !== '') {
     $registerFreeAction = '/curso/' . urlencode($slug) . '/registrar';
 }
 ?>
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title><?= htmlspecialchars($companyName ?: $title, ENT_QUOTES, 'UTF-8') ?></title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   :root {
@@ -622,47 +614,9 @@ if ($slug !== '') {
     .cta-banner h2 { font-size: 1.5rem; }
     .cta-banner p { font-size: 0.9rem; }
     .form-row { grid-template-columns: 1fr; gap: 12px; }
-    footer { padding: 20px 16px; font-size: 0.8rem; }
-  }
-  .panel { display: none; }
-  .panel.active { display: block; }
 </style>
-</head>
-<body>
 
-<nav>
-  <a class="nav-brand" href="<?= $courseHref ?>">
-    <?php if ($logoUrl): ?>
-      <img src="<?= htmlspecialchars($logoUrl, ENT_QUOTES, 'UTF-8') ?>" alt="Logo" style="height: 40px; width: auto; max-width: 200px; object-fit: contain;">
-    <?php else: ?>
-      <div class="brand-icon">
-        <?= htmlspecialchars(strtoupper(substr($companyName ?: 'OC', 0, 2)), ENT_QUOTES, 'UTF-8') ?>
-      </div>
-      <?= htmlspecialchars($companyName ?: 'Curso Online', ENT_QUOTES, 'UTF-8') ?>
-    <?php endif; ?>
-  </a>
-  <button class="mobile-menu-toggle" onclick="toggleMobileMenu()" aria-label="Menu">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <line x1="3" y1="12" x2="21" y2="12"></line>
-      <line x1="3" y1="6" x2="21" y2="6"></line>
-      <line x1="3" y1="18" x2="21" y2="18"></line>
-    </svg>
-  </button>
-  <div class="nav-actions" id="mobileMenu">
-    <?php if (!empty($_SESSION['user_id'])): ?>
-      <a href="/painel-externo" class="btn-primary">Acessar Painel</a>
-    <?php else: ?>
-      <a href="#login" onclick="event.preventDefault(); document.getElementById('login-section').scrollIntoView({behavior: 'smooth'}); setTimeout(() => switchTab('login', document.querySelector('[data-tab=login]')), 300); toggleMobileMenu();">Entrar</a>
-      <?php if ($priceCents > 0): ?>
-        <a href="<?= $checkoutHref ?>" class="btn-primary">Comprar por R$ <?= $price ?></a>
-      <?php else: ?>
-        <a href="#login" class="btn-primary" onclick="event.preventDefault(); document.getElementById('login-section').scrollIntoView({behavior: 'smooth'}); setTimeout(() => switchTab('register', document.querySelector('[data-tab=register]')), 300); toggleMobileMenu();">Criar Conta Grátis</a>
-      <?php endif; ?>
-    <?php endif; ?>
-  </div>
-</nav>
-
-<div class="page">
+<div class="page" style="padding-top: 0;">
   <section class="hero">
     <div class="hero-left">
       <div class="badge">
@@ -872,5 +826,3 @@ if ($slug !== '') {
     observer.observe(el);
   });
 </script>
-</body>
-</html>
