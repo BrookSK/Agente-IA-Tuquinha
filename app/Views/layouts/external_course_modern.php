@@ -183,7 +183,7 @@ function esc_attr(string $s): string {
         .header-content {
             max-width: 1400px;
             margin: 0 auto;
-            padding: 1rem 2rem;
+            padding: 1rem 80px;
             display: flex;
             align-items: center;
             justify-content: space-between;
