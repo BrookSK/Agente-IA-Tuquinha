@@ -497,6 +497,9 @@ function esc_attr(string $s): string {
             .form-input, .form-select { padding: 0.75rem; font-size: 0.9rem; }
             .form-hint { font-size: 0.75rem; }
             .btn { padding: 0.75rem 1.25rem; font-size: 0.9rem; }
+            .footer-content { grid-template-columns: 1fr; gap: 1.5rem; }
+            .footer-section { text-align: center; }
+            .footer-bottom { font-size: 0.8rem; padding: 1rem; }
         }
         
         @media (max-width: 640px) {
@@ -508,9 +511,15 @@ function esc_attr(string $s): string {
             h1 { font-size: 1.5rem; line-height: 1.25; }
             h2 { font-size: 1.25rem; }
             p { font-size: 0.9rem; }
-            .card { padding: 1rem; border-radius: 10px; }
-            .btn { padding: 0.625rem 1rem; font-size: 0.85rem; }
+            .card { padding: 1rem; }
+            .form-input, .form-select { font-size: 1rem; }
+            .btn { width: 100%; padding: 0.875rem; }
         }
+    </style>
+</head>
+<body>
+    <div class="site-wrapper">
+        <header class="site-header">
             <div class="header-content">
                 <a href="<?= $brandHref ?>" class="header-brand">
                     <?php if ($logoUrl !== ''): ?>

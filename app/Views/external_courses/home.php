@@ -622,6 +622,10 @@ if ($slug !== '') {
     .cta-banner h2 { font-size: 1.5rem; }
     .cta-banner p { font-size: 0.9rem; }
     .form-row { grid-template-columns: 1fr; gap: 12px; }
+    footer { padding: 20px 16px; font-size: 0.8rem; }
+  }
+  .panel { display: none; }
+  .panel.active { display: block; }
 </style>
 </head>
 <body>
@@ -632,7 +636,7 @@ if ($slug !== '') {
       <img src="<?= htmlspecialchars($logoUrl, ENT_QUOTES, 'UTF-8') ?>" alt="Logo" style="height: 40px; width: auto; max-width: 200px; object-fit: contain;">
     <?php else: ?>
       <div class="brand-icon">
-        <?= htmlspecialchars($companyName ?: 'Curso Online', ENT_QUOTES, 'UTF-8') ?>
+        <?= htmlspecialchars(strtoupper(substr($companyName ?: 'OC', 0, 2)), ENT_QUOTES, 'UTF-8') ?>
       </div>
       <?= htmlspecialchars($companyName ?: 'Curso Online', ENT_QUOTES, 'UTF-8') ?>
     <?php endif; ?>
