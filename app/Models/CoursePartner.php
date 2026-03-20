@@ -12,12 +12,36 @@ class CoursePartner
         $pdo = Database::getConnection();
         $stmt = $pdo->query('SELECT p.*, u.name AS user_name, u.email AS user_email,
                 b.subdomain AS branding_subdomain,
-                b.subdomain_status AS branding_subdomain_status
+                b.subdomain_status AS branding_subdomain_status,
+                b.subdomain_requested_at AS branding_subdomain_requested_at,
+                b.subdomain_approved_at AS branding_subdomain_approved_at,
+                b.company_name AS branding_company_name,
+                b.primary_color AS branding_primary_color,
+                b.secondary_color AS branding_secondary_color
             FROM course_partners p
             JOIN users u ON u.id = p.user_id
             LEFT JOIN course_partner_branding b ON b.user_id = p.user_id
             ORDER BY u.name ASC');
-        return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+
+        // Attach base_domain from settings for convenience
+        try {
+            $baseDomain = trim((string)\App\Models\Setting::get('partner_courses_base_domain', ''));
+            if ($baseDomain === '') {
+                $appPublicUrl = trim((string)\App\Models\Setting::get('app_public_url', ''));
+                $host = $appPublicUrl !== '' ? (string)(parse_url($appPublicUrl, PHP_URL_HOST) ?? '') : '';
+                $baseDomain = trim($host);
+            }
+        } catch (\Throwable $e) {
+            $baseDomain = '';
+        }
+
+        foreach ($rows as &$row) {
+            $row['base_domain'] = $baseDomain;
+        }
+        unset($row);
+
+        return $rows;
     }
 
     public static function findByUserId(int $userId): ?array

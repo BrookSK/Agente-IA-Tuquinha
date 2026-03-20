@@ -101,6 +101,35 @@ class FinanceService
         return SubscriptionPayment::sumRevenueCentsByPlanPeriodType($start, $end);
     }
 
+    public static function partnerRevenueBreakdown(string $start, string $end): array
+    {
+        $pdo = Database::getConnection();
+        // Revenue and commission owed per partner for the period
+        $sql = 'SELECT
+                u.id AS user_id,
+                u.name AS partner_name,
+                u.email AS partner_email,
+                b.company_name,
+                b.subdomain,
+                b.subdomain_status,
+                COUNT(cp.id) AS paid_count,
+                COALESCE(SUM(cp.amount_cents), 0) AS gross_cents,
+                COALESCE(SUM(ROUND(cp.amount_cents * (COALESCE(cpc.commission_percent, par.default_commission_percent) / 100), 0)), 0) AS commission_cents
+            FROM course_purchases cp
+            JOIN courses c ON c.id = cp.course_id
+            JOIN course_partners par ON par.user_id = c.owner_user_id
+            JOIN users u ON u.id = par.user_id
+            LEFT JOIN course_partner_branding b ON b.user_id = par.user_id
+            LEFT JOIN course_partner_commissions cpc ON cpc.partner_id = par.id AND cpc.course_id = c.id
+            WHERE cp.status = "paid" AND cp.paid_at IS NOT NULL
+              AND cp.paid_at >= :start AND cp.paid_at < :end
+            GROUP BY par.user_id, u.id, u.name, u.email, b.company_name, b.subdomain, b.subdomain_status, par.default_commission_percent
+            ORDER BY gross_cents DESC';
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute(['start' => $start, 'end' => $end]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+    }
+
     public static function summary(string $start, string $end): array
     {
         $plan = self::planRevenueCents($start, $end);

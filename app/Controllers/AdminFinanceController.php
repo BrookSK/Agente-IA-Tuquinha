@@ -34,6 +34,7 @@ class AdminFinanceController extends Controller
         $summary = FinanceService::summary($start, $end);
         $topCourses = FinanceService::courseRevenueByCourse($start, $end, 30);
         $planPayments = SubscriptionPayment::listByPeriod($start, $end, 120);
+        $partnerRevenue = FinanceService::partnerRevenueBreakdown($start, $end);
 
         $this->view('admin/finance/index', [
             'pageTitle' => 'Finanças',
@@ -46,6 +47,7 @@ class AdminFinanceController extends Controller
             'summary' => $summary,
             'topCourses' => $topCourses,
             'planPayments' => $planPayments,
+            'partnerRevenue' => $partnerRevenue,
         ]);
     }
 }

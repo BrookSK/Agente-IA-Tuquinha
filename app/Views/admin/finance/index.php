@@ -8,6 +8,7 @@
 /** @var array $summary */
 /** @var array $topCourses */
 /** @var array $planPayments */
+/** @var array $partnerRevenue */
 
 $plan = (int)($summary['plan_revenue_cents'] ?? 0);
 $planByType = (array)($summary['plan_revenue_by_type_cents'] ?? []);
@@ -159,6 +160,56 @@ if ($mode === 'year') {
                         </tbody>
                     </table>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <div style="margin-top:14px;">
+        <div style="font-size:14px; font-weight:900; margin-bottom:8px;">Receita por parceiro (cursos externos no período)</div>
+        <div style="border-radius:14px; border:1px solid var(--border-subtle); overflow:hidden; background:var(--surface-card);">
+            <div style="overflow-x:auto; -webkit-overflow-scrolling:touch;">
+                <table style="width:100%; min-width:700px; border-collapse:collapse; font-size:13px;">
+                    <thead style="background:var(--surface-subtle);">
+                        <tr>
+                            <th style="text-align:left; padding:10px 12px; border-bottom:1px solid var(--border-subtle);">Parceiro</th>
+                            <th style="text-align:left; padding:10px 12px; border-bottom:1px solid var(--border-subtle);">Subdomínio</th>
+                            <th style="text-align:center; padding:10px 12px; border-bottom:1px solid var(--border-subtle);">Vendas</th>
+                            <th style="text-align:right; padding:10px 12px; border-bottom:1px solid var(--border-subtle);">Receita bruta</th>
+                            <th style="text-align:right; padding:10px 12px; border-bottom:1px solid var(--border-subtle);">Comissão devida</th>
+                            <th style="text-align:right; padding:10px 12px; border-bottom:1px solid var(--border-subtle);">Líquido plataforma</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php if (empty($partnerRevenue)): ?>
+                            <tr><td colspan="6" style="padding:12px; color:var(--text-secondary);">Nenhuma venda de curso de parceiro no período.</td></tr>
+                        <?php else: ?>
+                            <?php foreach ($partnerRevenue as $pr): ?>
+                                <?php
+                                    $gross = (int)($pr['gross_cents'] ?? 0);
+                                    $commission = (int)($pr['commission_cents'] ?? 0);
+                                    $net = $gross - $commission;
+                                    $subStatus = strtolower(trim((string)($pr['subdomain_status'] ?? '')));
+                                    $subLabel = $subStatus === 'approved' ? '✓' : ($subStatus === 'pending' ? '⏳' : '');
+                                    $displayName = trim((string)($pr['company_name'] ?? '')) ?: (string)($pr['partner_name'] ?? '');
+                                ?>
+                                <tr style="border-top:1px solid var(--border-subtle);">
+                                    <td style="padding:10px 12px;">
+                                        <div style="font-weight:700;"><?= htmlspecialchars($displayName, ENT_QUOTES, 'UTF-8') ?></div>
+                                        <div style="font-size:11px; color:var(--text-secondary);"><?= htmlspecialchars((string)($pr['partner_email'] ?? ''), ENT_QUOTES, 'UTF-8') ?></div>
+                                    </td>
+                                    <td style="padding:10px 12px; font-family:monospace; font-size:12px; color:var(--text-secondary);">
+                                        <?= htmlspecialchars((string)($pr['subdomain'] ?? '—'), ENT_QUOTES, 'UTF-8') ?>
+                                        <?= $subLabel !== '' ? (' <span style="font-family:sans-serif;">' . $subLabel . '</span>') : '' ?>
+                                    </td>
+                                    <td style="padding:10px 12px; text-align:center;"><?= (int)($pr['paid_count'] ?? 0) ?></td>
+                                    <td style="padding:10px 12px; text-align:right; font-weight:900;"><?= money($gross) ?></td>
+                                    <td style="padding:10px 12px; text-align:right; color:#f59e0b; font-weight:800;"><?= money($commission) ?></td>
+                                    <td style="padding:10px 12px; text-align:right; font-weight:900; color:#10b981;"><?= money($net) ?></td>
+                                </tr>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>
