@@ -174,10 +174,33 @@ function esc_attr(string $s): string {
         .btn:hover { opacity: 0.9; }
         
         /* Mobile Responsive */
+        /* Mobile Header */
+        .mobile-header {
+            display: none;
+        }
+        
         @media (max-width: 768px) {
             body { padding-top: 60px; }
             .container { flex-direction: column; }
-            .mobile-header { display: flex; }
+            .mobile-header { 
+                display: flex !important;
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                height: 60px;
+                background: var(--bg-card);
+                border-bottom: 1px solid var(--border);
+                padding: 0 16px;
+                align-items: center;
+                justify-content: space-between;
+                z-index: 1001;
+            }
+            .mobile-header .logo img {
+                max-height: 36px !important;
+                width: auto;
+                max-width: 160px !important;
+            }
             .sidebar {
                 position: fixed;
                 top: 60px;
@@ -249,26 +272,6 @@ function esc_attr(string $s): string {
             .btn { padding: 9px 14px; font-size: 12px; }
         }
         
-        /* Mobile Header */
-        .mobile-header {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 60px;
-            background: var(--bg-card);
-            border-bottom: 1px solid var(--border);
-            padding: 0 16px;
-            align-items: center;
-            justify-content: space-between;
-            z-index: 1001;
-        }
-        .mobile-header .logo img {
-            max-height: 36px !important;
-            width: auto;
-            max-width: 160px !important;
-        }
         .mobile-menu-toggle {
             background: none;
             border: none;
