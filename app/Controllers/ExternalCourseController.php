@@ -508,7 +508,7 @@ class ExternalCourseController extends Controller
             'token' => $token,
             'slug' => $slug,
             'isPartnerSite' => $this->isPartnerSite(),
-            'layout' => 'external_course_modern',
+            'layout' => '',
         ]);
     }
 
