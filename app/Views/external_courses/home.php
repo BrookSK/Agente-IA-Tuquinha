@@ -47,10 +47,16 @@ if ($slug !== '') {
     --gold: #f5c842; --text: #e8eaf2; --muted: #6b7289; --radius: 18px;
     --glow: 0 0 60px rgba(45,110,246,.25);
   }
-  html { scroll-behavior: smooth; }
+  html { 
+    scroll-behavior: smooth; 
+    overflow-x: hidden;
+    max-width: 100%;
+  }
   body {
     font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text);
     min-height: 100vh; overflow-x: hidden; position: relative;
+    max-width: 100vw;
+    width: 100%;
   }
   body::before {
     content: ''; position: fixed; inset: 0; z-index: 0;
@@ -114,10 +120,17 @@ if ($slug !== '') {
     background: #4080ff; transform: translateY(-1px);
     box-shadow: 0 8px 28px rgba(45,110,246,.5);
   }
-  .page { position: relative; z-index: 2; }
+  .page { 
+    position: relative; 
+    z-index: 2; 
+    max-width: 100vw;
+    overflow-x: hidden;
+  }
   .hero {
     min-height: 100vh; display: grid; grid-template-columns: 1fr 1fr;
     align-items: center; gap: 0; padding-top: 68px;
+    max-width: 100%;
+    overflow-x: hidden;
   }
   .hero-left {
     padding: 80px 60px 80px 80px; display: flex; flex-direction: column; gap: 32px;
@@ -274,7 +287,12 @@ if ($slug !== '') {
     transform: translateY(-1px); box-shadow: 0 10px 30px rgba(45,110,246,.55);
   }
   .btn-submit:hover::after { opacity: 1; }
-  .section { padding: 100px 80px; position: relative; }
+  .section { 
+    padding: 100px 80px; 
+    position: relative;
+    max-width: 100%;
+    overflow-x: hidden;
+  }
   .section-head {
     text-align: center; margin-bottom: 60px; animation: fadeUp .8s ease both;
   }
@@ -412,7 +430,17 @@ if ($slug !== '') {
     transform: rotate(-45deg) translate(7px, -6px);
   }
   @media (max-width: 640px) {
-    body { overflow-x: hidden; padding-top: 60px; max-width: 100%; }
+    html { 
+      overflow-x: hidden !important;
+      max-width: 100vw !important;
+      width: 100% !important;
+    }
+    body { 
+      overflow-x: hidden !important; 
+      padding-top: 60px; 
+      max-width: 100vw !important;
+      width: 100% !important;
+    }
     nav { 
       padding: 0 16px; 
       height: 60px; 
@@ -461,7 +489,12 @@ if ($slug !== '') {
       text-align: center;
       display: block;
     }
-    .hero { padding-top: 0; min-height: auto; }
+    .hero { 
+      padding-top: 0; 
+      min-height: auto;
+      max-width: 100% !important;
+      overflow-x: hidden !important;
+    }
     .hero-left { 
       padding: 32px 20px 24px; 
       text-align: center; 
@@ -469,6 +502,8 @@ if ($slug !== '') {
       display: flex;
       flex-direction: column;
       gap: 20px;
+      max-width: 100%;
+      overflow-x: hidden;
     }
     .badge { margin: 0 auto; }
     .hero-title { 
@@ -505,6 +540,8 @@ if ($slug !== '') {
       padding: 24px 20px 40px;
       display: flex;
       justify-content: center;
+      max-width: 100%;
+      overflow-x: hidden;
     }
     .login-card { 
       padding: 24px 20px; 
@@ -524,14 +561,24 @@ if ($slug !== '') {
     .form-label { font-size: 0.85rem; margin-bottom: 6px; }
     .form-input { padding: 12px 14px; font-size: 0.95rem; }
     .btn-submit { padding: 14px; font-size: 0.95rem; }
-    .section { padding: 48px 16px; }
+    .section { 
+      padding: 48px 16px;
+      max-width: 100% !important;
+      overflow-x: hidden !important;
+    }
     .section-head h2 { font-size: 1.75rem; }
     .section-head p { font-size: 0.9rem; }
     .courses-grid { grid-template-columns: 1fr; gap: 16px; }
     .course-card { margin: 0; }
     .course-title { font-size: 1rem; }
     .course-desc { font-size: 0.8rem; }
-    .cta-banner { margin: 0 16px 32px; padding: 24px 20px; border-radius: 16px; }
+    .cta-banner { 
+      margin: 0 16px 32px; 
+      padding: 24px 20px; 
+      border-radius: 16px;
+      max-width: calc(100% - 32px) !important;
+      overflow-x: hidden !important;
+    }
     .cta-banner h2 { font-size: 1.5rem; }
     .cta-banner p { font-size: 0.9rem; }
     .form-row { grid-template-columns: 1fr; gap: 12px; }
