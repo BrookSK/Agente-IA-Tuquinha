@@ -638,8 +638,8 @@ if ($slug !== '') {
     <?php if (!empty($_SESSION['user_id'])): ?>
       <a href="/painel-externo" class="btn-primary">Acessar Painel</a>
     <?php else: ?>
-      <a href="#login" class="btn-ghost" onclick="switchTab('login', this); toggleMobileMenu();">Login</a>
-      <a href="#login" class="btn-primary" onclick="switchTab('register', this); toggleMobileMenu();">Criar Conta Grátis</a>
+      <a href="#login" class="btn-ghost" onclick="event.preventDefault(); document.getElementById('login-section').scrollIntoView({behavior: 'smooth'}); setTimeout(() => switchTab('login', document.querySelector('[data-tab=login]')), 300); toggleMobileMenu();">Login</a>
+      <a href="#login" class="btn-primary" onclick="event.preventDefault(); document.getElementById('login-section').scrollIntoView({behavior: 'smooth'}); setTimeout(() => switchTab('register', document.querySelector('[data-tab=register]')), 300); toggleMobileMenu();">Criar Conta Grátis</a>
     <?php endif; ?>
   </div>
 </nav>
@@ -687,8 +687,8 @@ if ($slug !== '') {
         </div>
 
         <div class="tabs">
-          <button class="tab active" onclick="switchTab('login', this)">Entrar</button>
-          <button class="tab" onclick="switchTab('register', this)">Cadastrar</button>
+          <button class="tab active" data-tab="login" onclick="switchTab('login', this)">Entrar</button>
+          <button class="tab" data-tab="register" onclick="switchTab('register', this)">Cadastrar</button>
         </div>
 
         <div id="panel-login" class="panel active">

@@ -111,7 +111,12 @@ class ExternalUserDashboardController extends Controller
 
         $courses = [];
         if ($partnerId) {
-            $allCourses = Course::allActive();
+            // Busca cursos externos ativos do proprietário
+            $pdo = Database::getConnection();
+            $stmt = $pdo->prepare('SELECT * FROM courses WHERE is_active = 1 AND is_external = 1 AND owner_user_id = :owner_id ORDER BY created_at DESC');
+            $stmt->execute(['owner_id' => $partnerId]);
+            $allCourses = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
             $enrollments = CourseEnrollment::allByUser((int)$user['id']);
             $enrolledCourseIds = [];
             foreach ($enrollments as $enrollment) {
@@ -119,10 +124,8 @@ class ExternalUserDashboardController extends Controller
             }
 
             foreach ($allCourses as $course) {
-                if ((int)$course['owner_user_id'] === $partnerId) {
-                    $course['user_has_access'] = !empty($enrolledCourseIds[(int)$course['id']]);
-                    $courses[] = $course;
-                }
+                $course['user_has_access'] = !empty($enrolledCourseIds[(int)$course['id']]);
+                $courses[] = $course;
             }
         }
 

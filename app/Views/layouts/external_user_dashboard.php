@@ -45,7 +45,7 @@ function esc_attr(string $s): string {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#111118">
-    <title>📚 <?= esc_attr($pageTitle ?? $companyName) ?></title>
+    <title><?= esc_attr($pageTitle ?? $companyName) ?></title>
     <?php 
     $faviconUrl = isset($branding) && is_array($branding) ? trim((string)($branding['favicon_url'] ?? '')) : '';
     if ($faviconUrl !== ''): 

@@ -68,7 +68,7 @@ function esc_attr(string $s): string {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="<?= $primary !== '' ? esc_attr($primary) : '#e53935' ?>">
-    <title>📚 <?= esc_attr($pageTitle ?? $companyName) ?></title>
+    <title><?= esc_attr($pageTitle ?? $companyName) ?></title>
     <?php if ($faviconUrl !== ''): ?>
         <link rel="icon" type="image/png" href="<?= esc_attr($faviconUrl) ?>">
     <?php else: ?>
