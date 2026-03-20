@@ -48,10 +48,21 @@ if ($slug !== '') {
 
 $loginHref = '';
 $ctaHref = '';
+$ctaText = 'Começar Agora';
 if (empty($_SESSION['user_id'])) {
     if ($slug !== '') {
         $loginHref = '/curso/' . urlencode($slug) . '/login';
         $ctaHref = '/curso/' . urlencode($slug) . '/checkout';
+        // Busca preço do curso para mostrar no botão
+        if (isset($course) && is_array($course)) {
+            $priceCents = isset($course['price_cents']) ? (int)$course['price_cents'] : 0;
+            if ($priceCents > 0) {
+                $price = number_format($priceCents / 100, 2, ',', '.');
+                $ctaText = 'Comprar por R$ ' . $price;
+            } else {
+                $ctaText = 'Criar Conta Grátis';
+            }
+        }
     } elseif (!$isPartnerSite) {
         $loginHref = '/login';
         $ctaHref = '/registrar';
@@ -171,6 +182,8 @@ function esc_attr(string $s): string {
             align-items: center;
             gap: 1rem;
             text-decoration: none;
+            position: relative;
+            z-index: 10;
         }
         
         .header-logo {
@@ -204,6 +217,8 @@ function esc_attr(string $s): string {
             display: flex;
             align-items: center;
             gap: 1.5rem;
+            position: relative;
+            z-index: 10;
         }
         
         .header-nav a {
@@ -510,7 +525,7 @@ function esc_attr(string $s): string {
                             <a href="<?= $loginHref ?>">Entrar</a>
                         <?php endif; ?>
                         <?php if ($ctaHref !== ''): ?>
-                            <a href="<?= $ctaHref ?>" class="btn" style="padding: 0.5rem 1.25rem; font-size: 0.9rem;">Começar Agora</a>
+                            <a href="<?= $ctaHref ?>" class="btn" style="padding: 0.5rem 1.25rem; font-size: 0.9rem;"><?= esc_attr($ctaText) ?></a>
                         <?php endif; ?>
                     <?php else: ?>
                         <a href="/painel-externo">Meu Painel</a>
