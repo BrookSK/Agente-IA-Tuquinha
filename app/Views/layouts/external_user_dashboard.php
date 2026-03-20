@@ -45,7 +45,15 @@ function esc_attr(string $s): string {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#111118">
-    <title><?= esc_attr($pageTitle ?? $companyName) ?></title>
+    <title>📚 <?= esc_attr($pageTitle ?? $companyName) ?></title>
+    <?php 
+    $faviconUrl = isset($branding) && is_array($branding) ? trim((string)($branding['favicon_url'] ?? '')) : '';
+    if ($faviconUrl !== ''): 
+    ?>
+        <link rel="icon" type="image/png" href="<?= esc_attr($faviconUrl) ?>">
+    <?php else: ?>
+        <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📚</text></svg>">
+    <?php endif; ?>
     <style>
         :root {
             --bg-main: #050509;
