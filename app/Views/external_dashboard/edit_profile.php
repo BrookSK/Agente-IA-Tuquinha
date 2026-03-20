@@ -392,13 +392,24 @@ $accentColor = !empty($branding['accent_color']) ? $branding['accent_color'] : '
                     </label>
                 </div>
                 <div class="edit-upload-area">
-                    <label class="edit-upload-btn" for="avatar-file">
-                        <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
-                        </svg>
-                        Escolher ficheiro
-                        <input type="file" id="avatar-file" name="avatar_file" accept="image/jpeg,image/png,image/gif"/>
-                    </label>
+                    <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                        <label class="edit-upload-btn" for="avatar-file" style="flex: 1; min-width: 150px;">
+                            <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+                            </svg>
+                            Escolher ficheiro
+                            <input type="file" id="avatar-file" name="avatar_file" accept="image/jpeg,image/png,image/gif"/>
+                        </label>
+                        <?php if ($avatarPath !== ''): ?>
+                            <button type="submit" name="remove_avatar" value="1" class="edit-upload-btn" style="flex: 0 0 auto; border-color: rgba(220, 53, 69, 0.3); color: #dc3545;" onclick="return confirm('Tem certeza que deseja remover a foto de perfil?');">
+                                <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                    <polyline points="3 6 5 6 21 6"></polyline>
+                                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                                </svg>
+                                Remover foto
+                            </button>
+                        <?php endif; ?>
+                    </div>
                     <p class="edit-field-hint" style="margin-top:8px;">JPG, PNG ou GIF · Até 2 MB</p>
                 </div>
             </div>

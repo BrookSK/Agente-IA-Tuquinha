@@ -746,6 +746,11 @@ class ExternalUserDashboardController extends Controller
         $existingProfile = UserSocialProfile::findByUserId($userId);
         $avatarPath = $existingProfile['avatar_path'] ?? null;
 
+        // Handle remove avatar request
+        if (!empty($_POST['remove_avatar'])) {
+            $avatarPath = null;
+        }
+
         if (!empty($_FILES['avatar_file']) && is_array($_FILES['avatar_file'])) {
             $uploadError = (int)($_FILES['avatar_file']['error'] ?? UPLOAD_ERR_NO_FILE);
             if ($uploadError !== UPLOAD_ERR_NO_FILE && $uploadError === UPLOAD_ERR_OK) {

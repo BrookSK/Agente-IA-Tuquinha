@@ -549,14 +549,15 @@ $accentColor = !empty($branding['accent_color']) ? $branding['accent_color'] : '
                                 <?php
                                     $commId = (int)($c['id'] ?? 0);
                                     $commName = (string)($c['name'] ?? 'Comunidade');
-                                    $commIcon = trim((string)($c['icon_path'] ?? ''));
+                                    $commImage = trim((string)($c['image_path'] ?? ''));
+                                    $commInitial = mb_strtoupper(mb_substr($commName, 0, 1, 'UTF-8'), 'UTF-8');
                                 ?>
                                 <a href="/painel-externo/comunidade/topicos?community_id=<?= $commId ?>" style="display:flex; align-items:center; gap:10px; padding:10px 12px; background:var(--surface-subtle); border:1.5px solid rgba(255, 255, 255, 0.08); border-radius:10px; text-decoration:none; color:var(--text-primary); font-size:.84rem; font-weight:500; transition:all .2s;">
-                                    <div style="width:36px; height:36px; border-radius:8px; overflow:hidden; background:rgba(255, 255, 255, 0.05); flex-shrink:0;">
-                                        <?php if ($commIcon !== ''): ?>
-                                            <img src="<?= htmlspecialchars($commIcon, ENT_QUOTES, 'UTF-8') ?>" alt="" style="width:100%; height:100%; object-fit:cover;"/>
+                                    <div style="width:36px; height:36px; border-radius:8px; overflow:hidden; background: linear-gradient(135deg, var(--accent), var(--accent2)); flex-shrink:0; display:flex; align-items:center; justify-content:center;">
+                                        <?php if ($commImage !== ''): ?>
+                                            <img src="<?= htmlspecialchars($commImage, ENT_QUOTES, 'UTF-8') ?>" alt="" style="width:100%; height:100%; object-fit:cover;"/>
                                         <?php else: ?>
-                                            <div style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; font-size:18px;">🏘️</div>
+                                            <span style="font-size:16px; font-weight:700; color:var(--button-text);"><?= htmlspecialchars($commInitial, ENT_QUOTES, 'UTF-8') ?></span>
                                         <?php endif; ?>
                                     </div>
                                     <span><?= htmlspecialchars($commName, ENT_QUOTES, 'UTF-8') ?></span>
