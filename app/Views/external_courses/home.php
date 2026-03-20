@@ -374,11 +374,11 @@ $logoUrl = isset($branding) && is_array($branding) && !empty($branding['logo_url
     height: 24px;
   }
   @media (max-width: 640px) {
-    body { overflow-x: hidden; }
-    nav { padding: 0 16px; height: 50px; min-height: 50px; }
+    body { overflow-x: hidden; padding-top: 50px; }
+    nav { padding: 0 16px; height: 50px; min-height: 50px; margin-bottom: 0; }
     .nav-brand img { height: 28px !important; max-width: 120px !important; }
     .brand-icon { width: 28px; height: 28px; font-size: 0.7rem; }
-    .mobile-menu-toggle { display: block; }
+    .mobile-menu-toggle { display: none !important; }
     .nav-actions {
       position: fixed;
       top: 50px;
@@ -402,13 +402,15 @@ $logoUrl = isset($branding) && is_array($branding) && !empty($branding['logo_url
       visibility: visible;
     }
     .nav-actions .btn { padding: 12px 20px; font-size: 0.9rem; width: 100%; text-align: center; }
-    .hero-left { padding: 60px 16px 24px; }
-    .hero-title { font-size: 2rem !important; line-height: 1.15; letter-spacing: -0.5px; }
-    .hero-sub { font-size: 0.9rem; line-height: 1.6; }
-    .hero-cta { flex-direction: column; width: 100%; }
-    .btn-lg { width: 100%; justify-content: center; padding: 12px 20px; font-size: 0.9rem; }
-    .hero-right { padding: 16px 16px 48px; }
-    .login-card { padding: 28px 20px; max-width: 100%; margin: 0; }
+    .hero { padding-top: 20px; }
+    .hero-left { padding: 40px 20px 24px; text-align: center; align-items: center; }
+    .badge { margin: 0 auto; }
+    .hero-title { font-size: 2rem !important; line-height: 1.15; letter-spacing: -0.5px; text-align: center; }
+    .hero-sub { font-size: 0.9rem; line-height: 1.6; text-align: center; max-width: 100%; }
+    .hero-cta { flex-direction: column; width: 100%; align-items: center; }
+    .btn-lg { width: 100%; max-width: 100%; justify-content: center; padding: 12px 20px; font-size: 0.9rem; }
+    .hero-right { padding: 16px 20px 48px; }
+    .login-card { padding: 28px 20px; max-width: 100%; margin: 0 auto; }
     .card-head h2 { font-size: 1.25rem; }
     .card-head p { font-size: 0.8rem; }
     .tabs { font-size: 0.85rem; padding: 3px; }
