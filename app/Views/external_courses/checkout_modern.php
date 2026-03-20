@@ -71,23 +71,32 @@ $prefilledPassword = (string)($prefilledData['password'] ?? '');
             $courseShortDescription = !empty($course['short_description']) ? trim((string)$course['short_description']) : '';
             $courseId = !empty($course['id']) ? (int)$course['id'] : 0;
             
-            // Buscar módulos do curso
-            $db = \App\Core\Database::getInstance();
-            $modulesQuery = "SELECT COUNT(*) as total_modules FROM course_modules WHERE course_id = ?";
-            $modulesResult = $db->query($modulesQuery, [$courseId]);
-            $totalModules = $modulesResult[0]['total_modules'] ?? 0;
+            $totalModules = 0;
+            $totalLessons = 0;
+            $communities = [];
+            $totalCommunities = 0;
             
-            // Buscar aulas do curso
-            $lessonsQuery = "SELECT COUNT(*) as total_lessons FROM course_lessons WHERE course_id = ?";
-            $lessonsResult = $db->query($lessonsQuery, [$courseId]);
-            $totalLessons = $lessonsResult[0]['total_lessons'] ?? 0;
-            
-            // Buscar comunidades do curso
-            $communitiesQuery = "SELECT c.name FROM course_allowed_communities cac 
-                                 INNER JOIN communities c ON c.id = cac.community_id 
-                                 WHERE cac.course_id = ? AND c.is_active = 1";
-            $communities = $db->query($communitiesQuery, [$courseId]);
-            $totalCommunities = count($communities);
+            try {
+                // Buscar módulos do curso
+                $db = \App\Core\Database::getInstance();
+                $modulesQuery = "SELECT COUNT(*) as total_modules FROM course_modules WHERE course_id = ?";
+                $modulesResult = $db->query($modulesQuery, [$courseId]);
+                $totalModules = $modulesResult[0]['total_modules'] ?? 0;
+                
+                // Buscar aulas do curso
+                $lessonsQuery = "SELECT COUNT(*) as total_lessons FROM course_lessons WHERE course_id = ?";
+                $lessonsResult = $db->query($lessonsQuery, [$courseId]);
+                $totalLessons = $lessonsResult[0]['total_lessons'] ?? 0;
+                
+                // Buscar comunidades do curso
+                $communitiesQuery = "SELECT c.name FROM course_allowed_communities cac 
+                                     INNER JOIN communities c ON c.id = cac.community_id 
+                                     WHERE cac.course_id = ? AND c.is_active = 1";
+                $communities = $db->query($communitiesQuery, [$courseId]);
+                $totalCommunities = count($communities);
+            } catch (\Exception $e) {
+                // Se houver erro, continua com valores padrão
+            }
             ?>
             
             <?php if ($courseImage): ?>
