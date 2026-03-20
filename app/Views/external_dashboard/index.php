@@ -66,7 +66,7 @@ $primaryColor = !empty($branding['primary_color']) ? $branding['primary_color'] 
 // Buscar cursos matriculados do usuário com detalhes
 $userId = $_SESSION['user_id'] ?? 0;
 if ($userId > 0) {
-    $db = \App\Core\Database::getInstance();
+    $pdo = \App\Core\Database::getConnection();
     
     // Buscar cursos matriculados
     $enrolledCoursesQuery = "
@@ -77,7 +77,9 @@ if ($userId > 0) {
         ORDER BY ce.enrolled_at DESC
         LIMIT 3
     ";
-    $enrolledCourses = $db->query($enrolledCoursesQuery, [$userId]);
+    $stmt = $pdo->prepare($enrolledCoursesQuery);
+    $stmt->execute([$userId]);
+    $enrolledCourses = $stmt->fetchAll(PDO::FETCH_ASSOC);
     
     if (!empty($enrolledCourses)):
 ?>
