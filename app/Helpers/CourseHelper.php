@@ -25,29 +25,26 @@ class CourseHelper
         }
         
         try {
-            $db = Database::getInstance();
+            $pdo = Database::getConnection();
             
             // Buscar total de módulos
-            $modulesResult = $db->query(
-                "SELECT COUNT(*) as total FROM course_modules WHERE course_id = ?",
-                [$courseId]
-            );
-            $result['totalModules'] = isset($modulesResult[0]['total']) ? (int)$modulesResult[0]['total'] : 0;
+            $stmt = $pdo->prepare("SELECT COUNT(*) as total FROM course_modules WHERE course_id = ?");
+            $stmt->execute([$courseId]);
+            $modulesResult = $stmt->fetch(\PDO::FETCH_ASSOC);
+            $result['totalModules'] = isset($modulesResult['total']) ? (int)$modulesResult['total'] : 0;
             
             // Buscar total de aulas
-            $lessonsResult = $db->query(
-                "SELECT COUNT(*) as total FROM course_lessons WHERE course_id = ?",
-                [$courseId]
-            );
-            $result['totalLessons'] = isset($lessonsResult[0]['total']) ? (int)$lessonsResult[0]['total'] : 0;
+            $stmt = $pdo->prepare("SELECT COUNT(*) as total FROM course_lessons WHERE course_id = ?");
+            $stmt->execute([$courseId]);
+            $lessonsResult = $stmt->fetch(\PDO::FETCH_ASSOC);
+            $result['totalLessons'] = isset($lessonsResult['total']) ? (int)$lessonsResult['total'] : 0;
             
             // Buscar comunidades
-            $result['communities'] = $db->query(
-                "SELECT c.name FROM course_allowed_communities cac 
-                 INNER JOIN communities c ON c.id = cac.community_id 
-                 WHERE cac.course_id = ? AND c.is_active = 1",
-                [$courseId]
-            );
+            $stmt = $pdo->prepare("SELECT c.name FROM course_allowed_communities cac 
+                                   INNER JOIN communities c ON c.id = cac.community_id 
+                                   WHERE cac.course_id = ? AND c.is_active = 1");
+            $stmt->execute([$courseId]);
+            $result['communities'] = $stmt->fetchAll(\PDO::FETCH_ASSOC) ?: [];
             
         } catch (\Exception $e) {
             // Retorna valores padrão em caso de erro
