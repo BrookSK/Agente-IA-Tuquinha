@@ -716,6 +716,31 @@ if (!empty($conversationId) && !empty($personaOptions) && is_array($personaOptio
                 <div class="tuqChatTitleText" title="<?= htmlspecialchars($conversationTitleText) ?>">
                     <?= htmlspecialchars($conversationTitleText) ?>
                 </div>
+
+<button id="chat-scroll-bottom-btn" type="button" aria-label="Descer para o fim" style="
+    position: fixed;
+    left: 50%;
+    transform: translateX(-50%) translateY(10px);
+    bottom: 120px;
+    z-index: 9999;
+    width: 34px;
+    height: 34px;
+    border-radius: 999px;
+    border: 1px solid rgba(255,255,255,0.16);
+    background: rgba(0,0,0,0.48);
+    color: #ffffff;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 10px 22px rgba(0,0,0,0.32);
+    backdrop-filter: blur(8px);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 160ms ease, transform 160ms ease;
+">
+    <span style="font-size:16px; line-height: 1;">↓</span>
+</button>
                 <?php
                     $personaBadgeText = 'Padrão do Tuquinha';
                     if (!empty($currentPersona) && is_array($currentPersona)) {
@@ -1293,7 +1318,7 @@ if (!empty($conversationId) && !empty($personaOptions) && is_array($personaOptio
         </div>
     <?php endif; ?>
 
-    <div id="chat-window" style="flex: 1; overflow-y: auto; padding: 12px 4px 12px 0;">
+    <div id="chat-window" style="flex: 1; overflow-y: auto; padding: 12px 4px 12px 0; position: relative;">
         <?php
         $attachmentsByMessageId = [];
         $legacyAttachments = [];
@@ -1710,6 +1735,57 @@ if (!empty($conversationId) && !empty($personaOptions) && is_array($personaOptio
     if (chatWindow) {
         chatWindow.scrollTop = chatWindow.scrollHeight;
     }
+
+    (function () {
+        const btn = document.getElementById('chat-scroll-bottom-btn');
+        const el = document.getElementById('chat-window');
+        if (!btn || !el) {
+            return;
+        }
+
+        const NEAR_PX = 220;
+        let raf = 0;
+
+        const setVisible = (visible) => {
+            if (visible) {
+                btn.classList.add('tuq-visible');
+                btn.style.opacity = '1';
+                btn.style.pointerEvents = 'auto';
+                btn.style.transform = 'translateX(-50%) translateY(0)';
+            } else {
+                btn.classList.remove('tuq-visible');
+                btn.style.opacity = '0';
+                btn.style.pointerEvents = 'none';
+                btn.style.transform = 'translateX(-50%) translateY(10px)';
+            }
+        };
+
+        const isNearBottom = () => {
+            const remaining = el.scrollHeight - (el.scrollTop + el.clientHeight);
+            return remaining <= NEAR_PX;
+        };
+
+        const update = () => {
+            if (raf) {
+                cancelAnimationFrame(raf);
+            }
+            raf = requestAnimationFrame(() => {
+                setVisible(!isNearBottom());
+            });
+        };
+
+        btn.addEventListener('click', () => {
+            try {
+                el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' });
+            } catch (e) {
+                el.scrollTop = el.scrollHeight;
+            }
+        });
+
+        el.addEventListener('scroll', update, { passive: true });
+        window.addEventListener('resize', update);
+        update();
+    })();
 
     // Toggle painel de regras do chat
     const rulesToggle = document.getElementById('chat-rules-toggle');
@@ -2803,6 +2879,7 @@ if (!empty($conversationId) && !empty($personaOptions) && is_array($personaOptio
             }
 
             let lastStatus = 0;
+            let deferFinalize = false;
 
             fetch('/chat/send', {
                 method: 'POST',
@@ -2821,6 +2898,86 @@ if (!empty($conversationId) && !empty($personaOptions) && is_array($personaOptio
                         const err = data && data.error ? data.error : 'Não foi possível enviar a mensagem. Tente novamente.';
                         const debug = 'status=' + String(lastStatus || 0) + '; payload=' + JSON.stringify(data || {});
                         showErrorReportBox(err, debug);
+                        return;
+                    }
+
+                    const pollJob = (jobId) => {
+                        const startedAt = Date.now();
+                        const tick = () => {
+                            // hard limit: 5 minutos
+                            if (Date.now() - startedAt > 5 * 60 * 1000) {
+                                const debug = 'job_timeout=1; job_id=' + String(jobId);
+                                showErrorReportBox('A resposta está demorando mais do que o esperado. Tente novamente.', debug);
+                                finalizeSendUi();
+                                return;
+                            }
+
+                            fetch('/chat/job?id=' + encodeURIComponent(String(jobId)), {
+                                method: 'GET',
+                                headers: {
+                                    'X-Requested-With': 'XMLHttpRequest',
+                                },
+                            })
+                                .then((r) => r.json().catch(() => null))
+                                .then((j) => {
+                                    if (!j) {
+                                        setTimeout(tick, 1000);
+                                        return;
+                                    }
+
+                                    if (j.status === 'done' && j.message) {
+                                        if (typeof j.message.tokens_used === 'number') {
+                                            lastTokensUsed = j.message.tokens_used;
+                                        } else {
+                                            lastTokensUsed = 0;
+                                        }
+                                        appendMessageToDom('assistant', j.message.content, j.message);
+                                        finalizeSendUi();
+                                        return;
+                                    }
+
+                                    if (j.status === 'error') {
+                                        const err = j.error ? j.error : 'Não consegui gerar a resposta agora. Tente novamente.';
+                                        const debug = 'job_error=1; job_id=' + String(jobId) + '; payload=' + JSON.stringify(j || {});
+                                        showErrorReportBox(err, debug);
+                                        finalizeSendUi();
+                                        return;
+                                    }
+
+                                    // pending/running
+                                    setTimeout(tick, 900);
+                                })
+                                .catch(() => {
+                                    setTimeout(tick, 1200);
+                                });
+                        };
+                        tick();
+                    };
+
+                    const finalizeSendUi = () => {
+                        if (activeTypingEl && activeTypingEl.parentNode) {
+                            activeTypingEl.parentNode.removeChild(activeTypingEl);
+                        } else {
+                            const el = chatWindow ? chatWindow.querySelector('[data-typing-indicator="1"]') : null;
+                            if (el && el.parentNode) {
+                                el.parentNode.removeChild(el);
+                            }
+                        }
+                        isSending = false;
+                        activeAbortController = null;
+                        activeTypingEl = null;
+                        messageInput.disabled = false;
+                        if (submitButton) {
+                            const sendLabel = document.getElementById('send-label');
+                            if (sendLabel && sendLabel.dataset.original) {
+                                sendLabel.textContent = sendLabel.dataset.original;
+                            }
+                        }
+                    };
+
+                    if (data.queued && data.job_id) {
+                        deferFinalize = true;
+                        pollJob(data.job_id);
                         return;
                     }
 
@@ -2870,6 +3027,9 @@ if (!empty($conversationId) && !empty($personaOptions) && is_array($personaOptio
                     showErrorReportBox('Erro ao enviar mensagem. Verifique sua conexão e tente novamente.', debug);
                 })
                 .finally(() => {
+                    if (deferFinalize) {
+                        return;
+                    }
                     if (activeTypingEl && activeTypingEl.parentNode) {
                         activeTypingEl.parentNode.removeChild(activeTypingEl);
                     } else {
