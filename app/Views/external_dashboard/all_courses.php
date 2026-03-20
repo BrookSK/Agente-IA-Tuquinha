@@ -1,5 +1,6 @@
 <?php
 /** @var array $courses */
+$highlightSlug = isset($_GET['highlight']) ? trim((string)$_GET['highlight']) : '';
 ?>
 <style>
     .courses-grid {
@@ -21,6 +22,34 @@
             gap: 14px;
         }
     }
+    
+    .course-highlight {
+        animation: highlightPulse 2s ease-in-out 3;
+        border: 2px solid var(--accent) !important;
+        box-shadow: 0 0 30px rgba(255, 193, 7, 0.4) !important;
+        position: relative;
+    }
+    
+    .course-highlight::before {
+        content: '⭐ Curso Necessário';
+        position: absolute;
+        top: -12px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: var(--accent);
+        color: var(--button-text);
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 11px;
+        font-weight: 700;
+        white-space: nowrap;
+        z-index: 10;
+    }
+    
+    @keyframes highlightPulse {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.02); }
+    }
 </style>
 <div class="header">
     <div style="margin-bottom: 8px; font-size: 14px; color: var(--text-secondary);">
@@ -38,7 +67,11 @@
 <?php else: ?>
     <div class="courses-grid">
         <?php foreach ($courses as $course): ?>
-            <div class="card">
+            <?php 
+            $courseSlugCurrent = !empty($course['slug']) ? (string)$course['slug'] : '';
+            $isHighlighted = ($highlightSlug !== '' && $courseSlugCurrent === $highlightSlug);
+            ?>
+            <div class="card<?= $isHighlighted ? ' course-highlight' : '' ?>" <?= $isHighlighted ? 'id="highlighted-course"' : '' ?>>
                 <?php if (!empty($course['image_path'])): ?>
                     <div style="width: 100%; height: 160px; border-radius: 10px; overflow: hidden; margin-bottom: 12px; background: rgba(255,255,255,0.05);">
                         <img src="<?= htmlspecialchars($course['image_path'], ENT_QUOTES, 'UTF-8') ?>" alt="<?= htmlspecialchars($course['title'] ?? '', ENT_QUOTES, 'UTF-8') ?>" style="width: 100%; height: 100%; object-fit: cover;">
@@ -74,14 +107,41 @@
                     <?php else: ?>
                         <?php 
                         $courseSlug = !empty($course['slug']) ? (string)$course['slug'] : '';
-                        $courseLink = $courseSlug !== '' ? '/curso/' . urlencode($courseSlug) : '/painel-externo/curso?id=' . (int)$course['id'];
+                        $isPaid = !empty($course['is_paid']) || (!empty($course['price_cents']) && (int)$course['price_cents'] > 0);
+                        
+                        if ($isPaid && $courseSlug !== '') {
+                            $courseLink = '/curso/' . urlencode($courseSlug) . '/checkout';
+                            $buttonText = 'Comprar curso';
+                        } elseif ($courseSlug !== '') {
+                            $courseLink = '/curso/' . urlencode($courseSlug);
+                            $buttonText = 'Ver curso';
+                        } else {
+                            $courseLink = '/painel-externo/curso?id=' . (int)$course['id'];
+                            $buttonText = 'Ver curso';
+                        }
                         ?>
                         <a href="<?= $courseLink ?>" class="btn" style="margin-left: auto;">
-                            Ver curso
+                            <?= $buttonText ?>
                         </a>
                     <?php endif; ?>
                 </div>
             </div>
         <?php endforeach; ?>
     </div>
+<?php endif; ?>
+
+<?php if ($highlightSlug !== ''): ?>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const highlightedCourse = document.getElementById('highlighted-course');
+    if (highlightedCourse) {
+        setTimeout(function() {
+            highlightedCourse.scrollIntoView({ 
+                behavior: 'smooth', 
+                block: 'center' 
+            });
+        }, 300);
+    }
+});
+</script>
 <?php endif; ?>

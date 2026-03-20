@@ -496,6 +496,11 @@ class ExternalCourseController extends Controller
             $branding = CoursePartnerBranding::findByUserId((int)$course['owner_user_id']);
         }
 
+        // Salva slug do curso na sessão para usar no logout
+        if ($slug !== '') {
+            $_SESSION['external_course_slug'] = $slug;
+        }
+        
         $this->view('external_courses/home', [
             'pageTitle' => (string)($branding['company_name'] ?? ($course['title'] ?? 'Curso')),
             'course' => $course,
@@ -523,6 +528,21 @@ class ExternalCourseController extends Controller
             $branding = CoursePartnerBranding::findByUserId((int)$course['owner_user_id']);
         }
 
+        // Recupera dados pré-preenchidos da sessão ou do usuário logado
+        $prefilledData = $_SESSION['checkout_prefill'] ?? [];
+        unset($_SESSION['checkout_prefill']); // Limpa após usar
+
+        // Se usuário está logado e não há dados pré-preenchidos, usa dados do usuário
+        if (empty($prefilledData) && !empty($_SESSION['user_id'])) {
+            $user = User::findById((int)$_SESSION['user_id']);
+            if ($user) {
+                $prefilledData = [
+                    'name' => trim((string)($user['name'] ?? '')),
+                    'email' => trim((string)($user['email'] ?? '')),
+                ];
+            }
+        }
+
         $this->view('external_courses/checkout_modern', [
             'pageTitle' => 'Comprar: ' . (string)($course['title'] ?? 'Curso'),
             'course' => $course,
@@ -531,6 +551,7 @@ class ExternalCourseController extends Controller
             'slug' => $slug,
             'isPartnerSite' => $this->isPartnerSite(),
             'error' => null,
+            'prefilledData' => $prefilledData,
             'layout' => 'external_course_modern',
         ]);
     }
@@ -782,6 +803,106 @@ class ExternalCourseController extends Controller
             ]);
             return;
         }
+    }
+
+    public function registerFree(): void
+    {
+        $resolved = $this->resolveExternalCourseFromPost();
+        $token = (string)$resolved['token'];
+        $slug = (string)$resolved['slug'];
+        $course = $resolved['course'];
+        if (!$course) {
+            header('Location: /');
+            exit;
+        }
+
+        $branding = null;
+        if (!empty($course['owner_user_id'])) {
+            $branding = CoursePartnerBranding::findByUserId((int)$course['owner_user_id']);
+        }
+
+        $firstName = trim((string)($_POST['first_name'] ?? ''));
+        $lastName = trim((string)($_POST['last_name'] ?? ''));
+        $email = trim((string)($_POST['email'] ?? ''));
+        $password = (string)($_POST['password'] ?? '');
+
+        if ($firstName === '' || $lastName === '' || $email === '' || $password === '') {
+            header('Location: ' . ($slug !== '' ? '/curso/' . urlencode($slug) : '/'));
+            exit;
+        }
+
+        if (strlen($password) < 8) {
+            header('Location: ' . ($slug !== '' ? '/curso/' . urlencode($slug) : '/'));
+            exit;
+        }
+
+        $existingUser = User::findByEmail($email);
+        if ($existingUser) {
+            // Usuário já existe, redireciona para login
+            if ($slug !== '') {
+                header('Location: /curso/' . urlencode($slug) . '/login');
+            } else {
+                header('Location: /login');
+            }
+            exit;
+        }
+
+        $name = trim($firstName . ' ' . $lastName);
+        $hash = password_hash($password, PASSWORD_DEFAULT);
+        $userId = User::createUser($name, $email, $hash);
+
+        // Marca como verificado para permitir login imediato
+        try {
+            User::setEmailVerifiedAt($userId, date('Y-m-d H:i:s'));
+        } catch (\Throwable $e) {
+        }
+
+        // Marca como usuário de curso externo
+        $partnerId = !empty($course['owner_user_id']) ? (int)$course['owner_user_id'] : 0;
+        if ($partnerId > 0) {
+            User::markAsExternalCourseUser($userId, $partnerId);
+        }
+
+        // Se o curso for gratuito, matricula automaticamente
+        $priceCents = isset($course['price_cents']) ? (int)$course['price_cents'] : 0;
+        if ($priceCents <= 0) {
+            $courseId = (int)($course['id'] ?? 0);
+            if ($courseId > 0) {
+                CourseEnrollment::enroll($courseId, $userId);
+            }
+        }
+
+        // Envia email com credenciais
+        try {
+            $companyName = (string)($branding['company_name'] ?? '');
+            $logoUrl = (string)($branding['logo_url'] ?? '');
+            $greeting = $name !== '' ? $name : 'cliente';
+            $loginPath = $slug !== '' ? '/curso/' . urlencode($slug) . '/login' : '/login';
+            $loginUrl = $this->buildExternalBaseUrl() . $loginPath;
+            $content = '<p style="font-size:13px; color:#b0b0b0; line-height:1.55;">Sua conta foi criada com sucesso!</p>'
+                . '<p style="font-size:13px; color:#b0b0b0; line-height:1.55;">Dados de acesso:</p>'
+                . '<div style="font-size:13px; color:#f5f5f5; line-height:1.55; border:1px solid #272727; border-radius:12px; padding:10px 12px; background:#050509;">'
+                . '<div><b>E-mail:</b> ' . htmlspecialchars($email, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') . '</div>'
+                . '<div><b>Senha:</b> ' . htmlspecialchars($password, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') . '</div>'
+                . '</div>'
+                . '<p style="font-size:12px; color:#777; line-height:1.55; margin-top:10px;">Guarde esta senha em local seguro.</p>';
+
+            $subject = ($companyName !== '' ? $companyName . ' - ' : '') . 'Bem-vindo!';
+            $body = MailService::buildDefaultTemplate($greeting, $content, 'Acessar Painel', $loginUrl, $logoUrl);
+            MailService::send($email, $name, $subject, $body);
+        } catch (\Throwable $eMail) {
+        }
+
+        // Login automático
+        $_SESSION['user_id'] = (int)$userId;
+        $_SESSION['user_name'] = $name;
+        $_SESSION['user_email'] = $email;
+        $_SESSION['external_course_token'] = $token;
+        unset($_SESSION['is_admin']);
+
+        // Redireciona para o painel externo
+        header('Location: /painel-externo');
+        exit;
     }
 
     public function members(): void

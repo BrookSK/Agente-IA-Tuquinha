@@ -343,15 +343,17 @@ HTML;
     public function logout(): void
     {
         $isExternalUser = !empty($_SESSION['user_id']) && User::isExternalCourseUser((int)$_SESSION['user_id']);
-        $externalToken = $_SESSION['external_course_token'] ?? null;
+        $courseSlug = $_SESSION['external_course_slug'] ?? '';
+        
         $isPartnerSite = !empty($_SERVER['TUQ_PARTNER_SITE']);
         
         unset($_SESSION['user_id'], $_SESSION['user_name'], $_SESSION['user_email'], $_SESSION['is_admin'], $_SESSION['external_course_token']);
         
         if ($isPartnerSite) {
             header('Location: /');
-        } elseif ($isExternalUser) {
-            header('Location: /painel-externo');
+        } elseif ($isExternalUser && $courseSlug !== '') {
+            // Redireciona para a home do curso de onde o usuário veio
+            header('Location: /curso/' . urlencode($courseSlug));
         } else {
             header('Location: /');
         }

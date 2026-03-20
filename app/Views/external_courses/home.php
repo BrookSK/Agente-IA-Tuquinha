@@ -21,6 +21,7 @@ $checkoutHref = '/';
 $loginAction = '/login';
 $forgotHref = '/senha/esqueci';
 $registerAction = '/registrar';
+$registerFreeAction = '/registrar';
 
 if ($slug !== '') {
     $courseHref = '/curso/' . urlencode($slug);
@@ -28,6 +29,7 @@ if ($slug !== '') {
     $loginAction = '/curso/' . urlencode($slug) . '/login';
     $forgotHref = '/curso/' . urlencode($slug) . '/senha/esqueci';
     $registerAction = '/curso/' . urlencode($slug) . '/checkout';
+    $registerFreeAction = '/curso/' . urlencode($slug) . '/registrar';
 }
 ?>
 <!DOCTYPE html>
@@ -76,6 +78,7 @@ if ($slug !== '') {
     display: flex; align-items: center; justify-content: space-between;
     padding: 0 80px; height: 72px; background: rgba(8,9,13,.95);
     backdrop-filter: blur(12px); width: 100%;
+    border-bottom: 1px solid rgba(255,255,255,.07);
   }
   nav::after {
     content: '';
@@ -87,11 +90,14 @@ if ($slug !== '') {
     height: 4px;
     background: linear-gradient(90deg, #ff6b35 0%, #f7931e 50%, #fdc830 100%);
     border-radius: 4px;
+    z-index: -1;
   }
   .nav-brand {
     display: flex; align-items: center; gap: 12px;
     font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1.1rem;
     letter-spacing: -.5px; color: var(--text); text-decoration: none;
+    position: relative;
+    z-index: 10;
   }
   .brand-icon {
     width: 36px; height: 36px; border-radius: 10px;
@@ -101,7 +107,17 @@ if ($slug !== '') {
     overflow: hidden;
   }
   .brand-icon img { width: 100%; height: 100%; object-fit: cover; }
-  .nav-actions { display: flex; align-items: center; gap: 12px; }
+  .nav-actions { display: flex; align-items: center; gap: 12px; position: relative; z-index: 10; }
+  .nav-actions a:not(.btn-primary) {
+    background: none !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 8px 16px;
+    color: var(--muted);
+  }
+  .nav-actions a:not(.btn-primary):hover {
+    color: var(--text);
+  }
   .btn-ghost {
     background: none; border: none; cursor: pointer; color: var(--muted);
     font-family: inherit; font-size: .875rem; padding: 8px 16px;
@@ -141,6 +157,8 @@ if ($slug !== '') {
     background: rgba(45,110,246,.12); border: 1px solid rgba(45,110,246,.3);
     color: var(--accent2); border-radius: 100px; padding: 6px 14px;
     font-size: .78rem; font-weight: 500; width: fit-content; letter-spacing: .5px;
+    max-width: 100%;
+    text-align: center;
   }
   .badge-dot {
     width: 6px; height: 6px; border-radius: 50%; background: var(--accent2);
@@ -158,7 +176,6 @@ if ($slug !== '') {
     -webkit-background-clip: text; -webkit-text-fill-color: transparent;
     background-clip: text;
     font-size: clamp(1.5rem, 4.5vw, 3rem);
-    white-space: nowrap;
   }
   .hero-sub {
     font-size: 1rem; color: #ffffff; line-height: 1.7; max-width: 420px;
@@ -482,12 +499,20 @@ if ($slug !== '') {
       opacity: 1;
       visibility: visible;
     }
+    .nav-actions .btn-ghost,
     .nav-actions .btn-primary { 
       padding: 14px 20px; 
       font-size: 0.95rem; 
       width: 100%; 
       text-align: center;
       display: block;
+    }
+    .nav-actions .btn-ghost {
+      background: rgba(255,255,255,.05);
+      color: var(--text);
+    }
+    .nav-actions .btn-ghost:hover {
+      background: rgba(255,255,255,.1);
     }
     .hero { 
       padding-top: 0; 
@@ -505,13 +530,28 @@ if ($slug !== '') {
       max-width: 100%;
       overflow-x: hidden;
     }
-    .badge { margin: 0 auto; }
+    .badge { 
+      margin: 0 auto;
+      font-size: 0.7rem;
+      padding: 6px 12px;
+      max-width: calc(100% - 40px);
+      white-space: normal;
+      text-align: center;
+    }
     .hero-title { 
       font-size: 1.75rem !important; 
       line-height: 1.2; 
       letter-spacing: -0.5px; 
       text-align: center;
       white-space: normal;
+      word-wrap: break-word;
+      overflow-wrap: break-word;
+    }
+    .hero-title .hl {
+      font-size: 1.5rem !important;
+      white-space: normal;
+      word-wrap: break-word;
+      display: inline;
     }
     .hero-sub { 
       font-size: 0.9rem; 
@@ -611,6 +651,13 @@ if ($slug !== '') {
   <div class="nav-actions" id="mobileMenu">
     <?php if (!empty($_SESSION['user_id'])): ?>
       <a href="/painel-externo" class="btn-primary">Acessar Painel</a>
+    <?php else: ?>
+      <a href="#login" onclick="event.preventDefault(); document.getElementById('login-section').scrollIntoView({behavior: 'smooth'}); setTimeout(() => switchTab('login', document.querySelector('[data-tab=login]')), 300); toggleMobileMenu();">Entrar</a>
+      <?php if ($priceCents > 0): ?>
+        <a href="<?= $checkoutHref ?>" class="btn-primary">Comprar por R$ <?= $price ?></a>
+      <?php else: ?>
+        <a href="#login" class="btn-primary" onclick="event.preventDefault(); document.getElementById('login-section').scrollIntoView({behavior: 'smooth'}); setTimeout(() => switchTab('register', document.querySelector('[data-tab=register]')), 300); toggleMobileMenu();">Criar Conta Grátis</a>
+      <?php endif; ?>
     <?php endif; ?>
   </div>
 </nav>
@@ -658,8 +705,8 @@ if ($slug !== '') {
         </div>
 
         <div class="tabs">
-          <button class="tab active" onclick="switchTab('login', this)">Entrar</button>
-          <button class="tab" onclick="switchTab('register', this)">Cadastrar</button>
+          <button class="tab active" data-tab="login" onclick="switchTab('login', this)">Entrar</button>
+          <button class="tab" data-tab="register" onclick="switchTab('register', this)">Cadastrar</button>
         </div>
 
         <div id="panel-login" class="panel active">
@@ -687,21 +734,21 @@ if ($slug !== '') {
         </div>
 
         <div id="panel-register" class="panel">
-          <form action="<?= $registerAction ?>" method="post">
+          <form action="<?= $registerFreeAction ?>" method="post" id="registerForm">
             <input type="hidden" name="token" value="<?= htmlspecialchars($token, ENT_QUOTES, 'UTF-8') ?>">
             <div class="form-row">
               <div class="form-group">
                 <label>Nome</label>
                 <div class="input-wrap">
                   <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                  <input class="form-input" type="text" name="first_name" placeholder="Seu nome" required>
+                  <input class="form-input" type="text" name="first_name" id="reg_first_name" placeholder="Seu nome" required>
                 </div>
               </div>
               <div class="form-group">
                 <label>Sobrenome</label>
                 <div class="input-wrap">
                   <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                  <input class="form-input" type="text" name="last_name" placeholder="Sobrenome" required>
+                  <input class="form-input" type="text" name="last_name" id="reg_last_name" placeholder="Sobrenome" required>
                 </div>
               </div>
             </div>
@@ -709,20 +756,25 @@ if ($slug !== '') {
               <label>E-mail</label>
               <div class="input-wrap">
                 <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,12 2,6"/></svg>
-                <input class="form-input" type="email" name="email" placeholder="seu@email.com" required>
+                <input class="form-input" type="email" name="email" id="reg_email" placeholder="seu@email.com" required>
               </div>
             </div>
             <div class="form-group">
               <label>Senha</label>
               <div class="input-wrap">
                 <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-                <input class="form-input" type="password" name="password" placeholder="Mínimo 8 caracteres" required>
+                <input class="form-input" type="password" name="password" id="reg_password" placeholder="Mínimo 8 caracteres" required>
               </div>
             </div>
             <input type="hidden" name="phone" value="">
             <input type="hidden" name="cpf" value="">
             <button type="submit" class="btn-submit">Criar conta gratuita →</button>
           </form>
+          <?php if ($priceCents > 0): ?>
+          <p style="text-align: center; margin-top: 1rem; font-size: 0.9rem; color: var(--muted);">
+            Quer comprar o curso? <a href="<?= $checkoutHref ?>" style="color: var(--accent2); font-weight: 600; text-decoration: none;">Ir para checkout</a>
+          </p>
+          <?php endif; ?>
         </div>
       </div>
     </div>

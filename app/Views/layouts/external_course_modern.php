@@ -48,10 +48,21 @@ if ($slug !== '') {
 
 $loginHref = '';
 $ctaHref = '';
+$ctaText = 'Começar Agora';
 if (empty($_SESSION['user_id'])) {
     if ($slug !== '') {
         $loginHref = '/curso/' . urlencode($slug) . '/login';
         $ctaHref = '/curso/' . urlencode($slug) . '/checkout';
+        // Busca preço do curso para mostrar no botão
+        if (isset($course) && is_array($course)) {
+            $priceCents = isset($course['price_cents']) ? (int)$course['price_cents'] : 0;
+            if ($priceCents > 0) {
+                $price = number_format($priceCents / 100, 2, ',', '.');
+                $ctaText = 'Comprar por R$ ' . $price;
+            } else {
+                $ctaText = 'Criar Conta Grátis';
+            }
+        }
     } elseif (!$isPartnerSite) {
         $loginHref = '/login';
         $ctaHref = '/registrar';
@@ -69,7 +80,11 @@ function esc_attr(string $s): string {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="<?= $primary !== '' ? esc_attr($primary) : '#e53935' ?>">
     <title><?= esc_attr($pageTitle ?? $companyName) ?></title>
-    <link rel="icon" type="image/png" href="<?= $faviconUrl !== '' ? esc_attr($faviconUrl) : '/public/favicon.png' ?>">
+    <?php if ($faviconUrl !== ''): ?>
+        <link rel="icon" type="image/png" href="<?= esc_attr($faviconUrl) ?>">
+    <?php else: ?>
+        <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📚</text></svg>">
+    <?php endif; ?>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -101,9 +116,13 @@ function esc_attr(string $s): string {
             padding: 0;
         }
         
+        html {
+            background: #0a0a0f !important;
+        }
+        
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-            background: linear-gradient(135deg, #0a0a0f 0%, #14141f 50%, #1a1a2e 100%);
+            background: linear-gradient(135deg, #0a0a0f 0%, #14141f 50%, #1a1a2e 100%) !important;
             color: var(--text-primary);
             line-height: 1.6;
             min-height: 100vh;
@@ -148,10 +167,23 @@ function esc_attr(string $s): string {
             border-bottom: 1px solid var(--border);
         }
         
+        .site-header::after {
+            content: '';
+            position: absolute;
+            bottom: -4px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: calc(100% - 160px);
+            height: 4px;
+            background: linear-gradient(90deg, #ff6b35 0%, #f7931e 50%, #fdc830 100%);
+            border-radius: 4px;
+            z-index: -1;
+        }
+        
         .header-content {
             max-width: 1400px;
             margin: 0 auto;
-            padding: 1rem 2rem;
+            padding: 1rem 80px;
             display: flex;
             align-items: center;
             justify-content: space-between;
@@ -163,6 +195,8 @@ function esc_attr(string $s): string {
             align-items: center;
             gap: 1rem;
             text-decoration: none;
+            position: relative;
+            z-index: 10;
         }
         
         .header-logo {
@@ -196,17 +230,23 @@ function esc_attr(string $s): string {
             display: flex;
             align-items: center;
             gap: 1.5rem;
+            position: relative;
+            z-index: 10;
         }
         
-        .header-nav a {
+        .header-nav a:not(.btn) {
             color: var(--text-secondary);
             text-decoration: none;
             font-weight: 500;
             font-size: 0.95rem;
             transition: color 0.2s;
+            background: transparent;
+            border: none;
+            padding: 0;
+            box-shadow: none;
         }
         
-        .header-nav a:hover {
+        .header-nav a:not(.btn):hover {
             color: var(--text-primary);
         }
         
@@ -227,6 +267,9 @@ function esc_attr(string $s): string {
         .main-content {
             flex: 1;
             padding: 3rem 2rem;
+            background: transparent;
+            position: relative;
+            z-index: 1;
         }
         
         .container {
@@ -499,7 +542,7 @@ function esc_attr(string $s): string {
                             <a href="<?= $loginHref ?>">Entrar</a>
                         <?php endif; ?>
                         <?php if ($ctaHref !== ''): ?>
-                            <a href="<?= $ctaHref ?>" class="btn" style="padding: 0.5rem 1.25rem; font-size: 0.9rem;">Começar Agora</a>
+                            <a href="<?= $ctaHref ?>" class="btn" style="padding: 0.5rem 1.25rem; font-size: 0.9rem;"><?= esc_attr($ctaText) ?></a>
                         <?php endif; ?>
                     <?php else: ?>
                         <a href="/painel-externo">Meu Painel</a>

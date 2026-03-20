@@ -111,7 +111,12 @@ class ExternalUserDashboardController extends Controller
 
         $courses = [];
         if ($partnerId) {
-            $allCourses = Course::allActive();
+            // Busca cursos externos ativos do proprietário
+            $pdo = Database::getConnection();
+            $stmt = $pdo->prepare('SELECT * FROM courses WHERE is_active = 1 AND is_external = 1 AND owner_user_id = :owner_id ORDER BY created_at DESC');
+            $stmt->execute(['owner_id' => $partnerId]);
+            $allCourses = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
             $enrollments = CourseEnrollment::allByUser((int)$user['id']);
             $enrolledCourseIds = [];
             foreach ($enrollments as $enrollment) {
@@ -119,10 +124,8 @@ class ExternalUserDashboardController extends Controller
             }
 
             foreach ($allCourses as $course) {
-                if ((int)$course['owner_user_id'] === $partnerId) {
-                    $course['user_has_access'] = !empty($enrolledCourseIds[(int)$course['id']]);
-                    $courses[] = $course;
-                }
+                $course['user_has_access'] = !empty($enrolledCourseIds[(int)$course['id']]);
+                $courses[] = $course;
             }
         }
 
@@ -168,14 +171,39 @@ class ExternalUserDashboardController extends Controller
         $user = $this->requireLogin();
         $branding = $this->getBrandingForUser($user);
         $isPartnerSite = !empty($_SERVER['TUQ_PARTNER_SITE']);
+        $userId = (int)$user['id'];
+        $partnerId = User::getExternalCoursePartnerId($userId);
 
-        $allowedCommunities = CourseAllowedCommunity::allowedCommunitiesByUser((int)$user['id']);
+        // Busca todas as comunidades vinculadas aos cursos do proprietário
+        $pdo = Database::getConnection();
+        $stmt = $pdo->prepare('SELECT DISTINCT 
+                c.*,
+                cac.course_id,
+                co.title as course_title,
+                co.slug as course_slug,
+                (SELECT COUNT(*) FROM community_topics ct WHERE ct.community_id = c.id) as topics_count,
+                (SELECT COUNT(*) FROM community_members cm WHERE cm.community_id = c.id AND cm.left_at IS NULL) as members_count,
+                EXISTS (
+                    SELECT 1 FROM course_enrollments ce 
+                    WHERE ce.course_id = cac.course_id AND ce.user_id = :user_id
+                ) as user_has_access
+            FROM communities c
+            JOIN course_allowed_communities cac ON cac.community_id = c.id
+            JOIN courses co ON co.id = cac.course_id
+            WHERE c.is_active = 1
+            AND co.owner_user_id = :partner_id
+            ORDER BY c.name ASC');
+        $stmt->execute([
+            'user_id' => $userId,
+            'partner_id' => $partnerId,
+        ]);
+        $communities = $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
 
         $this->view('external_dashboard/community', [
             'pageTitle' => 'Comunidade',
             'user' => $user,
             'branding' => $branding,
-            'communities' => $allowedCommunities,
+            'communities' => $communities,
             'isPartnerSite' => $isPartnerSite,
             'layout' => 'external_user_dashboard',
         ]);
