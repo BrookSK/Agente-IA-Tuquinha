@@ -1286,6 +1286,26 @@ class ExternalUserDashboardController extends Controller
 
         SocialConversation::touchWithMessage($conversationId, $messageId);
 
+        // Criar notificação para o destinatário da mensagem
+        try {
+            $recipientId = ($currentId === $user1) ? $user2 : $user1;
+            $sender = \App\Models\User::findById($currentId);
+            if ($sender && $recipientId > 0) {
+                \App\Models\UserNotification::create([
+                    'user_id' => $recipientId,
+                    'type' => 'message',
+                    'related_type' => 'conversation',
+                    'related_id' => $conversationId,
+                    'actor_user_id' => $currentId,
+                    'title' => 'Nova mensagem',
+                    'message' => ($sender['preferred_name'] ?? $sender['name']) . ' enviou uma mensagem para você.',
+                    'link' => '/painel-externo/chat?conversation_id=' . $conversationId
+                ]);
+            }
+        } catch (\Exception $e) {
+            // Silenciar erro de notificação
+        }
+
         header('Content-Type: application/json');
         echo json_encode([
             'ok' => true,
