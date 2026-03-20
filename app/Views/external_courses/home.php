@@ -49,10 +49,21 @@ $logoUrl = isset($branding) && is_array($branding) && !empty($branding['logo_url
   }
   body { padding-top: 72px; }
   nav {
-    position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
+    position: fixed; top: 0; left: 0; right: 0; z-index: 9999;
     display: flex; align-items: center; justify-content: space-between;
     padding: 0 80px; height: 72px; background: rgba(8,9,13,.95);
-    backdrop-filter: blur(12px);
+    backdrop-filter: blur(12px); width: 100%;
+  }
+  nav::after {
+    content: '';
+    position: absolute;
+    bottom: -4px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: calc(100% - 160px);
+    height: 4px;
+    background: linear-gradient(90deg, #ff6b35 0%, #f7931e 50%, #fdc830 100%);
+    border-radius: 4px;
   }
   .nav-brand {
     display: flex; align-items: center; gap: 12px;
@@ -368,57 +379,134 @@ $logoUrl = isset($branding) && is_array($branding) && !empty($branding['logo_url
     cursor: pointer;
     padding: 8px;
     color: var(--text);
+    z-index: 10000;
   }
   .mobile-menu-toggle svg {
     width: 24px;
     height: 24px;
   }
+  .mobile-menu-toggle.active svg line:nth-child(1) {
+    transform: rotate(45deg) translate(5px, 5px);
+  }
+  .mobile-menu-toggle.active svg line:nth-child(2) {
+    opacity: 0;
+  }
+  .mobile-menu-toggle.active svg line:nth-child(3) {
+    transform: rotate(-45deg) translate(7px, -6px);
+  }
   @media (max-width: 640px) {
-    body { overflow-x: hidden; padding-top: 50px; }
-    nav { padding: 0 16px; height: 50px; min-height: 50px; margin-bottom: 0; }
-    .nav-brand img { height: 28px !important; max-width: 120px !important; }
-    .brand-icon { width: 28px; height: 28px; font-size: 0.7rem; }
-    .mobile-menu-toggle { display: none !important; }
+    body { overflow-x: hidden; padding-top: 60px; max-width: 100%; }
+    nav { 
+      padding: 0 16px; 
+      height: 60px; 
+      min-height: 60px; 
+      margin-bottom: 0;
+      display: flex;
+      width: 100%;
+      position: fixed;
+      z-index: 9999;
+    }
+    nav::after { display: none !important; }
+    .nav-brand img { height: 32px !important; max-width: 140px !important; }
+    .brand-icon { width: 32px; height: 32px; font-size: 0.75rem; }
+    .mobile-menu-toggle { 
+      display: block !important; 
+      position: relative;
+      z-index: 10001;
+    }
     .nav-actions {
       position: fixed;
-      top: 50px;
+      top: 60px;
       left: 0;
       right: 0;
       background: rgba(8,9,13,.98);
       backdrop-filter: blur(12px);
       flex-direction: column;
-      padding: 16px;
+      padding: 20px 16px;
       gap: 12px;
       border-bottom: 1px solid var(--border);
       transform: translateY(-100%);
       opacity: 0;
       visibility: hidden;
       transition: transform 0.3s ease, opacity 0.3s ease, visibility 0.3s;
-      z-index: 1001;
+      z-index: 9998;
+      max-width: 100%;
     }
     .nav-actions.active {
       transform: translateY(0);
       opacity: 1;
       visibility: visible;
     }
-    .nav-actions .btn { padding: 12px 20px; font-size: 0.9rem; width: 100%; text-align: center; }
-    .hero { padding-top: 20px; }
-    .hero-left { padding: 40px 20px 24px; text-align: center; align-items: center; }
+    .nav-actions .btn-primary { 
+      padding: 14px 20px; 
+      font-size: 0.95rem; 
+      width: 100%; 
+      text-align: center;
+      display: block;
+    }
+    .hero { padding-top: 0; min-height: auto; }
+    .hero-left { 
+      padding: 32px 20px 24px; 
+      text-align: center; 
+      align-items: center;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
     .badge { margin: 0 auto; }
-    .hero-title { font-size: 2rem !important; line-height: 1.15; letter-spacing: -0.5px; text-align: center; }
-    .hero-sub { font-size: 0.9rem; line-height: 1.6; text-align: center; max-width: 100%; }
-    .hero-cta { flex-direction: column; width: 100%; align-items: center; }
-    .btn-lg { width: 100%; max-width: 100%; justify-content: center; padding: 12px 20px; font-size: 0.9rem; }
-    .hero-right { padding: 16px 20px 48px; }
-    .login-card { padding: 28px 20px; max-width: 100%; margin: 0 auto; }
-    .card-head h2 { font-size: 1.25rem; }
-    .card-head p { font-size: 0.8rem; }
-    .tabs { font-size: 0.85rem; padding: 3px; }
-    .tab { padding: 8px 12px; }
-    .form-group { margin-bottom: 16px; }
-    .form-label { font-size: 0.8rem; margin-bottom: 6px; }
-    .form-input { padding: 11px 12px; font-size: 0.9rem; }
-    .btn-submit { padding: 12px; font-size: 0.9rem; }
+    .hero-title { 
+      font-size: 1.75rem !important; 
+      line-height: 1.2; 
+      letter-spacing: -0.5px; 
+      text-align: center;
+      white-space: normal;
+    }
+    .hero-sub { 
+      font-size: 0.9rem; 
+      line-height: 1.6; 
+      text-align: center; 
+      max-width: 100%; 
+    }
+    .hero-cta { 
+      flex-direction: column; 
+      width: 100%; 
+      align-items: center;
+      display: flex;
+      gap: 12px;
+    }
+    .btn-lg { 
+      width: 100% !important; 
+      max-width: 100% !important; 
+      justify-content: center; 
+      padding: 14px 20px; 
+      font-size: 0.95rem;
+      margin: 0 auto;
+      display: block;
+      text-align: center;
+    }
+    .hero-right { 
+      padding: 24px 20px 40px;
+      display: flex;
+      justify-content: center;
+    }
+    .login-card { 
+      padding: 24px 20px; 
+      max-width: 100%; 
+      margin: 0 auto;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .card-head { margin-bottom: 16px; }
+    .card-head h2 { font-size: 1.3rem; margin-bottom: 6px; }
+    .card-head p { font-size: 0.85rem; }
+    .tabs { font-size: 0.9rem; padding: 4px; margin-bottom: 16px; }
+    .tab { padding: 10px 16px; }
+    .form-group { margin-bottom: 14px; }
+    .form-label { font-size: 0.85rem; margin-bottom: 6px; }
+    .form-input { padding: 12px 14px; font-size: 0.95rem; }
+    .btn-submit { padding: 14px; font-size: 0.95rem; }
     .section { padding: 48px 16px; }
     .section-head h2 { font-size: 1.75rem; }
     .section-head p { font-size: 0.9rem; }
@@ -635,7 +723,13 @@ $logoUrl = isset($branding) && is_array($branding) && !empty($branding['logo_url
 
   function toggleMobileMenu() {
     const menu = document.getElementById('mobileMenu');
-    menu.classList.toggle('active');
+    const toggle = document.querySelector('.mobile-menu-toggle');
+    if (menu) {
+      menu.classList.toggle('active');
+    }
+    if (toggle) {
+      toggle.classList.toggle('active');
+    }
   }
 
   // Close mobile menu when clicking outside
@@ -644,6 +738,7 @@ $logoUrl = isset($branding) && is_array($branding) && !empty($branding['logo_url
     const toggle = document.querySelector('.mobile-menu-toggle');
     if (menu && toggle && !menu.contains(event.target) && !toggle.contains(event.target)) {
       menu.classList.remove('active');
+      toggle.classList.remove('active');
     }
   });
 
