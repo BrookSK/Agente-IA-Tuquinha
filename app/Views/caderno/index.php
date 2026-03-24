@@ -492,6 +492,20 @@ if (!empty($breadcrumb)) {
     .notion-editor-wrap .ce-inline-toolbar,
     .notion-editor-wrap .ce-conversion-toolbar,
     .notion-editor-wrap .ce-popover {
+        --color-border: var(--border-subtle);
+        --color-shadow: rgba(0,0,0,0.25);
+        --color-background: rgba(17,17,24,0.94);
+        --color-text-primary: var(--text-primary);
+        --color-text-secondary: var(--text-secondary);
+        --color-border-icon: rgba(255,255,255,0.12);
+        --color-border-icon-disabled: rgba(255,255,255,0.06);
+        --color-text-icon-active: #e53935;
+        --color-background-icon-active: rgba(229,57,53,0.12);
+        --color-background-item-focus: rgba(255,255,255,0.08);
+        --color-shadow-item-focus: rgba(255,255,255,0.04);
+        --color-background-item-hover: rgba(255,255,255,0.10);
+        --color-background-item-confirm: rgba(229,57,53,0.18);
+        --color-background-item-confirm-hover: rgba(229,57,53,0.28);
         background: rgba(17,17,24,0.94) !important;
         border: 1px solid var(--border-subtle) !important;
         box-shadow: 0 18px 46px rgba(0,0,0,0.55) !important;
@@ -501,6 +515,15 @@ if (!empty($breadcrumb)) {
     body[data-theme="light"] .notion-editor-wrap .ce-inline-toolbar,
     body[data-theme="light"] .notion-editor-wrap .ce-conversion-toolbar,
     body[data-theme="light"] .notion-editor-wrap .ce-popover {
+        --color-background: rgba(255,255,255,0.98);
+        --color-border-icon: rgba(15,23,42,0.12);
+        --color-border-icon-disabled: rgba(15,23,42,0.06);
+        --color-background-icon-active: rgba(229,57,53,0.10);
+        --color-background-item-focus: rgba(15,23,42,0.06);
+        --color-shadow-item-focus: rgba(15,23,42,0.04);
+        --color-background-item-hover: rgba(15,23,42,0.08);
+        --color-background-item-confirm: rgba(229,57,53,0.12);
+        --color-background-item-confirm-hover: rgba(229,57,53,0.20);
         background: rgba(255,255,255,0.98) !important;
         box-shadow: 0 18px 46px rgba(15,23,42,0.16) !important;
     }
@@ -510,6 +533,20 @@ if (!empty($breadcrumb)) {
     .ce-toolbox,
     .ce-conversion-toolbar,
     .ce-inline-toolbar {
+        --color-border: var(--border-subtle);
+        --color-shadow: rgba(0,0,0,0.25);
+        --color-background: rgba(17,17,24,0.94);
+        --color-text-primary: var(--text-primary);
+        --color-text-secondary: var(--text-secondary);
+        --color-border-icon: rgba(255,255,255,0.12);
+        --color-border-icon-disabled: rgba(255,255,255,0.06);
+        --color-text-icon-active: #e53935;
+        --color-background-icon-active: rgba(229,57,53,0.12);
+        --color-background-item-focus: rgba(255,255,255,0.08);
+        --color-shadow-item-focus: rgba(255,255,255,0.04);
+        --color-background-item-hover: rgba(255,255,255,0.10);
+        --color-background-item-confirm: rgba(229,57,53,0.18);
+        --color-background-item-confirm-hover: rgba(229,57,53,0.28);
         background: rgba(17,17,24,0.94) !important;
         border: 1px solid var(--border-subtle) !important;
         box-shadow: 0 18px 46px rgba(0,0,0,0.55) !important;
@@ -521,6 +558,15 @@ if (!empty($breadcrumb)) {
     body[data-theme="light"] .ce-toolbox,
     body[data-theme="light"] .ce-conversion-toolbar,
     body[data-theme="light"] .ce-inline-toolbar {
+        --color-background: rgba(255,255,255,0.98);
+        --color-border-icon: rgba(15,23,42,0.12);
+        --color-border-icon-disabled: rgba(15,23,42,0.06);
+        --color-background-icon-active: rgba(229,57,53,0.10);
+        --color-background-item-focus: rgba(15,23,42,0.06);
+        --color-shadow-item-focus: rgba(15,23,42,0.04);
+        --color-background-item-hover: rgba(15,23,42,0.08);
+        --color-background-item-confirm: rgba(229,57,53,0.12);
+        --color-background-item-confirm-hover: rgba(229,57,53,0.20);
         background: rgba(255,255,255,0.98) !important;
         box-shadow: 0 18px 46px rgba(15,23,42,0.16) !important;
         color: var(--text-primary) !important;
@@ -725,22 +771,28 @@ if (!empty($breadcrumb)) {
 
     /* Settings popover (3 dots) - fix white text on white hover */
     .ce-popover__item:hover,
-    .ce-popover__item:focus {
-        background: rgba(255,255,255,0.12) !important;
-    }
-    .ce-popover__item:hover .ce-popover__item-label,
-    .ce-popover__item:hover .ce-popover__item-description,
-    .ce-popover__item:focus .ce-popover__item-label {
-        color: #ffffff !important;
+    .ce-popover__item:focus,
+    .ce-popover__item--focused {
+        background: rgba(255,255,255,0.10) !important;
     }
     body[data-theme="light"] .ce-popover__item:hover,
-    body[data-theme="light"] .ce-popover__item:focus {
+    body[data-theme="light"] .ce-popover__item:focus,
+    body[data-theme="light"] .ce-popover__item--focused {
         background: rgba(15,23,42,0.08) !important;
     }
-    body[data-theme="light"] .ce-popover__item:hover .ce-popover__item-label,
-    body[data-theme="light"] .ce-popover__item:hover .ce-popover__item-description,
-    body[data-theme="light"] .ce-popover__item:focus .ce-popover__item-label {
+    .ce-popover__item-icon {
+        background: rgba(255,255,255,0.08) !important;
+        border: 1px solid rgba(255,255,255,0.10) !important;
+        border-radius: 8px !important;
         color: var(--text-primary) !important;
+    }
+    .ce-popover__item-icon svg {
+        fill: currentColor !important;
+        color: var(--text-primary) !important;
+    }
+    body[data-theme="light"] .ce-popover__item-icon {
+        background: rgba(15,23,42,0.06) !important;
+        border: 1px solid rgba(15,23,42,0.10) !important;
     }
     .ce-popover__item--confirmation {
         background: rgba(229,57,53,0.18) !important;
@@ -815,6 +867,14 @@ if (!empty($breadcrumb)) {
         max-width: 900px;
         margin-left: auto;
         margin-right: auto;
+    }
+
+    @keyframes tuqEditorPulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.4; }
+    }
+    body[data-theme="light"] #editorjs-loading div:not(:last-child) {
+        background: rgba(15,23,42,0.06) !important;
     }
 
     .notion-sidebar a:hover {
@@ -1356,7 +1416,16 @@ if (!empty($breadcrumb)) {
         <div class="notion-page-body">
             <div class="notion-editor-wrap">
                 <?php if ($current): ?>
-                    <div id="editorjs" style="background:transparent; min-height:300px; cursor:text;"></div>
+                    <div id="editorjs" style="background:transparent; min-height:300px; cursor:text;">
+                        <div id="editorjs-loading" style="display:flex; flex-direction:column; gap:14px; padding:18px 0; animation: tuqEditorPulse 1.2s ease-in-out infinite;">
+                            <div style="height:22px; width:55%; border-radius:8px; background:rgba(255,255,255,0.06);"></div>
+                            <div style="height:14px; width:90%; border-radius:6px; background:rgba(255,255,255,0.04);"></div>
+                            <div style="height:14px; width:78%; border-radius:6px; background:rgba(255,255,255,0.04);"></div>
+                            <div style="height:14px; width:85%; border-radius:6px; background:rgba(255,255,255,0.04);"></div>
+                            <div style="height:14px; width:40%; border-radius:6px; background:rgba(255,255,255,0.04);"></div>
+                            <div style="margin-top:4px; font-size:12px; color:var(--text-secondary); opacity:0.7;">Carregando editor...</div>
+                        </div>
+                    </div>
                     <div id="editor-hint" class="notion-editor-hint"></div>
                 <?php endif; ?>
             </div>
@@ -1985,6 +2054,11 @@ if (!empty($breadcrumb)) {
                 },
                 onReady: function () {
                     try {
+                        var loadingEl = document.getElementById('editorjs-loading');
+                        if (loadingEl) loadingEl.style.display = 'none';
+                    } catch (e) {}
+
+                    try {
                         if (canEdit && typeof Undo !== 'undefined') {
                             new Undo({ editor: editor });
                         }
@@ -2093,6 +2167,13 @@ if (!empty($breadcrumb)) {
                     t.closest('.ce-block') ||
                     t.closest('.ce-toolbar') ||
                     t.closest('.ce-popover') ||
+                    t.closest('.ce-toolbox') ||
+                    t.closest('.ce-settings') ||
+                    t.closest('.ce-toolbar__plus') ||
+                    t.closest('.ce-toolbar__settings-btn') ||
+                    t.closest('.ce-toolbar__actions') ||
+                    t.closest('.ce-inline-toolbar') ||
+                    t.closest('.ce-conversion-toolbar') ||
                     t.closest('.notion-title-wrap')
                 );
                 if (inBlock) return;
