@@ -538,14 +538,13 @@
                                             $parea = trim((string)($p['area'] ?? ''));
                                             $pimg = trim((string)($p['image_path'] ?? ''));
                                             if ($pid <= 0 || $pname === '') { continue; }
-                                            $isComingSoon = !empty($p['coming_soon']);
-                                            $selected = !$isComingSoon && $initialPersonaId > 0 && $pid === $initialPersonaId;
+                                            if (!empty($p['coming_soon'])) { continue; }
+                                            $selected = $initialPersonaId > 0 && $pid === $initialPersonaId;
                                         ?>
                                         <button type="button"
-                                            <?= $isComingSoon ? '' : 'class="projectPersonaCard"' ?>
-                                            <?= $isComingSoon ? '' : 'data-persona-id="' . $pid . '"' ?>
+                                            class="projectPersonaCard"
+                                            data-persona-id="<?= $pid ?>"
                                             aria-pressed="<?= $selected ? 'true' : 'false' ?>"
-                                            <?= $isComingSoon ? 'disabled aria-disabled="true"' : '' ?>
                                             style="
                                             flex:0 0 220px;
                                             max-width: 240px;
@@ -555,8 +554,7 @@
                                             border-radius:14px;
                                             padding:10px;
                                             color:var(--text-primary);
-                                            cursor:<?= $isComingSoon ? 'not-allowed' : 'pointer' ?>;
-                                            opacity:<?= $isComingSoon ? '0.5' : '1' ?>;
+                                            cursor:pointer;
                                             text-align:left;
                                             display:flex;
                                             gap:10px;
@@ -573,9 +571,6 @@
                                             <div style="min-width:0; flex:1;">
                                                 <div style="display:flex; align-items:center; gap:5px; flex-wrap:wrap;">
                                                     <div title="<?= htmlspecialchars($pname) ?>" style="font-weight:700; font-size:13px; line-height:1.2; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"><?= htmlspecialchars($pname) ?></div>
-                                                    <?php if ($isComingSoon): ?>
-                                                        <span style="font-size:9px; text-transform:uppercase; letter-spacing:0.12em; border-radius:999px; padding:2px 6px; background:#201216; color:#ffcc80; border:1px solid #ff6f60; white-space:nowrap; flex-shrink:0;">Em breve</span>
-                                                    <?php endif; ?>
                                                 </div>
                                                 <?php if ($parea !== ''): ?>
                                                     <div title="<?= htmlspecialchars($parea) ?>" style="font-size:11px; color:var(--text-secondary); line-height:1.2; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"><?= htmlspecialchars($parea) ?></div>

@@ -722,6 +722,37 @@ if (!empty($breadcrumb)) {
     .notion-editor-wrap .ce-conversion-toolbar__label * {
         color: var(--text-secondary) !important;
     }
+
+    /* Settings popover (3 dots) - fix white text on white hover */
+    .ce-popover__item:hover,
+    .ce-popover__item:focus {
+        background: rgba(255,255,255,0.12) !important;
+    }
+    .ce-popover__item:hover .ce-popover__item-label,
+    .ce-popover__item:hover .ce-popover__item-description,
+    .ce-popover__item:focus .ce-popover__item-label {
+        color: #ffffff !important;
+    }
+    body[data-theme="light"] .ce-popover__item:hover,
+    body[data-theme="light"] .ce-popover__item:focus {
+        background: rgba(15,23,42,0.08) !important;
+    }
+    body[data-theme="light"] .ce-popover__item:hover .ce-popover__item-label,
+    body[data-theme="light"] .ce-popover__item:hover .ce-popover__item-description,
+    body[data-theme="light"] .ce-popover__item:focus .ce-popover__item-label {
+        color: var(--text-primary) !important;
+    }
+    .ce-popover__item--confirmation {
+        background: rgba(229,57,53,0.18) !important;
+    }
+    .ce-popover__item--confirmation .ce-popover__item-label,
+    .ce-popover__item--confirmation .ce-popover__item-icon {
+        color: #ff8a80 !important;
+    }
+    .ce-popover__item--confirmation .ce-popover__item-icon svg {
+        color: #ff8a80 !important;
+        fill: #ff8a80 !important;
+    }
     .notion-editor-wrap .ce-conversion-tool__icon {
         background: rgba(255,255,255,0.08) !important;
         border: 1px solid rgba(255,255,255,0.10) !important;
@@ -1915,12 +1946,61 @@ if (!empty($breadcrumb)) {
                 readOnly: !canEdit,
                 data: { time: Date.now(), blocks: [] },
                 autofocus: false,
+                i18n: {
+                    messages: {
+                        ui: {
+                            blockTunes: {
+                                toggler: { 'Click to tune': 'Clique para ajustar' }
+                            },
+                            inlineToolbar: {
+                                converter: { 'Convert to': 'Converter para' }
+                            },
+                            toolbar: {
+                                toolbox: { Add: 'Adicionar', Filter: 'Filtrar' }
+                            }
+                        },
+                        toolNames: {
+                            Text: 'Texto',
+                            Heading: 'Título',
+                            List: 'Lista',
+                            Checklist: 'Lista de tarefas',
+                            Quote: 'Citação',
+                            Code: 'Código',
+                            Image: 'Imagem',
+                            Attachment: 'Arquivo',
+                            'Ordered List': 'Lista numerada',
+                            'Unordered List': 'Lista com marcadores'
+                        },
+                        blockTunes: {
+                            'delete': { Delete: 'Excluir', 'Click to delete': 'Clique para excluir' },
+                            moveUp: { 'Move up': 'Mover acima' },
+                            moveDown: { 'Move down': 'Mover abaixo' }
+                        },
+                        tools: {
+                            header: { 'Heading 1': 'Título 1', 'Heading 2': 'Título 2', 'Heading 3': 'Título 3' },
+                            list: { Ordered: 'Numerada', Unordered: 'Com marcadores' },
+                            stub: { 'The block can not be displayed correctly.': 'Este bloco não pode ser exibido corretamente.' }
+                        }
+                    }
+                },
                 onReady: function () {
                     try {
                         if (canEdit && typeof Undo !== 'undefined') {
                             new Undo({ editor: editor });
                         }
                     } catch (e) {}
+
+                    // Registra autosave aqui, quando editor já está pronto
+                    if (canEdit && !editorInitError) {
+                        document.addEventListener('keyup', function (e) {
+                            if (!e || !editor) return;
+                            debounceSave();
+                        }, true);
+                        document.addEventListener('mouseup', function () {
+                            if (!editor) return;
+                            debounceSave();
+                        }, true);
+                    }
 
                     // Renderiza o conteúdo real em seguida, fora do caminho crítico de inicialização.
                     runIdle(function () {
@@ -1997,7 +2077,7 @@ if (!empty($breadcrumb)) {
     }
 
     if (pageId) {
-        runIdle(initEditor);
+        initEditor();
     }
 
     // Click anywhere in the editor area to focus the last block (or insert one)
@@ -2119,16 +2199,8 @@ if (!empty($breadcrumb)) {
         debounceTimer = setTimeout(scheduleSave, 650);
     }
 
-    if (!editorInitError && canEdit && editor) {
-        document.addEventListener('keyup', function (e) {
-            if (!e) return;
-            debounceSave();
-        }, true);
-        document.addEventListener('mouseup', function () { debounceSave(); }, true);
-    } else {
-        if (!editorInitError && pageId && !canEdit) {
-            setHint('Somente leitura (sem permissão de edição).');
-        }
+    if (!editorInitError && pageId && !canEdit) {
+        setHint('Somente leitura (sem permissão de edição).');
     }
 
     var btnSave = $('btn-save');
