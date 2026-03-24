@@ -632,6 +632,11 @@ if (!empty($breadcrumb)) {
     body:not([data-theme="light"]) .ce-popover__item-description {
         color: rgba(255,255,255,0.72) !important;
     }
+    /* Força fundo escuro nos ícones do popover (EditorJS aplica branco por padrão) */
+    body:not([data-theme="light"]) .ce-popover [class*="icon"] {
+        background: rgba(0,0,0,0.35) !important;
+        border-color: rgba(255,255,255,0.12) !important;
+    }
 
     /* Tema claro: garante que o popover não herde branco forçado */
     body[data-theme="light"] .ce-popover,
@@ -642,22 +647,27 @@ if (!empty($breadcrumb)) {
         color: var(--text-secondary) !important;
     }
 
-    .ce-popover__item-icon {
+    .ce-popover__item-icon,
+    .ce-popover-item__icon {
         background: rgba(255,255,255,0.08) !important;
         border: 1px solid rgba(255,255,255,0.10) !important;
         border-radius: 10px !important;
     }
-    body:not([data-theme="light"]) .ce-popover__item-icon {
+    body:not([data-theme="light"]) .ce-popover__item-icon,
+    body:not([data-theme="light"]) .ce-popover-item__icon {
         background: rgba(0,0,0,0.35) !important;
         border: 1px solid rgba(255,255,255,0.12) !important;
     }
     body:not([data-theme="light"]) .ce-popover__item-icon svg,
-    body:not([data-theme="light"]) .ce-popover__item-icon svg * {
+    body:not([data-theme="light"]) .ce-popover__item-icon svg *,
+    body:not([data-theme="light"]) .ce-popover-item__icon svg,
+    body:not([data-theme="light"]) .ce-popover-item__icon svg * {
         fill: currentColor !important;
         stroke: currentColor !important;
         color: #ffffff !important;
     }
-    body[data-theme="light"] .ce-popover__item-icon {
+    body[data-theme="light"] .ce-popover__item-icon,
+    body[data-theme="light"] .ce-popover-item__icon {
         background: rgba(15,23,42,0.06) !important;
         border: 1px solid rgba(15,23,42,0.10) !important;
     }
@@ -780,17 +790,20 @@ if (!empty($breadcrumb)) {
     body[data-theme="light"] .ce-popover__item--focused {
         background: rgba(15,23,42,0.08) !important;
     }
-    .ce-popover__item-icon {
+    .ce-popover__item-icon,
+    .ce-popover-item__icon {
         background: rgba(255,255,255,0.08) !important;
         border: 1px solid rgba(255,255,255,0.10) !important;
         border-radius: 8px !important;
         color: var(--text-primary) !important;
     }
-    .ce-popover__item-icon svg {
+    .ce-popover__item-icon svg,
+    .ce-popover-item__icon svg {
         fill: currentColor !important;
         color: var(--text-primary) !important;
     }
-    body[data-theme="light"] .ce-popover__item-icon {
+    body[data-theme="light"] .ce-popover__item-icon,
+    body[data-theme="light"] .ce-popover-item__icon {
         background: rgba(15,23,42,0.06) !important;
         border: 1px solid rgba(15,23,42,0.10) !important;
     }
@@ -798,10 +811,12 @@ if (!empty($breadcrumb)) {
         background: rgba(229,57,53,0.18) !important;
     }
     .ce-popover__item--confirmation .ce-popover__item-label,
-    .ce-popover__item--confirmation .ce-popover__item-icon {
+    .ce-popover__item--confirmation .ce-popover__item-icon,
+    .ce-popover__item--confirmation .ce-popover-item__icon {
         color: #ff8a80 !important;
     }
-    .ce-popover__item--confirmation .ce-popover__item-icon svg {
+    .ce-popover__item--confirmation .ce-popover__item-icon svg,
+    .ce-popover__item--confirmation .ce-popover-item__icon svg {
         color: #ff8a80 !important;
         fill: #ff8a80 !important;
     }
