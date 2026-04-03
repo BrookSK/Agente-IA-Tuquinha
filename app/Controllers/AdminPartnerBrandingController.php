@@ -100,6 +100,15 @@ class AdminPartnerBrandingController extends Controller
         $heroImageUrl = $existing['hero_image_url'] ?? null;
         $backgroundImageUrl = $existing['background_image_url'] ?? null;
 
+        // Preserve existing text values if admin left fields empty
+        if ($companyName === '') { $companyName = (string)($existing['company_name'] ?? ''); }
+        if ($primary === '') { $primary = (string)($existing['primary_color'] ?? ''); }
+        if ($secondary === '') { $secondary = (string)($existing['secondary_color'] ?? ''); }
+        if ($textColor === '') { $textColor = (string)($existing['text_color'] ?? ''); }
+        if ($buttonTextColor === '') { $buttonTextColor = (string)($existing['button_text_color'] ?? ''); }
+        if ($linkColor === '') { $linkColor = (string)($existing['link_color'] ?? ''); }
+        if ($paragraphColor === '') { $paragraphColor = (string)($existing['paragraph_color'] ?? ''); }
+
         $removeLogo = !empty($_POST['remove_logo']);
         if ($removeLogo) {
             $logoUrl = null;
@@ -229,6 +238,7 @@ class AdminPartnerBrandingController extends Controller
             'text_color' => $textColor,
             'button_text_color' => $buttonTextColor,
             'link_color' => $linkColor,
+            'paragraph_color' => $paragraphColor,
             'header_image_url' => $headerImageUrl,
             'footer_image_url' => $footerImageUrl,
             'hero_image_url' => $heroImageUrl,

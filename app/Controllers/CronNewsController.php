@@ -191,7 +191,7 @@ class CronNewsController extends Controller
             return false;
         }
 
-        $rssRaw = (string)Setting::get('news_rss_feeds', "https://www.meioemensagem.com.br/feed\nhttps://www.meioemensagem.com.br/categoria/marketing/feed\nhttps://www.publicitarioscriativos.com/feed\nhttps://mundodomarketing.com.br/feed\nhttps://www.promoview.com.br/feed\nhttps://gkpb.com.br/feed");
+        $rssRaw = (string)Setting::get('news_rss_feeds', "https://www.meioemensagem.com.br/marketing/feed\nhttps://www.publicitarioscriativos.com/feed\nhttps://mundodomarketing.com.br/feed\nhttps://www.promoview.com.br/feed\nhttps://gkpb.com.br/feed");
         $rssRaw = str_replace(["\r\n", "\r"], "\n", $rssRaw);
         $rssParts = preg_split('/[\n,;]+/', $rssRaw) ?: [];
         $rssFeeds = [];

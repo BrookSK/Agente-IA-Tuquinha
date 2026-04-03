@@ -507,7 +507,7 @@
                                 $initialPersonaId = 0;
                                 if ($defaultPersonaId > 0) {
                                     foreach ($personalities as $ppx) {
-                                        if ((int)($ppx['id'] ?? 0) === $defaultPersonaId && empty($ppx['coming_soon'])) {
+                                        if ((int)($ppx['id'] ?? 0) === $defaultPersonaId && empty($ppx['coming_soon']) && empty($ppx['_disabled'])) {
                                             $initialPersonaId = $defaultPersonaId;
                                             break;
                                         }
@@ -515,7 +515,7 @@
                                 }
                                 if ($initialPersonaId <= 0) {
                                     foreach ($personalities as $ppx) {
-                                        if (empty($ppx['coming_soon']) && !empty($ppx['id'])) {
+                                        if (empty($ppx['coming_soon']) && empty($ppx['_disabled']) && !empty($ppx['id'])) {
                                             $initialPersonaId = (int)$ppx['id'];
                                             break;
                                         }
@@ -538,13 +538,15 @@
                                             $parea = trim((string)($p['area'] ?? ''));
                                             $pimg = trim((string)($p['image_path'] ?? ''));
                                             if ($pid <= 0 || $pname === '') { continue; }
-                                            if (!empty($p['coming_soon'])) { continue; }
-                                            $selected = $initialPersonaId > 0 && $pid === $initialPersonaId;
+                                            $isDisabled = !empty($p['_disabled']);
+                                            $isComingSoon = !empty($p['coming_soon']);
+                                            $selected = !$isDisabled && $initialPersonaId > 0 && $pid === $initialPersonaId;
                                         ?>
                                         <button type="button"
-                                            class="projectPersonaCard"
-                                            data-persona-id="<?= $pid ?>"
+                                            <?= $isDisabled ? '' : 'class="projectPersonaCard"' ?>
+                                            <?= !$isDisabled ? 'data-persona-id="' . $pid . '"' : '' ?>
                                             aria-pressed="<?= $selected ? 'true' : 'false' ?>"
+                                            <?= $isDisabled ? 'disabled aria-disabled="true"' : '' ?>
                                             style="
                                             flex:0 0 220px;
                                             max-width: 240px;
@@ -554,7 +556,7 @@
                                             border-radius:14px;
                                             padding:10px;
                                             color:var(--text-primary);
-                                            cursor:pointer;
+                                            <?= $isDisabled ? 'opacity:0.45; cursor:not-allowed; pointer-events:none;' : 'cursor:pointer;' ?>
                                             text-align:left;
                                             display:flex;
                                             gap:10px;
@@ -571,6 +573,11 @@
                                             <div style="min-width:0; flex:1;">
                                                 <div style="display:flex; align-items:center; gap:5px; flex-wrap:wrap;">
                                                     <div title="<?= htmlspecialchars($pname) ?>" style="font-weight:700; font-size:13px; line-height:1.2; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"><?= htmlspecialchars($pname) ?></div>
+                                                    <?php if ($isComingSoon): ?>
+                                                        <span style="font-size:9px; font-weight:700; background:#2a1a00; color:#ffb74d; border-radius:4px; padding:1px 5px; white-space:nowrap; line-height:1.4;">Em breve</span>
+                                                    <?php elseif ($isDisabled): ?>
+                                                        <span style="font-size:9px; font-weight:700; background:#1a1a2a; color:#9e9ec8; border-radius:4px; padding:1px 5px; white-space:nowrap; line-height:1.4;">Plano superior</span>
+                                                    <?php endif; ?>
                                                 </div>
                                                 <?php if ($parea !== ''): ?>
                                                     <div title="<?= htmlspecialchars($parea) ?>" style="font-size:11px; color:var(--text-secondary); line-height:1.2; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"><?= htmlspecialchars($parea) ?></div>

@@ -338,15 +338,32 @@ class ProjectController extends Controller
         }
         if ($planAllowsPersonalities) {
             try {
+                $allActive = Personality::allActive();
                 if (!empty($_SESSION['is_admin'])) {
-                    $personalities = Personality::allActive();
+                    foreach ($allActive as &$pp) {
+                        $pp['_disabled'] = false;
+                    }
+                    unset($pp);
+                    $personalities = $allActive;
                 } else {
                     $planId = !empty($planForPersonalities['id']) ? (int)$planForPersonalities['id'] : 0;
+                    $availableIds = [];
                     if ($planId > 0) {
-                        $personalities = Personality::allVisibleForUsersByPlan($planId);
-                    } else {
-                        $personalities = Personality::allActive();
+                        $available = Personality::allVisibleForUsersByPlan($planId);
+                        foreach ($available as $av) {
+                            if (!empty($av['id']) && empty($av['coming_soon'])) {
+                                $availableIds[(int)$av['id']] = true;
+                            }
+                        }
                     }
+                    foreach ($allActive as &$pp) {
+                        $pid = (int)($pp['id'] ?? 0);
+                        $isComingSoon = !empty($pp['coming_soon']);
+                        $inPlan = $planId <= 0 || isset($availableIds[$pid]);
+                        $pp['_disabled'] = $isComingSoon || !$inPlan;
+                    }
+                    unset($pp);
+                    $personalities = $allActive;
                 }
             } catch (\Throwable $e) {
                 $personalities = Personality::allActive();
