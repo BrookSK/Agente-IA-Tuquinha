@@ -144,9 +144,9 @@ $conversationId = isset($conversationId) ? (int)$conversationId : 0;
     }
 </style>
 <div style="max-width: 1000px; margin: 0 auto;">
-    <h1 style="font-size: 26px; margin-bottom: 10px; font-weight: 650;">Escolha a personalidade do Tuquinha</h1>
+    <h1 style="font-size: 26px; margin-bottom: 10px; font-weight: 650;">Escolha a personalidade do <?= htmlspecialchars(\App\Models\Branding::mascotName()) ?></h1>
     <p style="color:var(--text-secondary); font-size: 14px; margin-bottom: 8px; max-width: 640px;">
-        Cada personalidade é um "modo" diferente do Tuquinha, com foco, jeito de falar e especialidade próprios.
+        Cada personalidade é um "modo" diferente do <?= htmlspecialchars(\App\Models\Branding::mascotName()) ?>, com foco, jeito de falar e especialidade próprios.
         Escolha quem vai te ajudar neste próximo chat.
     </p>
 
@@ -175,12 +175,12 @@ $conversationId = isset($conversationId) ? (int)$conversationId : 0;
                         cursor:pointer;
                     ">
                         <div class="persona-card-image">
-                            <img src="/public/perso_padrao.png" alt="Padrão do Tuquinha" onerror="this.onerror=null;this.src='/public/favicon.png';" style="width:100%; height:100%; object-fit:cover; display:block;">
+                            <img src="/public/perso_padrao.png" alt="Padrão do <?= htmlspecialchars(\App\Models\Branding::mascotName()) ?>" onerror="this.onerror=null;this.src='/public/favicon.png';" style="width:100%; height:100%; object-fit:cover; display:block;">
                         </div>
                         <div style="padding:10px 12px 12px 12px;">
                             <div style="display:flex; align-items:center; justify-content:space-between; gap:6px; margin-bottom:4px;">
                                 <div style="font-size:18px; font-weight:650; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
-                                    Padrão do Tuquinha
+                                    Padrão do <?= htmlspecialchars(\App\Models\Branding::mascotName()) ?>
                                 </div>
                             </div>
                             <div class="persona-card-desc">

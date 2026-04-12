@@ -48,7 +48,7 @@ if ($freeChatLimit <= 0) { $freeChatLimit = 400; }
     <div style="display: flex; flex-direction: column; gap: 12px;">
         <div style="background:#111118; border-radius:16px; padding:14px; border:1px solid #272727;">
             <h2 style="font-size:18px; margin-bottom:8px;">Dados da conta</h2>
-            <p style="font-size:13px; color:#b0b0b0; margin-bottom:10px;">Ajuste como o Tuquinha te chama e confira seu e-mail de acesso.</p>
+            <p style="font-size:13px; color:#b0b0b0; margin-bottom:10px;">Ajuste como o <?= htmlspecialchars(\App\Models\Branding::mascotName()) ?> te chama e confira seu e-mail de acesso.</p>
 
             <div style="margin-bottom:12px; display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
                 <form action="/conta/refazer-tour" method="post" style="margin:0;">
@@ -77,9 +77,9 @@ if ($freeChatLimit <= 0) { $freeChatLimit = 400; }
                     <input type="text" name="name" value="<?= htmlspecialchars($user['name'] ?? '') ?>" required style="width:100%; padding:8px 10px; border-radius:8px; border:1px solid #272727; background:#050509; color:#f5f5f5; font-size:14px;">
                 </div>
                 <div>
-                    <label style="font-size:13px; color:var(--text-secondary); display:block; margin-bottom:4px;">Como o Tuquinha deve te chamar?</label>
+                    <label style="font-size:13px; color:var(--text-secondary); display:block; margin-bottom:4px;">Como o <?= htmlspecialchars(\App\Models\Branding::mascotName()) ?> deve te chamar?</label>
                     <input type="text" name="preferred_name" value="<?= htmlspecialchars($user['preferred_name'] ?? '') ?>" placeholder="Opcional. Ex: Rafa, Dr. João, você decide." style="width:100%; padding:8px 10px; border-radius:8px; border:1px solid #272727; background:#050509; color:#f5f5f5; font-size:14px;">
-                    <div style="font-size:11px; color:#8d8d8d; margin-top:3px;">Se preencher, o Tuquinha vai usar esse nome nas respostas.</div>
+                    <div style="font-size:11px; color:#8d8d8d; margin-top:3px;">Se preencher, o <?= htmlspecialchars(\App\Models\Branding::mascotName()) ?> vai usar esse nome nas respostas.</div>
                 </div>
                 <div>
                     <label style="font-size:13px; color:var(--text-secondary); display:block; margin-bottom:4px;">E-mail</label>
@@ -88,7 +88,7 @@ if ($freeChatLimit <= 0) { $freeChatLimit = 400; }
                 <?php if (!empty($plan['allow_personalities'])): ?>
                     <div style="font-size:11px; color:#8d8d8d; margin-top:6px;">
                         Quer escolher uma personalidade padrão para novos chats? Acesse
-                        <a href="/conta/personalidade" style="color:#ff6f60; text-decoration:none;">configurar personalidade do Tuquinha</a>.
+                        <a href="/conta/personalidade" style="color:#ff6f60; text-decoration:none;">configurar personalidade do <?= htmlspecialchars(\App\Models\Branding::mascotName()) ?></a>.
                     </div>
                 <?php endif; ?>
                 <div style="font-size:12px; color:#b0b0b0;">
@@ -101,15 +101,15 @@ if ($freeChatLimit <= 0) { $freeChatLimit = 400; }
                 </div>
                 <div>
                     <label style="font-size:13px; color:var(--text-secondary); display:block; margin:10px 0 4px;">Memórias globais sobre você</label>
-                    <textarea name="global_memory" rows="3" placeholder="Opcional. Ex: tipo de cliente que você atende, nível de experiência, nicho favorito, informações que o Tuquinha não precisa perguntar toda hora." style="width:100%; padding:8px 10px; border-radius:8px; border:1px solid #272727; background:#050509; color:#f5f5f5; font-size:13px; resize:vertical; min-height:70px;"><?= htmlspecialchars($user['global_memory'] ?? '') ?></textarea>
+                    <textarea name="global_memory" rows="3" placeholder="Opcional. Ex: tipo de cliente que você atende, nível de experiência, nicho favorito, informações que o <?= htmlspecialchars(\App\Models\Branding::mascotName()) ?> não precisa perguntar toda hora." style="width:100%; padding:8px 10px; border-radius:8px; border:1px solid #272727; background:#050509; color:#f5f5f5; font-size:13px; resize:vertical; min-height:70px;"><?= htmlspecialchars($user['global_memory'] ?? '') ?></textarea>
                 </div>
                 <div>
-                    <label style="font-size:13px; color:var(--text-secondary); display:block; margin:6px 0 4px;">Regras globais para o Tuquinha</label>
+                    <label style="font-size:13px; color:var(--text-secondary); display:block; margin:6px 0 4px;">Regras globais para o <?= htmlspecialchars(\App\Models\Branding::mascotName()) ?></label>
                     <textarea name="global_instructions" rows="3" placeholder="Opcional. Ex: sempre responder mais direto, evitar certos temas, foco em resultado prático, etc." style="width:100%; padding:8px 10px; border-radius:8px; border:1px solid #272727; background:#050509; color:#f5f5f5; font-size:13px; resize:vertical; min-height:70px;"><?= htmlspecialchars($user['global_instructions'] ?? '') ?></textarea>
                 </div>
                 <?php if ($isFreePlan): ?>
                     <div style="font-size:11px; color:#8d8d8d; margin-top:4px;">
-                        No plano Free o Tuquinha considera até <?= htmlspecialchars((string)$freeGlobalLimit) ?> caracteres das memórias/regras globais. Para textos maiores, apenas o início será usado.
+                        No plano Free o <?= htmlspecialchars(\App\Models\Branding::mascotName()) ?> considera até <?= htmlspecialchars((string)$freeGlobalLimit) ?> caracteres das memórias/regras globais. Para textos maiores, apenas o início será usado.
                     </div>
                 <?php endif; ?>
                 <button type="submit" style="margin-top:6px; align-self:flex-start; border:none; border-radius:999px; padding:8px 14px; background:linear-gradient(135deg,#e53935,#ff6f60); color:#050509; font-weight:600; cursor:pointer; font-size:13px;">
@@ -153,7 +153,7 @@ if ($freeChatLimit <= 0) { $freeChatLimit = 400; }
                 <?= number_format((int)($tokenBalance ?? 0), 0, ',', '.') ?> tokens
             </div>
             <div style="font-size:11px; color:#8d8d8d;">
-                A cada resposta do Tuquinha uma parte desses tokens é consumida.
+                A cada resposta do <?= htmlspecialchars(\App\Models\Branding::mascotName()) ?> uma parte desses tokens é consumida.
             </div>
             <?php if ($hasPaidActivePlan): ?>
                 <div style="margin-top:8px;">

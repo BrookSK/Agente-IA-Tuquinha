@@ -82,7 +82,7 @@ class HomeController extends Controller
         }
 
         $this->view('home/index', [
-            'pageTitle' => 'Resenha 2.0',
+            'pageTitle' => \App\Models\Branding::platformName(),
             'tuquinhaAboutVideoUrl' => $tuquinhaAboutVideoUrl,
             'isLogged' => $isLogged,
             'currentPlan' => $currentPlan,

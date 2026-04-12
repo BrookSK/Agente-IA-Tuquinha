@@ -345,7 +345,7 @@ class CronNewsController extends Controller
                 rtrim((string)Setting::get('app_public_url', ''), '/') . '/noticias'
             );
 
-            $ok = MailService::send((string)$u['email'], (string)($u['name'] ?? ''), 'Novas notícias de marketing (Tuquinha)', $body);
+            $ok = MailService::send((string)$u['email'], (string)($u['name'] ?? ''), 'Novas notícias de marketing (' . \App\Models\Branding::mascotName() . ')', $body);
             if (!$ok) {
                 continue;
             }

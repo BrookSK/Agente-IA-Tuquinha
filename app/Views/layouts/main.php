@@ -3,8 +3,9 @@
 /** @var string|null $pageTitle */
 
 use App\Models\CoursePartner;
+use App\Models\Branding;
 
-$pageTitle = $pageTitle ?? 'Resenha 2.0';
+$pageTitle = $pageTitle ?? Branding::platformName();
 
 $menuIconMap = [];
 try {
@@ -108,7 +109,7 @@ if (!empty($_SESSION['user_id'])) {
     <meta name="theme-color" content="#e53935">
     <title><?= htmlspecialchars($pageTitle) ?></title>
     <link rel="icon" type="image/png" href="/public/favicon.png">
-    <link rel="manifest" href="/public/manifest.webmanifest">
+    <link rel="manifest" href="/public/manifest.php">
     <style>
         :root {
             --bg-main: #050509;
@@ -782,10 +783,10 @@ if (!empty($_SESSION['user_id'])) {
         <div>
             <button type="button" class="sidebar-close" id="sidebar-close" aria-label="Fechar menu">×</button>
             <div class="brand">
-                <div class="brand-logo"><img src="/public/favicon.png" alt="Tuquinha" style="width:100%; height:100%; display:block; object-fit:cover;"></div>
+                <div class="brand-logo"><img src="/public/favicon.png" alt="<?= htmlspecialchars(Branding::mascotName()) ?>" style="width:100%; height:100%; display:block; object-fit:cover;"></div>
                 <div>
-                    <div class="brand-text-title">Resenha 2.0</div>
-                    <div class="brand-text-sub">Branding vivo na veia</div>
+                    <div class="brand-text-title"><?= htmlspecialchars(Branding::platformName()) ?></div>
+                    <div class="brand-text-sub"><?= htmlspecialchars(Branding::slogan()) ?></div>
                 </div>
             </div>
             <?php
@@ -916,7 +917,7 @@ if (!empty($_SESSION['user_id'])) {
                 <div class="sidebar-section-title">Conversa</div>
                 <a href="<?= htmlspecialchars($newChatHref) ?>" class="sidebar-button primary<?= $isActiveNav(['/chat', '/personalidades']) ? ' sidebar-button--active' : '' ?>" data-tour="nav-new-chat" style="margin-bottom: 8px;">
                     <span class="icon">+</span>
-                    <span>Novo chat com o Tuquinha</span>
+                    <span>Novo chat com o <?= htmlspecialchars(\App\Models\Branding::mascotName()) ?></span>
                 </a>
                 <?php
                     $currentSlug = $_SESSION['plan_slug'] ?? null;
@@ -949,7 +950,7 @@ if (!empty($_SESSION['user_id'])) {
                             <path d="M18 4.8V7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
                         </svg>');
                     ?></span>
-                    <span>Quem é o Tuquinha</span>
+                    <span>Quem é o <?= htmlspecialchars(\App\Models\Branding::mascotName()) ?></span>
                 </a>
 
                 <?php if ($canUseCaderno): ?>
@@ -982,7 +983,7 @@ if (!empty($_SESSION['user_id'])) {
                 <?php endif; ?>
 
                 <?php if (!empty($_SESSION['user_id'])): ?>
-                    <div class="sidebar-section-title" style="margin-top: 10px;">Rede social do Tuquinha</div>
+                    <div class="sidebar-section-title" style="margin-top: 10px;">Rede social do <?= htmlspecialchars(\App\Models\Branding::mascotName()) ?></div>
                     <a href="/perfil" class="sidebar-button<?= $isActiveNav('/perfil') ? ' sidebar-button--active' : '' ?>">
                         <span class="icon" aria-hidden="true"><?php echo $renderMenuIcon('social_profile', '🧑'); ?></span>
                         <span>Perfil social</span>
@@ -1128,7 +1129,7 @@ if (!empty($_SESSION['user_id'])) {
                     </a>
                     <a href="/admin/personalidades" class="sidebar-button" style="margin-top: 6px;">
                         <span class="icon" aria-hidden="true"><?php echo $renderMenuIcon('admin_personalities', '🎭'); ?></span>
-                        <span>Personalidades do Tuquinha</span>
+                        <span>Personalidades do <?= htmlspecialchars(\App\Models\Branding::mascotName()) ?></span>
                     </a>
                     <a href="/admin/usuarios" class="sidebar-button" style="margin-top: 6px;">
                         <span class="icon" aria-hidden="true"><?php echo $renderMenuIcon('admin_users', '👥'); ?></span>
@@ -1485,7 +1486,8 @@ if (!empty($_SESSION['user_id'])) {
         window.TUQ_TOUR_CONFIG = {
             onboarding: <?= $tuqOnboarding ? 'true' : 'false' ?>,
             force: <?= $tuqOnboardingForce ? 'true' : 'false' ?>,
-            allowFab: false
+            allowFab: false,
+            mascotName: <?= json_encode(\App\Models\Branding::mascotName(), JSON_UNESCAPED_UNICODE) ?>
         };
     </script>
     <?php

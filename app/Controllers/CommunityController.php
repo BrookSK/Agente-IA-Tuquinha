@@ -180,7 +180,7 @@ class CommunityController extends Controller
         unset($_SESSION['community_success'], $_SESSION['community_error']);
 
         $this->view('community/index', [
-            'pageTitle' => 'Comunidade do Tuquinha',
+            'pageTitle' => \App\Models\Branding::communityName(),
             'user' => $user,
             'plan' => $plan,
             'posts' => $posts,
@@ -456,22 +456,18 @@ class CommunityController extends Controller
         if (!empty($targetUser['email'])) {
             $safeName = htmlspecialchars($targetUser['name'] ?? '', ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
             $safeReason = nl2br(htmlspecialchars($reason, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'));
-            $subject = 'Você foi bloqueado na comunidade do Tuquinha';
+            $brandHeader = \App\Models\Branding::emailHeaderHtml();
+            $brandCommunity = htmlspecialchars(\App\Models\Branding::communityName(), ENT_QUOTES, 'UTF-8');
+            $subject = "Você foi bloqueado na {$brandCommunity}";
             $body = <<<HTML
 <html>
 <body style="margin:0; padding:0; background:#050509; font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; color:#f5f5f5;">
   <div style="width:100%; padding:24px 0;">
     <div style="max-width:520px; margin:0 auto; background:#111118; border-radius:16px; border:1px solid #272727; padding:18px 20px;">
-      <div style="display:flex; align-items:center; gap:10px; margin-bottom:12px;">
-        <div style="width:32px; height:32px; line-height:32px; border-radius:50%; background:radial-gradient(circle at 30% 20%, #fff 0, #ff8a65 25%, #e53935 65%, #050509 100%); text-align:center; font-weight:700; font-size:16px; color:#050509;">T</div>
-        <div>
-          <div style="font-weight:700; font-size:15px;">Resenha 2.0</div>
-          <div style="font-size:11px; color:#b0b0b0;">Branding vivo na veia</div>
-        </div>
-      </div>
+      {$brandHeader}
 
       <p style="font-size:14px; margin:0 0 10px 0;">Oi, {$safeName} 👋</p>
-      <p style="font-size:14px; margin:0 0 10px 0;">Seu acesso para publicar, curtir e comentar na comunidade do Tuquinha foi bloqueado temporariamente.</p>
+      <p style="font-size:14px; margin:0 0 10px 0;">Seu acesso para publicar, curtir e comentar na {$brandCommunity} foi bloqueado temporariamente.</p>
       <p style="font-size:14px; margin:0 0 10px 0;">Motivo informado pela moderação:</p>
       <p style="font-size:13px; margin:0 0 10px 0; color:#ffb74d;">{$safeReason}</p>
       <p style="font-size:12px; color:#b0b0b0; margin:0;">Se você acredita que isso foi um engano, responda este e-mail explicando o contexto para que possamos revisar o caso.</p>
@@ -516,22 +512,18 @@ HTML;
 
         if (!empty($targetUser['email'])) {
             $safeName = htmlspecialchars($targetUser['name'] ?? '', ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
-            $subject = 'Seu acesso à comunidade do Tuquinha foi restaurado';
+            $brandHeader = \App\Models\Branding::emailHeaderHtml();
+            $brandCommunity = htmlspecialchars(\App\Models\Branding::communityName(), ENT_QUOTES, 'UTF-8');
+            $subject = "Seu acesso à {$brandCommunity} foi restaurado";
             $body = <<<HTML
 <html>
 <body style="margin:0; padding:0; background:#050509; font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; color:#f5f5f5;">
   <div style="width:100%; padding:24px 0;">
     <div style="max-width:520px; margin:0 auto; background:#111118; border-radius:16px; border:1px solid #272727; padding:18px 20px;">
-      <div style="display:flex; align-items:center; gap:10px; margin-bottom:12px;">
-        <div style="width:32px; height:32px; line-height:32px; border-radius:50%; background:radial-gradient(circle at 30% 20%, #fff 0, #ff8a65 25%, #e53935 65%, #050509 100%); text-align:center; font-weight:700; font-size:16px; color:#050509;">T</div>
-        <div>
-          <div style="font-weight:700; font-size:15px;">Resenha 2.0</div>
-          <div style="font-size:11px; color:#b0b0b0;">Branding vivo na veia</div>
-        </div>
-      </div>
+      {$brandHeader}
 
       <p style="font-size:14px; margin:0 0 10px 0;">Oi, {$safeName} 👋</p>
-      <p style="font-size:14px; margin:0 0 10px 0;">Seu acesso para participar da comunidade do Tuquinha foi restaurado. Bora seguir construindo um espaço seguro e útil para todo mundo.</p>
+      <p style="font-size:14px; margin:0 0 10px 0;">Seu acesso para participar da {$brandCommunity} foi restaurado. Bora seguir construindo um espaço seguro e útil para todo mundo.</p>
     </div>
   </div>
 </body>
@@ -602,22 +594,18 @@ HTML;
             }
             $safeSnippet = nl2br(htmlspecialchars($snippet, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'));
 
-            $subject = 'Você foi mencionado na comunidade do Tuquinha';
+            $brandHeader = \App\Models\Branding::emailHeaderHtml();
+            $brandCommunity = htmlspecialchars(\App\Models\Branding::communityName(), ENT_QUOTES, 'UTF-8');
+            $subject = "Você foi mencionado na {$brandCommunity}";
             $html = <<<HTML
 <html>
 <body style="margin:0; padding:0; background:#050509; font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; color:#f5f5f5;">
   <div style="width:100%; padding:24px 0;">
     <div style="max-width:520px; margin:0 auto; background:#111118; border-radius:16px; border:1px solid #272727; padding:18px 20px;">
-      <div style="display:flex; align-items:center; gap:10px; margin-bottom:12px;">
-        <div style="width:32px; height:32px; line-height:32px; border-radius:50%; background:radial-gradient(circle at 30% 20%, #fff 0, #ff8a65 25%, #e53935 65%, #050509 100%); text-align:center; font-weight:700; font-size:16px; color:#050509;">T</div>
-        <div>
-          <div style="font-weight:700; font-size:15px;">Resenha 2.0</div>
-          <div style="font-size:11px; color:#b0b0b0;">Branding vivo na veia</div>
-        </div>
-      </div>
+      {$brandHeader}
 
       <p style="font-size:14px; margin:0 0 10px 0;">Oi, {$safeName} 👋</p>
-      <p style="font-size:14px; margin:0 0 10px 0;"><strong>{$safeAuthor}</strong> te mencionou em um post na Comunidade do Tuquinha.</p>
+      <p style="font-size:14px; margin:0 0 10px 0;"><strong>{$safeAuthor}</strong> te mencionou em um post na {$brandCommunity}.</p>
       <p style="font-size:13px; margin:0 0 10px 0; color:#b0b0b0;">Trecho do post:</p>
       <div style="font-size:13px; margin:0 0 12px 0; padding:8px 10px; border-radius:10px; border:1px solid #272727; background:#050509;">{$safeSnippet}</div>
       <p style="margin:0; font-size:13px;"><a href="{$link}" style="color:#ff6f60; text-decoration:none;">👉 Ver post completo na comunidade</a></p>

@@ -2,7 +2,7 @@
 /** @var array $courses */
 ?>
 <div style="max-width: 900px; margin: 0 auto;">
-    <h1 style="font-size: 22px; margin-bottom: 10px; font-weight: 650;">Cursos do Tuquinha</h1>
+    <h1 style="font-size: 22px; margin-bottom: 10px; font-weight: 650;">Cursos do <?= htmlspecialchars(\App\Models\Branding::mascotName()) ?></h1>
     <p style="color:#b0b0b0; font-size:13px; margin-bottom:14px;">
         Gerencie os cursos disponíveis para os usuários: defina título, acesso por plano ou compra avulsa e status.
     </p>

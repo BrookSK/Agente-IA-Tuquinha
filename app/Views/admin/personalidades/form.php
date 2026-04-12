@@ -9,7 +9,7 @@ $isEdit = !empty($persona);
         <?= $isEdit ? 'Editar personalidade' : 'Nova personalidade' ?>
     </h1>
     <p style="color:var(--text-secondary); font-size:13px; margin-bottom:10px;">
-        Dê um nome, uma área de atuação, um texto de prompt detalhado e uma imagem para essa personalidade do Tuquinha.
+        Dê um nome, uma área de atuação, um texto de prompt detalhado e uma imagem para essa personalidade do <?= htmlspecialchars(\App\Models\Branding::mascotName()) ?>.
     </p>
 
     <?php if (!empty($_SESSION['admin_persona_error'])): ?>
@@ -49,7 +49,7 @@ $isEdit = !empty($persona);
 
         <div>
             <label style="font-size:13px; color:var(--text-primary); display:block; margin-bottom:4px;">URL da imagem</label>
-            <input type="text" name="image_path" value="<?= htmlspecialchars($persona['image_path'] ?? '') ?>" placeholder="Opcional. Ex: /public/img/tuquinha-marcas.png" style="
+            <input type="text" name="image_path" value="<?= htmlspecialchars($persona['image_path'] ?? '') ?>" placeholder="Opcional. Ex: /public/img/personalidade.png" style="
                 width:100%; padding:8px 10px; border-radius:8px; border:1px solid var(--border-subtle);
                 background:var(--surface-subtle); color:var(--text-primary); font-size:14px;">
             <div style="font-size:11px; color:#777; margin-top:3px;">Pode ser um caminho interno do site ou uma URL completa de CDN/imagens.</div>
@@ -77,10 +77,10 @@ $isEdit = !empty($persona);
         </div>
 
         <div>
-            <label style="font-size:13px; color:var(--text-primary); display:block; margin-bottom:4px;">Descrição do card "Padrão do Tuquinha"</label>
+            <label style="font-size:13px; color:var(--text-primary); display:block; margin-bottom:4px;">Descrição do card "Padrão do <?= htmlspecialchars(\App\Models\Branding::mascotName()) ?>"</label>
             <textarea name="default_tuquinha_description" rows="3" style="
                 width:100%; padding:8px 10px; border-radius:8px; border:1px solid var(--border-subtle);
-                background:var(--surface-subtle); color:var(--text-primary); font-size:13px; resize:vertical;" placeholder="Texto exibido para a opção 'Padrão do Tuquinha' nas telas de seleção."><?= htmlspecialchars((string)($defaultTuquinhaDesc ?? '')) ?></textarea>
+                background:var(--surface-subtle); color:var(--text-primary); font-size:13px; resize:vertical;" placeholder="Texto exibido para a opção 'Padrão do <?= htmlspecialchars(\App\Models\Branding::mascotName()) ?>' nas telas de seleção."><?= htmlspecialchars((string)($defaultTuquinhaDesc ?? '')) ?></textarea>
             <div style="font-size:11px; color:#777; margin-top:3px;">Esse texto é aplicado quando você marcar "Definir como personalidade padrão global".</div>
         </div>
 

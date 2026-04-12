@@ -461,7 +461,7 @@ class AccountController extends Controller
                 $planName = $plan['name'] ?? 'seu plano atual';
                 $safeName = htmlspecialchars($user['name'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
                 $safePlan = htmlspecialchars($planName, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
-                $subject = 'Confirmação de cancelamento da sua assinatura do Tuquinha';
+                $subject = 'Confirmação de cancelamento da sua assinatura do ' . \App\Models\Branding::mascotName();
 
                 $benefitsLines = [];
                 if (!empty($plan['benefits'])) {
@@ -490,29 +490,25 @@ class AccountController extends Controller
                 $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
                 $logoUrl = $scheme . $host . '/public/favicon.png';
                 $safeLogoUrl = htmlspecialchars($logoUrl, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+                $brandHeader = \App\Models\Branding::emailHeaderHtml($logoUrl);
+                $brandMascot = htmlspecialchars(\App\Models\Branding::mascotName(), ENT_QUOTES, 'UTF-8');
 
                 $body = <<<HTML
 <html>
 <body style="margin:0; padding:0; background:#050509; font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; color:#f5f5f5;">
   <div style="width:100%; padding:24px 0;">
     <div style="max-width:520px; margin:0 auto; background:#111118; border-radius:16px; border:1px solid #272727; padding:18px 20px;">
-      <div style="display:flex; align-items:center; gap:10px; margin-bottom:12px;">
-        <div style="width:32px; height:32px; border-radius:50%; overflow:hidden; background:#050509; box-shadow:0 0 18px rgba(229,57,53,0.8);"><img src="{$safeLogoUrl}" alt="Tuquinha" style="width:100%; height:100%; display:block; object-fit:cover;"></div>
-        <div>
-          <div style="font-weight:700; font-size:15px;">Resenha 2.0</div>
-          <div style="font-size:11px; color:#b0b0b0;">Branding vivo na veia</div>
-        </div>
-      </div>
+      {$brandHeader}
 
       <p style="font-size:14px; margin:0 0 10px 0;">Oi, {$safeName} 👋</p>
-      <p style="font-size:14px; margin:0 0 10px 0;">Confirmamos o cancelamento da sua assinatura do plano <strong>{$safePlan}</strong> no Tuquinha.</p>
+      <p style="font-size:14px; margin:0 0 10px 0;">Confirmamos o cancelamento da sua assinatura do plano <strong>{$safePlan}</strong> no {$brandMascot}.</p>
 
       <p style="font-size:13px; margin:0 0 8px 0;">Com o cancelamento, você deixa de contar com os benefícios deste plano, como por exemplo:</p>
       {$benefitsHtml}
 
       <p style="font-size:13px; margin:0 0 8px 0;">{$validUntilText}</p>
 
-      <p style="font-size:12px; margin:12px 0 0 0; color:#b0b0b0;">Se isso foi um engano ou se quiser voltar em algum momento, é só assinar novamente um dos planos disponíveis dentro do próprio Tuquinha.</p>
+      <p style="font-size:12px; margin:12px 0 0 0; color:#b0b0b0;">Se isso foi um engano ou se quiser voltar em algum momento, é só assinar novamente um dos planos disponíveis dentro do próprio {$brandMascot}.</p>
     </div>
   </div>
 </body>

@@ -23,7 +23,7 @@ class AdminPersonalityController extends Controller
         $personalities = Personality::all();
 
         $this->view('admin/personalidades/index', [
-            'pageTitle' => 'Personalidades do Tuquinha',
+            'pageTitle' => 'Personalidades do ' . \App\Models\Branding::mascotName(),
             'personalities' => $personalities,
         ]);
     }

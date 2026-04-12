@@ -348,7 +348,7 @@ class Conversation
 
         $title = trim($baseTitle);
         if ($title === '') {
-            $title = 'Chat com o Tuquinha';
+            $title = 'Chat com o ' . \App\Models\Branding::mascotName();
         }
 
         // Se não existir ainda, usa direto

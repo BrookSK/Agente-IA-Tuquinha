@@ -63,7 +63,7 @@ class PersonalityPreferenceController extends Controller
         }
 
         $this->view('account/personalidade', [
-            'pageTitle' => 'Personalidade padrão do Tuquinha',
+            'pageTitle' => 'Personalidade padrão do ' . \App\Models\Branding::mascotName(),
             'user' => $user,
             'plan' => $plan,
             'personalities' => $personalities,

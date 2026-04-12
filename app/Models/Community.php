@@ -236,7 +236,7 @@ class Community
         }
 
         $slug = self::buildCourseCommunitySlug($course);
-        $name = 'Comunidade: ' . trim((string)($course['title'] ?? 'Curso do Tuquinha'));
+        $name = 'Comunidade: ' . trim((string)($course['title'] ?? 'Curso'));
         $description = (string)($course['short_description'] ?? $course['description'] ?? '');
         $ownerId = !empty($course['owner_user_id']) ? (int)$course['owner_user_id'] : null;
 

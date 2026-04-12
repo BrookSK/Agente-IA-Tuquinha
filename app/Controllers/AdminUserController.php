@@ -69,7 +69,7 @@ class AdminUserController extends Controller
         $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
         $appUrl = $scheme . $host;
 
-        $body = MailService::buildDefaultTemplate($name, $contentHtml, 'Abrir o Tuquinha', $appUrl . '/chat');
+        $body = MailService::buildDefaultTemplate($name, $contentHtml, 'Abrir o ' . \App\Models\Branding::mascotName(), $appUrl . '/chat');
         try {
             MailService::send($email, (string)($user['name'] ?? ''), $subject, $body);
         } catch (\Throwable $e) {

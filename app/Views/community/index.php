@@ -42,7 +42,7 @@ foreach ($posts as $p) {
     }
 }
 $friendsCount = count($friendIds);
-$communitiesCount = 1; // por enquanto, apenas a comunidade global do Tuquinha
+$communitiesCount = 1; // por enquanto, apenas a comunidade global
 
 if (!function_exists('community_format_body')) {
     function community_format_body(string $text): string
@@ -90,7 +90,7 @@ if (!function_exists('community_format_body')) {
                             <?= htmlspecialchars($name) ?>
                         </div>
                         <div style="font-size:11px; color:#b0b0b0; margin-top:2px;">
-                            Membro da comunidade do Tuquinha
+                            Membro da <?= htmlspecialchars(\App\Models\Branding::communityName()) ?>
                         </div>
                     </div>
                 </div>
@@ -143,9 +143,9 @@ if (!function_exists('community_format_body')) {
         </aside>
 
         <main style="flex:2 1 320px; min-width:260px;">
-            <h1 style="font-size: 20px; margin-bottom: 4px; font-weight: 650;">Comunidade do Tuquinha</h1>
+            <h1 style="font-size: 20px; margin-bottom: 4px; font-weight: 650;"><?= htmlspecialchars(\App\Models\Branding::communityName()) ?></h1>
             <p style="color:#b0b0b0; font-size:13px; margin-bottom:10px;">
-                Espaço para trocar dúvidas, processos e histórias com outros alunos do Tuquinha, do seu jeito, em um só lugar.
+                Espaço para trocar dúvidas, processos e histórias com outros alunos do <?= htmlspecialchars(\App\Models\Branding::mascotName()) ?>, do seu jeito, em um só lugar.
             </p>
 
             <?php if (!empty($success)): ?>
@@ -176,7 +176,7 @@ if (!function_exists('community_format_body')) {
                         <div style="flex:1 1 180px; min-width:180px;">
                             <div style="font-size:12px; color:#b0b0b0; margin-bottom:4px;">Nome completo</div>
                             <div style="font-weight:600; margin-bottom:6px;"><?= htmlspecialchars($user['name'] ?? '') ?></div>
-                            <div style="font-size:12px; color:#b0b0b0; margin-bottom:4px;">Como o Tuquinha te chama</div>
+                            <div style="font-size:12px; color:#b0b0b0; margin-bottom:4px;">Como o <?= htmlspecialchars(\App\Models\Branding::mascotName()) ?> te chama</div>
                             <div style="margin-bottom:6px;">
                                 <?= htmlspecialchars($user['preferred_name'] ?? ($user['name'] ?? '')) ?>
                             </div>
@@ -190,7 +190,7 @@ if (!function_exists('community_format_body')) {
                             <div style="font-size:12px; color:#d0d0d0; border-radius:8px; border:1px solid #272727; background:#050509; padding:6px 8px; min-height:40px;">
                                 <?= nl2br(htmlspecialchars($user['global_memory'] ?? 'Sem memórias globais cadastradas ainda.')) ?>
                             </div>
-                            <div style="font-size:12px; color:#b0b0b0; margin:8px 0 4px;">Regras globais para o Tuquinha</div>
+                            <div style="font-size:12px; color:#b0b0b0; margin:8px 0 4px;">Regras globais para o <?= htmlspecialchars(\App\Models\Branding::mascotName()) ?></div>
                             <div style="font-size:12px; color:#d0d0d0; border-radius:8px; border:1px solid #272727; background:#050509; padding:6px 8px; min-height:40px;">
                                 <?= nl2br(htmlspecialchars($user['global_instructions'] ?? 'Sem regras globais personalizadas ainda.')) ?>
                             </div>
@@ -204,7 +204,7 @@ if (!function_exists('community_format_body')) {
                 <div style="border-radius:16px; border:1px solid #272727; background:#111118; padding:12px 14px; font-size:13px;">
                     <h2 style="font-size:15px; margin-bottom:6px;">Seus amigos na comunidade</h2>
                     <p style="font-size:12px; color:#b0b0b0; margin-bottom:8px;">
-                        Aqui aparecem outras pessoas que já publicaram ou interagiram com você na Comunidade do Tuquinha.
+                        Aqui aparecem outras pessoas que já publicaram ou interagiram com você na <?= htmlspecialchars(\App\Models\Branding::communityName()) ?>.
                     </p>
                     <?php if (empty($friendsPreview)): ?>
                         <div style="font-size:12px; color:#b0b0b0;">Assim que outras pessoas começarem a participar dos mesmos posts que você, elas vão aparecer aqui. 🙂</div>
@@ -234,7 +234,7 @@ if (!function_exists('community_format_body')) {
                 <div style="border-radius:16px; border:1px solid #272727; background:#111118; padding:12px 14px; font-size:13px;">
                     <h2 style="font-size:15px; margin-bottom:6px;">Suas comunidades</h2>
                     <p style="font-size:12px; color:#b0b0b0; margin-bottom:8px;">
-                        Por enquanto, tudo acontece dentro da <strong>Comunidade do Tuquinha</strong>. No futuro, novas comunidades temáticas podem aparecer aqui.
+                        Por enquanto, tudo acontece dentro da <strong><?= htmlspecialchars(\App\Models\Branding::communityName()) ?></strong>. No futuro, novas comunidades temáticas podem aparecer aqui.
                     </p>
                     <div style="display:flex; flex-wrap:wrap; gap:10px;">
                         <div style="flex:1 1 220px; min-width:200px; border-radius:14px; border:1px solid #272727; background:radial-gradient(circle at 0 0, #283593 0, #050509 45%, #111118 100%); padding:10px 12px; color:#f5f5f5;">
@@ -243,12 +243,12 @@ if (!function_exists('community_format_body')) {
                                     T
                                 </div>
                                 <div>
-                                    <div style="font-size:14px; font-weight:650;">Comunidade do Tuquinha</div>
-                                    <div style="font-size:11px; color:#c5cae9;">Branding vivo na veia</div>
+                                    <div style="font-size:14px; font-weight:650;"><?= htmlspecialchars(\App\Models\Branding::communityName()) ?></div>
+                                    <div style="font-size:11px; color:#c5cae9;"><?= htmlspecialchars(\App\Models\Branding::slogan()) ?></div>
                                 </div>
                             </div>
                             <div style="font-size:12px; color:#e0e0e0; margin-bottom:6px;">
-                                Mural para compartilhar dúvidas, processos, resultados e histórias de quem está estudando com o Tuquinha.
+                                Mural para compartilhar dúvidas, processos, resultados e histórias de quem está estudando com o <?= htmlspecialchars(\App\Models\Branding::mascotName()) ?>.
                             </div>
                             <div style="display:flex; justify-content:space-between; align-items:center; font-size:11px; color:#c5e1a5;">
                                 <span><?= (int)$friendsCount + 1 ?> membros recentes</span>

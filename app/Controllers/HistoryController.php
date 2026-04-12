@@ -99,7 +99,7 @@ class HistoryController extends Controller
             $conv = Conversation::findByIdForUser($id, $userId);
             if ($conv) {
                 if ($title === '') {
-                    $title = 'Chat com o Tuquinha';
+                    $title = 'Chat com o ' . \App\Models\Branding::mascotName();
                 }
                 Conversation::updateTitle($id, $title);
             }

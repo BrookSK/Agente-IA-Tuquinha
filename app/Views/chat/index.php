@@ -742,7 +742,7 @@ if (!empty($conversationId) && !empty($personaOptions) && is_array($personaOptio
     <span style="font-size:16px; line-height: 1;">↓</span>
 </button>
                 <?php
-                    $personaBadgeText = 'Padrão do Tuquinha';
+                    $personaBadgeText = 'Padrão do ' . htmlspecialchars(\App\Models\Branding::mascotName());
                     if (!empty($currentPersona) && is_array($currentPersona)) {
                         $pName = trim((string)($currentPersona['name'] ?? ''));
                         $pArea = trim((string)($currentPersona['area'] ?? ''));
@@ -1034,7 +1034,7 @@ if (!empty($conversationId) && !empty($personaOptions) && is_array($personaOptio
         </style>
 
         <div style="margin-top:0; margin-bottom:10px;">
-            <div style="margin-bottom:8px; font-size:12px; color:#b0b0b0;">Escolha a personalidade do Tuquinha (preview):</div>
+            <div style="margin-bottom:8px; font-size:12px; color:#b0b0b0;">Escolha a personalidade do <?= htmlspecialchars(\App\Models\Branding::mascotName()) ?> (preview):</div>
             <div class="chat-persona-stage">
                 <button type="button" id="chat-persona-prev" class="chat-persona-nav-btn" style="left:0;" aria-label="Anterior">‹</button>
                 <button type="button" id="chat-persona-next" class="chat-persona-nav-btn" style="right:0;" aria-label="Próximo">›</button>
@@ -1042,11 +1042,11 @@ if (!empty($conversationId) && !empty($personaOptions) && is_array($personaOptio
                 <div id="chat-persona-carousel" style="display:flex;">
                     <a href="/chat?c=<?= (int)$conversationId ?>&confirm_default=1" class="chat-persona-card" style="cursor:pointer; display:block; text-align:left; padding:0;">
                         <div class="chat-persona-card-image">
-                            <img src="/public/perso_padrao.png" alt="Padrão do Tuquinha" onerror="this.onerror=null;this.src='/public/favicon.png';" style="width:100%; height:100%; object-fit:cover; display:block;">
+                            <img src="/public/perso_padrao.png" alt="Padrão do <?= htmlspecialchars(\App\Models\Branding::mascotName()) ?>" onerror="this.onerror=null;this.src='/public/favicon.png';" style="width:100%; height:100%; object-fit:cover; display:block;">
                         </div>
                         <div style="padding:10px 12px 12px 12px;">
                             <div style="display:flex; align-items:center; justify-content:space-between; gap:6px; margin-bottom:4px;">
-                                <div style="font-size:18px; font-weight:650; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">Padrão do Tuquinha</div>
+                                <div style="font-size:18px; font-weight:650; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">Padrão do <?= htmlspecialchars(\App\Models\Branding::mascotName()) ?></div>
                             </div>
                             <div class="chat-persona-card-desc">
                                 <?= nl2br(htmlspecialchars((string)\App\Models\Setting::get('default_tuquinha_description', 'Deixa o sistema escolher a melhor personalidade global para você.'))) ?>
@@ -1280,7 +1280,7 @@ if (!empty($conversationId) && !empty($personaOptions) && is_array($personaOptio
             <form action="/chat/settings" method="post" style="display:flex; flex-direction:column; gap:6px;">
                 <input type="hidden" name="conversation_id" value="<?= (int)$conversationId ?>">
                 <div style="font-size:12px; color:#b0b0b0; margin-bottom:4px;">
-                    Ajuste regras e memórias só deste chat. O Tuquinha usa isso junto com as preferências globais da sua conta.
+                    Ajuste regras e memórias só deste chat. O <?= htmlspecialchars(\App\Models\Branding::mascotName()) ?> usa isso junto com as preferências globais da sua conta.
                     <?php if ($isFreePlan): ?>
                         <br><span style="font-size:11px; color:#8d8d8d;">No plano Free serão considerados até <?= htmlspecialchars((string)$freeChatLimit) ?> caracteres destas memórias/regras por chat.</span>
                     <?php endif; ?>
@@ -1519,7 +1519,7 @@ if (!empty($conversationId) && !empty($personaOptions) && is_array($personaOptio
                             align-items:center;
                             justify-content:center;
                         ">
-                            <img src="<?= $tuqChatAvatarUrlSafe ?>" alt="Tuquinha" onerror="this.onerror=null;this.src='/public/favicon.png';" style="width:100%; height:100%; display:block; object-fit:cover;">
+                            <img src="<?= $tuqChatAvatarUrlSafe ?>" alt="<?= htmlspecialchars(\App\Models\Branding::mascotName()) ?>" onerror="this.onerror=null;this.src='/public/favicon.png';" style="width:100%; height:100%; display:block; object-fit:cover;">
                         </div>
                         <div style="
                             max-width: 80%;
@@ -1690,7 +1690,7 @@ if (!empty($conversationId) && !empty($personaOptions) && is_array($personaOptio
                 box-sizing: border-box;
                 overflow-y: hidden;
                 max-height: 140px;
-            " placeholder="Pergunte ao Tuquinha!"><?php if (!empty($draftMessage)) { echo htmlspecialchars($draftMessage); } ?></textarea>
+            " placeholder="Pergunte ao <?= htmlspecialchars(\App\Models\Branding::mascotName()) ?>!"><?php if (!empty($draftMessage)) { echo htmlspecialchars($draftMessage); } ?></textarea>
             <button id="chat-send-btn" type="submit" style="
                 border: none;
                 border-radius: 999px;
@@ -1724,7 +1724,7 @@ if (!empty($conversationId) && !empty($personaOptions) && is_array($personaOptio
                 }
                 renameTitle.value = String(next).trim();
                 if (renameTitle.value === '') {
-                    renameTitle.value = 'Chat com o Tuquinha';
+                    renameTitle.value = 'Chat com o <?= htmlspecialchars(\App\Models\Branding::mascotName()) ?>';
                 }
                 renameForm.submit();
             });
@@ -1797,7 +1797,7 @@ if (!empty($conversationId) && !empty($personaOptions) && is_array($personaOptio
         });
     }
 
-    // Copiar conteúdo de mensagens (usuário e Tuquinha)
+    // Copiar conteúdo de mensagens (usuário e assistente)
     document.addEventListener('click', (e) => {
         const btn = e.target && e.target.classList && e.target.classList.contains('copy-message-btn')
             ? e.target
@@ -2056,7 +2056,7 @@ if (!empty($conversationId) && !empty($personaOptions) && is_array($personaOptio
                                     alert(err);
                                     if (messageEl) {
                                         messageEl.disabled = false;
-                                        messageEl.placeholder = 'Pergunte ao Tuquinha!';
+                                        messageEl.placeholder = 'Pergunte ao <?= htmlspecialchars(\App\Models\Branding::mascotName()) ?>!';
                                     }
                                     if (submitBtnEl) {
                                         submitBtnEl.disabled = false;
@@ -2081,7 +2081,7 @@ if (!empty($conversationId) && !empty($personaOptions) && is_array($personaOptio
                                 alert('Erro ao enviar o áudio para transcrição. Tente novamente.');
                                 if (messageEl) {
                                     messageEl.disabled = false;
-                                    messageEl.placeholder = 'Pergunte ao Tuquinha!';
+                                    messageEl.placeholder = 'Pergunte ao <?= htmlspecialchars(\App\Models\Branding::mascotName()) ?>!';
                                 }
                                 if (submitBtnEl) {
                                     submitBtnEl.disabled = false;
@@ -2124,7 +2124,7 @@ if (!empty($conversationId) && !empty($personaOptions) && is_array($personaOptio
     const chatForm = messageInput ? messageInput.closest('form') : null;
 
     if (messageInput && chatForm) {
-        const STORAGE_KEY = 'tuquinha_chat_draft';
+        const STORAGE_KEY = 'app_chat_draft';
         let isSending = false;
         let activeAbortController = null;
         let activeTypingEl = null;
@@ -2555,7 +2555,7 @@ if (!empty($conversationId) && !empty($personaOptions) && is_array($personaOptio
 
                 var logoImg = document.createElement('img');
                 logoImg.src = TUQ_CHAT_AVATAR_URL;
-                logoImg.alt = 'Tuquinha';
+                logoImg.alt = <?= json_encode(\App\Models\Branding::mascotName()) ?>;
                 logoImg.style.width = '100%';
                 logoImg.style.height = '100%';
                 logoImg.style.display = 'block';
@@ -2649,7 +2649,7 @@ if (!empty($conversationId) && !empty($personaOptions) && is_array($personaOptio
 
             const logoImg = document.createElement('img');
             logoImg.src = TUQ_CHAT_AVATAR_URL;
-            logoImg.alt = 'Tuquinha';
+            logoImg.alt = <?= json_encode(\App\Models\Branding::mascotName()) ?>;
             logoImg.style.width = '100%';
             logoImg.style.height = '100%';
             logoImg.style.display = 'block';

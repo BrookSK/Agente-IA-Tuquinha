@@ -243,7 +243,7 @@ class ProjectController extends Controller
         $projects = Project::allForUserWithFavorites((int)$user['id'], $onlyFavorites);
 
         $this->view('projects/index', [
-            'pageTitle' => 'Projetos - Tuquinha',
+            'pageTitle' => 'Projetos - ' . \App\Models\Branding::mascotName(),
             'user' => $user,
             'projects' => $projects,
             'onlyFavorites' => $onlyFavorites,
@@ -256,7 +256,7 @@ class ProjectController extends Controller
         $this->requireProjectPermission($user, 'create');
 
         $this->view('projects/new', [
-            'pageTitle' => 'Novo projeto - Tuquinha',
+            'pageTitle' => 'Novo projeto - ' . \App\Models\Branding::mascotName(),
             'user' => $user,
             'error' => null,
         ]);
@@ -272,7 +272,7 @@ class ProjectController extends Controller
 
         if ($name === '') {
             $this->view('projects/new', [
-                'pageTitle' => 'Novo projeto - Tuquinha',
+                'pageTitle' => 'Novo projeto - ' . \App\Models\Branding::mascotName(),
                 'user' => $user,
                 'error' => 'Informe o nome do projeto.',
             ]);
@@ -435,7 +435,7 @@ class ProjectController extends Controller
         }
 
         $this->view('projects/show', [
-            'pageTitle' => ($project['name'] ?? 'Projeto') . ' - Tuquinha',
+            'pageTitle' => ($project['name'] ?? 'Projeto') . ' - ' . \App\Models\Branding::mascotName(),
             'user' => $user,
             'project' => $project,
             'baseFiles' => $baseFiles,
@@ -665,7 +665,7 @@ class ProjectController extends Controller
         if (!$invitedUser) {
             http_response_code(422);
             header('Content-Type: application/json; charset=utf-8');
-            echo json_encode(['ok' => false, 'error' => 'Este e-mail não tem conta no Tuquinha.']);
+            echo json_encode(['ok' => false, 'error' => 'Este e-mail não tem conta no ' . \App\Models\Branding::mascotName() . '.']);
             return;
         }
 
@@ -712,7 +712,7 @@ class ProjectController extends Controller
         if ($role === 'admin') { $roleLabel = 'Administrador'; }
         $safeRole = htmlspecialchars($roleLabel, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
 
-        $contentHtml = '<p style="font-size:14px; margin:0 0 10px 0;">Você foi convidado para colaborar no projeto <strong>' . $safeProjectName . '</strong> no Tuquinha.</p>'
+        $contentHtml = '<p style="font-size:14px; margin:0 0 10px 0;">Você foi convidado para colaborar no projeto <strong>' . $safeProjectName . '</strong> no ' . htmlspecialchars(\App\Models\Branding::mascotName(), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') . '.</p>'
             . '<p style="font-size:14px; margin:0 0 10px 0;">Permissão: <strong>' . $safeRole . '</strong></p>'
             . '<p style="font-size:12px; color:#777; margin:10px 0 0 0;">Se você não reconhece este convite, pode ignorar este e-mail.</p>';
 

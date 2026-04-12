@@ -74,6 +74,6 @@ if (substr($slug, -11) === '-semestral') {
         font-size: 14px;
         text-decoration: none;
     ">
-        Voltar para o chat com o Tuquinha
+        Voltar para o chat com o <?= htmlspecialchars(\App\Models\Branding::mascotName()) ?>
     </a>
 </div>

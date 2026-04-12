@@ -149,7 +149,7 @@ $defaultTuquinhaDesc = \App\Models\Setting::get('default_tuquinha_description', 
 <div style="max-width: 900px; margin: 0 auto;">
     <h1 style="font-size: 22px; margin-bottom: 6px; font-weight: 650;">Escolha sua personalidade padrão</h1>
     <p style="color:#b0b0b0; font-size:13px; margin-bottom:10px; max-width:600px;">
-        Aqui você escolhe qual personalidade o Tuquinha vai usar por padrão na sua conta.
+        Aqui você escolhe qual personalidade o <?= htmlspecialchars(\App\Models\Branding::mascotName()) ?> vai usar por padrão na sua conta.
         Quando você definir uma personalidade padrão, todos os novos chats vão começar automaticamente com essa personalidade.
     </p>
 
@@ -178,10 +178,10 @@ $defaultTuquinhaDesc = \App\Models\Setting::get('default_tuquinha_description', 
                 <div id="persona-default-list" class="persona-stage-items">
                 <button type="button" class="persona-card-btn persona-default-card<?= $currentDefaultPersonaId === 0 ? ' persona-default-card--active' : '' ?>" data-persona-id="0">
                     <div class="persona-default-card-image">
-                        <img src="<?= htmlspecialchars($defaultPersonaImage) ?>" alt="Padrão do Tuquinha" onerror="this.onerror=null;this.src='/public/favicon.png';" style="width:100%; height:100%; object-fit:cover; display:block;">
+                        <img src="<?= htmlspecialchars($defaultPersonaImage) ?>" alt="Padrão do <?= htmlspecialchars(\App\Models\Branding::mascotName()) ?>" onerror="this.onerror=null;this.src='/public/favicon.png';" style="width:100%; height:100%; object-fit:cover; display:block;">
                     </div>
                     <div style="padding:10px 12px 12px 12px;">
-                        <div style="font-size:16px; font-weight:650; margin-bottom:4px;">Padrão do Tuquinha</div>
+                        <div style="font-size:16px; font-weight:650; margin-bottom:4px;">Padrão do <?= htmlspecialchars(\App\Models\Branding::mascotName()) ?></div>
                         <div class="persona-default-card-desc">
                             <?= htmlspecialchars((string)$defaultTuquinhaDesc) ?>
                         </div>

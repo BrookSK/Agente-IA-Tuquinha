@@ -43,6 +43,14 @@
 /** @var bool $saved */
 /** @var bool|null $testEmailStatus */
 /** @var string|null $testEmailError */
+/** @var string $brandPlatformName */
+/** @var string $brandPlatformShort */
+/** @var string $brandMascotName */
+/** @var string $brandAgencyName */
+/** @var string $brandSlogan */
+/** @var string $brandCompanyName */
+/** @var string $brandUserAgent */
+/** @var string $brandCommunityName */
 
 $knownModels = [
     'gpt-4o-mini',
@@ -75,6 +83,93 @@ $knownModels = [
     <?php endif; ?>
 
     <form action="/admin/config" method="post" enctype="multipart/form-data" style="display: flex; flex-direction: column; gap: 16px;">
+
+        <div style="padding:14px 16px; border-radius:12px; border:1px solid #3949ab; background:linear-gradient(135deg, #0a0a18 0%, #111128 100%);">
+            <div style="display:flex; align-items:center; gap:8px; margin-bottom:10px;">
+                <span style="font-size:18px;">🏷️</span>
+                <div>
+                    <strong style="font-size:14px;">Identidade da marca (White Label)</strong><br>
+                    <span style="font-size:11px; color:#b0b0b0;">Personalize os nomes exibidos em todo o sistema. Esses valores substituem todas as referências da plataforma, mascote e agência.</span>
+                </div>
+            </div>
+            <div style="display:flex; flex-direction:column; gap:10px;">
+                <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                    <div style="flex:1 1 220px; min-width:200px;">
+                        <label style="font-size: 12px; color: #b0b0b0;">Nome da plataforma</label>
+                        <input name="brand_platform_name" value="<?= htmlspecialchars($brandPlatformName ?? '') ?>" style="
+                            width: 100%; padding: 8px 10px; border-radius: 8px; border: 1px solid #272727;
+                            background: #050509; color: #f5f5f5; font-size: 13px;
+                        " placeholder="ex: Resenha 2.0">
+                        <small style="color:#777; font-size:11px;">Exibido na sidebar, título das páginas, hero da home, e-mails, login e cadastro.</small>
+                    </div>
+                    <div style="flex:1 1 220px; min-width:200px;">
+                        <label style="font-size: 12px; color: #b0b0b0;">Nome curto (PWA)</label>
+                        <input name="brand_platform_short" value="<?= htmlspecialchars($brandPlatformShort ?? '') ?>" style="
+                            width: 100%; padding: 8px 10px; border-radius: 8px; border: 1px solid #272727;
+                            background: #050509; color: #f5f5f5; font-size: 13px;
+                        " placeholder="ex: Tuquinha IA">
+                        <small style="color:#777; font-size:11px;">Usado no manifest do PWA (ícone na tela inicial do celular).</small>
+                    </div>
+                </div>
+                <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                    <div style="flex:1 1 220px; min-width:200px;">
+                        <label style="font-size: 12px; color: #b0b0b0;">Nome do mascote / assistente</label>
+                        <input name="brand_mascot_name" value="<?= htmlspecialchars($brandMascotName ?? '') ?>" style="
+                            width: 100%; padding: 8px 10px; border-radius: 8px; border: 1px solid #272727;
+                            background: #050509; color: #f5f5f5; font-size: 13px;
+                        " placeholder="ex: Tuquinha">
+                        <small style="color:#777; font-size:11px;">Nome usado no chat, tour, textos da comunidade, planos, prompts e labels gerais.</small>
+                    </div>
+                    <div style="flex:1 1 220px; min-width:200px;">
+                        <label style="font-size: 12px; color: #b0b0b0;">Nome da agência / empresa criadora</label>
+                        <input name="brand_agency_name" value="<?= htmlspecialchars($brandAgencyName ?? '') ?>" style="
+                            width: 100%; padding: 8px 10px; border-radius: 8px; border: 1px solid #272727;
+                            background: #050509; color: #f5f5f5; font-size: 13px;
+                        " placeholder="ex: Agência Tuca">
+                        <small style="color:#777; font-size:11px;">Exibido nos guias, prompt padrão da IA e créditos.</small>
+                    </div>
+                </div>
+                <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                    <div style="flex:1 1 220px; min-width:200px;">
+                        <label style="font-size: 12px; color: #b0b0b0;">Slogan</label>
+                        <input name="brand_slogan" value="<?= htmlspecialchars($brandSlogan ?? '') ?>" style="
+                            width: 100%; padding: 8px 10px; border-radius: 8px; border: 1px solid #272727;
+                            background: #050509; color: #f5f5f5; font-size: 13px;
+                        " placeholder="ex: Branding vivo na veia">
+                        <small style="color:#777; font-size:11px;">Frase exibida na sidebar, e-mails e headers do sistema.</small>
+                    </div>
+                    <div style="flex:1 1 220px; min-width:200px;">
+                        <label style="font-size: 12px; color: #b0b0b0;">Empresa mãe / razão social</label>
+                        <input name="brand_company_name" value="<?= htmlspecialchars($brandCompanyName ?? '') ?>" style="
+                            width: 100%; padding: 8px 10px; border-radius: 8px; border: 1px solid #272727;
+                            background: #050509; color: #f5f5f5; font-size: 13px;
+                        " placeholder="ex: Nuvem Labs">
+                        <small style="color:#777; font-size:11px;">Exibido no rodapé externo ("Uma empresa X").</small>
+                    </div>
+                </div>
+                <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                    <div style="flex:1 1 220px; min-width:200px;">
+                        <label style="font-size: 12px; color: #b0b0b0;">User-Agent (identificador técnico)</label>
+                        <input name="brand_user_agent" value="<?= htmlspecialchars($brandUserAgent ?? '') ?>" style="
+                            width: 100%; padding: 8px 10px; border-radius: 8px; border: 1px solid #272727;
+                            background: #050509; color: #f5f5f5; font-size: 13px;
+                        " placeholder="ex: TuquinhaApp">
+                        <small style="color:#777; font-size:11px;">Usado internamente nos cabeçalhos HTTP (User-Agent) das requisições do sistema.</small>
+                    </div>
+                    <div style="flex:1 1 220px; min-width:200px;">
+                        <label style="font-size: 12px; color: #b0b0b0;">Nome da comunidade</label>
+                        <input name="brand_community_name" value="<?= htmlspecialchars($brandCommunityName ?? '') ?>" style="
+                            width: 100%; padding: 8px 10px; border-radius: 8px; border: 1px solid #272727;
+                            background: #050509; color: #f5f5f5; font-size: 13px;
+                        " placeholder="ex: Comunidade do Tuquinha">
+                        <small style="color:#777; font-size:11px;">Título exibido na página de comunidade e no perfil social.</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <hr style="border:none; border-top:1px solid #272727; margin: 4px 0;">
+
         <div>
             <label style="font-size: 12px; color: #b0b0b0;">Chave da API OpenAI</label>
             <input name="openai_key" type="password" value="<?= htmlspecialchars($openaiKey) ?>" style="

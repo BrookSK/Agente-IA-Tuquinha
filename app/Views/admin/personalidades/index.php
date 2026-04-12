@@ -2,7 +2,7 @@
 /** @var array $personalities */
 ?>
 <div style="max-width: 900px; margin: 0 auto;">
-    <h1 style="font-size: 22px; margin-bottom: 10px; font-weight: 650;">Personalidades do Tuquinha</h1>
+    <h1 style="font-size: 22px; margin-bottom: 10px; font-weight: 650;">Personalidades do <?= htmlspecialchars(\App\Models\Branding::mascotName()) ?></h1>
     <p style="color:#b0b0b0; font-size:13px; margin-bottom:14px;">
         Aqui você cria e gerencia as personalidades que os usuários podem escolher antes de começar um chat.
     </p>

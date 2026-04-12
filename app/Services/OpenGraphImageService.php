@@ -19,7 +19,7 @@ class OpenGraphImageService
             CURLOPT_MAXREDIRS => 5,
             CURLOPT_TIMEOUT => max(1, $timeoutSeconds),
             CURLOPT_CONNECTTIMEOUT => min(2, max(1, $timeoutSeconds)),
-            CURLOPT_USERAGENT => 'TuquinhaNewsBot/1.0',
+            CURLOPT_USERAGENT => \App\Models\Branding::userAgent() . '/1.0',
         ]);
 
         $ok = curl_exec($ch);
@@ -96,7 +96,7 @@ class OpenGraphImageService
             CURLOPT_MAXREDIRS => 5,
             CURLOPT_TIMEOUT => max(1, $timeoutSeconds),
             CURLOPT_CONNECTTIMEOUT => min(3, max(1, $timeoutSeconds)),
-            CURLOPT_USERAGENT => 'TuquinhaNewsBot/1.0',
+            CURLOPT_USERAGENT => \App\Models\Branding::userAgent() . '/1.0',
             CURLOPT_HTTPHEADER => [
                 'Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
             ],

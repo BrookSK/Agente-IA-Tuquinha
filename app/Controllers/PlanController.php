@@ -80,7 +80,7 @@ class PlanController extends Controller
         $retentionDays = $planRetention > 0 ? $planRetention : $defaultRetention;
 
         $this->view('plans/index', [
-            'pageTitle' => 'Planos - Tuquinha',
+            'pageTitle' => 'Planos - ' . \App\Models\Branding::mascotName(),
             'plans' => $plans,
             'currentPlan' => $currentPlan,
             'retentionDays' => $retentionDays,

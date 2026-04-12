@@ -380,7 +380,7 @@ class ChatController extends Controller
         }
 
         $this->view('chat/index', [
-            'pageTitle' => 'Chat - Tuquinha',
+            'pageTitle' => 'Chat - ' . \App\Models\Branding::mascotName(),
             'chatHistory' => $history,
             'attachments' => $attachments,
             'allowedModels' => $allowedModels,
@@ -442,7 +442,7 @@ class ChatController extends Controller
         }
 
         if ($title === '') {
-            $title = 'Chat com o Tuquinha';
+            $title = 'Chat com o ' . \App\Models\Branding::mascotName();
         }
         Conversation::updateTitle($conversationId, $title);
 
@@ -643,7 +643,7 @@ class ChatController extends Controller
             if (empty($existingMessages)) {
                 $raw = trim(preg_replace('/\s+/', ' ', $message));
                 if ($raw === '') {
-                    $raw = 'Chat com o Tuquinha';
+                    $raw = 'Chat com o ' . \App\Models\Branding::mascotName();
                 }
 
                 $title = TuquinhaEngine::generateShortTitle($raw);
@@ -1696,7 +1696,7 @@ class ChatController extends Controller
                 // Plano free: quando acabar os tokens, sugere assinar um plano pago (com link clicável)
                 if ($isFreePlan && $currentBalance <= 0) {
                     $assistantReply = 'Você está usando o plano Free e os seus tokens gratuitos chegaram ao fim. '
-                        . 'Para continuar usando o Tuquinha com mais limite e recursos, é só assinar um plano pago.\n\n'
+                        . 'Para continuar usando o ' . \App\Models\Branding::mascotName() . ' com mais limite e recursos, é só assinar um plano pago.\n\n'
                         . 'Você pode clicar em **Planos e limites** no menu lateral ou acessar diretamente [a página de planos](/planos) para escolher o melhor plano para você.';
 
                     Message::create($conversation->id, 'assistant', $assistantReply, null);
@@ -1734,7 +1734,7 @@ class ChatController extends Controller
                 if ($planForContext && !$isFreePlan && isset($planForContext['monthly_token_limit']) && (int)$planForContext['monthly_token_limit'] > 0) {
                     if ($currentBalance <= 0) {
                         $assistantReply = 'Parece que o seu saldo de tokens deste plano chegou a zero. '
-                            . 'Para continuar usando o Tuquinha sem interrupções, você pode comprar tokens extras.\n\n'
+                            . 'Para continuar usando o ' . \App\Models\Branding::mascotName() . ' sem interrupções, você pode comprar tokens extras.\n\n'
                             . 'Clique em **Planos e limites** no menu lateral ou vá direto para [comprar tokens extras](/tokens/comprar) e adicionar mais tokens ao seu saldo.';
 
                         // Grava mensagem do assistente no histórico
@@ -2329,7 +2329,7 @@ class ChatController extends Controller
                     if ($defaultPersonaId > 0 && (int)$persona['id'] === $defaultPersonaId) {
                         $personaId = (int)$persona['id'];
                     } else {
-                        $_SESSION['chat_error'] = 'No seu plano atual, apenas a personalidade padrão do Tuquinha está disponível.';
+                        $_SESSION['chat_error'] = 'No seu plano atual, apenas a personalidade padrão do ' . \App\Models\Branding::mascotName() . ' está disponível.';
                         header('Location: /chat?c=' . $conversationId);
                         exit;
                     }

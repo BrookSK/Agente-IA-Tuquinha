@@ -79,7 +79,7 @@
 <div style="max-width: none; width: 100%; margin: 0;">
     <div style="display:flex; align-items:flex-start; justify-content:space-between; gap: 12px;">
         <div style="min-width: 0;">
-            <h1 style="font-size: 22px; margin-bottom: 10px; font-weight: 650;">Cursos do Tuquinha</h1>
+            <h1 style="font-size: 22px; margin-bottom: 10px; font-weight: 650;">Cursos do <?= htmlspecialchars(\App\Models\Branding::mascotName()) ?></h1>
         </div>
         <div style="flex: 0 0 auto; margin-top: 2px;">
             <div class="course-filter-tabs">

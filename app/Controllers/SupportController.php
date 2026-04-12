@@ -9,7 +9,7 @@ class SupportController extends Controller
     public function index(): void
     {
         $this->view('support/index', [
-            'pageTitle' => 'Suporte - Tuquinha',
+            'pageTitle' => 'Suporte - ' . \App\Models\Branding::mascotName(),
         ]);
     }
 }

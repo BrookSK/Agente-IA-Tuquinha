@@ -119,7 +119,7 @@ $moderatorsEmails = (string)($old['moderators_emails'] ?? '');
             <div>
                 <label for="moderators_emails" style="display:block; font-size:12px; color:var(--text-secondary); margin-bottom:3px;">Moderadores (e-mail)</label>
                 <textarea id="moderators_emails" name="moderators_emails" rows="2" placeholder="Digite e-mails separados por vírgula ou um por linha" style="width:100%; padding:6px 8px; border-radius:8px; border:1px solid var(--border-subtle); background:var(--surface-subtle); color:var(--text-primary); font-size:12px; resize:vertical;"><?= htmlspecialchars($moderatorsEmails, ENT_QUOTES, 'UTF-8') ?></textarea>
-                <div style="font-size:11px; color:var(--text-secondary); margin-top:2px;">Se o e-mail já estiver cadastrado no Tuquinha, a pessoa será adicionada como moderadora automaticamente.</div>
+                <div style="font-size:11px; color:var(--text-secondary); margin-top:2px;">Se o e-mail já estiver cadastrado no <?= htmlspecialchars(\App\Models\Branding::mascotName()) ?>, a pessoa será adicionada como moderadora automaticamente.</div>
             </div>
 
             <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:4px;">

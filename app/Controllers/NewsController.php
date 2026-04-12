@@ -329,7 +329,7 @@ class NewsController extends Controller
         $news = $final;
 
         $this->view('news/index', [
-            'pageTitle' => 'Notícias - Tuquinha',
+            'pageTitle' => 'Notícias - ' . \App\Models\Branding::mascotName(),
             'user' => $user,
             'news' => $news,
             'emailEnabled' => $emailEnabled,
@@ -412,7 +412,7 @@ class NewsController extends Controller
         }
 
         $this->view('news/view', [
-            'pageTitle' => 'Notícias - Tuquinha',
+            'pageTitle' => 'Notícias - ' . \App\Models\Branding::mascotName(),
             'user' => $user,
             'newsItem' => $newsItem,
             'content' => $content,

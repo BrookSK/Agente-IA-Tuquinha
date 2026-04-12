@@ -7,6 +7,7 @@ use App\Core\Database;
 use App\Models\Setting;
 use App\Models\AsaasConfig;
 use App\Models\TuquinhaEngine;
+use App\Models\Branding;
 use App\Services\MailService;
 use App\Services\MediaStorageService;
 
@@ -94,6 +95,8 @@ class AdminConfigController extends Controller
 
         $asaas = AsaasConfig::getActive();
 
+        $brandingAll = Branding::all();
+
         $this->view('admin/config', [
             'pageTitle' => 'Configuração - OpenAI',
             'openaiKey' => $openaiKey,
@@ -138,6 +141,14 @@ class AdminConfigController extends Controller
             'asaasEnvironment' => $asaas['environment'] ?? 'sandbox',
             'asaasSandboxKey' => $asaas['sandbox_api_key'] ?? '',
             'asaasProdKey' => $asaas['production_api_key'] ?? '',
+            'brandPlatformName' => $brandingAll['brand_platform_name'],
+            'brandPlatformShort' => $brandingAll['brand_platform_short'],
+            'brandMascotName' => $brandingAll['brand_mascot_name'],
+            'brandAgencyName' => $brandingAll['brand_agency_name'],
+            'brandSlogan' => $brandingAll['brand_slogan'],
+            'brandCompanyName' => $brandingAll['brand_company_name'],
+            'brandUserAgent' => $brandingAll['brand_user_agent'],
+            'brandCommunityName' => $brandingAll['brand_community_name'],
             'saved' => false,
             'testEmailStatus' => null,
             'testEmailError' => null,
@@ -205,6 +216,15 @@ class AdminConfigController extends Controller
 
         $supportWhatsapp = trim((string)($_POST['support_whatsapp'] ?? ''));
         $supportEmail = trim((string)($_POST['support_email'] ?? ''));
+
+        $brandPlatformName = trim((string)($_POST['brand_platform_name'] ?? ''));
+        $brandPlatformShort = trim((string)($_POST['brand_platform_short'] ?? ''));
+        $brandMascotName = trim((string)($_POST['brand_mascot_name'] ?? ''));
+        $brandAgencyName = trim((string)($_POST['brand_agency_name'] ?? ''));
+        $brandSlogan = trim((string)($_POST['brand_slogan'] ?? ''));
+        $brandCompanyName = trim((string)($_POST['brand_company_name'] ?? ''));
+        $brandUserAgent = trim((string)($_POST['brand_user_agent'] ?? ''));
+        $brandCommunityName = trim((string)($_POST['brand_community_name'] ?? ''));
 
         if (isset($_FILES['tuquinha_about_video_upload']) && !empty($_FILES['tuquinha_about_video_upload']['tmp_name'])) {
             $tmp = (string)($_FILES['tuquinha_about_video_upload']['tmp_name'] ?? '');
@@ -305,6 +325,14 @@ class AdminConfigController extends Controller
             'nano_banana_pro_model' => $nanoBananaProModel !== '' ? $nanoBananaProModel : 'nano-banana-pro',
             'support_whatsapp' => $supportWhatsapp,
             'support_email' => $supportEmail,
+            'brand_platform_name' => $brandPlatformName,
+            'brand_platform_short' => $brandPlatformShort,
+            'brand_mascot_name' => $brandMascotName,
+            'brand_agency_name' => $brandAgencyName,
+            'brand_slogan' => $brandSlogan,
+            'brand_company_name' => $brandCompanyName,
+            'brand_user_agent' => $brandUserAgent,
+            'brand_community_name' => $brandCommunityName,
             'certificate_issuer_name' => $certificateIssuerName,
             'certificate_signature_image_path' => $certificateSignatureImagePath,
             'course_partner_min_payout_cents' => (string)$coursePartnerMinPayoutCents,
@@ -373,10 +401,20 @@ class AdminConfigController extends Controller
             'asaasEnvironment' => $asaasEnv === 'production' ? 'production' : 'sandbox',
             'asaasSandboxKey' => $asaasSandboxKey,
             'asaasProdKey' => $asaasProdKey,
+            'brandPlatformName' => $brandPlatformName !== '' ? $brandPlatformName : Branding::defaults()['brand_platform_name'],
+            'brandPlatformShort' => $brandPlatformShort !== '' ? $brandPlatformShort : Branding::defaults()['brand_platform_short'],
+            'brandMascotName' => $brandMascotName !== '' ? $brandMascotName : Branding::defaults()['brand_mascot_name'],
+            'brandAgencyName' => $brandAgencyName !== '' ? $brandAgencyName : Branding::defaults()['brand_agency_name'],
+            'brandSlogan' => $brandSlogan !== '' ? $brandSlogan : Branding::defaults()['brand_slogan'],
+            'brandCompanyName' => $brandCompanyName !== '' ? $brandCompanyName : Branding::defaults()['brand_company_name'],
+            'brandUserAgent' => $brandUserAgent !== '' ? $brandUserAgent : Branding::defaults()['brand_user_agent'],
+            'brandCommunityName' => $brandCommunityName !== '' ? $brandCommunityName : Branding::defaults()['brand_community_name'],
             'saved' => true,
             'testEmailStatus' => null,
             'testEmailError' => null,
         ]);
+
+        Branding::clearCache();
     }
 
     public function sendTestEmail(): void
@@ -445,6 +483,8 @@ class AdminConfigController extends Controller
 
         $asaas = AsaasConfig::getActive();
 
+        $brandingAll = Branding::all();
+
         $status = null;
         $error = null;
 
@@ -452,8 +492,8 @@ class AdminConfigController extends Controller
             $status = false;
             $error = 'Informe um e-mail para teste.';
         } else {
-            $subject = 'Teste de e-mail - Tuquinha';
-            $body = '<p>Se você recebeu este e-mail, o envio SMTP do Tuquinha está funcionando.</p>';
+            $subject = 'Teste de e-mail - ' . Branding::mascotName();
+            $body = '<p>Se você recebeu este e-mail, o envio SMTP do ' . htmlspecialchars(Branding::mascotName()) . ' está funcionando.</p>';
             $sent = MailService::send($toEmail, $toEmail, $subject, $body);
             $status = $sent;
             if (!$sent) {
@@ -501,6 +541,14 @@ class AdminConfigController extends Controller
             'asaasEnvironment' => $asaas['environment'] ?? 'sandbox',
             'asaasSandboxKey' => $asaas['sandbox_api_key'] ?? '',
             'asaasProdKey' => $asaas['production_api_key'] ?? '',
+            'brandPlatformName' => $brandingAll['brand_platform_name'],
+            'brandPlatformShort' => $brandingAll['brand_platform_short'],
+            'brandMascotName' => $brandingAll['brand_mascot_name'],
+            'brandAgencyName' => $brandingAll['brand_agency_name'],
+            'brandSlogan' => $brandingAll['brand_slogan'],
+            'brandCompanyName' => $brandingAll['brand_company_name'],
+            'brandUserAgent' => $brandingAll['brand_user_agent'],
+            'brandCommunityName' => $brandingAll['brand_community_name'],
             'saved' => false,
             'testEmailStatus' => $status,
             'testEmailError' => $error,

@@ -46,7 +46,7 @@ class ErrorReportController extends Controller
         $user = User::findById($userId);
 
         if ($adminEmail && $user) {
-            $subject = 'Novo relato de erro de análise no Tuquinha';
+            $subject = 'Novo relato de erro de análise no ' . \App\Models\Branding::mascotName();
 
             $safeName = htmlspecialchars($user['name'] ?? '', ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
             $safeEmail = htmlspecialchars($user['email'] ?? '', ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
