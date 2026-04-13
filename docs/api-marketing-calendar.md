@@ -4,10 +4,16 @@ API REST para integração externa da Agenda de Marketing do Tuquinha.
 
 ## Autenticação
 
-Todas as requisições exigem um token de API no header:
+Todas as requisições exigem um token de API. Há duas formas de enviar:
 
+**Opção 1 — Header (recomendado):**
 ```
 Authorization: Bearer tuq_sua_chave_aqui
+```
+
+**Opção 2 — Query parameter (fallback):**
+```
+GET /api/marketing-calendar/events?api_token=tuq_sua_chave_aqui&year=2026&month=4
 ```
 
 Gere sua chave em: **Agenda de Marketing → botão "🔌 API" → Gerar chave**.

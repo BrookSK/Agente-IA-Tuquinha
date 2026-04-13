@@ -1,5 +1,9 @@
 RewriteEngine On
 
+# Repassa o header Authorization para o PHP (necessário em Apache CGI/FastCGI)
+RewriteCond %{HTTP:Authorization} .
+RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+
 RewriteCond %{REQUEST_URI} ^/guias/ [NC]
 RewriteCond %{DOCUMENT_ROOT}/public%{REQUEST_URI} -f
 RewriteRule ^guias/(.*)$ public/guias/$1 [L]

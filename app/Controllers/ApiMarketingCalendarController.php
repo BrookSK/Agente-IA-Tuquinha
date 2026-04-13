@@ -35,14 +35,21 @@ class ApiMarketingCalendarController
      */
     private function authenticate(): array
     {
+        // 1. Header padrão
         $header = trim((string)($_SERVER['HTTP_AUTHORIZATION'] ?? ''));
+
+        // 2. Fallback: Apache CGI/FastCGI repassa via REDIRECT_
         if ($header === '') {
-            // Fallback para servidores que não passam Authorization
             $header = trim((string)($_SERVER['REDIRECT_HTTP_AUTHORIZATION'] ?? ''));
         }
 
+        // 3. Fallback: query parameter ?api_token=tuq_...
+        if (($header === '' || stripos($header, 'Bearer ') !== 0) && isset($_GET['api_token'])) {
+            $header = 'Bearer ' . trim((string)$_GET['api_token']);
+        }
+
         if ($header === '' || stripos($header, 'Bearer ') !== 0) {
-            $this->json(['ok' => false, 'error' => 'Token de autenticação ausente. Envie o header Authorization: Bearer <api_key>.'], 401);
+            $this->json(['ok' => false, 'error' => 'Token de autenticação ausente. Envie o header Authorization: Bearer <api_key> ou o parâmetro ?api_token=<api_key>.'], 401);
         }
 
         $token = trim(substr($header, 7));

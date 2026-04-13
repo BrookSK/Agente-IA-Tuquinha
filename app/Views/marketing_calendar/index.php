@@ -209,8 +209,9 @@ $publicUrl = $publicToken ? (((!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !=
             <div style="font-size:12px; color:var(--text-secondary); margin-top:10px; line-height:1.7;">
                 <p style="margin-bottom:8px;"><strong>Base URL:</strong> <code id="mc-api-base-url"></code></p>
 
-                <p style="margin-bottom:4px;"><strong>Autenticação:</strong> Envie o header em todas as requisições:</p>
-                <pre style="background:var(--surface-subtle); padding:8px 10px; border-radius:8px; overflow-x:auto; font-size:11px; margin-bottom:10px;">Authorization: Bearer tuq_sua_chave_aqui</pre>
+                <p style="margin-bottom:4px;"><strong>Autenticação:</strong> Envie o header ou use query param:</p>
+                <pre style="background:var(--surface-subtle); padding:8px 10px; border-radius:8px; overflow-x:auto; font-size:11px; margin-bottom:4px;">Authorization: Bearer tuq_sua_chave_aqui</pre>
+                <p style="margin-bottom:10px; font-size:11px; color:var(--text-secondary);">Ou passe <code>?api_token=tuq_sua_chave_aqui</code> na URL como fallback.</p>
 
                 <p style="margin-bottom:4px; font-weight:600;">GET /api/marketing-calendar/events</p>
                 <p style="margin-bottom:2px;">Lista eventos do mês. Parâmetros: <code>year</code>, <code>month</code>.</p>
