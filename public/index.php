@@ -361,6 +361,13 @@ $router->get('/api/lessons/search', 'ApiLessonsController@search');
 $router->get('/api/courses/enrolled', 'ApiCoursesController@enrolled');
 $router->get('/api/courses/{id}/lessons', 'ApiCoursesController@lessons');
 
+// API Marketing Calendar (autenticação via Bearer token)
+$router->get('/api/marketing-calendar/events', 'ApiMarketingCalendarController@list');
+$router->get('/api/marketing-calendar/events/show', 'ApiMarketingCalendarController@show');
+$router->post('/api/marketing-calendar/events', 'ApiMarketingCalendarController@create');
+$router->post('/api/marketing-calendar/events/update', 'ApiMarketingCalendarController@update');
+$router->post('/api/marketing-calendar/events/delete', 'ApiMarketingCalendarController@delete');
+
 // Kanban (Trello-like)
 $router->get('/kanban', 'KanbanController@index');
 $router->post('/kanban/quadro/criar', 'KanbanController@createBoard');
@@ -416,6 +423,9 @@ $router->post('/agenda-marketing/publicar', 'MarketingCalendarController@publish
 $router->post('/agenda-marketing/compartilhar/adicionar', 'MarketingCalendarController@shareAdd');
 $router->post('/agenda-marketing/compartilhar/remover', 'MarketingCalendarController@shareRemove');
 $router->get('/agenda-marketing/publico', 'MarketingCalendarController@publico');
+$router->post('/agenda-marketing/api-key/gerar', 'MarketingCalendarController@generateApiKey');
+$router->post('/agenda-marketing/api-key/revogar', 'MarketingCalendarController@revokeApiKey');
+$router->get('/agenda-marketing/api-keys', 'MarketingCalendarController@listApiKeys');
 $router->get('/cron/noticias/enviar', 'CronNewsController@send');
 $router->get('/certificados', 'CertificateController@myCompletedCourses');
 $router->get('/certificados/ver', 'CertificateController@show');

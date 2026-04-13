@@ -23,6 +23,7 @@ class AdminMenuIconController extends Controller
             'quick_home' => 'Quem é o ' . \App\Models\Branding::mascotName(),
             'quick_notebook' => 'Caderno',
             'quick_kanban' => 'Kanban',
+            'quick_marketing_calendar' => 'Agenda de Marketing',
             'quick_plans' => 'Planos e limites',
             'quick_courses' => 'Cursos',
             'quick_news' => 'Notícias',

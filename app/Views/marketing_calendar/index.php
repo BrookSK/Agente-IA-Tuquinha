@@ -104,6 +104,7 @@ $publicUrl = $publicToken ? (((!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !=
             <?php if ($canShare): ?>
                 <button class="mc-btn mc-btn-secondary" onclick="mcToggleShare()">🔗 Compartilhar</button>
             <?php endif; ?>
+            <button class="mc-btn mc-btn-secondary" onclick="mcToggleApi()">🔌 API</button>
         </div>
     </div>
 
@@ -186,6 +187,65 @@ $publicUrl = $publicToken ? (((!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !=
         </div>
     </div>
     <?php endif; ?>
+
+    <!-- API Integration Panel -->
+    <div class="mc-share-panel" id="mc-api-panel" style="display:none; margin-top:12px;">
+        <h3>🔌 Integração via API</h3>
+        <p style="font-size:12px; color:var(--text-secondary); margin-bottom:12px;">
+            Use a API para sincronizar eventos com outros sistemas. Autentique com <code>Authorization: Bearer &lt;api_key&gt;</code>.
+        </p>
+
+        <div style="margin-bottom:12px;">
+            <div style="font-size:13px; font-weight:500; margin-bottom:6px;">Suas API Keys</div>
+            <div id="mc-api-keys-list" style="margin-bottom:8px; font-size:13px; color:var(--text-secondary);">Carregando...</div>
+            <div style="display:flex; gap:6px;">
+                <input type="text" id="mc-api-key-label" placeholder="Nome da integração (ex: Sistema X)" style="flex:1; padding:7px 10px; border-radius:8px; border:1px solid var(--border-subtle); background:var(--surface-subtle); color:var(--text-primary); font-size:13px;">
+                <button class="mc-btn mc-btn-primary" onclick="mcGenerateApiKey()" style="padding:6px 14px; font-size:12px;">Gerar chave</button>
+            </div>
+        </div>
+
+        <details style="margin-top:14px;">
+            <summary style="cursor:pointer; font-size:13px; font-weight:600; color:var(--text-primary);">📖 Documentação da API</summary>
+            <div style="font-size:12px; color:var(--text-secondary); margin-top:10px; line-height:1.7;">
+                <p style="margin-bottom:8px;"><strong>Base URL:</strong> <code id="mc-api-base-url"></code></p>
+
+                <p style="margin-bottom:4px;"><strong>Autenticação:</strong> Envie o header em todas as requisições:</p>
+                <pre style="background:var(--surface-subtle); padding:8px 10px; border-radius:8px; overflow-x:auto; font-size:11px; margin-bottom:10px;">Authorization: Bearer tuq_sua_chave_aqui</pre>
+
+                <p style="margin-bottom:4px; font-weight:600;">GET /api/marketing-calendar/events</p>
+                <p style="margin-bottom:2px;">Lista eventos do mês. Parâmetros: <code>year</code>, <code>month</code>.</p>
+                <pre style="background:var(--surface-subtle); padding:8px 10px; border-radius:8px; overflow-x:auto; font-size:11px; margin-bottom:10px;">GET /api/marketing-calendar/events?year=2026&month=4</pre>
+
+                <p style="margin-bottom:4px; font-weight:600;">GET /api/marketing-calendar/events/show?id=ID</p>
+                <p style="margin-bottom:10px;">Retorna um evento específico.</p>
+
+                <p style="margin-bottom:4px; font-weight:600;">POST /api/marketing-calendar/events</p>
+                <p style="margin-bottom:2px;">Cria um evento. Body JSON:</p>
+                <pre style="background:var(--surface-subtle); padding:8px 10px; border-radius:8px; overflow-x:auto; font-size:11px; margin-bottom:10px;">{
+  "title": "Post de lançamento",
+  "event_date": "2026-04-20",
+  "event_type": "post",
+  "status": "planejado",
+  "responsible": "João",
+  "color": "#e53935",
+  "notes": "Ideias...",
+  "reference_links": ["https://exemplo.com"]
+}</pre>
+                <p style="margin-bottom:2px; font-size:11px;">Tipos: <code>post</code>, <code>story</code>, <code>reels</code>, <code>video</code>, <code>email</code>, <code>anuncio</code>, <code>outro</code></p>
+                <p style="margin-bottom:10px; font-size:11px;">Status: <code>planejado</code>, <code>produzido</code>, <code>postado</code></p>
+
+                <p style="margin-bottom:4px; font-weight:600;">POST /api/marketing-calendar/events/update</p>
+                <p style="margin-bottom:2px;">Atualiza um evento. Body JSON (inclua <code>id</code> + campos a alterar):</p>
+                <pre style="background:var(--surface-subtle); padding:8px 10px; border-radius:8px; overflow-x:auto; font-size:11px; margin-bottom:10px;">{ "id": 123, "title": "Novo título", "status": "produzido" }</pre>
+
+                <p style="margin-bottom:4px; font-weight:600;">POST /api/marketing-calendar/events/delete</p>
+                <p style="margin-bottom:2px;">Exclui um evento. Body JSON:</p>
+                <pre style="background:var(--surface-subtle); padding:8px 10px; border-radius:8px; overflow-x:auto; font-size:11px; margin-bottom:10px;">{ "id": 123 }</pre>
+
+                <p style="margin-top:10px; font-size:11px; color:var(--text-secondary);">Todas as respostas retornam JSON com <code>{ "ok": true/false, ... }</code>. Erros incluem <code>"error"</code>.</p>
+            </div>
+        </details>
+    </div>
 
     <!-- Create/Edit Modal -->
     <div class="mc-modal-overlay" id="mc-create-modal">
@@ -471,6 +531,76 @@ function mcShareRemove(userId) {
         .then(r => r.json())
         .then(data => {
             if (data.ok) location.reload();
+            else alert(data.error || 'Erro.');
+        })
+        .catch(() => alert('Erro de conexão.'));
+}
+
+// API Panel
+function mcToggleApi() {
+    const panel = document.getElementById('mc-api-panel');
+    if (panel.style.display === 'none') {
+        panel.style.display = 'block';
+        mcLoadApiKeys();
+        document.getElementById('mc-api-base-url').textContent = location.origin;
+    } else {
+        panel.style.display = 'none';
+    }
+}
+
+function mcLoadApiKeys() {
+    fetch('/agenda-marketing/api-keys', { headers: { 'Accept': 'application/json' } })
+        .then(r => r.json())
+        .then(data => {
+            const list = document.getElementById('mc-api-keys-list');
+            if (!data.ok || !data.keys || data.keys.length === 0) {
+                list.innerHTML = '<div style="font-size:12px; color:var(--text-secondary);">Nenhuma chave gerada.</div>';
+                return;
+            }
+            let html = '';
+            data.keys.forEach(k => {
+                const active = k.is_active == 1;
+                html += '<div class="mc-share-row">';
+                html += '<span style="flex:1;">' + escHtml(k.label || 'Sem nome') + ' — <code>' + escHtml(k.api_key_masked) + '</code></span>';
+                html += '<span style="font-size:11px; color:' + (active ? '#43a047' : '#e53935') + ';">' + (active ? 'Ativa' : 'Revogada') + '</span>';
+                if (active) {
+                    html += '<button class="mc-link-remove" onclick="mcRevokeApiKey(' + k.id + ')">×</button>';
+                }
+                html += '</div>';
+            });
+            list.innerHTML = html;
+        })
+        .catch(() => {
+            document.getElementById('mc-api-keys-list').innerHTML = '<div style="color:#e53935;">Erro ao carregar.</div>';
+        });
+}
+
+function mcGenerateApiKey() {
+    const label = document.getElementById('mc-api-key-label').value.trim() || 'Integração';
+    const fd = new FormData();
+    fd.append('label', label);
+    fetch('/agenda-marketing/api-key/gerar', { method: 'POST', body: fd, headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+        .then(r => r.json())
+        .then(data => {
+            if (data.ok && data.api_key) {
+                prompt('Copie sua chave agora (ela não será exibida novamente):', data.api_key);
+                document.getElementById('mc-api-key-label').value = '';
+                mcLoadApiKeys();
+            } else {
+                alert(data.error || 'Erro ao gerar chave.');
+            }
+        })
+        .catch(() => alert('Erro de conexão.'));
+}
+
+function mcRevokeApiKey(id) {
+    if (!confirm('Revogar esta chave? Ela deixará de funcionar imediatamente.')) return;
+    const fd = new FormData();
+    fd.append('id', id);
+    fetch('/agenda-marketing/api-key/revogar', { method: 'POST', body: fd, headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+        .then(r => r.json())
+        .then(data => {
+            if (data.ok) mcLoadApiKeys();
             else alert(data.error || 'Erro.');
         })
         .catch(() => alert('Erro de conexão.'));

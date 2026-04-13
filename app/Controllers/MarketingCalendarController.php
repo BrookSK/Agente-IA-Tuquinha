@@ -356,6 +356,44 @@ class MarketingCalendarController extends Controller
         include $viewFile;
     }
 
+    public function generateApiKey(): void
+    {
+        $user = $this->requireLogin();
+        $this->requireCalendarAccess($user);
+        $uid = (int)$user['id'];
+
+        $label = trim((string)($_POST['label'] ?? 'Integração'));
+        $key = \App\Models\UserApiKey::generate($uid, $label);
+        $this->json(['ok' => true, 'api_key' => $key]);
+    }
+
+    public function revokeApiKey(): void
+    {
+        $user = $this->requireLogin();
+        $this->requireCalendarAccess($user);
+        $uid = (int)$user['id'];
+
+        $id = (int)($_POST['id'] ?? 0);
+        \App\Models\UserApiKey::revoke($id, $uid);
+        $this->json(['ok' => true]);
+    }
+
+    public function listApiKeys(): void
+    {
+        $user = $this->requireLogin();
+        $this->requireCalendarAccess($user);
+        $uid = (int)$user['id'];
+
+        $keys = \App\Models\UserApiKey::listForUser($uid);
+        // Mascarar as keys
+        foreach ($keys as &$k) {
+            $full = (string)($k['api_key'] ?? '');
+            $k['api_key_masked'] = strlen($full) > 12 ? substr($full, 0, 8) . '...' . substr($full, -4) : $full;
+            unset($k['api_key']);
+        }
+        $this->json(['ok' => true, 'keys' => $keys]);
+    }
+
     public function eventsJson(): void
     {
         $user = $this->requireLogin();
