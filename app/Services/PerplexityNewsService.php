@@ -118,7 +118,17 @@ class PerplexityNewsService
             $model = 'sonar';
         }
 
-        $system = 'Você é um agregador de notícias. Sua tarefa é retornar APENAS um JSON válido (sem markdown) com uma lista de notícias recentes sobre marketing, branding, publicidade, social media, e-commerce e comportamento do consumidor no Brasil. Evite política geral e notícias fora do tema. Evite sites com paywall/assinatura e evite conteúdos que exigem login/cadastro para ler o texto completo.';
+        // Obter URLs personalizadas para busca
+        $customUrls = trim((string)Setting::get('perplexity_search_urls', ''));
+        $urlsInstruction = '';
+        if ($customUrls !== '') {
+            $urls = array_filter(array_map('trim', explode("\n", $customUrls)));
+            if (!empty($urls)) {
+                $urlsInstruction = ' Priorize buscar notícias destes sites: ' . implode(', ', $urls) . '.';
+            }
+        }
+
+        $system = 'Você é um agregador de notícias. Sua tarefa é retornar APENAS um JSON válido (sem markdown) com uma lista de notícias recentes sobre marketing, branding, publicidade, social media, e-commerce e comportamento do consumidor no Brasil. Evite política geral e notícias fora do tema. Evite sites com paywall/assinatura e evite conteúdos que exigem login/cadastro para ler o texto completo.' . $urlsInstruction;
 
         $user = 'Busque as notícias mais recentes e relevantes (Brasil) para profissionais de marketing. Retorne exatamente neste formato JSON: {"items":[{"title":"...","summary":"...","url":"...","source_name":"...","published_at":"YYYY-MM-DD HH:MM:SS","image_url":"..."}]}. Regras: (1) no máximo ' . (int)$limit . ' itens; (2) title e url obrigatórios; (3) summary curto (1-2 frases); (4) published_at pode ser null se não souber; (5) image_url deve ser uma URL direta de imagem quando possível, caso contrário null.';
 
