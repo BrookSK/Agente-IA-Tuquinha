@@ -1005,7 +1005,7 @@ class ProjectController extends Controller
 
             if ($planAllowsPersonalities) {
                 $p = Personality::findById($personaIdRaw);
-                if ($p && !empty($p['active'])) {
+                if ($p && !empty($p['active']) && empty($p['coming_soon'])) {
                     if (!empty($_SESSION['is_admin']) || $planId <= 0) {
                         $personaId = (int)$p['id'];
                     } else {
