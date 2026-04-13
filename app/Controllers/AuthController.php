@@ -16,7 +16,7 @@ class AuthController extends Controller
     public function showLogin(): void
     {
         $this->view('auth/login', [
-            'pageTitle' => 'Entrar - Tuquinha',
+            'pageTitle' => 'Entrar - ' . \App\Models\Branding::mascotName(),
             'error' => null,
             'showVerifyLink' => false,
         ]);
@@ -29,7 +29,7 @@ class AuthController extends Controller
 
         if ($email === '' || $password === '') {
             $this->view('auth/login', [
-                'pageTitle' => 'Entrar - Tuquinha',
+                'pageTitle' => 'Entrar - ' . \App\Models\Branding::mascotName(),
                 'error' => 'Informe seu e-mail e senha.',
                 'showVerifyLink' => false,
             ]);
@@ -39,7 +39,7 @@ class AuthController extends Controller
         $user = User::findByEmail($email);
         if (!$user || !password_verify($password, $user['password_hash'])) {
             $this->view('auth/login', [
-                'pageTitle' => 'Entrar - Tuquinha',
+                'pageTitle' => 'Entrar - ' . \App\Models\Branding::mascotName(),
                 'error' => 'E-mail ou senha inválidos.',
                 'showVerifyLink' => false,
             ]);
@@ -52,7 +52,7 @@ class AuthController extends Controller
             $_SESSION['pending_verify_email'] = $user['email'];
 
             $this->view('auth/login', [
-                'pageTitle' => 'Entrar - Tuquinha',
+                'pageTitle' => 'Entrar - ' . \App\Models\Branding::mascotName(),
                 'error' => 'Antes de entrar, confirme seu e-mail. Enviamos um código de verificação para você.',
                 'showVerifyLink' => true,
             ]);
@@ -61,7 +61,7 @@ class AuthController extends Controller
 
         if (isset($user['is_active']) && (int)$user['is_active'] === 0) {
             $this->view('auth/login', [
-                'pageTitle' => 'Entrar - Tuquinha',
+                'pageTitle' => 'Entrar - ' . \App\Models\Branding::mascotName(),
                 'error' => 'Sua conta foi desativada por tempo indeterminado. Se você não solicitou isso ou não sabe o motivo, <a href="/suporte" style="color:#ffcc80; text-decoration:none;">fale com o suporte</a> para revisar o seu caso.',
                 'showVerifyLink' => false,
             ]);
@@ -222,7 +222,7 @@ class AuthController extends Controller
         }
 
         $this->view('auth/register', [
-            'pageTitle' => 'Criar conta - Tuquinha',
+            'pageTitle' => 'Criar conta - ' . \App\Models\Branding::mascotName(),
             'error' => null,
             'referralPlan' => $referralPlan,
         ]);
@@ -237,7 +237,7 @@ class AuthController extends Controller
 
         if ($name === '' || $email === '' || $password === '' || $passwordConfirm === '') {
             $this->view('auth/register', [
-                'pageTitle' => 'Criar conta - Tuquinha',
+                'pageTitle' => 'Criar conta - ' . \App\Models\Branding::mascotName(),
                 'error' => 'Preencha todos os campos.',
             ]);
             return;
@@ -245,7 +245,7 @@ class AuthController extends Controller
 
         if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
             $this->view('auth/register', [
-                'pageTitle' => 'Criar conta - Tuquinha',
+                'pageTitle' => 'Criar conta - ' . \App\Models\Branding::mascotName(),
                 'error' => 'E-mail inválido.',
             ]);
             return;
@@ -253,7 +253,7 @@ class AuthController extends Controller
 
         if ($password !== $passwordConfirm) {
             $this->view('auth/register', [
-                'pageTitle' => 'Criar conta - Tuquinha',
+                'pageTitle' => 'Criar conta - ' . \App\Models\Branding::mascotName(),
                 'error' => 'As senhas não conferem.',
             ]);
             return;
@@ -261,7 +261,7 @@ class AuthController extends Controller
 
         if (User::findByEmail($email)) {
             $this->view('auth/register', [
-                'pageTitle' => 'Criar conta - Tuquinha',
+                'pageTitle' => 'Criar conta - ' . \App\Models\Branding::mascotName(),
                 'error' => 'Já existe uma conta com esse e-mail.',
             ]);
             return;
@@ -291,7 +291,11 @@ class AuthController extends Controller
         EmailVerification::create($userId, $code, $expiresAt);
 
         // envia e-mail de boas-vindas com código
-        $subject = 'Bem-vindo(a) ao Tuquinha - Confirme seu e-mail';
+        $brandPlatform = htmlspecialchars(\App\Models\Branding::platformName(), ENT_QUOTES, 'UTF-8');
+        $brandSlogan = htmlspecialchars(\App\Models\Branding::slogan(), ENT_QUOTES, 'UTF-8');
+        $brandMascot = htmlspecialchars(\App\Models\Branding::mascotName(), ENT_QUOTES, 'UTF-8');
+        $brandInitial = htmlspecialchars(\App\Models\Branding::mascotInitials(), ENT_QUOTES, 'UTF-8');
+        $subject = "Bem-vindo(a) ao {$brandMascot} - Confirme seu e-mail";
         $safeName = htmlspecialchars($name, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
         $safeCode = htmlspecialchars($code, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
         $body = <<<HTML
@@ -300,15 +304,15 @@ class AuthController extends Controller
   <div style="width:100%; padding:24px 0;">
     <div style="max-width:520px; margin:0 auto; background:#111118; border-radius:16px; border:1px solid #272727; padding:18px 20px;">
       <div style="display:flex; align-items:center; gap:10px; margin-bottom:12px;">
-        <div style="width:32px; height:32px; line-height:32px; border-radius:50%; background:radial-gradient(circle at 30% 20%, #fff 0, #ff8a65 25%, #e53935 65%, #050509 100%); text-align:center; font-weight:700; font-size:16px; color:#050509;">T</div>
+        <div style="width:32px; height:32px; line-height:32px; border-radius:50%; background:radial-gradient(circle at 30% 20%, #fff 0, #ff8a65 25%, #e53935 65%, #050509 100%); text-align:center; font-weight:700; font-size:16px; color:#050509;">{$brandInitial}</div>
         <div>
-          <div style="font-weight:700; font-size:15px;">Resenha 2.0</div>
-          <div style="font-size:11px; color:#b0b0b0;">Branding vivo na veia</div>
+          <div style="font-weight:700; font-size:15px;">{$brandPlatform}</div>
+          <div style="font-size:11px; color:#b0b0b0;">{$brandSlogan}</div>
         </div>
       </div>
 
       <p style="font-size:14px; margin:0 0 10px 0;">Oi, {$safeName} 👋</p>
-      <p style="font-size:14px; margin:0 0 10px 0;">Que bom te ver por aqui! Antes de começar a brincar com o Tuquinha, precisamos confirmar que este e-mail é seu.</p>
+      <p style="font-size:14px; margin:0 0 10px 0;">Que bom te ver por aqui! Antes de começar a brincar com o {$brandMascot}, precisamos confirmar que este e-mail é seu.</p>
       <p style="font-size:14px; margin:0 0 10px 0;">Use o código abaixo na tela de confirmação para ativar sua conta:</p>
 
       <div style="text-align:center; margin:12px 0 16px 0;">
@@ -319,7 +323,7 @@ class AuthController extends Controller
 
       <p style="font-size:12px; color:#b0b0b0; margin:0 0 8px 0;">Por segurança, esse código vale por <strong>30 minutos</strong>. Depois disso, é só pedir um código novo.</p>
 
-      <p style="font-size:12px; color:#777; margin:0;">Se você não criou uma conta no Tuquinha, pode ignorar este e-mail.</p>
+      <p style="font-size:12px; color:#777; margin:0;">Se você não criou uma conta no {$brandMascot}, pode ignorar este e-mail.</p>
     </div>
   </div>
 </body>
@@ -404,22 +408,22 @@ HTML;
 
         $link = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https://' : 'http://') . $_SERVER['HTTP_HOST'] . '/senha/reset?token=' . urlencode($token);
 
-        $subject = 'Redefinição de senha - Tuquinha';
+        $subject = 'Redefinição de senha - ' . \App\Models\Branding::mascotName();
         $body = '
 <html>
 <body style="margin:0; padding:0; background:#050509; font-family:system-ui, -apple-system, BlinkMacSystemFont, \'Segoe UI\', sans-serif; color:#f5f5f5;">
   <div style="width:100%; padding:24px 0;">
     <div style="max-width:520px; margin:0 auto; background:#111118; border-radius:16px; border:1px solid #272727; padding:18px 20px;">
       <div style="display:flex; align-items:center; gap:10px; margin-bottom:12px;">
-        <div style="width:32px; height:32px; border-radius:50%; background:radial-gradient(circle at 30% 20%, #fff 0, #ff8a65 25%, #e53935 65%, #050509 100%); display:flex; align-items:center; justify-content:center; font-weight:700; font-size:16px; color:#050509;">T</div>
+        <div style="width:32px; height:32px; border-radius:50%; background:radial-gradient(circle at 30% 20%, #fff 0, #ff8a65 25%, #e53935 65%, #050509 100%); display:flex; align-items:center; justify-content:center; font-weight:700; font-size:16px; color:#050509;">' . htmlspecialchars(\App\Models\Branding::mascotInitials(), ENT_QUOTES, 'UTF-8') . '</div>
         <div>
-          <div style="font-weight:700; font-size:15px;">Resenha 2.0</div>
-          <div style="font-size:11px; color:#b0b0b0;">Branding vivo na veia</div>
+          <div style="font-weight:700; font-size:15px;">' . htmlspecialchars(\App\Models\Branding::platformName(), ENT_QUOTES, 'UTF-8') . '</div>
+          <div style="font-size:11px; color:#b0b0b0;">' . htmlspecialchars(\App\Models\Branding::slogan(), ENT_QUOTES, 'UTF-8') . '</div>
         </div>
       </div>
 
       <p style="font-size:14px; margin:0 0 10px 0;">Oi, ' . htmlspecialchars($user['name']) . ' 👋</p>
-      <p style="font-size:14px; margin:0 0 10px 0;">Recebemos um pedido para redefinir a senha da sua conta no Tuquinha.</p>
+      <p style="font-size:14px; margin:0 0 10px 0;">Recebemos um pedido para redefinir a senha da sua conta no ' . htmlspecialchars(\App\Models\Branding::mascotName(), ENT_QUOTES, 'UTF-8') . '.</p>
       <p style="font-size:14px; margin:0 0 14px 0;">Clique no botão abaixo para criar uma nova senha. Esse link vale por <strong>1 hora</strong>:</p>
 
       <div style="text-align:center; margin-bottom:14px;">
@@ -689,7 +693,11 @@ HTML;
         $expiresAt = (new \DateTime('+30 minutes'))->format('Y-m-d H:i:s');
         EmailVerification::create((int)$userId, $code, $expiresAt);
 
-        $subject = 'Seu novo código para confirmar o e-mail - Tuquinha';
+        $brandPlatform = htmlspecialchars(\App\Models\Branding::platformName(), ENT_QUOTES, 'UTF-8');
+        $brandSlogan = htmlspecialchars(\App\Models\Branding::slogan(), ENT_QUOTES, 'UTF-8');
+        $brandMascot = htmlspecialchars(\App\Models\Branding::mascotName(), ENT_QUOTES, 'UTF-8');
+        $brandInitial = htmlspecialchars(\App\Models\Branding::mascotInitials(), ENT_QUOTES, 'UTF-8');
+        $subject = "Seu novo código para confirmar o e-mail - {$brandMascot}";
         $safeName = htmlspecialchars($user['name'] ?? '', ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
         $safeCode = htmlspecialchars($code, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
         $body = <<<HTML
@@ -698,15 +706,15 @@ HTML;
   <div style="width:100%; padding:24px 0;">
     <div style="max-width:520px; margin:0 auto; background:#111118; border-radius:16px; border:1px solid #272727; padding:18px 20px;">
       <div style="display:flex; align-items:center; gap:10px; margin-bottom:12px;">
-        <div style="width:32px; height:32px; border-radius:50%; background:radial-gradient(circle at 30% 20%, #fff 0, #ff8a65 25%, #e53935 65%, #050509 100%); display:flex; align-items:center; justify-content:center; font-weight:700; font-size:16px; color:#050509;">T</div>
+        <div style="width:32px; height:32px; border-radius:50%; background:radial-gradient(circle at 30% 20%, #fff 0, #ff8a65 25%, #e53935 65%, #050509 100%); display:flex; align-items:center; justify-content:center; font-weight:700; font-size:16px; color:#050509;">{$brandInitial}</div>
         <div>
-          <div style="font-weight:700; font-size:15px;">Resenha 2.0</div>
-          <div style="font-size:11px; color:#b0b0b0;">Branding vivo na veia</div>
+          <div style="font-weight:700; font-size:15px;">{$brandPlatform}</div>
+          <div style="font-size:11px; color:#b0b0b0;">{$brandSlogan}</div>
         </div>
       </div>
 
       <p style="font-size:14px; margin:0 0 10px 0;">Oi, {$safeName} 👋</p>
-      <p style="font-size:14px; margin:0 0 10px 0;">Aqui vai um novo código para você confirmar o seu e-mail no Tuquinha.</p>
+      <p style="font-size:14px; margin:0 0 10px 0;">Aqui vai um novo código para você confirmar o seu e-mail no {$brandMascot}.</p>
       <p style="font-size:14px; margin:0 0 10px 0;">Digite o código abaixo na tela de confirmação:</p>
 
       <div style="text-align:center; margin:12px 0 16px 0;">

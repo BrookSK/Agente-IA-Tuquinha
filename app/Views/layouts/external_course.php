@@ -192,7 +192,7 @@ function esc_attr(string $s): string {
         </div>
 
         <div class="footer">
-            Copyright © Tuquinha IA
+            Copyright © <?= htmlspecialchars(\App\Models\Branding::platformName()) ?>
         </div>
     </div>
 </body>

@@ -4,7 +4,7 @@
         Talvez o link esteja incorreto ou a página tenha sido movida.
     </p>
     <p style="color: #b0b0b0; margin-bottom: 20px; font-size: 14px;">
-        Se você chegou aqui saindo de algum botão dentro do Tuquinha, vale avisar o suporte pra gente ajustar o caminho.
+        Se você chegou aqui saindo de algum botão dentro do <?= htmlspecialchars(\App\Models\Branding::mascotName()) ?>, vale avisar o suporte pra gente ajustar o caminho.
     </p>
 
     <div style="display:flex; justify-content:center; gap:10px; flex-wrap:wrap;">
@@ -20,7 +20,7 @@
             font-size:13px;
             text-decoration:none;
         ">
-            Voltar para o chat com o Tuquinha
+            Voltar para o chat com o <?= htmlspecialchars(\App\Models\Branding::mascotName()) ?>
         </a>
         <a href="/" style="
             display:inline-flex;

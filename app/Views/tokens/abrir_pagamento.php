@@ -12,7 +12,7 @@
         <?= $billingType === 'PIX' ? 'PIX' : 'boleto bancário' ?>.
     </p>
     <p style="color:#b0b0b0; font-size:13px; margin-bottom:12px;">
-        A janela do Tuquinha continuará aberta aqui enquanto você conclui o pagamento na outra aba.
+        A janela do <?= htmlspecialchars(\App\Models\Branding::mascotName()) ?> continuará aberta aqui enquanto você conclui o pagamento na outra aba.
         Assim que o pagamento for confirmado pelo banco, seus tokens extras serão adicionados
         automaticamente ao seu saldo.
     </p>

@@ -492,7 +492,7 @@ class SocialPortfolioController extends Controller
         unset($_SESSION['portfolio_success'], $_SESSION['portfolio_error']);
 
         $this->view('social/portfolio_manage', [
-            'pageTitle' => 'Meu portfólio - Tuquinha',
+            'pageTitle' => 'Meu portfólio - ' . \App\Models\Branding::mascotName(),
             'user' => $currentUser,
             'profileUser' => $ownerUser,
             'profile' => $profile,
@@ -1004,7 +1004,7 @@ class SocialPortfolioController extends Controller
         if (!$invitedUser) {
             http_response_code(422);
             header('Content-Type: application/json; charset=utf-8');
-            echo json_encode(['ok' => false, 'error' => 'Este e-mail não tem conta no Tuquinha.']);
+            echo json_encode(['ok' => false, 'error' => 'Este e-mail não tem conta no ' . \App\Models\Branding::mascotName() . '.']);
             return;
         }
 
@@ -1056,7 +1056,7 @@ class SocialPortfolioController extends Controller
         $safeItemTitle = htmlspecialchars($itemTitle, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
         $roleLabel = $role === 'edit' ? 'Edição' : 'Leitura';
         $safeRole = htmlspecialchars($roleLabel, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
-        $contentHtml = '<p style="font-size:14px; margin:0 0 10px 0;">Você foi convidado para colaborar no portfólio de <strong>' . $safeOwnerName . '</strong> no Tuquinha.</p>'
+        $contentHtml = '<p style="font-size:14px; margin:0 0 10px 0;">Você foi convidado para colaborar no portfólio de <strong>' . $safeOwnerName . '</strong> no ' . htmlspecialchars(\App\Models\Branding::mascotName(), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') . '.</p>'
             . '<p style="font-size:14px; margin:0 0 10px 0;">Item: <strong>' . $safeItemTitle . '</strong></p>'
             . '<p style="font-size:14px; margin:0 0 10px 0;">Permissão: <strong>' . $safeRole . '</strong></p>'
             . '<p style="font-size:12px; color:#777; margin:10px 0 0 0;">Se você não reconhece este convite, pode ignorar este e-mail.</p>';

@@ -225,7 +225,7 @@ class TokenTopupController extends Controller
                 'customer'          => $subscription['asaas_customer_id'],
                 'billingType'       => $billingType,
                 'value'             => $amountCents / 100,
-                'description'       => 'Crédito de ' . $tokens . ' tokens extras no Tuquinha',
+                'description'       => 'Crédito de ' . $tokens . ' tokens extras no ' . \App\Models\Branding::mascotName(),
                 'externalReference' => 'token_topup:' . $topupId,
                 'dueDate'           => $dueDate,
             ];
@@ -243,7 +243,7 @@ class TokenTopupController extends Controller
             }
 
             if ($redirectUrl) {
-                // tela intermediária: abre o link em nova aba e mantém o Tuquinha aberto
+                // tela intermediária: abre o link em nova aba e mantém o app aberto
                 $this->view('tokens/abrir_pagamento', [
                     'pageTitle'    => 'Pagamento de tokens extras',
                     'redirectUrl'  => $redirectUrl,

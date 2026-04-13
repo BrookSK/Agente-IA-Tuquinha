@@ -255,7 +255,7 @@ class CommunitiesController extends Controller
         $categories = CommunityCategory::allActiveNames();
 
         $this->view('social/communities', [
-            'pageTitle' => 'Comunidades do Tuquinha',
+            'pageTitle' => 'Comunidades do ' . \App\Models\Branding::mascotName(),
             'user' => $user,
             'communities' => $communities,
             'memberships' => $memberships,
@@ -1558,9 +1558,9 @@ class CommunitiesController extends Controller
         $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
         $link = $scheme . $host . '/comunidades/aceitar-convite?token=' . urlencode($token);
 
-        $subject = 'Convite para participar da comunidade "' . ($community['name'] ?? 'Comunidade do Tuquinha') . '"';
+        $subject = 'Convite para participar da comunidade "' . ($community['name'] ?? \App\Models\Branding::communityName()) . '"';
         $toName = $name !== '' ? $name : $email;
-        $body = '<p>Você foi convidado para participar da comunidade <strong>' . htmlspecialchars((string)$community['name'], ENT_QUOTES, 'UTF-8') . '</strong> no Tuquinha.</p>' .
+        $body = '<p>Você foi convidado para participar da comunidade <strong>' . htmlspecialchars((string)$community['name'], ENT_QUOTES, 'UTF-8') . '</strong> no ' . htmlspecialchars(\App\Models\Branding::mascotName(), ENT_QUOTES, 'UTF-8') . '.</p>' .
             '<p>Para aceitar o convite e entrar na comunidade, clique no link abaixo:</p>' .
             '<p><a href="' . htmlspecialchars($link, ENT_QUOTES, 'UTF-8') . '">' . htmlspecialchars($link, ENT_QUOTES, 'UTF-8') . '</a></p>' .
             '<p>Se você não reconhece este convite, pode ignorar este e-mail.</p>';
@@ -1692,7 +1692,7 @@ class CommunitiesController extends Controller
             $reporter = User::findById($userId);
             $reported = User::findById($reportedUserId);
 
-            $subject = 'Nova denúncia em comunidade no Tuquinha';
+            $subject = 'Nova denúncia em comunidade no ' . \App\Models\Branding::mascotName();
 
             $safeCommunityName = htmlspecialchars((string)($community['name'] ?? ''), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
             $safeReporterName = htmlspecialchars((string)($reporter['name'] ?? ''), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');

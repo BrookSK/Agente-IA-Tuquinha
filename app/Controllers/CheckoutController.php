@@ -436,35 +436,31 @@ class CheckoutController extends Controller
                                     $bonusParts[] = "<li>" . $referralFreeDays . " dias grátis antes da primeira cobrança;</li>";
                                 }
                                 if ($friendTokens > 0) {
-                                    $bonusParts[] = "<li>" . number_format($friendTokens, 0, ',', '.') . " tokens extras para usar com o Tuquinha;</li>";
+                                    $bonusParts[] = "<li>" . number_format($friendTokens, 0, ',', '.') . " tokens extras para usar com o " . htmlspecialchars(\App\Models\Branding::mascotName(), ENT_QUOTES, 'UTF-8') . ";</li>";
                                 }
                                 $bonusListHtml = '';
                                 if ($bonusParts) {
                                     $bonusListHtml = '<ul style="font-size:13px; color:#b0b0b0; padding-left:18px; margin:0 0 10px 0;">' . implode('', $bonusParts) . '</ul>';
                                 }
 
-                                $subjectFriend = 'Você ganhou bônus pela indicação no Tuquinha';
+                                $brandHeader = \App\Models\Branding::emailHeaderHtml();
+                                $brandMascot = htmlspecialchars(\App\Models\Branding::mascotName(), ENT_QUOTES, 'UTF-8');
+                                $subjectFriend = "Você ganhou bônus pela indicação no {$brandMascot}";
                                 $bodyFriend = <<<HTML
 <html>
 <body style="margin:0; padding:0; background:#050509; font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; color:#f5f5f5;">
   <div style="width:100%; padding:24px 0;">
     <div style="max-width:520px; margin:0 auto; background:#111118; border-radius:16px; border:1px solid #272727; padding:18px 20px;">
-      <div style="display:flex; align-items:center; gap:10px; margin-bottom:12px;">
-        <div style="width:32px; height:32px; line-height:32px; border-radius:50%; background:radial-gradient(circle at 30% 20%, #fff 0, #ff8a65 25%, #e53935 65%, #050509 100%); text-align:center; font-weight:700; font-size:16px; color:#050509;">T</div>
-        <div>
-          <div style="font-weight:700; font-size:15px;">Resenha 2.0</div>
-          <div style="font-size:11px; color:#b0b0b0;">Branding vivo na veia</div>
-        </div>
-      </div>
+      {$brandHeader}
 
       <p style="font-size:14px; margin:0 0 10px 0;">Oi, {$safeNameFriend} 👋</p>
       <p style="font-size:14px; margin:0 0 10px 0;">Sua assinatura do plano <strong>{$safePlanName}</strong> foi feita por indicação e, por isso, você ganhou alguns bônus para começar com o pé direito:</p>
       {$bonusListHtml}
 
-      <p style="font-size:13px; margin:8px 0 0 0;">É só entrar no Tuquinha e aproveitar. Se tiver qualquer dúvida, fale com a gente pelo suporte.</p>
+      <p style="font-size:13px; margin:8px 0 0 0;">É só entrar no {$brandMascot} e aproveitar. Se tiver qualquer dúvida, fale com a gente pelo suporte.</p>
 
       <div style="text-align:center; margin:14px 0 0 0;">
-        <a href="{$safeAppUrl}" style="display:inline-block; padding:9px 18px; border-radius:999px; background:linear-gradient(135deg,#e53935,#ff6f60); color:#050509; font-weight:600; font-size:13px; text-decoration:none;">Abrir o Tuquinha</a>
+        <a href="{$safeAppUrl}" style="display:inline-block; padding:9px 18px; border-radius:999px; background:linear-gradient(135deg,#e53935,#ff6f60); color:#050509; font-weight:600; font-size:13px; text-decoration:none;">Abrir o {$brandMascot}</a>
       </div>
     </div>
   </div>
@@ -485,25 +481,19 @@ HTML;
                                     ? ' ' . number_format($referrerTokens, 0, ',', '.') . ' tokens foram adicionados ao seu saldo.'
                                     : '';
 
-                                $subjectRef = 'Um amigo assinou pelo seu link no Tuquinha';
+                                $subjectRef = "Um amigo assinou pelo seu link no {$brandMascot}";
                                 $bodyRef = <<<HTML
 <html>
 <body style="margin:0; padding:0; background:#050509; font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; color:#f5f5f5;">
   <div style="width:100%; padding:24px 0;">
     <div style="max-width:520px; margin:0 auto; background:#111118; border-radius:16px; border:1px solid #272727; padding:18px 20px;">
-      <div style="display:flex; align-items:center; gap:10px; margin-bottom:12px;">
-        <div style="width:32px; height:32px; line-height:32px; border-radius:50%; background:radial-gradient(circle at 30% 20%, #fff 0, #ff8a65 25%, #e53935 65%, #050509 100%); text-align:center; font-weight:700; font-size:16px; color:#050509;">T</div>
-        <div>
-          <div style="font-weight:700; font-size:15px;">Resenha 2.0</div>
-          <div style="font-size:11px; color:#b0b0b0;">Branding vivo na veia</div>
-        </div>
-      </div>
+      {$brandHeader}
 
       <p style="font-size:14px; margin:0 0 10px 0;">Oi, {$safeNameRef} 👋</p>
       <p style="font-size:14px; margin:0 0 10px 0;">Boas notícias: <strong>{$safeFriendName}</strong> acabou de assinar o plano <strong>{$safePlanName2}</strong> usando o seu link de indicação.</p>
       <p style="font-size:14px; margin:0 0 10px 0;">Como agradecimento,{$tokensText}</p>
 
-      <p style="font-size:13px; margin:8px 0 0 0;">Obrigado por indicar o Tuquinha. Sempre que um amigo assinar pelo seu link, você acumula mais bônus para usar no dia a dia.</p>
+      <p style="font-size:13px; margin:8px 0 0 0;">Obrigado por indicar o {$brandMascot}. Sempre que um amigo assinar pelo seu link, você acumula mais bônus para usar no dia a dia.</p>
     </div>
   </div>
 </body>
@@ -532,7 +522,9 @@ HTML;
                     $periodLabel = 'ano';
                 }
 
-                $subject = 'Sua assinatura do Tuquinha está ativa';
+                $brandHeader = \App\Models\Branding::emailHeaderHtml();
+                $brandMascot = htmlspecialchars(\App\Models\Branding::mascotName(), ENT_QUOTES, 'UTF-8');
+                $subject = "Sua assinatura do {$brandMascot} está ativa";
                 $safeName = htmlspecialchars($customer['name'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
                 $safePlan = htmlspecialchars($plan['name'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
                 $safePrice = htmlspecialchars($priceFormatted, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
@@ -542,23 +534,17 @@ HTML;
 <body style="margin:0; padding:0; background:#050509; font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; color:#f5f5f5;">
   <div style="width:100%; padding:24px 0;">
     <div style="max-width:520px; margin:0 auto; background:#111118; border-radius:16px; border:1px solid #272727; padding:18px 20px;">
-      <div style="display:flex; align-items:center; gap:10px; margin-bottom:12px;">
-        <div style="width:32px; height:32px; line-height:32px; border-radius:50%; background:radial-gradient(circle at 30% 20%, #fff 0, #ff8a65 25%, #e53935 65%, #050509 100%); text-align:center; font-weight:700; font-size:16px; color:#050509;">T</div>
-        <div>
-          <div style="font-weight:700; font-size:15px;">Resenha 2.0</div>
-          <div style="font-size:11px; color:#b0b0b0;">Branding vivo na veia</div>
-        </div>
-      </div>
+      {$brandHeader}
 
       <p style="font-size:14px; margin:0 0 10px 0;">Oi, {$safeName} 👋</p>
-      <p style="font-size:14px; margin:0 0 10px 0;">Sua assinatura foi criada com sucesso. A partir de agora, você tem acesso ao plano <strong>{$safePlan}</strong> no Tuquinha.</p>
+      <p style="font-size:14px; margin:0 0 10px 0;">Sua assinatura foi criada com sucesso. A partir de agora, você tem acesso ao plano <strong>{$safePlan}</strong> no {$brandMascot}.</p>
       <p style="font-size:14px; margin:0 0 10px 0;">Valor da assinatura: <strong>R\$ {$safePrice}/{$safePeriod}</strong>.</p>
 
       <p style="font-size:13px; margin:0 0 8px 0;">Com esse plano você pode:</p>
       <ul style="font-size:13px; color:#b0b0b0; padding-left:18px; margin:0 0 10px 0;">
-        <li>Usar o Tuquinha para apoiar sua criação de marcas no dia a dia;</li>
+        <li>Usar o {$brandMascot} para apoiar sua criação de marcas no dia a dia;</li>
         <li>Organizar seus projetos de branding com histórico de conversas salvo;</li>
-        <li>Explorar prompts e ideias guiadas pelo próprio Tuquinha.</li>
+        <li>Explorar prompts e ideias guiadas pelo próprio {$brandMascot}.</li>
       </ul>
 
       <p style="font-size:13px; margin:0 0 10px 0;">Se perceber qualquer problema com a cobrança ou acesso, responda este e-mail ou fale com a gente pelo suporte.</p>
@@ -610,6 +596,7 @@ HTML;
                             $periodLabel = 'ano';
                         }
 
+                        $brandHeader = \App\Models\Branding::emailHeaderHtml();
                         $subject = 'Falha ao processar o pagamento da sua assinatura';
                         $safeName = htmlspecialchars($sessionCustomer['name'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
                         $safePlan = htmlspecialchars($plan['name'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
@@ -620,13 +607,7 @@ HTML;
 <body style="margin:0; padding:0; background:#050509; font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; color:#f5f5f5;">
   <div style="width:100%; padding:24px 0;">
     <div style="max-width:520px; margin:0 auto; background:#111118; border-radius:16px; border:1px solid #272727; padding:18px 20px;">
-      <div style="display:flex; align-items:center; gap:10px; margin-bottom:12px;">
-        <div style="width:32px; height:32px; line-height:32px; border-radius:50%; background:radial-gradient(circle at 30% 20%, #fff 0, #ff8a65 25%, #e53935 65%, #050509 100%); text-align:center; font-weight:700; font-size:16px; color:#050509;">T</div>
-        <div>
-          <div style="font-weight:700; font-size:15px;">Resenha 2.0</div>
-          <div style="font-size:11px; color:#b0b0b0;">Branding vivo na veia</div>
-        </div>
-      </div>
+      {$brandHeader}
 
       <p style="font-size:14px; margin:0 0 10px 0;">Oi, {$safeName} 👋</p>
       <p style="font-size:14px; margin:0 0 10px 0;">Tentamos processar o pagamento da sua assinatura do plano <strong>{$safePlan}</strong>, mas o cartão não foi aprovado.</p>

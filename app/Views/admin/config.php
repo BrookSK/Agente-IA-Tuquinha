@@ -43,6 +43,27 @@
 /** @var bool $saved */
 /** @var bool|null $testEmailStatus */
 /** @var string|null $testEmailError */
+/** @var string $brandPlatformName */
+/** @var string $brandPlatformShort */
+/** @var string $brandMascotName */
+/** @var string $brandAgencyName */
+/** @var string $brandSlogan */
+/** @var string $brandCompanyName */
+/** @var string $brandUserAgent */
+/** @var string $brandCommunityName */
+/** @var string $themeColorPrimary */
+/** @var string $themeColorSecondary */
+/** @var string $themeColorAccent */
+/** @var string $themeColorBackground */
+/** @var string $themeColorSurface */
+/** @var string $themeColorText */
+/** @var string $themeColorTextSecondary */
+/** @var string $themeButtonBackground */
+/** @var string $themeButtonBackgroundType */
+/** @var string $themeButtonText */
+/** @var string $themeButtonBorder */
+/** @var string $themeHeadlineColor */
+/** @var string $perplexitySearchUrls */
 
 $knownModels = [
     'gpt-4o-mini',
@@ -75,6 +96,311 @@ $knownModels = [
     <?php endif; ?>
 
     <form action="/admin/config" method="post" enctype="multipart/form-data" style="display: flex; flex-direction: column; gap: 16px;">
+
+        <div style="padding:14px 16px; border-radius:12px; border:1px solid #3949ab; background:linear-gradient(135deg, #0a0a18 0%, #111128 100%);">
+            <div style="display:flex; align-items:center; gap:8px; margin-bottom:10px;">
+                <span style="font-size:18px;">🏷️</span>
+                <div>
+                    <strong style="font-size:14px;">Identidade da marca (White Label)</strong><br>
+                    <span style="font-size:11px; color:#b0b0b0;">Personalize os nomes exibidos em todo o sistema. Esses valores substituem todas as referências da plataforma, mascote e agência.</span>
+                </div>
+            </div>
+            <div style="display:flex; flex-direction:column; gap:10px;">
+                <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                    <div style="flex:1 1 220px; min-width:200px;">
+                        <label style="font-size: 12px; color: #b0b0b0;">Nome da plataforma</label>
+                        <input name="brand_platform_name" value="<?= htmlspecialchars($brandPlatformName ?? '') ?>" style="
+                            width: 100%; padding: 8px 10px; border-radius: 8px; border: 1px solid #272727;
+                            background: #050509; color: #f5f5f5; font-size: 13px;
+                        " placeholder="ex: Resenha 2.0">
+                        <small style="color:#777; font-size:11px;">Exibido na sidebar, título das páginas, hero da home, e-mails, login e cadastro.</small>
+                    </div>
+                    <div style="flex:1 1 220px; min-width:200px;">
+                        <label style="font-size: 12px; color: #b0b0b0;">Nome curto (PWA)</label>
+                        <input name="brand_platform_short" value="<?= htmlspecialchars($brandPlatformShort ?? '') ?>" style="
+                            width: 100%; padding: 8px 10px; border-radius: 8px; border: 1px solid #272727;
+                            background: #050509; color: #f5f5f5; font-size: 13px;
+                        " placeholder="ex: Tuquinha IA">
+                        <small style="color:#777; font-size:11px;">Usado no manifest do PWA (ícone na tela inicial do celular).</small>
+                    </div>
+                </div>
+                <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                    <div style="flex:1 1 220px; min-width:200px;">
+                        <label style="font-size: 12px; color: #b0b0b0;">Nome do mascote / assistente</label>
+                        <input name="brand_mascot_name" value="<?= htmlspecialchars($brandMascotName ?? '') ?>" style="
+                            width: 100%; padding: 8px 10px; border-radius: 8px; border: 1px solid #272727;
+                            background: #050509; color: #f5f5f5; font-size: 13px;
+                        " placeholder="ex: Tuquinha">
+                        <small style="color:#777; font-size:11px;">Nome usado no chat, tour, textos da comunidade, planos, prompts e labels gerais.</small>
+                    </div>
+                    <div style="flex:1 1 220px; min-width:200px;">
+                        <label style="font-size: 12px; color: #b0b0b0;">Nome da agência / empresa criadora</label>
+                        <input name="brand_agency_name" value="<?= htmlspecialchars($brandAgencyName ?? '') ?>" style="
+                            width: 100%; padding: 8px 10px; border-radius: 8px; border: 1px solid #272727;
+                            background: #050509; color: #f5f5f5; font-size: 13px;
+                        " placeholder="ex: Agência Tuca">
+                        <small style="color:#777; font-size:11px;">Exibido nos guias, prompt padrão da IA e créditos.</small>
+                    </div>
+                </div>
+                <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                    <div style="flex:1 1 220px; min-width:200px;">
+                        <label style="font-size: 12px; color: #b0b0b0;">Slogan</label>
+                        <input name="brand_slogan" value="<?= htmlspecialchars($brandSlogan ?? '') ?>" style="
+                            width: 100%; padding: 8px 10px; border-radius: 8px; border: 1px solid #272727;
+                            background: #050509; color: #f5f5f5; font-size: 13px;
+                        " placeholder="ex: Branding vivo na veia">
+                        <small style="color:#777; font-size:11px;">Frase exibida na sidebar, e-mails e headers do sistema.</small>
+                    </div>
+                    <div style="flex:1 1 220px; min-width:200px;">
+                        <label style="font-size: 12px; color: #b0b0b0;">Empresa mãe / razão social</label>
+                        <input name="brand_company_name" value="<?= htmlspecialchars($brandCompanyName ?? '') ?>" style="
+                            width: 100%; padding: 8px 10px; border-radius: 8px; border: 1px solid #272727;
+                            background: #050509; color: #f5f5f5; font-size: 13px;
+                        " placeholder="ex: Nuvem Labs">
+                        <small style="color:#777; font-size:11px;">Exibido no rodapé externo ("Uma empresa X").</small>
+                    </div>
+                </div>
+                <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                    <div style="flex:1 1 220px; min-width:200px;">
+                        <label style="font-size: 12px; color: #b0b0b0;">User-Agent (identificador técnico)</label>
+                        <input name="brand_user_agent" value="<?= htmlspecialchars($brandUserAgent ?? '') ?>" style="
+                            width: 100%; padding: 8px 10px; border-radius: 8px; border: 1px solid #272727;
+                            background: #050509; color: #f5f5f5; font-size: 13px;
+                        " placeholder="ex: TuquinhaApp">
+                        <small style="color:#777; font-size:11px;">Usado internamente nos cabeçalhos HTTP (User-Agent) das requisições do sistema.</small>
+                    </div>
+                    <div style="flex:1 1 220px; min-width:200px;">
+                        <label style="font-size: 12px; color: #b0b0b0;">Nome da comunidade</label>
+                        <input name="brand_community_name" value="<?= htmlspecialchars($brandCommunityName ?? '') ?>" style="
+                            width: 100%; padding: 8px 10px; border-radius: 8px; border: 1px solid #272727;
+                            background: #050509; color: #f5f5f5; font-size: 13px;
+                        " placeholder="ex: Comunidade do Tuquinha">
+                        <small style="color:#777; font-size:11px;">Título exibido na página de comunidade e no perfil social.</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div style="padding:14px 16px; border-radius:12px; border:1px solid #3949ab; background:linear-gradient(135deg, #0a0a18 0%, #111128 100%);">
+            <div style="display:flex; align-items:center; gap:8px; margin-bottom:10px;">
+                <span style="font-size:18px;">🎨</span>
+                <div>
+                    <strong style="font-size:14px;">Paleta de cores e tema</strong><br>
+                    <span style="font-size:11px; color:#b0b0b0;">Configure todas as cores da interface, botões, textos e elementos visuais do sistema.</span>
+                </div>
+            </div>
+            <div style="display:flex; flex-direction:column; gap:12px;">
+                <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                    <div style="flex:1 1 200px; min-width:180px;">
+                        <label style="font-size: 12px; color: #b0b0b0;">Cor primária</label>
+                        <div style="display:flex; gap:6px; align-items:center;">
+                            <input name="theme_color_primary" type="color" value="<?= htmlspecialchars($themeColorPrimary ?? '#e53935') ?>" style="
+                                width: 40px; height: 32px; border-radius: 6px; border: 1px solid #272727;
+                                background: transparent; cursor: pointer;
+                            ">
+                            <input name="theme_color_primary_text" value="<?= htmlspecialchars($themeColorPrimary ?? '#e53935') ?>" style="
+                                flex: 1; padding: 6px 8px; border-radius: 6px; border: 1px solid #272727;
+                                background: #050509; color: #f5f5f5; font-size: 12px;
+                            " placeholder="#e53935">
+                        </div>
+                        <small style="color:#777; font-size:11px;">Cor principal da marca (gradientes, destaques)</small>
+                    </div>
+                    <div style="flex:1 1 200px; min-width:180px;">
+                        <label style="font-size: 12px; color: #b0b0b0;">Cor secundária</label>
+                        <div style="display:flex; gap:6px; align-items:center;">
+                            <input name="theme_color_secondary" type="color" value="<?= htmlspecialchars($themeColorSecondary ?? '#ff6f60') ?>" style="
+                                width: 40px; height: 32px; border-radius: 6px; border: 1px solid #272727;
+                                background: transparent; cursor: pointer;
+                            ">
+                            <input name="theme_color_secondary_text" value="<?= htmlspecialchars($themeColorSecondary ?? '#ff6f60') ?>" style="
+                                flex: 1; padding: 6px 8px; border-radius: 6px; border: 1px solid #272727;
+                                background: #050509; color: #f5f5f5; font-size: 12px;
+                            " placeholder="#ff6f60">
+                        </div>
+                        <small style="color:#777; font-size:11px;">Segunda cor da marca (gradientes, complementos)</small>
+                    </div>
+                </div>
+                <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                    <div style="flex:1 1 200px; min-width:180px;">
+                        <label style="font-size: 12px; color: #b0b0b0;">Cor de destaque</label>
+                        <div style="display:flex; gap:6px; align-items:center;">
+                            <input name="theme_color_accent" type="color" value="<?= htmlspecialchars($themeColorAccent ?? '#2ecc71') ?>" style="
+                                width: 40px; height: 32px; border-radius: 6px; border: 1px solid #272727;
+                                background: transparent; cursor: pointer;
+                            ">
+                            <input name="theme_color_accent_text" value="<?= htmlspecialchars($themeColorAccent ?? '#2ecc71') ?>" style="
+                                flex: 1; padding: 6px 8px; border-radius: 6px; border: 1px solid #272727;
+                                background: #050509; color: #f5f5f5; font-size: 12px;
+                            " placeholder="#2ecc71">
+                        </div>
+                        <small style="color:#777; font-size:11px;">Cor para sucessos, confirmações e destaques</small>
+                    </div>
+                    <div style="flex:1 1 200px; min-width:180px;">
+                        <label style="font-size: 12px; color: #b0b0b0;">Cor de fundo</label>
+                        <div style="display:flex; gap:6px; align-items:center;">
+                            <input name="theme_color_background" type="color" value="<?= htmlspecialchars($themeColorBackground ?? '#050509') ?>" style="
+                                width: 40px; height: 32px; border-radius: 6px; border: 1px solid #272727;
+                                background: transparent; cursor: pointer;
+                            ">
+                            <input name="theme_color_background_text" value="<?= htmlspecialchars($themeColorBackground ?? '#050509') ?>" style="
+                                flex: 1; padding: 6px 8px; border-radius: 6px; border: 1px solid #272727;
+                                background: #050509; color: #f5f5f5; font-size: 12px;
+                            " placeholder="#050509">
+                        </div>
+                        <small style="color:#777; font-size:11px;">Cor de fundo principal da interface</small>
+                    </div>
+                </div>
+                <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                    <div style="flex:1 1 200px; min-width:180px;">
+                        <label style="font-size: 12px; color: #b0b0b0;">Cor de superfície</label>
+                        <div style="display:flex; gap:6px; align-items:center;">
+                            <input name="theme_color_surface" type="color" value="<?= htmlspecialchars($themeColorSurface ?? '#0a0a10') ?>" style="
+                                width: 40px; height: 32px; border-radius: 6px; border: 1px solid #272727;
+                                background: transparent; cursor: pointer;
+                            ">
+                            <input name="theme_color_surface_text" value="<?= htmlspecialchars($themeColorSurface ?? '#0a0a10') ?>" style="
+                                flex: 1; padding: 6px 8px; border-radius: 6px; border: 1px solid #272727;
+                                background: #050509; color: #f5f5f5; font-size: 12px;
+                            " placeholder="#0a0a10">
+                        </div>
+                        <small style="color:#777; font-size:11px;">Cor de cards, modais e elementos elevados</small>
+                    </div>
+                    <div style="flex:1 1 200px; min-width:180px;">
+                        <label style="font-size: 12px; color: #b0b0b0;">Cor do texto principal</label>
+                        <div style="display:flex; gap:6px; align-items:center;">
+                            <input name="theme_color_text" type="color" value="<?= htmlspecialchars($themeColorText ?? '#f5f5f5') ?>" style="
+                                width: 40px; height: 32px; border-radius: 6px; border: 1px solid #272727;
+                                background: transparent; cursor: pointer;
+                            ">
+                            <input name="theme_color_text_text" value="<?= htmlspecialchars($themeColorText ?? '#f5f5f5') ?>" style="
+                                flex: 1; padding: 6px 8px; border-radius: 6px; border: 1px solid #272727;
+                                background: #050509; color: #f5f5f5; font-size: 12px;
+                            " placeholder="#f5f5f5">
+                        </div>
+                        <small style="color:#777; font-size:11px;">Cor do texto principal da interface</small>
+                    </div>
+                </div>
+                <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                    <div style="flex:1 1 200px; min-width:180px;">
+                        <label style="font-size: 12px; color: #b0b0b0;">Cor do texto secundário</label>
+                        <div style="display:flex; gap:6px; align-items:center;">
+                            <input name="theme_color_text_secondary" type="color" value="<?= htmlspecialchars($themeColorTextSecondary ?? '#b0b0b0') ?>" style="
+                                width: 40px; height: 32px; border-radius: 6px; border: 1px solid #272727;
+                                background: transparent; cursor: pointer;
+                            ">
+                            <input name="theme_color_text_secondary_text" value="<?= htmlspecialchars($themeColorTextSecondary ?? '#b0b0b0') ?>" style="
+                                flex: 1; padding: 6px 8px; border-radius: 6px; border: 1px solid #272727;
+                                background: #050509; color: #f5f5f5; font-size: 12px;
+                            " placeholder="#b0b0b0">
+                        </div>
+                        <small style="color:#777; font-size:11px;">Cor para textos de apoio, labels e descrições</small>
+                    </div>
+                    <div style="flex:1 1 200px; min-width:180px;">
+                        <label style="font-size: 12px; color: #b0b0b0;">Cor dos títulos</label>
+                        <div style="display:flex; gap:6px; align-items:center;">
+                            <input name="theme_headline_color" type="color" value="<?= htmlspecialchars($themeHeadlineColor ?? '#ffffff') ?>" style="
+                                width: 40px; height: 32px; border-radius: 6px; border: 1px solid #272727;
+                                background: transparent; cursor: pointer;
+                            ">
+                            <input name="theme_headline_color_text" value="<?= htmlspecialchars($themeHeadlineColor ?? '#ffffff') ?>" style="
+                                flex: 1; padding: 6px 8px; border-radius: 6px; border: 1px solid #272727;
+                                background: #050509; color: #f5f5f5; font-size: 12px;
+                            " placeholder="#ffffff">
+                        </div>
+                        <small style="color:#777; font-size:11px;">Cor para títulos, headlines e cabeçalhos</small>
+                    </div>
+                </div>
+                
+                <hr style="border:none; border-top:1px solid #272727; margin: 8px 0;">
+                
+                <div style="margin-top:8px;">
+                    <strong style="font-size:13px; color:#f5f5f5;">Configuração de botões</strong>
+                </div>
+                <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                    <div style="flex:1 1 200px; min-width:180px;">
+                        <label style="font-size: 12px; color: #b0b0b0;">Tipo de fundo do botão</label>
+                        <select name="theme_button_background_type" style="
+                            width: 100%; padding: 8px 10px; border-radius: 8px; border: 1px solid #272727;
+                            background: #050509; color: #f5f5f5; font-size: 13px;
+                        ">
+                            <option value="solid" <?= ($themeButtonBackgroundType ?? 'gradient') === 'solid' ? 'selected' : '' ?>>Cor sólida</option>
+                            <option value="gradient" <?= ($themeButtonBackgroundType ?? 'gradient') === 'gradient' ? 'selected' : '' ?>>Gradiente</option>
+                        </select>
+                        <small style="color:#777; font-size:11px;">Define se o botão usa cor sólida ou gradiente</small>
+                    </div>
+                    <div style="flex:1 1 200px; min-width:180px;">
+                        <label style="font-size: 12px; color: #b0b0b0;">Cor de fundo do botão</label>
+                        <div style="display:flex; gap:6px; align-items:center;">
+                            <input name="theme_button_background" type="color" value="<?= htmlspecialchars($themeButtonBackground ?? '#e53935') ?>" style="
+                                width: 40px; height: 32px; border-radius: 6px; border: 1px solid #272727;
+                                background: transparent; cursor: pointer;
+                            ">
+                            <input name="theme_button_background_text" value="<?= htmlspecialchars($themeButtonBackground ?? '#e53935') ?>" style="
+                                flex: 1; padding: 6px 8px; border-radius: 6px; border: 1px solid #272727;
+                                background: #050509; color: #f5f5f5; font-size: 12px;
+                            " placeholder="#e53935">
+                        </div>
+                        <small style="color:#777; font-size:11px;">Cor principal do botão (ou primeira cor do gradiente)</small>
+                    </div>
+                </div>
+                <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                    <div style="flex:1 1 200px; min-width:180px;">
+                        <label style="font-size: 12px; color: #b0b0b0;">Cor do texto do botão</label>
+                        <div style="display:flex; gap:6px; align-items:center;">
+                            <input name="theme_button_text" type="color" value="<?= htmlspecialchars($themeButtonText ?? '#ffffff') ?>" style="
+                                width: 40px; height: 32px; border-radius: 6px; border: 1px solid #272727;
+                                background: transparent; cursor: pointer;
+                            ">
+                            <input name="theme_button_text_text" value="<?= htmlspecialchars($themeButtonText ?? '#ffffff') ?>" style="
+                                flex: 1; padding: 6px 8px; border-radius: 6px; border: 1px solid #272727;
+                                background: #050509; color: #f5f5f5; font-size: 12px;
+                            " placeholder="#ffffff">
+                        </div>
+                        <small style="color:#777; font-size:11px;">Cor do texto dentro dos botões</small>
+                    </div>
+                    <div style="flex:1 1 200px; min-width:180px;">
+                        <label style="font-size: 12px; color: #b0b0b0;">Cor da borda do botão</label>
+                        <div style="display:flex; gap:6px; align-items:center;">
+                            <input name="theme_button_border" type="color" value="<?= htmlspecialchars($themeButtonBorder ?? 'transparent') ?>" style="
+                                width: 40px; height: 32px; border-radius: 6px; border: 1px solid #272727;
+                                background: transparent; cursor: pointer;
+                            ">
+                            <input name="theme_button_border_text" value="<?= htmlspecialchars($themeButtonBorder ?? 'transparent') ?>" style="
+                                flex: 1; padding: 6px 8px; border-radius: 6px; border: 1px solid #272727;
+                                background: #050509; color: #f5f5f5; font-size: 12px;
+                            " placeholder="transparent">
+                        </div>
+                        <small style="color:#777; font-size:11px;">Cor da borda dos botões (use "transparent" para sem borda)</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <hr style="border:none; border-top:1px solid #272727; margin: 4px 0;">
+
+        <div style="margin-top: 8px; padding:10px 12px; border-radius:10px; border:1px solid #272727; background:#0a0a10;">
+            <div style="font-size:13px; color:#b0b0b0; margin-bottom:8px;">
+                <strong>Perplexity - Links de busca personalizados</strong><br>
+                Configure URLs específicas onde o Perplexity deve buscar notícias. Um link por linha.
+            </div>
+            <div style="display:flex; flex-direction:column; gap:10px;">
+                <div>
+                    <label style="font-size: 12px; color: #b0b0b0;">URLs para busca de notícias</label>
+                    <textarea name="perplexity_search_urls" rows="8" style="
+                        width: 100%; padding: 8px 10px; border-radius: 8px; border: 1px solid #272727;
+                        background: #050509; color: #f5f5f5; font-size: 13px; resize: vertical;
+                    " placeholder="https://www.propmark.com.br
+https://www.meioemensagem.com.br
+https://www.b9.com.br
+https://www.adnews.com.br
+https://www.mundodomarketing.com.br"><?= htmlspecialchars($perplexitySearchUrls ?? '') ?></textarea>
+                    <small style="color:#777; font-size:11px;">Adicione uma URL por linha. O Perplexity priorizará essas fontes na busca por notícias de marketing.</small>
+                </div>
+            </div>
+        </div>
+
+        <hr style="border:none; border-top:1px solid #272727; margin: 4px 0;">
+
         <div>
             <label style="font-size: 12px; color: #b0b0b0;">Chave da API OpenAI</label>
             <input name="openai_key" type="password" value="<?= htmlspecialchars($openaiKey) ?>" style="
@@ -602,5 +928,25 @@ $knownModels = [
 
         window.addEventListener('resize', adjustHeight);
         adjustHeight();
+
+        // Sincronização dos campos de cor
+        function syncColorFields() {
+            var colorInputs = document.querySelectorAll('input[type="color"]');
+            colorInputs.forEach(function(colorInput) {
+                var textInput = document.querySelector('input[name="' + colorInput.name + '_text"]');
+                if (textInput) {
+                    colorInput.addEventListener('input', function() {
+                        textInput.value = colorInput.value;
+                    });
+                    textInput.addEventListener('input', function() {
+                        if (/^#[0-9A-Fa-f]{6}$/.test(textInput.value)) {
+                            colorInput.value = textInput.value;
+                        }
+                    });
+                }
+            });
+        }
+
+        syncColorFields();
     })();
 </script>

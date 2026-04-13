@@ -5,7 +5,7 @@
             <span>Nova versão disponível</span>
         </div>
         <h1 data-tour="home-title" style="font-size: 34px; line-height: 1.15; font-weight: 800; letter-spacing: -0.02em;">
-            Bem-vindo ao <span style="color: var(--accent-soft);">Resenha 2.0</span>
+            Bem-vindo ao <span style="color: var(--accent-soft);"><?= htmlspecialchars(\App\Models\Branding::platformName()) ?></span>
         </h1>
         <div style="color: var(--text-secondary); font-size: 14px; line-height: 1.5; max-width: 560px;">
             Seu ecossistema completo para designers que querem ir além<br>
@@ -190,7 +190,7 @@
         ?>
 
         <div style="text-align:center; font-size: 15px; font-weight: 800; margin-bottom: 14px;">
-            Quem é o <span style="color:#ff6f60;">Tuquinha</span>?
+            Quem é o <span style="color:#ff6f60;"><?= htmlspecialchars(\App\Models\Branding::mascotName()) ?></span>?
         </div>
 
         <div style="max-width: 520px; margin: 0 auto;">
@@ -227,11 +227,11 @@
             </div>
 
             <div style="margin-top: 10px; font-size: 11px; color: var(--text-secondary);">
-                Conheça a plataforma e o Tuquinha
+                Conheça a plataforma e o <?= htmlspecialchars(\App\Models\Branding::mascotName()) ?>
             </div>
 
             <div style="margin-top: 14px; color: var(--text-secondary); font-size: 13px; line-height: 1.65;">
-                O Tuquinha é seu parceiro de jornada. Ele entende <strong style="color: var(--text-primary);">branding, vendas, gestão, redes sociais</strong> e tudo mais que você precisa para tocar seu negócio.
+                O <?= htmlspecialchars(\App\Models\Branding::mascotName()) ?> é seu parceiro de jornada. Ele entende <strong style="color: var(--text-primary);">branding, vendas, gestão, redes sociais</strong> e tudo mais que você precisa para tocar seu negócio.
                 <br>
                 É como ter uma equipe inteira de especialistas, só que mais gente boa!
                 <span style="display:inline-flex; align-items:center; gap:6px; padding:4px 10px; border-radius:999px; background:rgba(229,57,53,0.14); border:1px solid rgba(229,57,53,0.22); color: var(--accent-soft); font-size:11px; margin-top:10px;">
@@ -243,7 +243,7 @@
         <div id="tuqAboutModal" style="display:none; position:fixed; inset:0; z-index:9999; background:rgba(0,0,0,0.72); align-items:center; justify-content:center; padding:18px;">
             <div style="width:100%; max-width:860px; border-radius:16px; overflow:hidden; border:1px solid rgba(255,255,255,0.10); background:#050509; box-shadow:0 18px 48px rgba(0,0,0,0.7);">
                 <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; padding:10px 12px; background:#0b0b10; border-bottom:1px solid rgba(255,255,255,0.08);">
-                    <div style="font-size:12px; color:rgba(255,255,255,0.75); font-weight:650;">Quem é o Tuquinha</div>
+                    <div style="font-size:12px; color:rgba(255,255,255,0.75); font-weight:650;">Quem é o <?= htmlspecialchars(\App\Models\Branding::mascotName()) ?></div>
                     <button type="button" id="tuqAboutModalClose" style="border:1px solid rgba(255,255,255,0.12); background:transparent; color:rgba(255,255,255,0.85); border-radius:999px; padding:6px 10px; cursor:pointer; font-size:12px;">Fechar</button>
                 </div>
                 <div style="position:relative; width:100%; padding-top:56.25%; background:#000;">
@@ -251,7 +251,7 @@
                         <?php if ($isDirectVideo): ?>
                             <video id="tuqAboutVideoEl" src="<?= htmlspecialchars($videoUrl) ?>" controls controlsList="nodownload" oncontextmenu="return false;" playsinline style="position:absolute; inset:0; width:100%; height:100%;"></video>
                         <?php else: ?>
-                            <iframe id="tuqAboutIframe" src="" data-src="<?= htmlspecialchars($videoUrl) ?>" title="Vídeo: Quem é o Tuquinha" style="position:absolute; inset:0; width:100%; height:100%; border:0;" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+                            <iframe id="tuqAboutIframe" src="" data-src="<?= htmlspecialchars($videoUrl) ?>" title="Vídeo: Quem é o <?= htmlspecialchars(\App\Models\Branding::mascotName()) ?>" style="position:absolute; inset:0; width:100%; height:100%; border:0;" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
                         <?php endif; ?>
                     <?php endif; ?>
                 </div>
@@ -326,7 +326,7 @@
             <div data-tour="home-guide-method" style="background: var(--surface-card); border-radius: 14px; padding: 16px; border: 1px solid var(--border-subtle); box-shadow: var(--shadow-card);">
                 <div style="font-size: 16px; font-weight: 750; margin-bottom: 6px;">Metodologia</div>
                 <div style="color: var(--text-secondary); font-size: 13px; line-height: 1.6; margin-bottom: 12px;">
-                    Um guia prático com a metodologia do Tuquinha e como aplicar no seu processo.
+                    Um guia prático com a metodologia do <?= htmlspecialchars(\App\Models\Branding::mascotName()) ?> e como aplicar no seu processo.
                 </div>
                 <div style="height: 1px; background: rgba(255,255,255,0.08); margin: 10px 0 12px 0;"></div>
                 <a href="<?= htmlspecialchars($guideHref('/guia/metodologia')) ?>" target="_blank" rel="noopener" style="
@@ -354,10 +354,10 @@
     <div id="pwa-install-banner" style="display:none; margin-bottom: 18px;">
         <div style="background:var(--surface-card); border-radius:14px; border:1px solid var(--border-subtle); padding:12px 14px; display:flex; align-items:center; gap:10px;">
             <div style="width:36px; height:36px; border-radius:12px; overflow:hidden; background:var(--surface-subtle); display:flex; align-items:center; justify-content:center;">
-                <img src="/public/favicon.png" alt="Tuquinha" style="width:100%; height:100%; display:block; object-fit:cover;">
+                <img src="/public/favicon.png" alt="<?= htmlspecialchars(\App\Models\Branding::mascotName()) ?>" style="width:100%; height:100%; display:block; object-fit:cover;">
             </div>
             <div style="flex:1;">
-                <div style="font-size:13px; font-weight:600; margin-bottom:2px;">Leve o Tuquinha pro seu celular</div>
+                <div style="font-size:13px; font-weight:600; margin-bottom:2px;">Leve o <?= htmlspecialchars(\App\Models\Branding::mascotName()) ?> pro seu celular</div>
                 <div style="font-size:12px; color:var(--text-secondary);">Instale o app na tela inicial e volte pro chat em 1 toque.</div>
             </div>
             <button id="pwa-install-button" type="button" style="border:none; border-radius:999px; padding:8px 12px; font-size:12px; font-weight:600; cursor:pointer; background:linear-gradient(135deg,#e53935,#ff6f60); color:#050509;">
@@ -373,7 +373,7 @@
         border-top: 1px solid rgba(255,255,255,0.06);
     ">
         <div style="text-align:center; font-size: 14px; font-weight: 800; margin-bottom: 8px;">Pronto para começar?</div>
-        <div style="text-align:center; color: var(--text-secondary); font-size: 12px; margin-bottom: 14px;">O Tuquinha está esperando para te ajudar.</div>
+        <div style="text-align:center; color: var(--text-secondary); font-size: 12px; margin-bottom: 14px;">O <?= htmlspecialchars(\App\Models\Branding::mascotName()) ?> está esperando para te ajudar.</div>
 
         <?php
             $homeCtaHref = $menuHref('/chat?new=1');
@@ -397,7 +397,7 @@
                 box-shadow: 0 10px 26px rgba(229, 57, 53, 0.35);
                 text-decoration: none;
             ">
-                <span>Começar um papo com o Tuquinha</span>
+                <span>Começar um papo com o <?= htmlspecialchars(\App\Models\Branding::mascotName()) ?></span>
             </a>
         </div>
     </div>

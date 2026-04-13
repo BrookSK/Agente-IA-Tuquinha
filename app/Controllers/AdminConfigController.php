@@ -7,6 +7,7 @@ use App\Core\Database;
 use App\Models\Setting;
 use App\Models\AsaasConfig;
 use App\Models\TuquinhaEngine;
+use App\Models\Branding;
 use App\Services\MailService;
 use App\Services\MediaStorageService;
 
@@ -94,6 +95,25 @@ class AdminConfigController extends Controller
 
         $asaas = AsaasConfig::getActive();
 
+        $brandingAll = Branding::all();
+
+        // Configurações de tema/cores
+        $themeColorPrimary = Setting::get('theme_color_primary', '#e53935');
+        $themeColorSecondary = Setting::get('theme_color_secondary', '#ff6f60');
+        $themeColorAccent = Setting::get('theme_color_accent', '#2ecc71');
+        $themeColorBackground = Setting::get('theme_color_background', '#050509');
+        $themeColorSurface = Setting::get('theme_color_surface', '#0a0a10');
+        $themeColorText = Setting::get('theme_color_text', '#f5f5f5');
+        $themeColorTextSecondary = Setting::get('theme_color_text_secondary', '#b0b0b0');
+        $themeButtonBackground = Setting::get('theme_button_background', '#e53935');
+        $themeButtonBackgroundType = Setting::get('theme_button_background_type', 'gradient');
+        $themeButtonText = Setting::get('theme_button_text', '#ffffff');
+        $themeButtonBorder = Setting::get('theme_button_border', 'transparent');
+        $themeHeadlineColor = Setting::get('theme_headline_color', '#ffffff');
+
+        // URLs do Perplexity
+        $perplexitySearchUrls = Setting::get('perplexity_search_urls', '');
+
         $this->view('admin/config', [
             'pageTitle' => 'Configuração - OpenAI',
             'openaiKey' => $openaiKey,
@@ -138,6 +158,27 @@ class AdminConfigController extends Controller
             'asaasEnvironment' => $asaas['environment'] ?? 'sandbox',
             'asaasSandboxKey' => $asaas['sandbox_api_key'] ?? '',
             'asaasProdKey' => $asaas['production_api_key'] ?? '',
+            'brandPlatformName' => $brandingAll['brand_platform_name'],
+            'brandPlatformShort' => $brandingAll['brand_platform_short'],
+            'brandMascotName' => $brandingAll['brand_mascot_name'],
+            'brandAgencyName' => $brandingAll['brand_agency_name'],
+            'brandSlogan' => $brandingAll['brand_slogan'],
+            'brandCompanyName' => $brandingAll['brand_company_name'],
+            'brandUserAgent' => $brandingAll['brand_user_agent'],
+            'brandCommunityName' => $brandingAll['brand_community_name'],
+            'themeColorPrimary' => $themeColorPrimary,
+            'themeColorSecondary' => $themeColorSecondary,
+            'themeColorAccent' => $themeColorAccent,
+            'themeColorBackground' => $themeColorBackground,
+            'themeColorSurface' => $themeColorSurface,
+            'themeColorText' => $themeColorText,
+            'themeColorTextSecondary' => $themeColorTextSecondary,
+            'themeButtonBackground' => $themeButtonBackground,
+            'themeButtonBackgroundType' => $themeButtonBackgroundType,
+            'themeButtonText' => $themeButtonText,
+            'themeButtonBorder' => $themeButtonBorder,
+            'themeHeadlineColor' => $themeHeadlineColor,
+            'perplexitySearchUrls' => $perplexitySearchUrls,
             'saved' => false,
             'testEmailStatus' => null,
             'testEmailError' => null,
@@ -205,6 +246,32 @@ class AdminConfigController extends Controller
 
         $supportWhatsapp = trim((string)($_POST['support_whatsapp'] ?? ''));
         $supportEmail = trim((string)($_POST['support_email'] ?? ''));
+
+        $brandPlatformName = trim((string)($_POST['brand_platform_name'] ?? ''));
+        $brandPlatformShort = trim((string)($_POST['brand_platform_short'] ?? ''));
+        $brandMascotName = trim((string)($_POST['brand_mascot_name'] ?? ''));
+        $brandAgencyName = trim((string)($_POST['brand_agency_name'] ?? ''));
+        $brandSlogan = trim((string)($_POST['brand_slogan'] ?? ''));
+        $brandCompanyName = trim((string)($_POST['brand_company_name'] ?? ''));
+        $brandUserAgent = trim((string)($_POST['brand_user_agent'] ?? ''));
+        $brandCommunityName = trim((string)($_POST['brand_community_name'] ?? ''));
+
+        // Configurações de tema/cores
+        $themeColorPrimary = trim((string)($_POST['theme_color_primary_text'] ?? $_POST['theme_color_primary'] ?? '#e53935'));
+        $themeColorSecondary = trim((string)($_POST['theme_color_secondary_text'] ?? $_POST['theme_color_secondary'] ?? '#ff6f60'));
+        $themeColorAccent = trim((string)($_POST['theme_color_accent_text'] ?? $_POST['theme_color_accent'] ?? '#2ecc71'));
+        $themeColorBackground = trim((string)($_POST['theme_color_background_text'] ?? $_POST['theme_color_background'] ?? '#050509'));
+        $themeColorSurface = trim((string)($_POST['theme_color_surface_text'] ?? $_POST['theme_color_surface'] ?? '#0a0a10'));
+        $themeColorText = trim((string)($_POST['theme_color_text_text'] ?? $_POST['theme_color_text'] ?? '#f5f5f5'));
+        $themeColorTextSecondary = trim((string)($_POST['theme_color_text_secondary_text'] ?? $_POST['theme_color_text_secondary'] ?? '#b0b0b0'));
+        $themeButtonBackground = trim((string)($_POST['theme_button_background_text'] ?? $_POST['theme_button_background'] ?? '#e53935'));
+        $themeButtonBackgroundType = trim((string)($_POST['theme_button_background_type'] ?? 'gradient'));
+        $themeButtonText = trim((string)($_POST['theme_button_text_text'] ?? $_POST['theme_button_text'] ?? '#ffffff'));
+        $themeButtonBorder = trim((string)($_POST['theme_button_border_text'] ?? $_POST['theme_button_border'] ?? 'transparent'));
+        $themeHeadlineColor = trim((string)($_POST['theme_headline_color_text'] ?? $_POST['theme_headline_color'] ?? '#ffffff'));
+
+        // URLs do Perplexity
+        $perplexitySearchUrls = trim((string)($_POST['perplexity_search_urls'] ?? ''));
 
         if (isset($_FILES['tuquinha_about_video_upload']) && !empty($_FILES['tuquinha_about_video_upload']['tmp_name'])) {
             $tmp = (string)($_FILES['tuquinha_about_video_upload']['tmp_name'] ?? '');
@@ -305,6 +372,27 @@ class AdminConfigController extends Controller
             'nano_banana_pro_model' => $nanoBananaProModel !== '' ? $nanoBananaProModel : 'nano-banana-pro',
             'support_whatsapp' => $supportWhatsapp,
             'support_email' => $supportEmail,
+            'brand_platform_name' => $brandPlatformName,
+            'brand_platform_short' => $brandPlatformShort,
+            'brand_mascot_name' => $brandMascotName,
+            'brand_agency_name' => $brandAgencyName,
+            'brand_slogan' => $brandSlogan,
+            'brand_company_name' => $brandCompanyName,
+            'brand_user_agent' => $brandUserAgent,
+            'brand_community_name' => $brandCommunityName,
+            'theme_color_primary' => $themeColorPrimary,
+            'theme_color_secondary' => $themeColorSecondary,
+            'theme_color_accent' => $themeColorAccent,
+            'theme_color_background' => $themeColorBackground,
+            'theme_color_surface' => $themeColorSurface,
+            'theme_color_text' => $themeColorText,
+            'theme_color_text_secondary' => $themeColorTextSecondary,
+            'theme_button_background' => $themeButtonBackground,
+            'theme_button_background_type' => $themeButtonBackgroundType,
+            'theme_button_text' => $themeButtonText,
+            'theme_button_border' => $themeButtonBorder,
+            'theme_headline_color' => $themeHeadlineColor,
+            'perplexity_search_urls' => $perplexitySearchUrls,
             'certificate_issuer_name' => $certificateIssuerName,
             'certificate_signature_image_path' => $certificateSignatureImagePath,
             'course_partner_min_payout_cents' => (string)$coursePartnerMinPayoutCents,
@@ -373,10 +461,33 @@ class AdminConfigController extends Controller
             'asaasEnvironment' => $asaasEnv === 'production' ? 'production' : 'sandbox',
             'asaasSandboxKey' => $asaasSandboxKey,
             'asaasProdKey' => $asaasProdKey,
+            'brandPlatformName' => $brandPlatformName !== '' ? $brandPlatformName : Branding::defaults()['brand_platform_name'],
+            'brandPlatformShort' => $brandPlatformShort !== '' ? $brandPlatformShort : Branding::defaults()['brand_platform_short'],
+            'brandMascotName' => $brandMascotName !== '' ? $brandMascotName : Branding::defaults()['brand_mascot_name'],
+            'brandAgencyName' => $brandAgencyName !== '' ? $brandAgencyName : Branding::defaults()['brand_agency_name'],
+            'brandSlogan' => $brandSlogan !== '' ? $brandSlogan : Branding::defaults()['brand_slogan'],
+            'brandCompanyName' => $brandCompanyName !== '' ? $brandCompanyName : Branding::defaults()['brand_company_name'],
+            'brandUserAgent' => $brandUserAgent !== '' ? $brandUserAgent : Branding::defaults()['brand_user_agent'],
+            'brandCommunityName' => $brandCommunityName !== '' ? $brandCommunityName : Branding::defaults()['brand_community_name'],
+            'themeColorPrimary' => $themeColorPrimary,
+            'themeColorSecondary' => $themeColorSecondary,
+            'themeColorAccent' => $themeColorAccent,
+            'themeColorBackground' => $themeColorBackground,
+            'themeColorSurface' => $themeColorSurface,
+            'themeColorText' => $themeColorText,
+            'themeColorTextSecondary' => $themeColorTextSecondary,
+            'themeButtonBackground' => $themeButtonBackground,
+            'themeButtonBackgroundType' => $themeButtonBackgroundType,
+            'themeButtonText' => $themeButtonText,
+            'themeButtonBorder' => $themeButtonBorder,
+            'themeHeadlineColor' => $themeHeadlineColor,
+            'perplexitySearchUrls' => $perplexitySearchUrls,
             'saved' => true,
             'testEmailStatus' => null,
             'testEmailError' => null,
         ]);
+
+        Branding::clearCache();
     }
 
     public function sendTestEmail(): void
@@ -445,6 +556,8 @@ class AdminConfigController extends Controller
 
         $asaas = AsaasConfig::getActive();
 
+        $brandingAll = Branding::all();
+
         $status = null;
         $error = null;
 
@@ -452,8 +565,8 @@ class AdminConfigController extends Controller
             $status = false;
             $error = 'Informe um e-mail para teste.';
         } else {
-            $subject = 'Teste de e-mail - Tuquinha';
-            $body = '<p>Se você recebeu este e-mail, o envio SMTP do Tuquinha está funcionando.</p>';
+            $subject = 'Teste de e-mail - ' . Branding::mascotName();
+            $body = '<p>Se você recebeu este e-mail, o envio SMTP do ' . htmlspecialchars(Branding::mascotName()) . ' está funcionando.</p>';
             $sent = MailService::send($toEmail, $toEmail, $subject, $body);
             $status = $sent;
             if (!$sent) {
@@ -501,6 +614,14 @@ class AdminConfigController extends Controller
             'asaasEnvironment' => $asaas['environment'] ?? 'sandbox',
             'asaasSandboxKey' => $asaas['sandbox_api_key'] ?? '',
             'asaasProdKey' => $asaas['production_api_key'] ?? '',
+            'brandPlatformName' => $brandingAll['brand_platform_name'],
+            'brandPlatformShort' => $brandingAll['brand_platform_short'],
+            'brandMascotName' => $brandingAll['brand_mascot_name'],
+            'brandAgencyName' => $brandingAll['brand_agency_name'],
+            'brandSlogan' => $brandingAll['brand_slogan'],
+            'brandCompanyName' => $brandingAll['brand_company_name'],
+            'brandUserAgent' => $brandingAll['brand_user_agent'],
+            'brandCommunityName' => $brandingAll['brand_community_name'],
             'saved' => false,
             'testEmailStatus' => $status,
             'testEmailError' => $error,

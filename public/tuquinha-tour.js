@@ -1,6 +1,8 @@
 (function () {
   'use strict';
 
+  var _m = (window.TUQ_TOUR_CONFIG && window.TUQ_TOUR_CONFIG.mascotName) || 'Tuquinha';
+
   function qs(sel, root) {
     try { return (root || document).querySelector(sel); } catch (e) { return null; }
   }
@@ -236,8 +238,8 @@
       steps: [
         {
           selector: '[data-tour="home-about"]',
-          title: 'Quem é o Tuquinha',
-          text: 'Aqui você entende o que é o Tuquinha e como ele te ajuda no dia a dia com branding.'
+          title: 'Quem é o ' + _m,
+          text: 'Aqui você entende o que é o ' + _m + ' e como ele te ajuda no dia a dia com branding.'
         },
         {
           selector: '[data-tour="home-guides"]',
@@ -247,7 +249,7 @@
         {
           selector: '[data-tour="home-cta-chat"]',
           title: 'Começar um chat',
-          text: 'Clique aqui quando quiser iniciar um papo com o Tuquinha.'
+          text: 'Clique aqui quando quiser iniciar um papo com o ' + _m + '.'
         }
       ]
     },
@@ -258,7 +260,7 @@
         {
           selector: 'h1',
           title: 'Escolha uma personalidade',
-          text: 'Cada personalidade muda o foco e o jeito do Tuquinha. Aqui você escolhe como ele vai te ajudar no próximo chat.'
+          text: 'Cada personalidade muda o foco e o jeito do ' + _m + '. Aqui você escolhe como ele vai te ajudar no próximo chat.'
         },
         {
           selector: '#persona-carousel',
@@ -284,7 +286,7 @@
         {
           selector: '#chat-send-btn',
           title: 'Enviar',
-          text: 'Clique para enviar e iniciar a conversa com o Tuquinha.'
+          text: 'Clique para enviar e iniciar a conversa com o ' + _m + '.'
         },
         {
           selector: '#tuqChatMenuBtn',
@@ -300,7 +302,7 @@
         {
           selector: 'h1',
           title: 'Seus projetos',
-          text: 'Aqui você organiza seus trabalhos e conversas do Tuquinha por projeto.'
+          text: 'Aqui você organiza seus trabalhos e conversas do ' + _m + ' por projeto.'
         },
         {
           selector: 'a[href="/projetos/novo"]',
@@ -362,7 +364,7 @@
       steps: [
         {
           selector: 'h1',
-          title: 'Cursos do Tuquinha',
+          title: 'Cursos do ' + _m,
           text: 'Aqui você encontra cursos disponíveis pelo seu plano ou para compra avulsa.'
         },
         {
@@ -379,12 +381,12 @@
         {
           selector: '#tuq-refazer-tour',
           title: 'Refazer tour quando quiser',
-          text: 'Se você quiser rever o guia, é só clicar aqui e o Tuquinha te leva de novo pelas telas principais.'
+          text: 'Se você quiser rever o guia, é só clicar aqui e o ' + _m + ' te leva de novo pelas telas principais.'
         },
         {
           selector: 'form[action="/conta"]',
           title: 'Dados da conta',
-          text: 'Aqui você ajusta seu nome, como o Tuquinha deve te chamar e define memórias e regras globais.'
+          text: 'Aqui você ajusta seu nome, como o ' + _m + ' deve te chamar e define memórias e regras globais.'
         }
       ]
     },
@@ -477,7 +479,7 @@
         {
           selector: '#socialProfileLayout',
           title: 'Seu perfil social',
-          text: 'Aqui é seu perfil dentro da rede social do Tuquinha: portfólio, scraps, amigos e informações.'
+          text: 'Aqui é seu perfil dentro da rede social do ' + _m + ': portfólio, scraps, amigos e informações.'
         },
         {
           selector: '#copyProfileLinkBtn',
@@ -503,7 +505,7 @@
       steps: [
         {
           selector: 'h1',
-          title: 'Comunidade do Tuquinha',
+          title: 'Comunidade do ' + _m,
           text: 'Aqui você troca ideias, dúvidas e processos com outros alunos — tudo num feed só.'
         },
         {

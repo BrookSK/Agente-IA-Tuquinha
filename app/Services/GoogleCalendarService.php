@@ -55,7 +55,7 @@ class GoogleCalendarService
             ],
             'conferenceData' => [
                 'createRequest' => [
-                    'requestId' => uniqid('tuquinha-live-', true),
+                    'requestId' => uniqid(strtolower(\App\Models\Branding::platformShort()) . '-live-', true),
                     'conferenceSolutionKey' => [
                         'type' => 'hangoutsMeet',
                     ],

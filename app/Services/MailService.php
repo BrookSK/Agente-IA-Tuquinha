@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Setting;
+use App\Models\Branding;
 
 class MailService
 {
@@ -21,10 +22,10 @@ class MailService
             ? htmlspecialchars($resolvedLogoUrl, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')
             : '';
 
-        $brandAvatar = '<div style="width:32px; height:32px; line-height:32px; border-radius:50%; background:radial-gradient(circle at 30% 20%, #fff 0, #ff8a65 25%, #e53935 65%, #050509 100%); text-align:center; font-weight:700; font-size:16px; color:#050509;">T</div>';
+        $brandAvatar = '<div style="width:32px; height:32px; line-height:32px; border-radius:50%; background:radial-gradient(circle at 30% 20%, #fff 0, #ff8a65 25%, #e53935 65%, #050509 100%); text-align:center; font-weight:700; font-size:16px; color:#050509;">' . htmlspecialchars(Branding::mascotInitials(), ENT_QUOTES, 'UTF-8') . '</div>';
         if ($safeLogoUrl !== '') {
             $brandAvatar = '<div style="width:32px; height:32px; border-radius:50%; overflow:hidden; background:#050509; box-shadow:0 0 18px rgba(229,57,53,0.8);">'
-                . '<img src="' . $safeLogoUrl . '" alt="Tuquinha" style="width:100%; height:100%; display:block; object-fit:cover;">'
+                . '<img src="' . $safeLogoUrl . '" alt="' . htmlspecialchars(Branding::mascotName(), ENT_QUOTES, 'UTF-8') . '" style="width:100%; height:100%; display:block; object-fit:cover;">'
                 . '</div>';
         }
 
@@ -49,8 +50,8 @@ class MailService
             . '<div style="display:flex; align-items:center; gap:10px; margin-bottom:12px;">'
             . $brandAvatar
             . '<div>'
-            . '<div style="font-weight:700; font-size:15px;">Resenha 2.0</div>'
-            . '<div style="font-size:11px; color:#b0b0b0;">Branding vivo na veia</div>'
+            . '<div style="font-weight:700; font-size:15px;">' . htmlspecialchars(Branding::platformName(), ENT_QUOTES, 'UTF-8') . '</div>'
+            . '<div style="font-size:11px; color:#b0b0b0;">' . htmlspecialchars(Branding::slogan(), ENT_QUOTES, 'UTF-8') . '</div>'
             . '</div>'
             . '</div>'
             . '<p style="font-size:14px; margin:0 0 10px 0;">Oi, ' . $safeGreeting . ' 👋</p>'
@@ -69,7 +70,7 @@ class MailService
         $user = Setting::get('smtp_user', '');
         $pass = Setting::get('smtp_password', '');
         $fromEmail = Setting::get('smtp_from_email', '');
-        $fromName = Setting::get('smtp_from_name', 'Tuquinha IA');
+        $fromName = Setting::get('smtp_from_name', Branding::platformShort());
 
         if ($host === '' || $user === '' || $pass === '' || $fromEmail === '') {
             // SMTP não configurado; falha controlada

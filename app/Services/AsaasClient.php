@@ -40,7 +40,7 @@ class AsaasClient
         $headers = [
             'Content-Type: application/json',
             'access_token: ' . $this->apiKey,
-            'User-Agent: TuquinhaApp/1.0',
+            'User-Agent: ' . \App\Models\Branding::userAgent() . '/1.0',
         ];
 
         $options = [

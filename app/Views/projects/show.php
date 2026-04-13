@@ -376,7 +376,7 @@
     <div style="width:min(760px, 100%); background:var(--surface-card); border:1px solid var(--border-subtle); border-radius:16px; padding:16px;">
         <div style="font-weight:700; font-size:15px; margin-bottom:6px;">Editar memória do projeto</div>
         <div style="color:var(--text-secondary); font-size:12px; line-height:1.35; margin-bottom:10px;">
-            A memória ajuda o Tuquinha a entender o contexto permanente do projeto.
+            A memória ajuda o <?= htmlspecialchars(\App\Models\Branding::mascotName()) ?> a entender o contexto permanente do projeto.
         </div>
         <textarea id="projectMemoryInput" rows="8" style="width:100%; padding:10px 12px; border-radius:12px; border:1px solid var(--border-subtle); background:var(--surface-subtle); color:var(--text-primary); font-size:13px; resize:vertical; outline:none;"><?= htmlspecialchars((string)($project['description'] ?? '')) ?></textarea>
         <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:12px;">
@@ -525,7 +525,7 @@
                             <input type="hidden" name="persona_id" id="projectComposerPersonaId" value="<?= $initialPersonaId > 0 ? (int)$initialPersonaId : '' ?>">
                             <div style="margin-bottom:10px;">
                                 <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:8px;">
-                                    <div style="font-size:12px; color:var(--text-secondary); white-space:nowrap;">Tuquinha</div>
+                                    <div style="font-size:12px; color:var(--text-secondary); white-space:nowrap;"><?= htmlspecialchars(\App\Models\Branding::mascotName()) ?></div>
                                 </div>
                                 <div style="position:relative;">
                                     <button type="button" id="projectPersonaPrev" class="projectPersonaNavBtn" style="left:0;" aria-label="Anterior">‹</button>
@@ -640,12 +640,12 @@
                                                 </span>
                                             </span>
                                         <?php else: ?>
-                                            <span class="tuqPersonaBadge" title="Padrão do Tuquinha / da conta">
+                                            <span class="tuqPersonaBadge" title="Padrão do <?= htmlspecialchars(\App\Models\Branding::mascotName()) ?> / da conta">
                                                 <span class="tuqPersonaBadgeAvatar">
                                                     <img src="/public/perso_padrao.png" alt="" onerror="this.onerror=null;this.src='/public/favicon.png';">
                                                 </span>
                                                 <span class="tuqPersonaBadgeText">
-                                                    <span class="tuqPersonaBadgeName">Padrão do Tuquinha</span>
+                                                    <span class="tuqPersonaBadgeName">Padrão do <?= htmlspecialchars(\App\Models\Branding::mascotName()) ?></span>
                                                     <span class="tuqPersonaBadgeArea">Padrão da conta</span>
                                                 </span>
                                             </span>
@@ -715,7 +715,7 @@
                     <div style="color:var(--text-secondary); font-size:12px; line-height:1.35;">
                         <?= trim((string)($projectInstructions ?? '')) !== ''
                             ? htmlspecialchars(mb_strimwidth(trim((string)$projectInstructions), 0, 160, '…', 'UTF-8'))
-                            : 'Configure instruções para orientar as respostas do Tuquinha neste projeto.' ?>
+                            : 'Configure instruções para orientar as respostas do ' . htmlspecialchars(\App\Models\Branding::mascotName()) . ' neste projeto.' ?>
                     </div>
                 </div>
 
@@ -1687,7 +1687,7 @@
             <input type="hidden" name="project_id" value="<?= (int)($project['id'] ?? 0) ?>">
             <div style="font-weight:700; font-size:15px; margin-bottom:6px;">Criar instruções para o projeto</div>
             <div style="color:var(--text-secondary); font-size:12px; line-height:1.35; margin-bottom:10px;">
-                Dê ao Tuquinha instruções e informações relevantes para as conversas dentro deste projeto.
+                Dê ao <?= htmlspecialchars(\App\Models\Branding::mascotName()) ?> instruções e informações relevantes para as conversas dentro deste projeto.
             </div>
             <textarea id="projectInstructionsTextarea" class="tuqAutoGrow" name="instructions" rows="8" style="width:100%; padding:10px 12px; border-radius:12px; border:1px solid var(--border-subtle); background:var(--surface-subtle); color:var(--text-primary); font-size:13px; resize:vertical; outline:none;" spellcheck="false"><?= htmlspecialchars((string)($projectInstructions ?? '')) ?></textarea>
             <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:12px;">

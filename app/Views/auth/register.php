@@ -5,7 +5,7 @@
         <div style="text-align:center; margin-bottom: 14px;">
             <div style="font-size: 18px; font-weight: 800;">Criar conta</div>
             <div style="color: rgba(255,255,255,0.60); font-size: 12px; margin-top: 6px; line-height: 1.45;">
-                Crie sua conta para assinar um plano e acessar o Resenha 2.0.
+                Crie sua conta para assinar um plano e acessar o <?= htmlspecialchars(\App\Models\Branding::platformName()) ?>.
             </div>
         </div>
 

@@ -609,7 +609,7 @@ function esc_attr(string $s): string {
             </div>
             
             <div class="footer-bottom">
-                Resenha 2.0 - Uma empresa Nuvem Labs
+                <?= htmlspecialchars(\App\Models\Branding::platformName()) ?> - Uma empresa <?= htmlspecialchars(\App\Models\Branding::companyName()) ?>
             </div>
         </footer>
     </div>

@@ -32,7 +32,7 @@
 <div class="tuq-tokens-wrap">
     <h1 style="font-size:22px; margin:18px 0 8px; font-weight:650;">Comprar tokens extras</h1>
     <p style="color:#b0b0b0; font-size:13px; margin-bottom:14px;">
-        Aqui você pode adicionar mais tokens ao seu saldo atual para continuar usando o Tuquinha mesmo depois de atingir o limite do seu plano.
+        Aqui você pode adicionar mais tokens ao seu saldo atual para continuar usando o <?= htmlspecialchars(\App\Models\Branding::mascotName()) ?> mesmo depois de atingir o limite do seu plano.
     </p>
 
     <div class="tuq-tokens-top" style="margin-bottom:12px;">

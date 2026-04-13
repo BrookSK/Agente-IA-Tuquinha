@@ -180,7 +180,7 @@ class KanbanController extends Controller
         }
 
         $this->view('kanban/index', [
-            'pageTitle' => 'Kanban - Tuquinha',
+            'pageTitle' => 'Kanban - ' . \App\Models\Branding::mascotName(),
             'user' => $user,
             'boards' => $boards,
             'currentBoard' => $currentBoard,

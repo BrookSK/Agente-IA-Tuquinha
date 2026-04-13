@@ -5,7 +5,7 @@
         <div style="text-align:center; margin-bottom: 14px;">
             <div style="font-size: 18px; font-weight: 800;">Entrar na sua conta</div>
             <div style="color: rgba(255,255,255,0.60); font-size: 12px; margin-top: 6px; line-height: 1.45;">
-                Acesse para gerenciar seus planos e acessar o Resenha 2.0.
+                Acesse para gerenciar seus planos e acessar o <?= htmlspecialchars(\App\Models\Branding::platformName()) ?>.
             </div>
         </div>
 

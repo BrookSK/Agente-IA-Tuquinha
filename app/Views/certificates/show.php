@@ -39,7 +39,7 @@ $autoPrint = isset($_GET['print']) && (string)$_GET['print'] === '1';
     <div id="certificateSheet" style="border-radius:18px; border:1px solid #272727; background:radial-gradient(circle at top left,#111118 0,#050509 70%); padding:18px 18px;">
         <div style="display:flex; justify-content:space-between; gap:12px; align-items:flex-start; flex-wrap:wrap;">
             <div style="min-width:260px;">
-                <div style="font-size:12px; color:#ffcc80; letter-spacing:0.16em; text-transform:uppercase;">Tuquinha</div>
+                <div style="font-size:12px; color:#ffcc80; letter-spacing:0.16em; text-transform:uppercase;"><?= htmlspecialchars(\App\Models\Branding::mascotName()) ?></div>
                 <div style="font-size:24px; font-weight:800; margin-top:2px;">Certificado de Conclusão</div>
                 <div style="margin-top:12px; font-size:13px; color:#d8d8d8; line-height:1.6;">
                     Certificamos que <strong style="color:#fff;"><?= htmlspecialchars($studentName, ENT_QUOTES, 'UTF-8') ?></strong>

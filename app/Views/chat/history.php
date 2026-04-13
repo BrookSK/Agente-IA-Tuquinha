@@ -209,7 +209,7 @@
 <div style="max-width: 880px; margin: 0 auto;">
     <h1 style="font-size: 24px; margin-bottom: 10px; font-weight: 650;">Histórico de conversas</h1>
     <p style="color:var(--text-secondary); font-size: 14px; margin-bottom: 4px;">
-        Aqui você encontra os chats recentes com o Tuquinha nesta sessão. Use a busca para localizar pelo título.
+        Aqui você encontra os chats recentes com o <?= htmlspecialchars(\App\Models\Branding::mascotName()) ?> nesta sessão. Use a busca para localizar pelo título.
     </p>
     <?php $days = (int)($retentionDays ?? 90); if ($days <= 0) { $days = 90; } ?>
     <p style="color:#777; font-size: 12px; margin-bottom: 14px;">
@@ -261,7 +261,7 @@
                             <div class="tuqChatTitleRow">
                                 <?php
                                     $showPersona = !empty($planAllowsPersonalities);
-                                    $personaLabelName = $personaName !== '' ? $personaName : 'Tuquinha';
+                                    $personaLabelName = $personaName !== '' ? $personaName : htmlspecialchars(\App\Models\Branding::mascotName());
                                     $personaLabelArea = $personaArea !== '' ? $personaArea : 'Chat';
                                     $personaHasImg = $personaImg !== '';
                                 ?>
@@ -361,7 +361,7 @@
             }
             title = (title || '').trim();
             if (title === '') {
-                title = 'Chat com o Tuquinha';
+                title = 'Chat com o <?= htmlspecialchars(\App\Models\Branding::mascotName()) ?>';
             }
             var form = document.getElementById('tuqRenameForm' + id);
             if (!form) {

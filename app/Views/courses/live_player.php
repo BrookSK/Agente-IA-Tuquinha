@@ -86,7 +86,7 @@ if ($embedUrl !== '' && strpos($embedUrl, 'drive.google.com') !== false) {
         <section style="border-radius:14px; border:1px solid #272727; background:#111118; padding:10px 12px; min-height:120px;">
             <div style="font-size:12px; color:#b0b0b0; margin-bottom:6px;">Conteúdo transcrito / tratado com IA</div>
             <div style="font-size:13px; color:#d0d0d0; line-height:1.5;">
-                Em breve você verá aqui um resumo inteligente e a transcrição desta live gerados pelo Tuquinha.
+                Em breve você verá aqui um resumo inteligente e a transcrição desta live gerados pelo <?= htmlspecialchars(\App\Models\Branding::mascotName()) ?>.
             </div>
         </section>
 

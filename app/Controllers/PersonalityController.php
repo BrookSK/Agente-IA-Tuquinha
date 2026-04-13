@@ -80,7 +80,7 @@ class PersonalityController extends Controller
         }
 
         $this->view('personalities/index', [
-            'pageTitle' => 'Escolha a personalidade do Tuquinha',
+            'pageTitle' => 'Escolha a personalidade do ' . \App\Models\Branding::mascotName(),
             'personalities' => $personalities,
             'conversationId' => $conversationId,
         ]);

@@ -41,7 +41,7 @@ if ($slugForCycle !== '') {
         <?= $isEdit ? 'Editar plano' : 'Novo plano' ?>
     </h1>
     <p style="color:var(--text-secondary); font-size:13px; margin-bottom:14px;">
-        Defina nome, ciclo de cobrança, preço e quais recursos esse plano libera no Tuquinha.
+        Defina nome, ciclo de cobrança, preço e quais recursos esse plano libera no <?= htmlspecialchars(\App\Models\Branding::mascotName()) ?>.
     </p>
 
     <form action="/admin/planos/salvar" method="post" style="display:flex; flex-direction:column; gap:10px;">

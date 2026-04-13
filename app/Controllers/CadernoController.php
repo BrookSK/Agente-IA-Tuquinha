@@ -146,7 +146,7 @@ class CadernoController extends Controller
         }
 
         $this->view('caderno/index', [
-            'pageTitle' => 'Caderno - Tuquinha',
+            'pageTitle' => 'Caderno - ' . \App\Models\Branding::mascotName(),
             'user' => $user,
             'pages' => $pages,
             'current' => $current,

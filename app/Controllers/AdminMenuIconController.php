@@ -20,7 +20,7 @@ class AdminMenuIconController extends Controller
     {
         return [
             'chat_history' => 'Histórico de chats',
-            'quick_home' => 'Quem é o Tuquinha',
+            'quick_home' => 'Quem é o ' . \App\Models\Branding::mascotName(),
             'quick_notebook' => 'Caderno',
             'quick_kanban' => 'Kanban',
             'quick_plans' => 'Planos e limites',
@@ -46,7 +46,7 @@ class AdminMenuIconController extends Controller
             'admin_finance' => 'Finanças (admin)',
             'admin_courses' => 'Cursos (admin)',
             'admin_commissions' => 'Comissões (admin)',
-            'admin_personalities' => 'Personalidades do Tuquinha',
+            'admin_personalities' => 'Personalidades do ' . \App\Models\Branding::mascotName(),
             'admin_users' => 'Usuários',
             'admin_subscriptions' => 'Assinaturas',
             'admin_community_categories' => 'Categorias de comunidades',

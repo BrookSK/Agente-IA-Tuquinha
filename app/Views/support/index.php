@@ -8,9 +8,9 @@
     }
 ?>
 <div style="max-width: 600px; margin: 0 auto;">
-    <h1 style="font-size: 24px; margin-bottom: 8px; font-weight: 650;">Suporte Tuquinha</h1>
+    <h1 style="font-size: 24px; margin-bottom: 8px; font-weight: 650;">Suporte <?= htmlspecialchars(\App\Models\Branding::mascotName()) ?></h1>
     <p style="color:#b0b0b0; font-size: 14px; margin-bottom: 14px;">
-        Se algo travar na assinatura ou no uso do Tuquinha, fala com a gente por um destes canais:
+        Se algo travar na assinatura ou no uso do <?= htmlspecialchars(\App\Models\Branding::mascotName()) ?>, fala com a gente por um destes canais:
     </p>
 
     <div style="background:#111118; border-radius:14px; padding:14px; border:1px solid #272727; display:flex; flex-direction:column; gap:10px;">

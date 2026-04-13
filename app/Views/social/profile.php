@@ -156,7 +156,7 @@ $profileId = (int)($profileUser['id'] ?? 0);
             <div style="display:flex; flex-direction:column; gap:6px; margin-bottom:8px;">
                 <?php if ($friendStatus === 'accepted'): ?>
                     <div style="font-size:12px; color:#8bc34a; background:var(--surface-subtle); border-radius:10px; border:1px solid var(--border-subtle); padding:6px 8px; text-align:center;">
-                        Vocês são amigos na rede social do Tuquinha.
+                        Vocês são amigos na rede social do <?= htmlspecialchars(\App\Models\Branding::mascotName()) ?>.
                     </div>
                     <form action="/amigos/favorito" method="post" style="margin:0;">
                         <input type="hidden" name="user_id" value="<?= (int)$profileId ?>">
@@ -200,7 +200,7 @@ $profileId = (int)($profileUser['id'] ?? 0);
             </div>
         <?php else: ?>
             <div style="font-size:12px; color:var(--text-secondary); margin-bottom:8px; text-align:center;">
-                Este é o seu perfil social dentro da comunidade do Tuquinha.
+                Este é o seu perfil social dentro da <?= htmlspecialchars(\App\Models\Branding::communityName()) ?>.
             </div>
 
             <div style="display:flex; flex-direction:column; gap:8px; margin-bottom:8px;">
@@ -330,7 +330,7 @@ $profileId = (int)($profileUser['id'] ?? 0);
                     <p style="margin-bottom:6px;">Nenhuma descrição adicionada ainda.</p>
                 <?php endif; ?>
                 <?php if (!empty($profileUser['global_memory'])): ?>
-                    <p style="margin-bottom:4px; font-size:12px; color:var(--text-secondary);">Memórias globais que o Tuquinha usa sobre esta pessoa:</p>
+                    <p style="margin-bottom:4px; font-size:12px; color:var(--text-secondary);">Memórias globais que o <?= htmlspecialchars(\App\Models\Branding::mascotName()) ?> usa sobre esta pessoa:</p>
                     <p style="font-size:12px;"><?= nl2br(htmlspecialchars((string)$profileUser['global_memory'], ENT_QUOTES, 'UTF-8')) ?></p>
                 <?php endif; ?>
             </div>
