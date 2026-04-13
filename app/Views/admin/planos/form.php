@@ -328,6 +328,14 @@ if ($slugForCycle !== '') {
                 <span>Permitir compartilhar quadros do Kanban</span>
             </label>
             <label style="display:flex; align-items:center; gap:5px;">
+                <input type="checkbox" name="allow_marketing_calendar" value="1" <?= !empty($plan['allow_marketing_calendar']) ? 'checked' : '' ?>>
+                <span>Permitir acesso à Agenda de Marketing</span>
+            </label>
+            <label style="display:flex; align-items:center; gap:5px;">
+                <input type="checkbox" name="allow_marketing_calendar_sharing" value="1" <?= !empty($plan['allow_marketing_calendar_sharing']) ? 'checked' : '' ?>>
+                <span>Permitir compartilhar a Agenda de Marketing</span>
+            </label>
+            <label style="display:flex; align-items:center; gap:5px;">
                 <input type="checkbox" name="allow_projects_access" value="1" <?= !empty($plan['allow_projects_access']) ? 'checked' : '' ?>>
                 <span>Permitir acesso a projetos</span>
             </label>

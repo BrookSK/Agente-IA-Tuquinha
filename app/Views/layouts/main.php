@@ -800,11 +800,13 @@ if (!empty($_SESSION['user_id'])) {
                 $canUseCaderno = false;
                 $canUseKanban = false;
                 $canUseNews = false;
+                $canUseMarketingCalendar = false;
                 if ($hasUser && $isAdmin) {
                     $canUseProjects = true;
                     $canUseCaderno = true;
                     $canUseKanban = true;
                     $canUseNews = true;
+                    $canUseMarketingCalendar = true;
 
                     try {
                         if (class_exists('App\\Models\\Personality') && \App\Models\Personality::hasAnyUsableForUsers()) {
@@ -826,6 +828,7 @@ if (!empty($_SESSION['user_id'])) {
                                 $canUseProjects = !empty($plan['allow_projects_access']);
                                 $canUseCaderno = !empty($plan['allow_pages']);
                                 $canUseKanban = !empty($plan['allow_kanban']);
+                                $canUseMarketingCalendar = !empty($plan['allow_marketing_calendar']);
 
                                 if (!empty($plan['allow_personalities'])) {
                                     try {
@@ -868,6 +871,13 @@ if (!empty($_SESSION['user_id'])) {
                     'primary' => false,
                     'show' => $canUseKanban,
                     'active' => $isActiveNav('/kanban'),
+                ];
+                $mobileQuickLinks[] = [
+                    'label' => 'Agenda MKT',
+                    'href' => '/agenda-marketing',
+                    'primary' => false,
+                    'show' => $canUseMarketingCalendar,
+                    'active' => $isActiveNav('/agenda-marketing'),
                 ];
                 $mobileQuickLinks[] = [
                     'label' => 'Histórico',
@@ -963,6 +973,13 @@ if (!empty($_SESSION['user_id'])) {
                     <a href="/kanban" class="sidebar-button<?= $isActiveNav('/kanban') ? ' sidebar-button--active' : '' ?>">
                         <span class="icon" aria-hidden="true"><?php echo $renderMenuIcon('quick_kanban', '🗂'); ?></span>
                         <span>Kanban</span>
+                    </a>
+                <?php endif; ?>
+
+                <?php if ($canUseMarketingCalendar): ?>
+                    <a href="/agenda-marketing" class="sidebar-button<?= $isActiveNav('/agenda-marketing') ? ' sidebar-button--active' : '' ?>">
+                        <span class="icon" aria-hidden="true"><?php echo $renderMenuIcon('quick_marketing_calendar', '📅'); ?></span>
+                        <span>Agenda de Marketing</span>
                     </a>
                 <?php endif; ?>
                 <a href="/planos" class="sidebar-button<?= $isActiveNav('/planos') ? ' sidebar-button--active' : '' ?>" data-tour="nav-plans">

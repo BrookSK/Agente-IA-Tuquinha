@@ -404,6 +404,18 @@ $router->get('/caderno/midia/download', 'CadernoController@downloadMedia');
 $router->post('/caderno/compartilhar/adicionar', 'CadernoController@shareAdd');
 $router->post('/caderno/compartilhar/remover', 'CadernoController@shareRemove');
 $router->get('/caderno/publico', 'CadernoController@publico');
+
+// Agenda de Marketing
+$router->get('/agenda-marketing', 'MarketingCalendarController@index');
+$router->post('/agenda-marketing/criar', 'MarketingCalendarController@create');
+$router->post('/agenda-marketing/atualizar', 'MarketingCalendarController@update');
+$router->post('/agenda-marketing/excluir', 'MarketingCalendarController@delete');
+$router->get('/agenda-marketing/evento', 'MarketingCalendarController@getEvent');
+$router->get('/agenda-marketing/eventos', 'MarketingCalendarController@eventsJson');
+$router->post('/agenda-marketing/publicar', 'MarketingCalendarController@publish');
+$router->post('/agenda-marketing/compartilhar/adicionar', 'MarketingCalendarController@shareAdd');
+$router->post('/agenda-marketing/compartilhar/remover', 'MarketingCalendarController@shareRemove');
+$router->get('/agenda-marketing/publico', 'MarketingCalendarController@publico');
 $router->get('/cron/noticias/enviar', 'CronNewsController@send');
 $router->get('/certificados', 'CertificateController@myCompletedCourses');
 $router->get('/certificados/ver', 'CertificateController@show');
