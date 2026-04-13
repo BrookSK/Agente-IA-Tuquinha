@@ -275,7 +275,9 @@ class MarketingCalendarController extends Controller
 
         $publicUrl = null;
         if ($publish && $token) {
-            $publicUrl = '/agenda-marketing/publico?token=' . urlencode($token);
+            $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+            $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+            $publicUrl = $scheme . '://' . $host . '/agenda-marketing/publico?token=' . urlencode($token);
         }
         $this->json(['ok' => true, 'public_url' => $publicUrl]);
     }

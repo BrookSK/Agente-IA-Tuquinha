@@ -31,7 +31,7 @@ foreach ($events as $ev) {
     $eventsByDay[$d][] = $ev;
 }
 
-$publicUrl = $publicToken ? ('/agenda-marketing/publico?token=' . urlencode($publicToken)) : null;
+$publicUrl = $publicToken ? (((!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http') . '://' . ($_SERVER['HTTP_HOST'] ?? 'localhost') . '/agenda-marketing/publico?token=' . urlencode($publicToken)) : null;
 ?>
 
 <style>
