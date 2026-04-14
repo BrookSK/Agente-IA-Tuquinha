@@ -5,7 +5,7 @@ const APP_ENV = 'dev';
 
 $dbConfigs = [
     'dev' => [
-        'host' => 'localhost',
+        'host' => '127.0.0.1',
         'port' => 3311,
         'database' => 'db_7_agente_ia_tuquinha', // altere aqui
         'username' => 'Agente-IA-Tuquinha',         // altere aqui
