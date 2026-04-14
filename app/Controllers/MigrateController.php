@@ -2,7 +2,6 @@
 
 namespace App\Controllers;
 
-use App\Core\Database;
 use PDO;
 
 /**
@@ -42,6 +41,7 @@ class MigrateController
             $executed[$row['filename']] = true;
         }
         $stmt->closeCursor();
+        $pdo = null;
 
         $migrationsDir = __DIR__ . '/../../database/migrations';
         if (!is_dir($migrationsDir)) {
@@ -62,7 +62,6 @@ class MigrateController
             return;
         }
 
-        // Schema base
         $schemaFile = __DIR__ . '/../../database/schema.sql';
         if (is_file($schemaFile) && empty($executed['schema.sql'])) {
             echo "=== schema.sql ===\n";
@@ -89,8 +88,7 @@ class MigrateController
             }
 
             echo "=== $filename ===\n";
-            $result = $this->runSingleMigration($filename, $sql);
-            if ($result) {
+            if ($this->runSingleMigration($filename, $sql)) {
                 $ran++;
             } else {
                 $errors++;
@@ -114,14 +112,14 @@ class MigrateController
         $statements = $this->splitStatements($sql);
         $hadError = false;
 
-        foreach ($statements as $stmt_sql) {
-            $stmt_sql = trim($stmt_sql);
-            if ($stmt_sql === '') {
+        foreach ($statements as $stmtSql) {
+            $stmtSql = trim($stmtSql);
+            if ($stmtSql === '') {
                 continue;
             }
 
             try {
-                $pdo->exec($stmt_sql);
+                $pdo->exec($stmtSql);
             } catch (\Throwable $e) {
                 $msg = $e->getMessage();
 
@@ -131,47 +129,49 @@ class MigrateController
                     stripos($msg, 'already exists') !== false ||
                     stripos($msg, "Can't DROP") !== false ||
                     stripos($msg, 'check that column/key exists') !== false ||
-                    stripos($msg, 'check that it exists') !== false;
+                    stripos($msg, 'check that it exists') !== false ||
+                    stripos($msg, 'Referencing column') !== false ||
+                    stripos($msg, 'incompatible') !== false ||
+                    stripos($msg, 'Failed to open the referenced table') !== false ||
+                    stripos($msg, 'errno: 150') !== false ||
+                    stripos($msg, 'errno 150') !== false;
 
                 if ($isIgnorable) {
                     $short = strlen($msg) > 120 ? substr($msg, 0, 120) . '...' : $msg;
-                    echo "AVISO $filename: (ignorável) $short\n";
+                    echo "AVISO (ignorável): $short\n";
                 } else {
-                    echo "ERRO $filename: $msg\n\n";
+                    echo "ERRO: $msg\n";
                     $hadError = true;
-                    // Continua tentando os outros statements do mesmo arquivo
+                }
+
+                // Reconecta pra evitar unbuffered queries cascateando
+                try {
+                    $pdo = $this->freshPdo();
+                } catch (\Throwable $re) {
+                    echo "ERRO: Falha ao reconectar\n\n";
+                    return false;
                 }
             }
         }
 
         // Marca como executada
         try {
-            $pdo2 = $this->freshPdo();
-            $ins = $pdo2->prepare('INSERT IGNORE INTO _migrations (filename) VALUES (:f)');
+            $mark = $this->freshPdo();
+            $ins = $mark->prepare('INSERT IGNORE INTO _migrations (filename) VALUES (:f)');
             $ins->execute(['f' => $filename]);
         } catch (\Throwable $e) {
-            // Não fatal
         }
 
-        if (!$hadError) {
-            echo "OK: $filename\n\n";
-        }
-
+        echo($hadError ? "" : "OK: $filename") . "\n\n";
         return !$hadError;
     }
 
     private function freshPdo(): PDO
     {
         global $currentDbConfig;
-
-        $dsn = sprintf(
-            'mysql:host=%s;port=%d;dbname=%s;charset=%s',
-            $currentDbConfig['host'],
-            $currentDbConfig['port'],
-            $currentDbConfig['database'],
-            $currentDbConfig['charset']
-        );
-
+        $dsn = sprintf('mysql:host=%s;port=%d;dbname=%s;charset=%s',
+            $currentDbConfig['host'], $currentDbConfig['port'],
+            $currentDbConfig['database'], $currentDbConfig['charset']);
         return new PDO($dsn, $currentDbConfig['username'], $currentDbConfig['password'], [
             PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
             PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
@@ -189,14 +189,12 @@ class MigrateController
 
         for ($i = 0; $i < $len; $i++) {
             $char = $sql[$i];
-
             if (!$inString && ($char === "'" || $char === '"')) {
                 $inString = true;
                 $stringChar = $char;
                 $current .= $char;
                 continue;
             }
-
             if ($inString) {
                 $current .= $char;
                 if ($char === $stringChar) {
@@ -209,7 +207,6 @@ class MigrateController
                 }
                 continue;
             }
-
             if ($char === '-' && $i + 1 < $len && $sql[$i + 1] === '-') {
                 $end = strpos($sql, "\n", $i);
                 if ($end === false) { break; }
@@ -217,24 +214,16 @@ class MigrateController
                 $current .= "\n";
                 continue;
             }
-
             if ($char === ';') {
                 $trimmed = trim($current);
-                if ($trimmed !== '') {
-                    $statements[] = $trimmed;
-                }
+                if ($trimmed !== '') { $statements[] = $trimmed; }
                 $current = '';
                 continue;
             }
-
             $current .= $char;
         }
-
         $trimmed = trim($current);
-        if ($trimmed !== '') {
-            $statements[] = $trimmed;
-        }
-
+        if ($trimmed !== '') { $statements[] = $trimmed; }
         return $statements;
     }
 }

@@ -388,6 +388,7 @@ class SetupController
 
         $statements = $this->splitStatements($sql);
         $hadWarnings = false;
+        $hadFatalError = false;
 
         foreach ($statements as $stmt_sql) {
             $stmt_sql = trim($stmt_sql);
@@ -400,15 +401,19 @@ class SetupController
             } catch (\Throwable $e) {
                 $msg = $e->getMessage();
 
-                // Erros toleráveis: coluna/tabela/index já existe, ou já foi removida
+                // Erros toleráveis
                 $isIgnorable =
                     stripos($msg, 'Duplicate column') !== false ||
                     stripos($msg, 'Duplicate key name') !== false ||
                     stripos($msg, 'already exists') !== false ||
-                    stripos($msg, 'Table') !== false && stripos($msg, 'already exists') !== false ||
                     stripos($msg, "Can't DROP") !== false ||
                     stripos($msg, 'check that column/key exists') !== false ||
-                    stripos($msg, 'check that it exists') !== false;
+                    stripos($msg, 'check that it exists') !== false ||
+                    stripos($msg, 'Referencing column') !== false ||
+                    stripos($msg, 'incompatible') !== false ||
+                    stripos($msg, 'Failed to open the referenced table') !== false ||
+                    stripos($msg, 'errno: 150') !== false ||
+                    stripos($msg, 'errno 150') !== false;
 
                 if ($isIgnorable) {
                     $shortMsg = strlen($msg) > 120 ? substr($msg, 0, 120) . '...' : $msg;
@@ -416,20 +421,31 @@ class SetupController
                     $hadWarnings = true;
                 } else {
                     $this->fail("$filename: $msg");
+                    $hadFatalError = true;
+                }
+
+                // Reconecta pra evitar unbuffered queries cascateando
+                try {
+                    $pdo = $this->freshPdo();
+                } catch (\Throwable $reconnectErr) {
+                    $this->fail("$filename: Falha ao reconectar — " . $reconnectErr->getMessage());
                     return false;
                 }
             }
         }
 
-        // Marca como executada
+        // Marca como executada (mesmo com warnings)
         try {
             $pdo2 = $this->freshPdo();
             $ins = $pdo2->prepare('INSERT IGNORE INTO _migrations (filename) VALUES (:f)');
             $ins->execute(['f' => $filename]);
         } catch (\Throwable $e) {
-            // Se não conseguiu marcar, não é fatal
+            // Não fatal
         }
 
+        if ($hadFatalError) {
+            return false;
+        }
         return $hadWarnings ? 'warn' : true;
     }
 
