@@ -627,6 +627,12 @@ $router->post('/chat/settings', 'ChatController@saveSettings');
 // Webhook de eventos do Asaas (renovações, pagamentos etc.)
 $router->post('/webhooks/asaas', 'AsaasWebhookController@handle');
 
+// Rota para rodar migrations pendentes (protegida por chave secreta)
+$router->get('/migrate/run', 'MigrateController@run');
+
+// Rota de setup/inicialização completa do servidor
+$router->get('/setup', 'SetupController@run');
+
 // Relato de erros de análise pelos usuários
 $router->post('/erro/reportar', 'ErrorReportController@store');
 

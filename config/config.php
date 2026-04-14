@@ -42,6 +42,9 @@ const SOCKET_IO_SECRET = 'change-me';
 const ADMIN_USERNAME = 'admin';
 const ADMIN_PASSWORD = 'admin123'; // troque em produção
 
+// Chave secreta para rodar migrations via /migrate/run?key=CHAVE
+const MIGRATE_SECRET_KEY = 'tuq-migrate-2026'; // troque em produção
+
 // Credenciais do Google para criação de lives no Google Meet via API
 // O admin da plataforma deve preencher estes campos com os dados do projeto no Google Cloud.
 // GOOGLE_CALENDAR_CLIENT_ID e GOOGLE_CALENDAR_CLIENT_SECRET vêm da tela de "Credenciais" do Google Cloud (OAuth 2.0 Client ID).
