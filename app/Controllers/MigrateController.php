@@ -4,11 +4,6 @@ namespace App\Controllers;
 
 use PDO;
 
-/**
- * Rota pública para rodar todas as migrations pendentes.
- *
- * Acesse: GET /migrate/run?key=SUA_CHAVE_SECRETA
- */
 class MigrateController
 {
     public function run(): void
@@ -27,7 +22,6 @@ class MigrateController
         header('Content-Type: text/plain; charset=utf-8');
 
         $pdo = $this->freshPdo();
-
         $pdo->exec('CREATE TABLE IF NOT EXISTS _migrations (
             id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
             filename VARCHAR(255) NOT NULL,
@@ -51,119 +45,100 @@ class MigrateController
 
         $files = [];
         foreach (scandir($migrationsDir) as $f) {
-            if (substr($f, -4) === '.sql') {
-                $files[] = $f;
-            }
+            if (substr($f, -4) === '.sql') { $files[] = $f; }
         }
         sort($files, SORT_NATURAL);
-
-        if (empty($files)) {
-            echo "Nenhum arquivo de migration encontrado.\n";
-            return;
-        }
 
         $schemaFile = __DIR__ . '/../../database/schema.sql';
         if (is_file($schemaFile) && empty($executed['schema.sql'])) {
             echo "=== schema.sql ===\n";
-            $sql = file_get_contents($schemaFile);
-            if ($sql !== false && trim($sql) !== '') {
-                $this->runSingleMigration('schema.sql', $sql);
-            }
+            $this->runSingle('schema.sql', file_get_contents($schemaFile));
         }
 
-        $ran = 0;
-        $errors = 0;
-        $skipped = 0;
-
-        foreach ($files as $filename) {
-            if (!empty($executed[$filename])) {
-                $skipped++;
-                continue;
-            }
-
-            $sql = file_get_contents($migrationsDir . '/' . $filename);
-            if ($sql === false || trim($sql) === '') {
-                $skipped++;
-                continue;
-            }
-
-            echo "=== $filename ===\n";
-            if ($this->runSingleMigration($filename, $sql)) {
-                $ran++;
-            } else {
-                $errors++;
-            }
+        $ran = 0; $errors = 0; $skipped = 0;
+        foreach ($files as $f) {
+            if (!empty($executed[$f])) { $skipped++; continue; }
+            $sql = file_get_contents($migrationsDir . '/' . $f);
+            if (!$sql || !trim($sql)) { $skipped++; continue; }
+            echo "=== $f ===\n";
+            $this->runSingle($f, $sql) ? $ran++ : $errors++;
         }
 
-        echo "---\n";
-        echo "Concluído. Executadas: $ran | Erros: $errors | Já aplicadas: $skipped\n";
-        echo "Total de arquivos: " . count($files) . "\n";
+        echo "---\nConcluído. Executadas: $ran | Erros: $errors | Já aplicadas: $skipped\n";
     }
 
-    private function runSingleMigration(string $filename, string $sql): bool
+    private function runSingle(string $filename, string $sql): bool
     {
+        // Tenta executar tudo de uma vez (necessário para PREPARE/EXECUTE)
         try {
             $pdo = $this->freshPdo();
+            $pdo->exec($sql);
+            $this->mark($filename);
+            echo "OK: $filename\n\n";
+            return true;
         } catch (\Throwable $e) {
-            echo "ERRO $filename: Sem conexão — " . $e->getMessage() . "\n\n";
+            if ($this->isIgnorable($e->getMessage())) {
+                $short = strlen($e->getMessage()) > 120 ? substr($e->getMessage(), 0, 120) . '...' : $e->getMessage();
+                echo "AVISO (ignorável): $short\n";
+                $this->mark($filename);
+                echo "OK: $filename\n\n";
+                return true;
+            }
+        }
+
+        // Fallback: statement por statement
+        try { $pdo = $this->freshPdo(); } catch (\Throwable $e) {
+            echo "ERRO: Sem conexão\n\n";
             return false;
         }
 
-        $statements = $this->splitStatements($sql);
-        $hadError = false;
-
-        foreach ($statements as $stmtSql) {
-            $stmtSql = trim($stmtSql);
-            if ($stmtSql === '') {
-                continue;
-            }
-
+        $hadFatal = false;
+        foreach ($this->splitStatements($sql) as $s) {
+            $s = trim($s);
+            if ($s === '') continue;
             try {
-                $pdo->exec($stmtSql);
+                $pdo->exec($s);
             } catch (\Throwable $e) {
                 $msg = $e->getMessage();
-
-                $isIgnorable =
-                    stripos($msg, 'Duplicate column') !== false ||
-                    stripos($msg, 'Duplicate key name') !== false ||
-                    stripos($msg, 'already exists') !== false ||
-                    stripos($msg, "Can't DROP") !== false ||
-                    stripos($msg, 'check that column/key exists') !== false ||
-                    stripos($msg, 'check that it exists') !== false ||
-                    stripos($msg, 'Referencing column') !== false ||
-                    stripos($msg, 'incompatible') !== false ||
-                    stripos($msg, 'Failed to open the referenced table') !== false ||
-                    stripos($msg, 'errno: 150') !== false ||
-                    stripos($msg, 'errno 150') !== false;
-
-                if ($isIgnorable) {
+                if ($this->isIgnorable($msg)) {
                     $short = strlen($msg) > 120 ? substr($msg, 0, 120) . '...' : $msg;
                     echo "AVISO (ignorável): $short\n";
                 } else {
                     echo "ERRO: $msg\n";
-                    $hadError = true;
+                    $hadFatal = true;
                 }
-
-                // Reconecta pra evitar unbuffered queries cascateando
-                try {
-                    $pdo = $this->freshPdo();
-                } catch (\Throwable $re) {
+                try { $pdo = $this->freshPdo(); } catch (\Throwable $re) {
                     echo "ERRO: Falha ao reconectar\n\n";
                     return false;
                 }
             }
         }
 
-        // Marca como executada
-        try {
-            $mark = $this->freshPdo();
-            $ins = $mark->prepare('INSERT IGNORE INTO _migrations (filename) VALUES (:f)');
-            $ins->execute(['f' => $filename]);
-        } catch (\Throwable $e) {
-        }
+        $this->mark($filename);
+        echo($hadFatal ? "\n" : "OK: $filename\n\n");
+        return !$hadFatal;
+    }
 
-        echo($hadError ? "" : "OK: $filename") . "\n\n";
-        return !$hadError;
+    private function mark(string $filename): void
+    {
+        try {
+            $p = $this->freshPdo();
+            $p->prepare('INSERT IGNORE INTO _migrations (filename) VALUES (:f)')->execute(['f' => $filename]);
+        } catch (\Throwable $e) {}
+    }
+
+    private function isIgnorable(string $msg): bool
+    {
+        return stripos($msg, 'Duplicate column') !== false ||
+            stripos($msg, 'Duplicate key name') !== false ||
+            stripos($msg, 'already exists') !== false ||
+            stripos($msg, "Can't DROP") !== false ||
+            stripos($msg, 'check that column/key exists') !== false ||
+            stripos($msg, 'Referencing column') !== false ||
+            stripos($msg, 'incompatible') !== false ||
+            stripos($msg, 'Failed to open the referenced table') !== false ||
+            stripos($msg, 'errno: 150') !== false ||
+            stripos($msg, 'errno 150') !== false;
     }
 
     private function freshPdo(): PDO
@@ -181,49 +156,16 @@ class MigrateController
 
     private function splitStatements(string $sql): array
     {
-        $statements = [];
-        $current = '';
-        $inString = false;
-        $stringChar = '';
-        $len = strlen($sql);
-
+        $stmts = []; $cur = ''; $inStr = false; $sc = ''; $len = strlen($sql);
         for ($i = 0; $i < $len; $i++) {
-            $char = $sql[$i];
-            if (!$inString && ($char === "'" || $char === '"')) {
-                $inString = true;
-                $stringChar = $char;
-                $current .= $char;
-                continue;
-            }
-            if ($inString) {
-                $current .= $char;
-                if ($char === $stringChar) {
-                    if ($i + 1 < $len && $sql[$i + 1] === $stringChar) {
-                        $current .= $sql[$i + 1];
-                        $i++;
-                    } else {
-                        $inString = false;
-                    }
-                }
-                continue;
-            }
-            if ($char === '-' && $i + 1 < $len && $sql[$i + 1] === '-') {
-                $end = strpos($sql, "\n", $i);
-                if ($end === false) { break; }
-                $i = $end;
-                $current .= "\n";
-                continue;
-            }
-            if ($char === ';') {
-                $trimmed = trim($current);
-                if ($trimmed !== '') { $statements[] = $trimmed; }
-                $current = '';
-                continue;
-            }
-            $current .= $char;
+            $c = $sql[$i];
+            if (!$inStr && ($c === "'" || $c === '"')) { $inStr = true; $sc = $c; $cur .= $c; continue; }
+            if ($inStr) { $cur .= $c; if ($c === $sc) { if ($i+1 < $len && $sql[$i+1] === $sc) { $cur .= $sql[++$i]; } else { $inStr = false; } } continue; }
+            if ($c === '-' && $i+1 < $len && $sql[$i+1] === '-') { $end = strpos($sql, "\n", $i); if ($end === false) break; $i = $end; $cur .= "\n"; continue; }
+            if ($c === ';') { $t = trim($cur); if ($t !== '') $stmts[] = $t; $cur = ''; continue; }
+            $cur .= $c;
         }
-        $trimmed = trim($current);
-        if ($trimmed !== '') { $statements[] = $trimmed; }
-        return $statements;
+        $t = trim($cur); if ($t !== '') $stmts[] = $t;
+        return $stmts;
     }
 }

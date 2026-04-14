@@ -379,6 +379,39 @@ class SetupController
      */
     private function runSingleMigration(string $filename, string $sql)
     {
+        // Estratégia 1: tenta executar o arquivo inteiro de uma vez (necessário para PREPARE/EXECUTE)
+        try {
+            $pdo = $this->freshPdo();
+            $pdo->exec($sql);
+
+            // Marca como executada
+            try {
+                $mark = $this->freshPdo();
+                $ins = $mark->prepare('INSERT IGNORE INTO _migrations (filename) VALUES (:f)');
+                $ins->execute(['f' => $filename]);
+            } catch (\Throwable $e) {}
+
+            $this->pass("$filename executado");
+            return true;
+        } catch (\Throwable $e) {
+            $fullMsg = $e->getMessage();
+
+            // Se o erro é ignorável e não tem múltiplos statements, trata direto
+            if ($this->isIgnorableError($fullMsg)) {
+                $shortMsg = strlen($fullMsg) > 120 ? substr($fullMsg, 0, 120) . '...' : $fullMsg;
+                $this->warn("$filename: (ignorável) $shortMsg");
+
+                try {
+                    $mark = $this->freshPdo();
+                    $ins = $mark->prepare('INSERT IGNORE INTO _migrations (filename) VALUES (:f)');
+                    $ins->execute(['f' => $filename]);
+                } catch (\Throwable $e2) {}
+
+                return 'warn';
+            }
+        }
+
+        // Estratégia 2: divide por statements e executa um a um
         try {
             $pdo = $this->freshPdo();
         } catch (\Throwable $e) {
@@ -390,32 +423,18 @@ class SetupController
         $hadWarnings = false;
         $hadFatalError = false;
 
-        foreach ($statements as $stmt_sql) {
-            $stmt_sql = trim($stmt_sql);
-            if ($stmt_sql === '') {
+        foreach ($statements as $stmtSql) {
+            $stmtSql = trim($stmtSql);
+            if ($stmtSql === '') {
                 continue;
             }
 
             try {
-                $pdo->exec($stmt_sql);
+                $pdo->exec($stmtSql);
             } catch (\Throwable $e) {
                 $msg = $e->getMessage();
 
-                // Erros toleráveis
-                $isIgnorable =
-                    stripos($msg, 'Duplicate column') !== false ||
-                    stripos($msg, 'Duplicate key name') !== false ||
-                    stripos($msg, 'already exists') !== false ||
-                    stripos($msg, "Can't DROP") !== false ||
-                    stripos($msg, 'check that column/key exists') !== false ||
-                    stripos($msg, 'check that it exists') !== false ||
-                    stripos($msg, 'Referencing column') !== false ||
-                    stripos($msg, 'incompatible') !== false ||
-                    stripos($msg, 'Failed to open the referenced table') !== false ||
-                    stripos($msg, 'errno: 150') !== false ||
-                    stripos($msg, 'errno 150') !== false;
-
-                if ($isIgnorable) {
+                if ($this->isIgnorableError($msg)) {
                     $shortMsg = strlen($msg) > 120 ? substr($msg, 0, 120) . '...' : $msg;
                     $this->warn("$filename: (ignorável) $shortMsg");
                     $hadWarnings = true;
@@ -427,8 +446,8 @@ class SetupController
                 // Reconecta pra evitar unbuffered queries cascateando
                 try {
                     $pdo = $this->freshPdo();
-                } catch (\Throwable $reconnectErr) {
-                    $this->fail("$filename: Falha ao reconectar — " . $reconnectErr->getMessage());
+                } catch (\Throwable $re) {
+                    $this->fail("$filename: Falha ao reconectar — " . $re->getMessage());
                     return false;
                 }
             }
@@ -436,17 +455,31 @@ class SetupController
 
         // Marca como executada (mesmo com warnings)
         try {
-            $pdo2 = $this->freshPdo();
-            $ins = $pdo2->prepare('INSERT IGNORE INTO _migrations (filename) VALUES (:f)');
+            $mark = $this->freshPdo();
+            $ins = $mark->prepare('INSERT IGNORE INTO _migrations (filename) VALUES (:f)');
             $ins->execute(['f' => $filename]);
-        } catch (\Throwable $e) {
-            // Não fatal
-        }
+        } catch (\Throwable $e) {}
 
         if ($hadFatalError) {
             return false;
         }
         return $hadWarnings ? 'warn' : true;
+    }
+
+    private function isIgnorableError(string $msg): bool
+    {
+        return
+            stripos($msg, 'Duplicate column') !== false ||
+            stripos($msg, 'Duplicate key name') !== false ||
+            stripos($msg, 'already exists') !== false ||
+            stripos($msg, "Can't DROP") !== false ||
+            stripos($msg, 'check that column/key exists') !== false ||
+            stripos($msg, 'check that it exists') !== false ||
+            stripos($msg, 'Referencing column') !== false ||
+            stripos($msg, 'incompatible') !== false ||
+            stripos($msg, 'Failed to open the referenced table') !== false ||
+            stripos($msg, 'errno: 150') !== false ||
+            stripos($msg, 'errno 150') !== false;
     }
 
     /**
