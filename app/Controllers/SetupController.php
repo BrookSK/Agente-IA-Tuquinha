@@ -285,7 +285,7 @@ class SetupController
         $this->line("\n[6/9] MIGRATIONS");
 
         try {
-            $pdo = Database::getConnection();
+            $pdo = $this->freshPdo();
         } catch (\Throwable $e) {
             $this->fail("Sem conexão com o banco — migrations não executadas.");
             return;
@@ -304,19 +304,16 @@ class SetupController
         while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
             $executed[$row['filename']] = true;
         }
+        $stmt->closeCursor();
 
         // Schema base
         $schemaFile = __DIR__ . '/../../database/schema.sql';
         if (is_file($schemaFile) && empty($executed['schema.sql'])) {
             $sql = file_get_contents($schemaFile);
             if ($sql !== false && trim($sql) !== '') {
-                try {
-                    $this->executeSqlStatements($pdo, $sql);
-                    $ins = $pdo->prepare('INSERT IGNORE INTO _migrations (filename) VALUES (:f)');
-                    $ins->execute(['f' => 'schema.sql']);
+                $result = $this->runSingleMigration('schema.sql', $sql);
+                if ($result === true) {
                     $this->pass("schema.sql executado");
-                } catch (\Throwable $e) {
-                    $this->fail("schema.sql: " . $e->getMessage());
                 }
             }
         } elseif (!empty($executed['schema.sql'])) {
@@ -354,14 +351,13 @@ class SetupController
                 continue;
             }
 
-            try {
-                $this->executeSqlStatements($pdo, $sql);
-                $ins = $pdo->prepare('INSERT IGNORE INTO _migrations (filename) VALUES (:f)');
-                $ins->execute(['f' => $filename]);
+            $result = $this->runSingleMigration($filename, $sql);
+            if ($result === true) {
                 $this->pass("$filename executado");
                 $ran++;
-            } catch (\Throwable $e) {
-                $this->fail("$filename: " . $e->getMessage());
+            } elseif ($result === 'warn') {
+                $ran++;
+            } else {
                 $migrationErrors++;
             }
         }
@@ -375,6 +371,150 @@ class SetupController
         if ($ran === 0 && $migrationErrors === 0) {
             $this->pass("Banco de dados atualizado — nenhuma migration pendente");
         }
+    }
+
+    /**
+     * Executa uma migration individual usando uma conexão PDO fresca.
+     * Retorna true se OK, 'warn' se teve erros toleráveis, false se falhou.
+     */
+    private function runSingleMigration(string $filename, string $sql)
+    {
+        try {
+            $pdo = $this->freshPdo();
+        } catch (\Throwable $e) {
+            $this->fail("$filename: Sem conexão — " . $e->getMessage());
+            return false;
+        }
+
+        $statements = $this->splitStatements($sql);
+        $hadWarnings = false;
+
+        foreach ($statements as $stmt_sql) {
+            $stmt_sql = trim($stmt_sql);
+            if ($stmt_sql === '') {
+                continue;
+            }
+
+            try {
+                $pdo->exec($stmt_sql);
+            } catch (\Throwable $e) {
+                $msg = $e->getMessage();
+
+                // Erros toleráveis: coluna/tabela/index já existe, ou já foi removida
+                $isIgnorable =
+                    stripos($msg, 'Duplicate column') !== false ||
+                    stripos($msg, 'Duplicate key name') !== false ||
+                    stripos($msg, 'already exists') !== false ||
+                    stripos($msg, 'Table') !== false && stripos($msg, 'already exists') !== false ||
+                    stripos($msg, "Can't DROP") !== false ||
+                    stripos($msg, 'check that column/key exists') !== false ||
+                    stripos($msg, 'check that it exists') !== false;
+
+                if ($isIgnorable) {
+                    $shortMsg = strlen($msg) > 120 ? substr($msg, 0, 120) . '...' : $msg;
+                    $this->warn("$filename: (ignorável) $shortMsg");
+                    $hadWarnings = true;
+                } else {
+                    $this->fail("$filename: $msg");
+                    return false;
+                }
+            }
+        }
+
+        // Marca como executada
+        try {
+            $pdo2 = $this->freshPdo();
+            $ins = $pdo2->prepare('INSERT IGNORE INTO _migrations (filename) VALUES (:f)');
+            $ins->execute(['f' => $filename]);
+        } catch (\Throwable $e) {
+            // Se não conseguiu marcar, não é fatal
+        }
+
+        return $hadWarnings ? 'warn' : true;
+    }
+
+    /**
+     * Cria uma conexão PDO nova e independente (evita unbuffered queries).
+     */
+    private function freshPdo(): PDO
+    {
+        global $currentDbConfig;
+
+        $dsn = sprintf(
+            'mysql:host=%s;port=%d;dbname=%s;charset=%s',
+            $currentDbConfig['host'],
+            $currentDbConfig['port'],
+            $currentDbConfig['database'],
+            $currentDbConfig['charset']
+        );
+
+        return new PDO($dsn, $currentDbConfig['username'], $currentDbConfig['password'], [
+            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+            PDO::MYSQL_ATTR_USE_BUFFERED_QUERY => true,
+        ]);
+    }
+
+    /**
+     * Divide SQL em statements individuais, respeitando strings e comentários.
+     */
+    private function splitStatements(string $sql): array
+    {
+        $statements = [];
+        $current = '';
+        $inString = false;
+        $stringChar = '';
+        $len = strlen($sql);
+
+        for ($i = 0; $i < $len; $i++) {
+            $char = $sql[$i];
+
+            if (!$inString && ($char === "'" || $char === '"')) {
+                $inString = true;
+                $stringChar = $char;
+                $current .= $char;
+                continue;
+            }
+
+            if ($inString) {
+                $current .= $char;
+                if ($char === $stringChar) {
+                    if ($i + 1 < $len && $sql[$i + 1] === $stringChar) {
+                        $current .= $sql[$i + 1];
+                        $i++;
+                    } else {
+                        $inString = false;
+                    }
+                }
+                continue;
+            }
+
+            if ($char === '-' && $i + 1 < $len && $sql[$i + 1] === '-') {
+                $end = strpos($sql, "\n", $i);
+                if ($end === false) { break; }
+                $i = $end;
+                $current .= "\n";
+                continue;
+            }
+
+            if ($char === ';') {
+                $trimmed = trim($current);
+                if ($trimmed !== '') {
+                    $statements[] = $trimmed;
+                }
+                $current = '';
+                continue;
+            }
+
+            $current .= $char;
+        }
+
+        $trimmed = trim($current);
+        if ($trimmed !== '') {
+            $statements[] = $trimmed;
+        }
+
+        return $statements;
     }
 
     // ─── Node Dependencies ─────────────────────────────────
@@ -516,67 +656,6 @@ class SetupController
     }
 
     // ─── Helpers ───────────────────────────────────────────
-
-    private function executeSqlStatements(PDO $pdo, string $sql): void
-    {
-        $statements = [];
-        $current = '';
-        $inString = false;
-        $stringChar = '';
-        $len = strlen($sql);
-
-        for ($i = 0; $i < $len; $i++) {
-            $char = $sql[$i];
-
-            if (!$inString && ($char === "'" || $char === '"')) {
-                $inString = true;
-                $stringChar = $char;
-                $current .= $char;
-                continue;
-            }
-
-            if ($inString) {
-                $current .= $char;
-                if ($char === $stringChar) {
-                    if ($i + 1 < $len && $sql[$i + 1] === $stringChar) {
-                        $current .= $sql[$i + 1];
-                        $i++;
-                    } else {
-                        $inString = false;
-                    }
-                }
-                continue;
-            }
-
-            if ($char === '-' && $i + 1 < $len && $sql[$i + 1] === '-') {
-                $end = strpos($sql, "\n", $i);
-                if ($end === false) { break; }
-                $i = $end;
-                $current .= "\n";
-                continue;
-            }
-
-            if ($char === ';') {
-                $trimmed = trim($current);
-                if ($trimmed !== '') {
-                    $statements[] = $trimmed;
-                }
-                $current = '';
-                continue;
-            }
-
-            $current .= $char;
-        }
-
-        $trimmed = trim($current);
-        if ($trimmed !== '') {
-            $statements[] = $trimmed;
-        }
-
-        foreach ($statements as $stmt) {
-            $pdo->exec($stmt);
-        }
-    }
 
     private function parseSize(string $size): int
     {

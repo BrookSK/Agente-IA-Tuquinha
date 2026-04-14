@@ -9,15 +9,11 @@ use PDO;
  * Rota pública para rodar todas as migrations pendentes.
  *
  * Acesse: GET /migrate/run?key=SUA_CHAVE_SECRETA
- *
- * A chave é definida no config.php como MIGRATE_SECRET_KEY
- * ou, se não existir, usa uma chave padrão (troque em produção!).
  */
 class MigrateController
 {
     public function run(): void
     {
-        // Chave de segurança simples pra não deixar qualquer um rodar
         $secretKey = defined('MIGRATE_SECRET_KEY') ? MIGRATE_SECRET_KEY : 'tuq-migrate-2026';
         $providedKey = trim((string)($_GET['key'] ?? ''));
 
@@ -31,9 +27,8 @@ class MigrateController
         set_time_limit(300);
         header('Content-Type: text/plain; charset=utf-8');
 
-        $pdo = Database::getConnection();
+        $pdo = $this->freshPdo();
 
-        // 1. Garante que a tabela de controle existe
         $pdo->exec('CREATE TABLE IF NOT EXISTS _migrations (
             id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
             filename VARCHAR(255) NOT NULL,
@@ -41,17 +36,16 @@ class MigrateController
             UNIQUE KEY uq_filename (filename)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci');
 
-        // 2. Busca quais já foram executadas
         $stmt = $pdo->query('SELECT filename FROM _migrations');
         $executed = [];
         while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
             $executed[$row['filename']] = true;
         }
+        $stmt->closeCursor();
 
-        // 3. Lista todos os arquivos .sql na pasta de migrations
         $migrationsDir = __DIR__ . '/../../database/migrations';
         if (!is_dir($migrationsDir)) {
-            echo "Pasta de migrations não encontrada: $migrationsDir\n";
+            echo "Pasta de migrations não encontrada.\n";
             return;
         }
 
@@ -68,24 +62,16 @@ class MigrateController
             return;
         }
 
-        // 4. Roda o schema.sql primeiro se nunca foi executado
+        // Schema base
         $schemaFile = __DIR__ . '/../../database/schema.sql';
         if (is_file($schemaFile) && empty($executed['schema.sql'])) {
-            echo "=== Executando schema.sql ===\n";
+            echo "=== schema.sql ===\n";
             $sql = file_get_contents($schemaFile);
             if ($sql !== false && trim($sql) !== '') {
-                try {
-                    $pdo->exec($sql);
-                    $ins = $pdo->prepare('INSERT IGNORE INTO _migrations (filename) VALUES (:f)');
-                    $ins->execute(['f' => 'schema.sql']);
-                    echo "OK: schema.sql\n\n";
-                } catch (\Throwable $e) {
-                    echo "ERRO em schema.sql: " . $e->getMessage() . "\n\n";
-                }
+                $this->runSingleMigration('schema.sql', $sql);
             }
         }
 
-        // 5. Executa cada migration pendente em ordem
         $ran = 0;
         $errors = 0;
         $skipped = 0;
@@ -96,37 +82,18 @@ class MigrateController
                 continue;
             }
 
-            $filePath = $migrationsDir . '/' . $filename;
-            $sql = file_get_contents($filePath);
+            $sql = file_get_contents($migrationsDir . '/' . $filename);
             if ($sql === false || trim($sql) === '') {
-                echo "VAZIO: $filename (pulando)\n";
                 $skipped++;
                 continue;
             }
 
-            echo "=== Executando $filename ===\n";
-
-            try {
-                // Divide por statements pra lidar com múltiplos comandos
-                $statements = $this->splitStatements($sql);
-                foreach ($statements as $stmt_sql) {
-                    $stmt_sql = trim($stmt_sql);
-                    if ($stmt_sql === '') {
-                        continue;
-                    }
-                    $pdo->exec($stmt_sql);
-                }
-
-                // Marca como executada
-                $ins = $pdo->prepare('INSERT IGNORE INTO _migrations (filename) VALUES (:f)');
-                $ins->execute(['f' => $filename]);
-
-                echo "OK: $filename\n\n";
+            echo "=== $filename ===\n";
+            $result = $this->runSingleMigration($filename, $sql);
+            if ($result) {
                 $ran++;
-            } catch (\Throwable $e) {
-                echo "ERRO em $filename: " . $e->getMessage() . "\n\n";
+            } else {
                 $errors++;
-                // Continua com as próximas migrations
             }
         }
 
@@ -135,9 +102,83 @@ class MigrateController
         echo "Total de arquivos: " . count($files) . "\n";
     }
 
-    /**
-     * Divide o SQL em statements individuais, respeitando strings e delimiters.
-     */
+    private function runSingleMigration(string $filename, string $sql): bool
+    {
+        try {
+            $pdo = $this->freshPdo();
+        } catch (\Throwable $e) {
+            echo "ERRO $filename: Sem conexão — " . $e->getMessage() . "\n\n";
+            return false;
+        }
+
+        $statements = $this->splitStatements($sql);
+        $hadError = false;
+
+        foreach ($statements as $stmt_sql) {
+            $stmt_sql = trim($stmt_sql);
+            if ($stmt_sql === '') {
+                continue;
+            }
+
+            try {
+                $pdo->exec($stmt_sql);
+            } catch (\Throwable $e) {
+                $msg = $e->getMessage();
+
+                $isIgnorable =
+                    stripos($msg, 'Duplicate column') !== false ||
+                    stripos($msg, 'Duplicate key name') !== false ||
+                    stripos($msg, 'already exists') !== false ||
+                    stripos($msg, "Can't DROP") !== false ||
+                    stripos($msg, 'check that column/key exists') !== false ||
+                    stripos($msg, 'check that it exists') !== false;
+
+                if ($isIgnorable) {
+                    $short = strlen($msg) > 120 ? substr($msg, 0, 120) . '...' : $msg;
+                    echo "AVISO $filename: (ignorável) $short\n";
+                } else {
+                    echo "ERRO $filename: $msg\n\n";
+                    $hadError = true;
+                    // Continua tentando os outros statements do mesmo arquivo
+                }
+            }
+        }
+
+        // Marca como executada
+        try {
+            $pdo2 = $this->freshPdo();
+            $ins = $pdo2->prepare('INSERT IGNORE INTO _migrations (filename) VALUES (:f)');
+            $ins->execute(['f' => $filename]);
+        } catch (\Throwable $e) {
+            // Não fatal
+        }
+
+        if (!$hadError) {
+            echo "OK: $filename\n\n";
+        }
+
+        return !$hadError;
+    }
+
+    private function freshPdo(): PDO
+    {
+        global $currentDbConfig;
+
+        $dsn = sprintf(
+            'mysql:host=%s;port=%d;dbname=%s;charset=%s',
+            $currentDbConfig['host'],
+            $currentDbConfig['port'],
+            $currentDbConfig['database'],
+            $currentDbConfig['charset']
+        );
+
+        return new PDO($dsn, $currentDbConfig['username'], $currentDbConfig['password'], [
+            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+            PDO::MYSQL_ATTR_USE_BUFFERED_QUERY => true,
+        ]);
+    }
+
     private function splitStatements(string $sql): array
     {
         $statements = [];
@@ -149,7 +190,6 @@ class MigrateController
         for ($i = 0; $i < $len; $i++) {
             $char = $sql[$i];
 
-            // Detecta início/fim de string
             if (!$inString && ($char === "'" || $char === '"')) {
                 $inString = true;
                 $stringChar = $char;
@@ -160,7 +200,6 @@ class MigrateController
             if ($inString) {
                 $current .= $char;
                 if ($char === $stringChar) {
-                    // Verifica se é escape (\' ou '')
                     if ($i + 1 < $len && $sql[$i + 1] === $stringChar) {
                         $current .= $sql[$i + 1];
                         $i++;
@@ -171,18 +210,14 @@ class MigrateController
                 continue;
             }
 
-            // Detecta comentário de linha (-- )
             if ($char === '-' && $i + 1 < $len && $sql[$i + 1] === '-') {
                 $end = strpos($sql, "\n", $i);
-                if ($end === false) {
-                    break;
-                }
+                if ($end === false) { break; }
                 $i = $end;
                 $current .= "\n";
                 continue;
             }
 
-            // Semicolon fora de string = fim do statement
             if ($char === ';') {
                 $trimmed = trim($current);
                 if ($trimmed !== '') {
@@ -195,7 +230,6 @@ class MigrateController
             $current .= $char;
         }
 
-        // Último statement sem semicolon
         $trimmed = trim($current);
         if ($trimmed !== '') {
             $statements[] = $trimmed;
