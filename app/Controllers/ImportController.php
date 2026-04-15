@@ -179,11 +179,17 @@ class ImportController
 
                 if ($inString) {
                     $currentStmt .= $char;
+                    if ($char === '\\') {
+                        // Caractere de escape: pula o próximo caractere
+                        if ($i + 1 < $len) {
+                            $currentStmt .= $line[$i + 1];
+                            $i++;
+                        }
+                        continue;
+                    }
                     if ($char === $stringChar) {
-                        // Escape: '' ou \"
-                        if ($i > 0 && $line[$i - 1] === '\\') {
-                            // escaped quote, continua na string
-                        } elseif ($i + 1 < $len && $line[$i + 1] === $stringChar) {
+                        // Verifica se é escape por duplicação: '' ou ""
+                        if ($i + 1 < $len && $line[$i + 1] === $stringChar) {
                             $currentStmt .= $line[$i + 1];
                             $i++;
                         } else {
@@ -204,8 +210,14 @@ class ImportController
                     $stmtCount++;
 
                     // Pula statements que não são dados (SET, LOCK, UNLOCK, etc.)
+                    // ou statements órfãos (continuação de INSERT truncado)
                     $upper = strtoupper(substr($stmt, 0, 10));
                     if (str_starts_with($upper, 'LOCK TABLE') || str_starts_with($upper, 'UNLOCK TAB')) {
+                        $skipped++;
+                        continue;
+                    }
+                    // Statement que começa com vírgula = continuação órfã de INSERT partido
+                    if ($stmt[0] === ',') {
                         $skipped++;
                         continue;
                     }
