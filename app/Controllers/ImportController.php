@@ -125,8 +125,23 @@ class ImportController
         // Lê o arquivo linha por linha pra não estourar memória
         $handle = fopen($filePath, 'r');
         if (!$handle) {
+            $perms = is_file($filePath) ? substr(sprintf('%o', fileperms($filePath)), -4) : 'arquivo não existe';
+            $readable = is_readable($filePath) ? 'sim' : 'não';
             $this->out("  ❌ Não foi possível abrir o arquivo.");
-            return ['ok' => 0, 'errors' => 1, 'skipped' => 0];
+            $this->out("     Caminho: $filePath");
+            $this->out("     Permissões: $perms | Legível: $readable");
+            if (!is_readable($filePath)) {
+                @chmod($filePath, 0644);
+                $handle = fopen($filePath, 'r');
+                if ($handle) {
+                    $this->out("  ✅ Permissão corrigida automaticamente, continuando...");
+                } else {
+                    $this->out("     Execute: chmod 644 " . escapeshellarg($filePath));
+                    return ['ok' => 0, 'errors' => 1, 'skipped' => 0];
+                }
+            } else {
+                return ['ok' => 0, 'errors' => 1, 'skipped' => 0];
+            }
         }
 
         $pdo = $this->freshPdo();
