@@ -1674,8 +1674,10 @@ class ChatController extends Controller
                 // Carrega o texto extraído de TODOS os arquivos base do projeto
                 $projectFileTexts = [];
                 $modelForBudget = isset($_SESSION['chat_model']) ? (string)$_SESSION['chat_model'] : '';
-                $charBudget = str_starts_with($modelForBudget, 'claude-') ? 50000 : 30000;
+                $charBudget = str_starts_with($modelForBudget, 'claude-') ? 40000 : 25000;
                 $totalCharsUsed = 0;
+                $pdfExtractionAttempts = 0;
+                $maxPdfExtractions = 2; // Limita extrações on-the-fly pra não travar o chat
 
                 foreach ($baseFiles as $bf) {
                     $bfId = (int)($bf['id'] ?? 0);
@@ -1689,28 +1691,33 @@ class ChatController extends Controller
                     $bfExt = strtolower(pathinfo($bfName, PATHINFO_EXTENSION));
 
                     // Se não tem texto extraído e é PDF, tenta extrair via pdftotext
-                    if ($extractedText === '' && ($bfExt === 'pdf' || $bfMime === 'application/pdf')) {
+                    if ($extractedText === '' && ($bfExt === 'pdf' || $bfMime === 'application/pdf') && $pdfExtractionAttempts < $maxPdfExtractions) {
+                        $pdfExtractionAttempts++;
                         $storageUrl = trim((string)($ver['storage_url'] ?? ''));
                         if ($storageUrl !== '') {
-                            $tmpPdf = tempnam(sys_get_temp_dir(), 'pdf_');
-                            $downloaded = @file_get_contents($storageUrl);
-                            if (is_string($downloaded) && $downloaded !== '') {
-                                file_put_contents($tmpPdf, $downloaded);
-                                $outTxt = tempnam(sys_get_temp_dir(), 'pdf_txt_');
-                                @shell_exec('pdftotext -layout ' . escapeshellarg($tmpPdf) . ' ' . escapeshellarg($outTxt) . ' 2>&1');
-                                if (is_file($outTxt) && filesize($outTxt) > 0) {
-                                    $extractedText = trim((string)file_get_contents($outTxt));
-                                    // Salva no banco pra não precisar extrair de novo
-                                    if ($extractedText !== '') {
-                                        $verId = (int)($ver['id'] ?? 0);
-                                        if ($verId > 0) {
-                                            ProjectFileVersion::updateExtractedText($verId, $extractedText);
+                            try {
+                                $ctx = stream_context_create(['http' => ['timeout' => 10]]);
+                                $tmpPdf = tempnam(sys_get_temp_dir(), 'pdf_');
+                                $downloaded = @file_get_contents($storageUrl, false, $ctx);
+                                if (is_string($downloaded) && strlen($downloaded) > 100) {
+                                    @file_put_contents($tmpPdf, $downloaded);
+                                    $outTxt = tempnam(sys_get_temp_dir(), 'pdf_txt_');
+                                    @shell_exec('pdftotext -layout ' . escapeshellarg($tmpPdf) . ' ' . escapeshellarg($outTxt) . ' 2>/dev/null');
+                                    if (is_file($outTxt) && filesize($outTxt) > 0) {
+                                        $extractedText = trim((string)@file_get_contents($outTxt));
+                                        if ($extractedText !== '') {
+                                            $verId = (int)($ver['id'] ?? 0);
+                                            if ($verId > 0) {
+                                                ProjectFileVersion::updateExtractedText($verId, $extractedText);
+                                            }
                                         }
                                     }
+                                    @unlink($outTxt);
                                 }
-                                @unlink($outTxt);
+                                @unlink($tmpPdf);
+                            } catch (\Throwable $e) {
+                                // Não bloqueia o chat se a extração falhar
                             }
-                            @unlink($tmpPdf);
                         }
                     }
 
