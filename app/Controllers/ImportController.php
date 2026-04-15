@@ -211,6 +211,14 @@ class ImportController
                     }
 
                     try {
+                        // Troca INSERT por REPLACE pra sobrescrever dados existentes
+                        $upper = strtoupper(substr($stmt, 0, 12));
+                        if (str_starts_with($upper, 'INSERT INTO ')) {
+                            $stmt = 'REPLACE INTO ' . substr($stmt, 12);
+                        } elseif (str_starts_with($upper, 'INSERT INTO`')) {
+                            $stmt = 'REPLACE INTO`' . substr($stmt, 12);
+                        }
+
                         $pdo->exec($stmt);
                         $ok++;
                     } catch (\Throwable $e) {
