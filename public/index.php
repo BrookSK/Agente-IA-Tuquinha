@@ -427,6 +427,9 @@ $router->post('/agenda-marketing/api-key/gerar', 'MarketingCalendarController@ge
 $router->post('/agenda-marketing/api-key/revogar', 'MarketingCalendarController@revokeApiKey');
 $router->get('/agenda-marketing/api-keys', 'MarketingCalendarController@listApiKeys');
 $router->get('/cron/noticias/enviar', 'CronNewsController@send');
+
+// Cron de aprendizado por projeto
+$router->get('/cron/learning/project-suggestions', 'CronLearningController@projectSuggestions');
 $router->get('/certificados', 'CertificateController@myCompletedCourses');
 $router->get('/certificados/ver', 'CertificateController@show');
 $router->get('/certificados/verificar', 'CertificateController@verify');

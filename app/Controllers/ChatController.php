@@ -19,6 +19,7 @@ use App\Models\ProjectFile;
 use App\Models\ProjectFileVersion;
 use App\Models\Project;
 use App\Models\ProjectMemoryItem;
+use App\Models\ProjectSuggestionJob;
 use App\Models\ChatJob;
 
 class ChatController extends Controller
@@ -1245,6 +1246,9 @@ class ChatController extends Controller
             $projectContextFilesUsed = [];
             $projectContextMessage = null;
             $projectFileInputsForModel = [];
+            $projectFileTexts = [];
+            $memoryLines = [];
+            $parts = [];
 
             if (!empty($conversation->project_id) && $userId > 0) {
                 $projectId = (int)$conversation->project_id;
@@ -1665,6 +1669,76 @@ class ChatController extends Controller
                 if (!empty($parts)) {
                     $projectContextMessage = "Contexto do projeto (use como fonte de verdade; não invente se estiver aqui):\n\n" . implode("\n\n---\n\n", $parts);
                 }
+
+                // === INJEÇÃO DE CONTEÚDO DOS ARQUIVOS NA MENSAGEM DO USUÁRIO ===
+                // Carrega o texto extraído de TODOS os arquivos base do projeto
+                $projectFileTexts = [];
+                $modelForBudget = isset($_SESSION['chat_model']) ? (string)$_SESSION['chat_model'] : '';
+                $charBudget = str_starts_with($modelForBudget, 'claude-') ? 50000 : 30000;
+                $totalCharsUsed = 0;
+
+                foreach ($baseFiles as $bf) {
+                    $bfId = (int)($bf['id'] ?? 0);
+                    if ($bfId <= 0) continue;
+                    $ver = $latestByFileId[$bfId] ?? null;
+                    if (!is_array($ver)) continue;
+
+                    $extractedText = trim((string)($ver['extracted_text'] ?? ''));
+                    $bfName = trim((string)($bf['name'] ?? $bf['path'] ?? ''));
+                    $bfMime = trim((string)($bf['mime_type'] ?? ''));
+                    $bfExt = strtolower(pathinfo($bfName, PATHINFO_EXTENSION));
+
+                    // Se não tem texto extraído e é PDF, tenta extrair via pdftotext
+                    if ($extractedText === '' && ($bfExt === 'pdf' || $bfMime === 'application/pdf')) {
+                        $storageUrl = trim((string)($ver['storage_url'] ?? ''));
+                        if ($storageUrl !== '') {
+                            $tmpPdf = tempnam(sys_get_temp_dir(), 'pdf_');
+                            $downloaded = @file_get_contents($storageUrl);
+                            if (is_string($downloaded) && $downloaded !== '') {
+                                file_put_contents($tmpPdf, $downloaded);
+                                $outTxt = tempnam(sys_get_temp_dir(), 'pdf_txt_');
+                                @shell_exec('pdftotext -layout ' . escapeshellarg($tmpPdf) . ' ' . escapeshellarg($outTxt) . ' 2>&1');
+                                if (is_file($outTxt) && filesize($outTxt) > 0) {
+                                    $extractedText = trim((string)file_get_contents($outTxt));
+                                    // Salva no banco pra não precisar extrair de novo
+                                    if ($extractedText !== '') {
+                                        $verId = (int)($ver['id'] ?? 0);
+                                        if ($verId > 0) {
+                                            ProjectFileVersion::updateExtractedText($verId, $extractedText);
+                                        }
+                                    }
+                                }
+                                @unlink($outTxt);
+                            }
+                            @unlink($tmpPdf);
+                        }
+                    }
+
+                    if ($extractedText === '') continue;
+
+                    // Respeita o budget de caracteres
+                    $textLen = mb_strlen($extractedText, 'UTF-8');
+                    $remaining = $charBudget - $totalCharsUsed;
+                    if ($remaining <= 0) break;
+
+                    if ($textLen > $remaining) {
+                        $extractedText = mb_substr($extractedText, 0, $remaining, 'UTF-8') . "\n\n[...texto truncado por limite de contexto...]";
+                        $textLen = $remaining;
+                    }
+
+                    $projectFileTexts[] = "=== ARQUIVO: {$bfName} ===\n{$extractedText}";
+                    $totalCharsUsed += $textLen;
+                }
+
+                // Carrega memórias do projeto
+                $projectMemories = ProjectMemoryItem::allActiveForProject($projectId, 60);
+                $memoryLines = [];
+                foreach ($projectMemories as $mi) {
+                    $c = trim((string)($mi['content'] ?? ''));
+                    if ($c !== '') {
+                        $memoryLines[] = '- ' . $c;
+                    }
+                }
             }
 
             // Carrega contexto do usuário, personalidade e da conversa para personalizar o Tuquinha
@@ -1814,10 +1888,59 @@ class ChatController extends Controller
                 ]);
             }
             if (is_string($projectContextMessage) && $projectContextMessage !== '') {
+                // Injeta o contexto do projeto no system prompt via $projectContext (não como mensagem separada)
+                // O conteúdo dos arquivos vai direto na mensagem do usuário abaixo
+            }
+
+            // === INJEÇÃO DO CONTEÚDO DOS ARQUIVOS NA ÚLTIMA MENSAGEM DO USUÁRIO ===
+            $projectContextForEngine = null;
+            if (!empty($conversation->project_id) && !empty($projectFileTexts) && is_array($projectFileTexts) && !empty($projectFileTexts)) {
+                $fileContentBlock = implode("\n\n", $projectFileTexts);
+                $memoriesBlock = '';
+                if (!empty($memoryLines)) {
+                    $memoriesBlock = "\n\nMEMÓRIAS DO PROJETO:\n" . implode("\n", $memoryLines);
+                }
+
+                $injectedContent = "ATENÇÃO: Você recebeu o conteúdo completo dos arquivos do projeto abaixo.\n"
+                    . "REGRA ABSOLUTA: Construa sua resposta usando APENAS o texto dos arquivos.\n"
+                    . "Cada parágrafo da sua resposta deve conter uma citação literal entre aspas com número de página.\n"
+                    . "NÃO adicione nenhuma informação que não esteja nos arquivos.\n"
+                    . "NÃO use conhecimento próprio, experiência prática ou informações externas.\n"
+                    . "Se perguntarem se você usou os arquivos, diga SIM — porque você DEVE usar.\n\n"
+                    . $fileContentBlock
+                    . $memoriesBlock
+                    . "\n\nPERGUNTA DO USUÁRIO (responda usando SOMENTE o conteúdo acima):\n"
+                    . $message;
+
+                // Substitui a última mensagem do usuário no histórico
+                $lastIdx = null;
+                for ($hi = count($historyForEngine) - 1; $hi >= 0; $hi--) {
+                    if (($historyForEngine[$hi]['role'] ?? '') === 'user') {
+                        $lastIdx = $hi;
+                        break;
+                    }
+                }
+                if ($lastIdx !== null) {
+                    $historyForEngine[$lastIdx]['content'] = $injectedContent;
+                }
+
+                // Seta projectContextMessage como null pra não duplicar
+                $projectContextMessage = null;
+
+                // Passa o contexto do projeto pro system prompt (ignora handoff de personalidade)
+                $projectContextForEngine = "CONTEXTO DO PROJETO: Este chat está vinculado a um projeto com arquivos base. "
+                    . "O conteúdo dos arquivos foi injetado na mensagem do usuário. "
+                    . "IGNORE regras de handoff de personalidade para este chat — responda QUALQUER pergunta usando os arquivos do projeto.";
+                if (!empty($memoryLines)) {
+                    $projectContextForEngine .= "\n\nMEMÓRIAS DO PROJETO:\n" . implode("\n", $memoryLines);
+                }
+            } elseif (is_string($projectContextMessage) && $projectContextMessage !== '') {
+                // Fallback: se não tem textos de arquivo mas tem contexto de projeto, usa o método antigo
                 array_unshift($historyForEngine, [
                     'role' => 'user',
                     'content' => $projectContextMessage,
                 ]);
+                $projectContextForEngine = null;
             }
 
             $existingAttachments = Attachment::allByConversation((int)$conversation->id);
@@ -1906,7 +2029,8 @@ class ChatController extends Controller
                     $userData,
                     $conversationSettings,
                     $personaData,
-                    !empty($persistentFileInputs) ? $persistentFileInputs : null
+                    !empty($persistentFileInputs) ? $persistentFileInputs : null,
+                    $projectContextForEngine ?? null
                 );
             } catch (\Throwable $e) {
                 if ($asyncJobId) {
@@ -1930,6 +2054,20 @@ class ChatController extends Controller
 
             if ($asyncJobId) {
                 ChatJob::markDone((int)$asyncJobId, (int)$assistantMessageId, $totalTokensUsed > 0 ? $totalTokensUsed : null);
+            }
+
+            // Enfileira job de aprendizado por projeto (sugestões assíncronas)
+            if (!empty($conversation->project_id) && $assistantReply !== '' && stripos($assistantReply, 'Desculpe') !== 0) {
+                try {
+                    ProjectSuggestionJob::enqueue(
+                        (int)$conversation->project_id,
+                        (int)$conversation->id,
+                        $message,
+                        $assistantReply
+                    );
+                } catch (\Throwable $e) {
+                    // Não bloqueia o fluxo principal
+                }
             }
 
             // Debita tokens do usuário logado, se houver contador de uso disponível

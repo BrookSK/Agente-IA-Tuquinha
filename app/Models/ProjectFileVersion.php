@@ -60,6 +60,19 @@ class ProjectFileVersion
         ]);
     }
 
+    public static function updateExtractedText(int $versionId, string $text): void
+    {
+        if ($versionId <= 0) {
+            return;
+        }
+        $pdo = Database::getConnection();
+        $stmt = $pdo->prepare('UPDATE project_file_versions SET extracted_text = :txt WHERE id = :id LIMIT 1');
+        $stmt->execute([
+            'txt' => $text,
+            'id' => $versionId,
+        ]);
+    }
+
     public static function latestForFiles(array $projectFileIds): array
     {
         $ids = array_values(array_filter(array_map('intval', $projectFileIds), static function ($v) {

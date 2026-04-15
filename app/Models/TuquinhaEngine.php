@@ -38,7 +38,7 @@ class TuquinhaEngine
         return is_string($result) ? $result : '';
     }
 
-    public function generateResponseWithContext(array $messages, ?string $model = null, ?array $user = null, ?array $conversationSettings = null, ?array $persona = null, ?array $fileInputs = null): array
+    public function generateResponseWithContext(array $messages, ?string $model = null, ?array $user = null, ?array $conversationSettings = null, ?array $persona = null, ?array $fileInputs = null, ?string $projectContext = null): array
     {
         $configuredModel = Setting::get('openai_default_model', AI_MODEL);
         $modelToUse = $model ?: $configuredModel;
@@ -47,10 +47,10 @@ class TuquinhaEngine
 
         // Decide provedor com base no nome do modelo
         if ($this->isClaudeModel($modelToUse)) {
-            return $this->callAnthropicClaude($messages, $modelToUse, $user, $conversationSettings, $persona, $fileInputs);
+            return $this->callAnthropicClaude($messages, $modelToUse, $user, $conversationSettings, $persona, $fileInputs, $projectContext);
         }
 
-        return $this->callOpenAI($messages, $modelToUse, $user, $conversationSettings, $persona, $fileInputs);
+        return $this->callOpenAI($messages, $modelToUse, $user, $conversationSettings, $persona, $fileInputs, $projectContext);
     }
 
     private function isClaudeModel(string $model): bool
@@ -112,7 +112,7 @@ class TuquinhaEngine
         return false;
     }
 
-    private function callOpenAI(array $messages, string $model, ?array $user, ?array $conversationSettings, ?array $persona, ?array $fileInputs): array
+    private function callOpenAI(array $messages, string $model, ?array $user, ?array $conversationSettings, ?array $persona, ?array $fileInputs, ?string $projectContext = null): array
     {
         $configuredApiKey = Setting::get('openai_api_key', AI_API_KEY);
 
@@ -125,13 +125,13 @@ class TuquinhaEngine
         }
 
         if (!empty($fileInputs) && is_array($fileInputs)) {
-            return $this->callOpenAIResponsesWithFiles($messages, $model, $configuredApiKey, $user, $conversationSettings, $persona, $fileInputs);
+            return $this->callOpenAIResponsesWithFiles($messages, $model, $configuredApiKey, $user, $conversationSettings, $persona, $fileInputs, $projectContext);
         }
 
         $payloadMessages = [];
         $payloadMessages[] = [
             'role' => 'system',
-            'content' => $this->buildSystemPromptWithContext($user, $conversationSettings, $persona),
+            'content' => $this->buildSystemPromptWithContext($user, $conversationSettings, $persona, $projectContext),
         ];
 
         foreach ($messages as $m) {
@@ -231,7 +231,7 @@ class TuquinhaEngine
         ];
     }
 
-    private function callAnthropicClaude(array $messages, string $model, ?array $user, ?array $conversationSettings, ?array $persona, ?array $fileInputs): array
+    private function callAnthropicClaude(array $messages, string $model, ?array $user, ?array $conversationSettings, ?array $persona, ?array $fileInputs, ?string $projectContext = null): array
     {
         $apiKey = Setting::get('anthropic_api_key', ANTHROPIC_API_KEY);
         if (empty($apiKey)) {
@@ -242,7 +242,7 @@ class TuquinhaEngine
             ];
         }
 
-        $systemPrompt = $this->buildSystemPromptWithContext($user, $conversationSettings, $persona);
+        $systemPrompt = $this->buildSystemPromptWithContext($user, $conversationSettings, $persona, $projectContext);
         $model = $this->normalizeClaudeModel($model);
 
         $claudeMessages = [];
@@ -327,7 +327,7 @@ class TuquinhaEngine
                 'model' => $usedModel,
                 'system' => $systemPrompt,
                 'messages' => $claudeMessages,
-                'max_tokens' => 2048,
+                'max_tokens' => 4096,
                 'temperature' => 0.7,
             ]);
 
@@ -364,7 +364,12 @@ class TuquinhaEngine
                 $httpCode = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
                 curl_close($ch);
                 if ($try < self::PROVIDER_RETRY_MAX_ATTEMPTS && ($httpCode === 429 || $httpCode === 408 || ($httpCode >= 500 && $httpCode <= 599))) {
-                    usleep($try === 1 ? 300000 : ($try === 2 ? 900000 : 1500000));
+                    // 429 rate limit: espera mais tempo (5-10s) pra dar tempo do rate limit resetar
+                    if ($httpCode === 429) {
+                        sleep($try === 1 ? 5 : 10);
+                    } else {
+                        usleep($try === 1 ? 900000 : 2000000);
+                    }
                     continue;
                 }
                 break;
@@ -410,6 +415,57 @@ class TuquinhaEngine
             $usageTotal = (int)($data['usage']['input_tokens'] ?? 0) + (int)($data['usage']['output_tokens'] ?? 0);
         }
 
+        // Continuação automática: se a resposta foi cortada por max_tokens, faz segunda chamada
+        $stopReason = $data['stop_reason'] ?? null;
+        if ($stopReason === 'max_tokens' && is_string($content) && $content !== '') {
+            $continuationMessages = $claudeMessages;
+            $continuationMessages[] = [
+                'role' => 'assistant',
+                'content' => [['type' => 'text', 'text' => $content]],
+            ];
+            $continuationMessages[] = [
+                'role' => 'user',
+                'content' => [['type' => 'text', 'text' => 'Continue exatamente de onde parou, sem repetir o que já disse.']],
+            ];
+
+            $contBody = json_encode([
+                'model' => $usedModel,
+                'system' => $systemPrompt,
+                'messages' => $continuationMessages,
+                'max_tokens' => 4096,
+                'temperature' => 0.7,
+            ]);
+
+            $contCh = curl_init('https://api.anthropic.com/v1/messages');
+            curl_setopt_array($contCh, [
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_POST => true,
+                CURLOPT_HTTPHEADER => [
+                    'Content-Type: application/json',
+                    'x-api-key: ' . $apiKey,
+                    'anthropic-version: 2023-06-01',
+                ],
+                CURLOPT_POSTFIELDS => $contBody,
+                CURLOPT_CONNECTTIMEOUT => self::PROVIDER_CONNECT_TIMEOUT_SECONDS,
+                CURLOPT_TIMEOUT => self::ANTHROPIC_TIMEOUT_SECONDS,
+            ]);
+
+            $contResult = curl_exec($contCh);
+            $contHttpCode = (int)curl_getinfo($contCh, CURLINFO_HTTP_CODE);
+            curl_close($contCh);
+
+            if ($contResult !== false && $contHttpCode >= 200 && $contHttpCode < 300) {
+                $contData = json_decode($contResult, true);
+                $contText = $contData['content'][0]['text'] ?? null;
+                if (is_string($contText) && $contText !== '') {
+                    $content .= $contText;
+                    if (isset($contData['usage'])) {
+                        $usageTotal += (int)($contData['usage']['input_tokens'] ?? 0) + (int)($contData['usage']['output_tokens'] ?? 0);
+                    }
+                }
+            }
+        }
+
         if (!is_string($content) || $content === '') {
             $snippet = substr((string)$result, 0, 800);
             $this->lastProviderError = 'anthropic_messages_no_text; body=' . $snippet;
@@ -426,7 +482,7 @@ class TuquinhaEngine
         ];
     }
 
-    private function callOpenAIResponsesWithFiles(array $messages, string $model, string $apiKey, ?array $user, ?array $conversationSettings, ?array $persona, array $fileInputs): array
+    private function callOpenAIResponsesWithFiles(array $messages, string $model, string $apiKey, ?array $user, ?array $conversationSettings, ?array $persona, array $fileInputs, ?string $projectContext = null): array
     {
         $imageInputs = [];
         $fileIds = [];
@@ -553,7 +609,7 @@ class TuquinhaEngine
             ];
         }
 
-        $systemText = $this->buildSystemPromptWithContext($user, $conversationSettings, $persona);
+        $systemText = $this->buildSystemPromptWithContext($user, $conversationSettings, $persona, $projectContext);
         if ($imageInputs) {
             $systemText = "IMPORTANTE: Você PODE analisar imagens quando elas forem fornecidas como input_image neste chat.\n" . $systemText;
         }
@@ -911,7 +967,7 @@ class TuquinhaEngine
         return $prompt;
     }
 
-    private function buildSystemPromptWithContext(?array $user, ?array $conversationSettings, ?array $persona): string
+    private function buildSystemPromptWithContext(?array $user, ?array $conversationSettings, ?array $persona, ?string $projectContext = null): string
     {
         $parts = [];
         $parts[] = $this->systemPrompt;
@@ -1020,6 +1076,11 @@ class TuquinhaEngine
             if ($convLines) {
                 $parts[] = implode("\n\n", $convLines);
             }
+        }
+
+        // Contexto do projeto (adicionado no final para ter prioridade sobre regras de handoff)
+        if (is_string($projectContext) && trim($projectContext) !== '') {
+            $parts[] = $projectContext;
         }
 
         return implode("\n\n---\n\n", $parts);
