@@ -633,6 +633,9 @@ $router->get('/migrate/run', 'MigrateController@run');
 // Rota de setup/inicialização completa do servidor
 $router->get('/setup', 'SetupController@run');
 
+// Rota para importar dumps SQL grandes da pasta database/imports/
+$router->get('/import/run', 'ImportController@run');
+
 // Relato de erros de análise pelos usuários
 $router->post('/erro/reportar', 'ErrorReportController@store');
 

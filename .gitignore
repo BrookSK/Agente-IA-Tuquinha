@@ -1,0 +1,3 @@
+# Pasta de imports manuais (dumps SQL grandes do servidor antigo)
+database/imports/*.sql
+database/imports/*.sql.gz
