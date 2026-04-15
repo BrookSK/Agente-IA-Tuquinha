@@ -233,8 +233,10 @@ class ImportController
                             $skipped++;
                         } else {
                             $errors++;
-                            $short = strlen($msg) > 150 ? substr($msg, 0, 150) . '...' : $msg;
+                            $short = strlen($msg) > 300 ? substr($msg, 0, 300) . '...' : $msg;
+                            $stmtPreview = strlen($stmt) > 200 ? substr($stmt, 0, 200) . '...' : $stmt;
                             $this->out("  ❌ Linha ~$lineNum: $short");
+                            $this->out("     SQL: $stmtPreview");
                         }
 
                         // Reconecta se necessário
